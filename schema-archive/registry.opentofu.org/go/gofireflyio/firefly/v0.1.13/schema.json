@@ -1,0 +1,2311 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_key": {
+          "type": "string",
+          "description": "The access key for API operations. May also be provided via FIREFLY_ACCESS_KEY environment variable.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "The URL of the Firefly API. May also be provided via FIREFLY_API_URL environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "secret_key": {
+          "type": "string",
+          "description": "The secret key for API operations. May also be provided via FIREFLY_SECRET_KEY environment variable.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      "description": "Interact with Firefly",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "firefly_backup_and_dr_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The account ID for the backup application",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "application_name": {
+            "type": "string",
+            "description": "The name of the backup application (max 100 characters)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "auto_create_pr": {
+            "type": "bool",
+            "description": "If true, the restore flow automatically opens a VCS pull request with the restored IaC",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "backup_on_save": {
+            "type": "bool",
+            "description": "Whether to trigger a backup immediately on application creation/update",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the application was created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the backup application (max 500 characters)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "frequency": {
+            "type": "number",
+            "description": "Hours between scheduled backups (4, 8, 16, or 24)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the backup application",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The integration ID for cloud provider credentials",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "last_backup_snapshot_id": {
+            "type": "string",
+            "description": "ID of the most recent backup snapshot",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_backup_status": {
+            "type": "string",
+            "description": "Status of the last backup",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_backup_time": {
+            "type": "string",
+            "description": "Timestamp of the last backup",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "next_backup_time": {
+            "type": "string",
+            "description": "Timestamp of the next scheduled backup",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "notification_id": {
+            "type": "string",
+            "description": "Notification channel ID for backup alerts",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "The cloud provider type (max 50 characters)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The cloud region where backups will be stored",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resilience_enabled": {
+            "type": "bool",
+            "description": "When true, target_account, target_region, and frequency are required and DR scheduling applies",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "restore_instructions": {
+            "type": "string",
+            "description": "Instructions for restoring from backups (max 2000 characters)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snapshots_count": {
+            "type": "number",
+            "description": "Number of snapshots created by this application",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the application (Active/Inactive)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "target_account": {
+            "type": "string",
+            "description": "Target account/integration ID where the restore should land",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "target_region": {
+            "type": "string",
+            "description": "Target region where the restore should land",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the application was last updated",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "scope": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "Scope type (tags, resource_group, asset_types, excluded_asset_types, selected_resources, excluded_resources)",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of values for this scope type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Resource scope configurations for backup targeting",
+              "description_kind": "markdown"
+            }
+          },
+          "vcs": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "repo_id": {
+                  "type": "string",
+                  "description": "Repository ID for storing backups",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "vcs_integration_id": {
+                  "type": "string",
+                  "description": "VCS integration ID",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "VCS integration configuration for backup artifacts",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a Firefly Backup & DR application",
+        "description_kind": "markdown"
+      }
+    },
+    "firefly_governance_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "The category of the policy (e.g., 'Misconfiguration')",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "code": {
+            "type": "string",
+            "description": "The Rego code for the policy rule (can be base64 encoded)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the governance policy",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "frameworks": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of compliance frameworks this policy relates to (e.g., 'SOC2', 'ISO27001')",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the governance policy",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of labels for categorizing the policy",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the governance policy",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "provider_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of provider IDs this policy applies to (e.g., 'aws_all', specific account IDs)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "severity": {
+            "type": "string",
+            "description": "The severity level of the policy (trace, info, low, medium, high, critical)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of resource types this policy applies to (e.g., 'aws_cloudwatch_event_target')",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a Firefly governance policy (custom policy rule)",
+        "description_kind": "markdown"
+      }
+    },
+    "firefly_project_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the membership (format: project_id:user_id)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The ID of the project",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role of the user in the project (e.g., 'admin', 'member', 'viewer')",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to add to the project",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages membership of a user in a Firefly project. This resource allows you to add users to projects with specific roles.",
+        "description_kind": "markdown"
+      }
+    },
+    "firefly_workflows_guardrail": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the guardrail rule was created",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the guardrail rule",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_enabled": {
+            "type": "bool",
+            "description": "Whether the guardrail rule is enabled",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the guardrail rule",
+            "description_kind": "plain",
+            "required": true
+          },
+          "notification_id": {
+            "type": "string",
+            "description": "ID of the associated notification",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity level of the guardrail rule. Allowed values: flexible, strict, warning.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the guardrail rule (policy, cost, resource, or tag)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the guardrail rule was last updated",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "criteria": {
+            "nesting_mode": "single",
+            "block": {
+              "block_types": {
+                "cost": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "threshold_amount": {
+                        "type": "number",
+                        "description": "Absolute threshold amount (in USD) for cost criteria",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "threshold_percentage": {
+                        "type": "number",
+                        "description": "Percentage threshold for cost criteria",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Cost criteria for the guardrail rule",
+                    "description_kind": "plain"
+                  }
+                },
+                "policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "severity": {
+                        "type": "string",
+                        "description": "Severity level for policy criteria",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "policies": {
+                        "nesting_mode": "single",
+                        "block": {
+                          "attributes": {
+                            "exclude": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to exclude",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "include": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to include",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "Policy patterns to include or exclude",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Policy criteria for the guardrail rule",
+                    "description_kind": "plain"
+                  }
+                },
+                "resource": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "actions": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of actions to filter by",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "specific_resources": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of specific resources to filter by",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "asset_types": {
+                        "nesting_mode": "single",
+                        "block": {
+                          "attributes": {
+                            "exclude": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to exclude",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "include": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to include",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "Asset type patterns to include or exclude",
+                          "description_kind": "plain"
+                        }
+                      },
+                      "regions": {
+                        "nesting_mode": "single",
+                        "block": {
+                          "attributes": {
+                            "exclude": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to exclude",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "include": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "List of patterns to include",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "Region patterns to include or exclude",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Resource criteria for the guardrail rule",
+                    "description_kind": "plain"
+                  }
+                },
+                "tag": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "required_tags": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of required tags",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "required_values": {
+                        "type": [
+                          "map",
+                          [
+                            "list",
+                            "string"
+                          ]
+                        ],
+                        "description": "Map of tag keys to required values",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "tag_enforcement_mode": {
+                        "type": "string",
+                        "description": "Mode of tag enforcement (requiredTags, anyTags, requiredValues)",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Tag criteria for the guardrail rule",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Criteria for the guardrail rule",
+              "description_kind": "plain"
+            }
+          },
+          "scope": {
+            "nesting_mode": "single",
+            "block": {
+              "block_types": {
+                "branches": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "exclude": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to exclude",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "include": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to include",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Branch patterns to include or exclude",
+                    "description_kind": "plain"
+                  }
+                },
+                "labels": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "exclude": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to exclude",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "include": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to include",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Label patterns to include or exclude",
+                    "description_kind": "plain"
+                  }
+                },
+                "repositories": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "exclude": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to exclude",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "include": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to include",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Repository patterns to include or exclude",
+                    "description_kind": "plain"
+                  }
+                },
+                "workspaces": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "exclude": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to exclude",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "include": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of patterns to include",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Workspace patterns to include or exclude",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Scope of the guardrail rule",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Firefly guardrail rule",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account the project belongs to",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cron_execution_pattern": {
+            "type": "string",
+            "description": "Cron pattern for scheduled executions",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the project",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Labels to assign to the project",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "members_count": {
+            "type": "number",
+            "description": "Number of members assigned to the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "ID of the parent project (for nested projects)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_count": {
+            "type": "number",
+            "description": "Number of workspaces in the project",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "variables": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "destination": {
+                  "type": "string",
+                  "description": "The destination of the variable (env or iac)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The variable key",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "sensitivity": {
+                  "type": "string",
+                  "description": "The sensitivity of the variable (string or secret)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The variable value",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Variables associated with the project",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Firefly project",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_runners_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "Account ID that the workspace belongs to",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "apply_rule": {
+            "type": "string",
+            "description": "Apply rule (manual or auto)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "consumed_variable_sets": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of variable set IDs that this workspace consumes",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cron_execution_pattern": {
+            "type": "string",
+            "description": "Cron pattern for scheduled executions",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "default_branch": {
+            "type": "string",
+            "description": "Default branch for the workspace",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the workspace",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "iac_type": {
+            "type": "string",
+            "description": "Infrastructure as Code type (terraform, opentofu)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the workspace",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Labels to assign to the workspace",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the workspace (cannot contain spaces)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID for workspace assignment",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "Repository URL or name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "Terraform version to use",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "triggers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of triggers for the workspace",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vcs_integration_id": {
+            "type": "string",
+            "description": "VCS integration ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vcs_type": {
+            "type": "string",
+            "description": "VCS type (e.g., github, gitlab)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "Working directory within the repository",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "variables": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "destination": {
+                  "type": "string",
+                  "description": "The destination of the variable (env or iac)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The variable key",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "sensitivity": {
+                  "type": "string",
+                  "description": "The sensitivity of the variable (string or secret)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The variable value",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Variables associated with the workspace",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Firefly runners workspace",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_variable_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the variable set",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the variable set",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Labels to assign to the variable set",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the variable set",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parents": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Parent variable set IDs",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Version number of the variable set",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "variables": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "destination": {
+                  "type": "string",
+                  "description": "The destination of the variable (env or iac)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The variable key",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "sensitivity": {
+                  "type": "string",
+                  "description": "The sensitivity of the variable (string or secret)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The variable value",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Variables in the variable set",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Firefly variable set",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workspace_labels": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the workspace",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of labels to assign to the workspace",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the labels were last updated",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The ID of the workspace to manage labels for",
+            "description_kind": "plain",
+            "required": true
+          },
+          "workspace_name": {
+            "type": "string",
+            "description": "The name of the workspace",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages labels for a Firefly workspace",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "firefly_backup_and_dr_applications": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The account ID to list applications for",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "applications": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "The account ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "application_id": {
+                  "type": "string",
+                  "description": "The unique identifier of the backup application",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "application_name": {
+                  "type": "string",
+                  "description": "The name of the backup application",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "auto_create_pr": {
+                  "type": "bool",
+                  "description": "If true, the restore flow automatically opens a VCS pull request",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the backup application",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "frequency": {
+                  "type": "number",
+                  "description": "Hours between scheduled backups (4, 8, 16, or 24)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "integration_id": {
+                  "type": "string",
+                  "description": "The integration ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_backup_snapshot_id": {
+                  "type": "string",
+                  "description": "ID of the last backup snapshot",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_backup_status": {
+                  "type": "string",
+                  "description": "Status of the last backup",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_backup_time": {
+                  "type": "string",
+                  "description": "Timestamp of the last backup",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "next_backup_time": {
+                  "type": "string",
+                  "description": "Timestamp of the next backup",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "notification_id": {
+                  "type": "string",
+                  "description": "Notification channel ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "provider_type": {
+                  "type": "string",
+                  "description": "The cloud provider type",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The cloud region",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "resilience_enabled": {
+                  "type": "bool",
+                  "description": "When true, DR scheduling applies",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "restore_instructions": {
+                  "type": "string",
+                  "description": "Restore instructions",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "snapshots_count": {
+                  "type": "number",
+                  "description": "Number of snapshots",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current status of the application",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "target_account": {
+                  "type": "string",
+                  "description": "Target account/integration ID where the restore should land",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "target_region": {
+                  "type": "string",
+                  "description": "Target region where the restore should land",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of backup applications",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "Filter by integration ID",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "Filter by cloud provider type",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Filter by cloud region",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Filter by application status (Active/Inactive)",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Data source for retrieving Firefly Backup & DR applications",
+        "description_kind": "markdown"
+      }
+    },
+    "firefly_governance_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Category filter for policies",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of labels to filter policies",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "policies": {
+            "nested_type": {
+              "attributes": {
+                "category": {
+                  "type": "string",
+                  "description": "The category of the policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "code": {
+                  "type": "string",
+                  "description": "The Rego code for the policy rule",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the governance policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "frameworks": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of compliance frameworks this policy relates to",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the governance policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of labels for categorizing the policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the governance policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "provider_ids": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of provider IDs this policy applies to",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "The severity level of the policy",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of resource types this policy applies to",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of governance policies",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "query": {
+            "type": "string",
+            "description": "Search query string for filtering policies",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Data source for retrieving Firefly governance policies",
+        "description_kind": "markdown"
+      }
+    },
+    "firefly_workflows_guardrails": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "guardrails": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "Account ID associated with the guardrail rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the guardrail rule was created",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_by": {
+                  "type": "string",
+                  "description": "ID of the user who created the guardrail rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier of the guardrail rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_enabled": {
+                  "type": "bool",
+                  "description": "Whether the guardrail rule is enabled",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the guardrail rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "notification_id": {
+                  "type": "string",
+                  "description": "ID of the associated notification",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "Severity level of the guardrail rule. Allowed values: flexible, strict, warning.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the guardrail rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp when the guardrail rule was last updated",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of guardrail rules",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "search_value": {
+            "type": "string",
+            "description": "Search value to filter guardrails",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "filters": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "branches": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by branches",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "created_by": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by creator",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by labels",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "repositories": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by repositories",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by type",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "workspaces": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by workspaces",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Filters for guardrail rules",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Fetches the list of Firefly guardrail rules",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account the project belongs to",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cron_execution_pattern": {
+            "type": "string",
+            "description": "Cron pattern for scheduled executions",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the project",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Labels assigned to the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "members_count": {
+            "type": "number",
+            "description": "Number of members assigned to the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "ID of the parent project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path of the project (alternative to id)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_count": {
+            "type": "number",
+            "description": "Number of workspaces in the project",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Firefly project by ID or path",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_projects": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "projects": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "ID of the account the project belongs to",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cron_execution_pattern": {
+                  "type": "string",
+                  "description": "Cron pattern for scheduled executions",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Labels assigned to the project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "members_count": {
+                  "type": "number",
+                  "description": "Number of members assigned to the project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "parent_id": {
+                  "type": "string",
+                  "description": "ID of the parent project",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_count": {
+                  "type": "number",
+                  "description": "Number of workspaces in the project",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of projects",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "search_query": {
+            "type": "string",
+            "description": "Optional search query to filter projects",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Fetches a list of Firefly projects",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_variable_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the variable set",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the variable set",
+            "description_kind": "plain",
+            "required": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Labels assigned to the variable set",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the variable set",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parents": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Parent variable set IDs",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Version number of the variable set",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Firefly variable set by ID",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workflows_variable_sets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "search_query": {
+            "type": "string",
+            "description": "Optional search query to filter variable sets",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "variable_sets": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "The description of the variable set",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the variable set",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Labels assigned to the variable set",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the variable set",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "parents": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Parent variable set IDs",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "number",
+                  "description": "Version number of the variable set",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of variable sets",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of Firefly variable sets",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workspace_runs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "runs": {
+            "nested_type": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "Branch associated with the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "build_id": {
+                  "type": "string",
+                  "description": "Build ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "build_name": {
+                  "type": "string",
+                  "description": "Name of the build",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "build_url": {
+                  "type": "string",
+                  "description": "URL of the build",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "commit_id": {
+                  "type": "string",
+                  "description": "Commit ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "commit_url": {
+                  "type": "string",
+                  "description": "URL of the commit",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the run was created",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier of the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repo": {
+                  "type": "string",
+                  "description": "Repository associated with the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repo_url": {
+                  "type": "string",
+                  "description": "URL of the repository",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "run_id": {
+                  "type": "string",
+                  "description": "Run ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "run_name": {
+                  "type": "string",
+                  "description": "Name of the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "runner_type": {
+                  "type": "string",
+                  "description": "Type of CI/CD runner",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Status of the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Title of the run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp when the run was last updated",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vcs_type": {
+                  "type": "string",
+                  "description": "Type of version control system",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description": "ID of the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_name": {
+                  "type": "string",
+                  "description": "Name of the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of workspace runs",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "search_value": {
+            "type": "string",
+            "description": "Search value to filter runs",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "ID of the workspace to fetch runs for",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "filters": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by branch",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ci_tool": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by CI tool",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "commit_id": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by commit ID",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "repository": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by repository",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "run_id": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by run ID",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "run_name": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by run name",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by status",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "vcs_type": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by VCS type",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Filters for workspace runs",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Fetches the list of runs for a Firefly workspace",
+        "description_kind": "plain"
+      }
+    },
+    "firefly_workspaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "search_value": {
+            "type": "string",
+            "description": "Search value to filter workspaces",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workspaces": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "Account ID associated with the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the workspace was created",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "iac_type": {
+                  "type": "string",
+                  "description": "Type of Infrastructure as Code",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "iac_type_version": {
+                  "type": "string",
+                  "description": "Version of the IaC tool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier of the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_workflow_managed": {
+                  "type": "bool",
+                  "description": "Whether the workflow is managed",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of labels associated with the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_apply_time": {
+                  "type": "string",
+                  "description": "Timestamp of the last apply",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_plan_time": {
+                  "type": "string",
+                  "description": "Timestamp of the last plan",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_run_status": {
+                  "type": "string",
+                  "description": "Status of the last run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_run_time": {
+                  "type": "string",
+                  "description": "Timestamp of the last run",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repo": {
+                  "type": "string",
+                  "description": "Repository associated with the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repo_url": {
+                  "type": "string",
+                  "description": "Repository URL",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "runner_type": {
+                  "type": "string",
+                  "description": "CI/CD runner type",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "runs_count": {
+                  "type": "number",
+                  "description": "Number of runs",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp when the workspace was last updated",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vcs_type": {
+                  "type": "string",
+                  "description": "Version control system type",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description": "Workspace ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_name": {
+                  "type": "string",
+                  "description": "Name of the workspace",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of workspaces",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "filters": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "ci_tool": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by CI tool",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_managed_workflow": {
+                  "type": "bool",
+                  "description": "Filter by whether the workflow is managed",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by labels",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "repositories": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by repositories",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by status",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "vcs_type": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by VCS type",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "workspace_name": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by workspace name",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Filters for workspaces",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Fetches the list of Firefly workspaces",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
