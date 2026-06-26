@@ -1,0 +1,459 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "fail_on_untested_version": {
+          "type": "bool",
+          "description": "Whether to fail if the Dokku version has not been tested with this provider. Defaults to true. Can be set via DOKKU_FAIL_ON_UNTESTED_VERSION environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "skip_known_hosts_check": {
+          "type": "bool",
+          "description": "Whether to skip SSH known hosts verification. Defaults to false. Can be set via DOKKU_SKIP_KNOWN_HOSTS_CHECK environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "ssh_cert": {
+          "type": "string",
+          "description": "Either a path to the SSH private key for connecting to your Dokku server OR the source for an SSH key directly. Can be set via DOKKU_SSH_CERT environment variable.",
+          "description_kind": "plain",
+          "required": true
+        },
+        "ssh_host": {
+          "type": "string",
+          "description": "The hostname of your Dokku server. Can be set via DOKKU_SSH_HOST environment variable.",
+          "description_kind": "plain",
+          "required": true
+        },
+        "ssh_passphrase": {
+          "type": "string",
+          "description": "An optional passphrase to be used in conjunction with the provided SSH key.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "ssh_port": {
+          "type": "number",
+          "description": "The SSH port of your Dokku server. Defaults to 22. Can be set via DOKKU_SSH_PORT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "ssh_user": {
+          "type": "string",
+          "description": "The SSH user to connect to your Dokku server. Defaults to 'dokku'. Can be set via DOKKU_SSH_USER environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "dokku_app": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "buildpacks": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of buildpacks to be used when deploying the application. These can be URLs to custom buildpacks or shorthand names for official Heroku buildpacks.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "config_vars": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Environment variables to set for the application. These are exposed to the application at runtime.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "domains": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of domains to be associated with the application.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "locked": {
+            "type": "bool",
+            "description": "(Not yet implemented) Whether the application is locked for deployment. When true, deploys to this application will be blocked.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Dokku application.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "nginx_bind_address_ipv4": {
+            "type": "string",
+            "description": "The IPv4 address that nginx will bind to for this application. Defaults to '0.0.0.0'.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "nginx_bind_address_ipv6": {
+            "type": "string",
+            "description": "The IPv6 address that nginx will bind to for this application. Defaults to '::'.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ports": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of port mappings for the application. Each mapping should be in the format 'scheme:hostPort:containerPort' (e.g., 'https:443:8080').",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Dokku application. This resource enables the configuration and deployment of applications on a Dokku host, supporting environment variables, domains, buildpacks, and port mapping.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_clickhouse_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the ClickHouse service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stopped": {
+            "type": "bool",
+            "description": "Whether the ClickHouse service is stopped. When true, the database service will not be running but data will be preserved.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a ClickHouse service in Dokku. Requires the ClickHouse Dokku plugin to be installed.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_clickhouse_service_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Alternative environment variable name to use in exposing credentials to the app.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "app": {
+            "type": "string",
+            "description": "The name of the Dokku application that will be linked to the ClickHouse service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_string": {
+            "type": "string",
+            "description": "Additional connection parameters to append to the service URL environment variables as a query string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "The name of the ClickHouse service to link to the application.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a Dokku ClickHouse service to an application, creating a connection between them and injecting the ClickHouse connection details into the application's environment variables.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_mysql_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "expose_on": {
+            "type": "string",
+            "description": "Network address and port to expose the service on. Format is 'host:port' (e.g. '0.0.0.0:8085'). If not specified, the service remains unexposed.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The Docker image to use for the MySQL service. If not specified, Dokku will use its default MySQL image.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image_version": {
+            "type": "string",
+            "description": "The version of MySQL to use. If not specified, Dokku will use its default version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the MySQL service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stopped": {
+            "type": "bool",
+            "description": "Whether the MySQL service is stopped. When true, the database service will not be running but data will be preserved.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a MySQL service in Dokku. Requires the MySQL Dokku plugin to be installed.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_mysql_service_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Alternative environment variable name to use in exposing credentials to the app.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "app": {
+            "type": "string",
+            "description": "The name of the Dokku application that will be linked to the MySQL service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_string": {
+            "type": "string",
+            "description": "Additional connection parameters to append to the DATABASE_URL environment variable as a query string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "The name of the MySQL service to link to the application.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a Dokku MySQL service to an application, creating a connection between them and injecting the MySQL connection details into the application's environment variables.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_postgres_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "expose_on": {
+            "type": "string",
+            "description": "Network address and port to expose the service on. Format is 'host:port' (e.g. '0.0.0.0:8085'). If not specified, the service remains unexposed.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The Docker image to use for the Postgres service. If not specified, Dokku will use its default Postgres image.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image_version": {
+            "type": "string",
+            "description": "The version of Postgres to use. If not specified, Dokku will use its default version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Postgres service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stopped": {
+            "type": "bool",
+            "description": "Whether the Postgres service is stopped. When true, the database service will not be running but data will be preserved.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Postgres database service, allowing for creation and configuration of Postgres databases. Requires the Postgres Dokku plugin to be installed.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_postgres_service_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Alternative environment variable name to use in exposing credentials to the app.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "app": {
+            "type": "string",
+            "description": "The name of the Dokku application that will be linked to the Postgres service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_string": {
+            "type": "string",
+            "description": "Additional connection parameters to append to the DATABASE_URL environment variable as a query string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "The name of the Postgres service to link to the application.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a Dokku Postgres service to an application, creating a connection between them and injecting the database connection details into the application's environment variables.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_redis_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "expose_on": {
+            "type": "string",
+            "description": "Network address and port to expose the service on. Format is 'host:port' (e.g. '0.0.0.0:8085'). If not specified, the service remains unexposed.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The Docker image to use for the Redis service. If not specified, Dokku will use its default Redis image.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "image_version": {
+            "type": "string",
+            "description": "The version of Redis to use. If not specified, Dokku will use its default version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Redis service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stopped": {
+            "type": "bool",
+            "description": "Whether the Redis service is stopped. When true, the Redis service will not be running but data will be preserved.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Redis service in Dokku. Requires the Redis Dokku plugin to be installed.",
+        "description_kind": "plain"
+      }
+    },
+    "dokku_redis_service_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Alternative environment variable name to use in exposing credentials to the app.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "app": {
+            "type": "string",
+            "description": "The name of the Dokku application that will be linked to the Redis service.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_string": {
+            "type": "string",
+            "description": "Additional connection parameters to append to the REDIS_URL environment variable as a query string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "The name of the Redis service to link to the application.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a Dokku Redis service to an application, creating a connection between them and injecting the redis connection details into the application's environment variables.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

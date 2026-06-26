@@ -1,0 +1,1139 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "Caputchin management API endpoint. Defaults to https://caputchin.com/api. May be overridden via the CAPUTCHIN_ENDPOINT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "management_token": {
+          "type": "string",
+          "description": "Caputchin management API token (account-PAT or troop-PAT). May be supplied via the CAPUTCHIN_MANAGEMENT_TOKEN environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Manage Caputchin troops, site keys, per-site configuration, and read account / stats data.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "caputchin_account_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-issued token identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable token name. Immutable (the management API has no PATCH on tokens); changing this attribute forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Display-friendly prefix of the token value (first 16 chars). Rotates together with the secret half on every in-place rotation; refer to tokens across rotation by `id` or `name`, not `prefix`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Full bearer-token value. Returned ONCE at creation and on every in-place rotation (`secret_version` bump). Pipe to a secrets store immediately. The value is stored sensitively in state; treat the state file as secret-bearing. Lost values cannot be recovered; rotate via `secret_version` to mint a fresh value into state without destroying the resource.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "secret_version": {
+            "type": "number",
+            "description": "Provider-tracked rotation counter. Bump the value to trigger an in-place credential rotation: the provider issues POST /tokens/{id}/rotate and writes the new value into the `secret` attribute. The token row's `id`, `name`, and `type` are unchanged; the `prefix` rotates together with the secret. Any troop attachments survive. Defaults to `0`; set explicitly to start at a different baseline. Initial Create does NOT call rotate regardless of the planned version (the mint already returns a fresh credential). Refused by the API if the calling token is the rotation target.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Token type. `account` (master, capped at 1 active per account, free) or `troop` (per-troop-scope; mint is free, seat is claimed at attach time). Defaults to `troop`. Immutable; changing forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A Caputchin management token (Personal Access Token). `type='account'` mints a master PAT (free, capped at 1 active per account); `type='troop'` mints a troop-scoped PAT. Minting itself is free under the per-troop-axis seat model (token rows do not consume a seat). The seat is claimed at attach time (`caputchin_troop_pat`); each attached troop's non-revoked attachment count is capped at `accounts.seats_total - user_used`. The secret is returned only at creation; the resource stores it sensitively in state. Both `name` and `type` are immutable post-mint; changing either replaces the token (the management API does not support PATCH on tokens). To rotate the credential in place without losing troop attachments, bump `secret_version`. The provider issues POST /tokens/{id}/rotate; the row's `id` and `name` stay stable, the `prefix` rotates together with the secret half, and the rotated value lands in `secret`. Attach troop-PATs to specific troops via the separate `caputchin_troop_pat` resource.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_custom_game_run_artifact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "game_id": {
+            "type": "string",
+            "description": "Custom game id, e.g. `customer/my-game`. Forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id encoding the composite key as `scope|id|game` (scope is troop|site). Matches the import id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "module_paths": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Local file paths for additional modules the run entry imports (`.wasm` or `.js`). Each filename must match `^[a-zA-Z0-9_-]+\\.(wasm|js)$` and is forwarded as-is. Max 16 modules, 5 MB per file, 10 MB combined.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "run_path": {
+            "type": "string",
+            "description": "Local file path to the headless `run.js` entry. The file's basename is ignored; the server stores it as `run.js`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "self_check_ok": {
+            "type": "bool",
+            "description": "Replay self-check verdict at upload time. Only `true` makes the install gate-eligible. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Site id. Exactly one of `troop_id` / `site_id` is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "source_hash": {
+            "type": "string",
+            "description": "Optional caller-computed drift signal. When this string changes between plans, the resource re-uploads. Recommended: `sha256(filesha256(var.run_path), [for m in var.module_paths : filesha256(m)])`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Troop id. Exactly one of `troop_id` / `site_id` is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "uploaded_at": {
+            "type": "string",
+            "description": "ISO timestamp the active artifact was first vendored. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version_hash": {
+            "type": "string",
+            "description": "Server-assigned content-hash of the active artifact. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Uploads the headless replay artifact for a custom game (run.js plus optional wasm/js modules) so the game becomes eligible as a verification gate. The custom game must already exist via `caputchin_customized_game` with `source = \"custom\"`. Set exactly one of `troop_id` / `site_id`. Free for all tiers.\n\nDrift detection: the resource never reads local files at plan time, so a file edit alone won't trigger an update. Either taint the resource or pass a `source_hash` that the HCL recomputes via `sha256(filesha256(var.run_path), [for m in var.module_paths : filesha256(m)])` so a content change drives a new plan.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_custom_game_schema": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "axis": {
+            "type": "string",
+            "description": "Override axis: `locale`, `skin`, or `configuration`. Forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "game_id": {
+            "type": "string",
+            "description": "Game id (e.g. a custom id not in the marketplace) the schema describes. Forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id encoding the composite key as `scope|id|game|axis` (scope is troop|site). Matches the import id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "schema": {
+            "type": "string",
+            "description": "JSON object declaring the axis's editable fields (use `jsonencode({...})`). Compared semantically.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Site id for a per-site schema. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Troop id for a troop-wide schema. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Server timestamp (ISO 8601) of the last write.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Per-axis editable-field schema for a custom (non-marketplace) game, declaring the keys customers may override. Set exactly one of `troop_id` / `site_id`. Carries no plan-tier gate (it is metadata describing the shape of presets), but requires the game registered first: declare a `caputchin_customized_game` for the same scope + game and set `game_id = caputchin_customized_game.<name>.game_id` so it applies first, else the API rejects the write with `game-not-registered`. Changing scope, game, or axis forces replacement.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_customized_game": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_update": {
+            "type": "bool",
+            "description": "When true, the install re-pins automatically when the indexer ships a newer version that passes the server-side replay check (non-destructive, server-driven). Default false. This is the declarative way to track the latest version. There is no one-shot \"update now\" attribute (Terraform is declarative): a manual re-pin is an imperative API action (`POST /game-customization/game/re-pin`) outside Terraform's model. Tainting + recreating also advances the pin, but it is destructive (the destroy cascade-deletes the game's presets + schemas first), so prefer auto_update.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "game_id": {
+            "type": "string",
+            "description": "Game id (e.g. `caputchin/games/leaf` or a custom id). Forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id encoding the composite key as `scope|id|game` (scope is troop|site). Matches the import id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pinned_version": {
+            "type": "string",
+            "description": "Vendored snapshot id this install serves. Null for custom / not-yet-vendored games. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Site id. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "source": {
+            "type": "string",
+            "description": "`marketplace` or `custom`. Omit to auto-derive from the marketplace catalog (present \u21d2 marketplace, else custom).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Troop id. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_available": {
+            "type": "bool",
+            "description": "True when a newer self-check-passed version exists and auto_update is off. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Registers a game in a scope's customized-games list. This is the REQUIRED parent for any game-axis `caputchin_white_label_preset` or `caputchin_custom_game_schema`: those reject with `game-not-registered` unless the game is registered first, so declare this resource and have the children set `game_id = caputchin_customized_game.<name>.game_id` (which also orders creation correctly). Set exactly one of `troop_id` / `site_id`. Requires the configuration tier (Solo+).\n\nWARNING: destroying this resource cascade-deletes the ENTIRE game customization for the scope: every preset (all axes) and every custom schema for the game, not just the registry row. When children reference its `game_id`, Terraform destroys them before this resource, so the cascade is a backstop; managing children for the same game WITHOUT that reference risks the cascade removing rows Terraform still tracks.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_hosted_verification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email_to": {
+            "type": "string",
+            "description": "Email destination for verification events (server-side requires `@`). May be null to leave unset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether hosted verification is enabled for the site.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Identifier of the site this hosted-verification config belongs to. Changing this attribute forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "number",
+            "description": "Last-update timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "webhook_url": {
+            "type": "string",
+            "description": "Customer webhook destination URL (validated as `^https?://`). May be null to leave unset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Hosted-verification configuration for a site (Alpha tier or above). Singleton per `site_id`: one configuration row, upserted on every apply via PUT. Define exactly one `caputchin_hosted_verification` per `site_id`; concurrent resources targeting the same site will race on update. Destroying this resource removes Terraform tracking but does NOT disable hosted verification or clear destinations server-side; set `enabled = false` and re-apply before destroy if you want the server-side row neutralized.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_site_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_automated_browsers": {
+            "type": "bool",
+            "description": "If true, reject sessions identified as automated browsers (Selenium, Puppeteer, etc.).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "block_non_browser_ua": {
+            "type": "bool",
+            "description": "If true, reject sessions whose User-Agent does not look like a browser. May be null to leave unset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cors_origins": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Allowed origins for verification calls (e.g. `[\"https://example.com\"]`). May be null to leave unset (no CORS check).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "obfuscation_level": {
+            "type": "number",
+            "description": "Browser-instrumentation obfuscation level (1-10).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "pow_challenge_count": {
+            "type": "number",
+            "description": "Number of proof-of-work sub-challenges per session (1-500).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "pow_difficulty": {
+            "type": "number",
+            "description": "Proof-of-work difficulty (1-8). Higher values make the challenge harder to solve.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ratelimit_max": {
+            "type": "number",
+            "description": "Maximum verification requests per second (1-10000), capped at the plan tier ceiling. Values above the tier ceiling are rejected by the server. May be null to use the server's plan-tier default.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "required_headers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Headers that must be present on incoming requests. May be null to leave unset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Identifier of the site this configuration belongs to. Changing this attribute forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Per-site configuration for a Caputchin site key. Singleton: one configuration row per site. Fields you do not set retain the server-side defaults derived from the site's plan tier.\n\nDefine exactly one `caputchin_site_config` per `site_id`; concurrent resources targeting the same site will race on update.\n\nDestroying this resource removes Terraform tracking but does NOT reset the server-side configuration; values set via this resource remain in effect until explicitly changed.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_site_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether the site key is disabled. Disabled keys still exist but reject verification calls. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-issued site identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Public site key (the value embedded in the widget on the customer's site).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable site name. Modifiable in place.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary map of string-string pairs. Any change forces full replacement of the site key (Delete + Create), yielding a fresh `id`, `key`, and `secret`. Use this for compromised-key recovery where a new public key is also required; for routine secret-only rotation, bump `secret_version` instead.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Secret used to authenticate server-side verification calls. Returned at creation time and on every rotation; stored sensitively in state. Treat the Terraform state file as secret-bearing.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "secret_version": {
+            "type": "number",
+            "description": "Provider-tracked rotation counter. Bump the value to trigger an in-place secret rotation: the provider issues POST /sites/{id}/rotate-secret and writes the new value into the `secret` attribute. Site `id` and `key` are unchanged. Defaults to `0`; set explicitly to start at a different baseline. Initial Create does NOT call rotate-secret regardless of the planned version (the mint already returns a fresh secret).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Plan tier inherited from the owning troop. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Identifier of the owning troop. Immutable; changing this attribute forces replacement of the site key.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A Caputchin site key (the public/secret pair a customer embeds in their site and uses to verify users). `troop_id` is immutable; changing it forces replacement.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_site_security_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "require_game": {
+            "type": "bool",
+            "description": "If true, verification on this site key must be gated by a game (server-replayed); if false, verification is proof-of-work only and can be passed without playing a game.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Identifier of the site these settings belong to. Changing this attribute forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Per-site security settings for a Caputchin site key (the game gate). Singleton: one row per site.\n\nWhen `require_game` is true, verification on this site key must be gated by a game the server replays, instead of proof-of-work only. Enabling requires at least one installed marketplace game with a replayable artifact for this site (its own or inherited from the troop); otherwise the API rejects the change.\n\nDestroying this resource removes Terraform tracking but does NOT reset the server-side setting.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troop": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "Owning account identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "can_manage": {
+            "type": "bool",
+            "description": "Whether the calling principal can manage this troop. Always true for a troop this provider manages (created on the caller's own account).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-issued troop identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Troop kind. Always `shared` for resources managed by this provider.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable troop name. Modifiable in place.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "owner_email": {
+            "type": "string",
+            "description": "Email of the troop's owning account. For a troop this provider manages that is the caller's own account email (caller is owner/manager).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Plan tier inherited from the owning account. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A Caputchin troop (the tenant boundary that owns site keys). Only shared troops are creatable; personal troops are auto-created per account and cannot be managed by this resource.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troop_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "Account id of the invitee (resolved server-side by email).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Invitee email. Immutable (the membership row is keyed by the troop+account pair).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-issued membership identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "perms": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "bool",
+                  "description": "May create site keys / configs in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "edit": {
+                  "type": "bool",
+                  "description": "May edit existing site keys / configs in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "manage": {
+                  "type": "bool",
+                  "description": "May manage the troop's members and PAT memberships.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "read": {
+                  "type": "bool",
+                  "description": "May read site keys / configs / stats in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Permission set. Stripping every perm is refused.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scope": {
+            "nested_type": {
+              "attributes": {
+                "kind": {
+                  "type": "string",
+                  "description": "`full` or `partial`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "site_ids": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Per-site allowlist. Required (non-empty) when `kind=\"partial\"`; ignored otherwise.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Site scope. `kind=\"full\"` grants the perms across all sites in the troop; `kind=\"partial\"` restricts them to the listed `site_ids` (at least one).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Owning troop identifier. Immutable.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "would_consume_seat": {
+            "type": "bool",
+            "description": "Whether this membership consumed a fresh user seat at creation time (sharing across troops within the same account is free, so subsequent memberships for an account already in another troop here come back as `false`). Snapshot at Create; preserved through subsequent reads (the management API does not echo it on GET).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A user membership in a Caputchin troop. Invitees are identified by email; the membership row is created idempotently for an existing or newly-invited account. Consumes one user seat if the invitee is not already a member of any troop in this account (sharing across troops is free). `troop_id` and `email` are immutable; changing either forces replacement (the underlying row is per-(troop, account) pair). `perms` and `scope` are mutable in place. Stripping every perm is refused server-side (`no-perms-granted`); destroy the resource to remove the member.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troop_pat": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Server-issued membership identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pat_id": {
+            "type": "string",
+            "description": "Token identifier (from `caputchin_account_token` with `type=\"troop\"`). Immutable.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pat_name": {
+            "type": "string",
+            "description": "Name of the attached token (snapshot of `caputchin_account_token.name`).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pat_prefix": {
+            "type": "string",
+            "description": "Display prefix of the attached token (snapshot of `caputchin_account_token.prefix`).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "perms": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "bool",
+                  "description": "May create site keys / configs in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "edit": {
+                  "type": "bool",
+                  "description": "May edit existing site keys / configs in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "manage": {
+                  "type": "bool",
+                  "description": "May manage the troop's members and PAT memberships.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "read": {
+                  "type": "bool",
+                  "description": "May read site keys / configs / stats in scope.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Permission set. Stripping every perm is refused (`no-perms-granted`); destroy the resource to remove the membership instead.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scope": {
+            "nested_type": {
+              "attributes": {
+                "kind": {
+                  "type": "string",
+                  "description": "`full` or `partial`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "site_ids": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Per-site allowlist. Required (non-empty) when `kind=\"partial\"`; ignored otherwise. The server echoes an empty list when `kind=\"full\"`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Site scope. `kind=\"full\"` grants the perms across all sites in the troop; `kind=\"partial\"` restricts them to the listed `site_ids` (at least one).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Owning troop identifier. Immutable.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Attaches an existing troop-PAT (minted via `caputchin_account_token` with `type=\"troop\"`) to a specific troop with a permission set and scope. Each attachment occupies one of the target troop's token slots; capacity per troop is `accounts.seats_total - user_used` and the management API refuses with `no-troop-slot-available` (HTTP 409) when the troop is at capacity. The same PAT may be attached to multiple troops with different permissions (each attachment counts against THAT troop's slot count independently). `troop_id` and `pat_id` are immutable; changing either forces replacement (the underlying membership row is per-(troop, pat) pair). `perms` and `scope` are mutable in place.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troop_security_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "force_game": {
+            "type": "bool",
+            "description": "If true, every site key in the troop must gate verification with a game, regardless of its own setting.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Identifier of the troop these settings belong to. Changing this attribute forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Troop-wide security settings (the game-gate ceiling). Singleton: one row per troop.\n\nWhen `force_game` is true, every site key in the troop is gated by a game regardless of each site's own setting. Enabling requires at least one installed troop-level marketplace game with a replayable artifact; otherwise the API rejects the change. Requires full-scope create|edit on the troop.\n\nDestroying this resource removes Terraform tracking but does NOT reset the server-side setting.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_white_label_preset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "axis": {
+            "type": "string",
+            "description": "Override axis: `locale`, `skin`, or `configuration`. Forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "game_id": {
+            "type": "string",
+            "description": "Game id (e.g. `caputchin/games/leaf`) for a game-axis preset. Omit for a widget-shell (white-label) preset. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id encoding the composite key as `scope|id|game|axis|name` (scope is troop|site; game empty for a widget-shell preset). Matches the import id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Preset name. Forces replacement (rename = destroy + recreate).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Site id for a per-site preset. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Troop id for a troop-wide preset. Exactly one of troop_id / site_id is required. Forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Server timestamp (ISO 8601) of the last write.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "values": {
+            "type": "string",
+            "description": "JSON object of preset leaf values (use `jsonencode({...})`). Empty-string / null leaves are dropped to match what the API persists (no perpetual diff), so they neither apply nor drift. Compared semantically, so key order and whitespace never produce a diff.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A single white-label / game-customization preset. Per-preset granularity: one resource is one preset row. Set exactly one of `troop_id` (troop-wide baseline) or `site_id` (per-site override). Omit `game_id` for a widget-shell preset (Apex tier); set it for a game-axis preset (configuration = Solo+, skin/locale = Alpha+). A game-axis preset requires the game registered first: declare a `caputchin_customized_game` for the same scope + game and set `game_id = caputchin_customized_game.<name>.game_id` so it applies first, else the API rejects the write with `game-not-registered`. Changing scope, game, axis, or name forces replacement.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "caputchin_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Account email address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Account identifier.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Metadata for the Caputchin account that owns the provider's management token.\n\nIntended for account-level credentials (session cookie or account-PAT). Once troop-PAT typing ships in the platform, troop-PAT callers will be rejected with an upstream authorization error; configurations that may run under a troop-PAT should not depend on this data source.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_site_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether the site key is disabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Site identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Public site key embedded in the widget.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable site name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Plan tier inherited from the owning troop.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "troop_id": {
+            "type": "string",
+            "description": "Owning troop identifier.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Caputchin site key by id. The secret is never returned by this data source; it is only available at creation time on the resource.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_site_stats": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "challenge_blocked": {
+            "type": "number",
+            "description": "Issuance attempts blocked by the per-site security filters.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "failed_client_completion": {
+            "type": "number",
+            "description": "Sessions in which the client-side completion attempt was rejected.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "failed_server_verification": {
+            "type": "number",
+            "description": "Sessions in which the server-side verification call was rejected.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rate_limit_rejections": {
+            "type": "number",
+            "description": "Issuance attempts rejected by the per-second rate limit.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sessions_client_completed": {
+            "type": "number",
+            "description": "Sessions in which the browser-side challenge was completed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sessions_server_verified": {
+            "type": "number",
+            "description": "Sessions whose token was successfully verified by `/siteverify`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sessions_started": {
+            "type": "number",
+            "description": "Total sessions started by the widget.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "Site identifier.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Lifetime counters for a Caputchin site key. Returns monotonic totals across the site's history; time-series breakdowns are not exposed via this data source.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_sites": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "sites": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "number",
+                  "description": "Creation timestamp in milliseconds since the Unix epoch.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "disabled": {
+                  "type": "bool",
+                  "description": "Whether the site key is disabled.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Site identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Public site key embedded in the widget.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable site name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tier": {
+                  "type": "string",
+                  "description": "Plan tier inherited from the owning troop.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "troop_id": {
+                  "type": "string",
+                  "description": "Owning troop identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Visible sites.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Caputchin site keys the caller can read. Use this for cross-resource lookup (for example, wiring `caputchin_site_config` against existing sites). The secret is never returned by this data source; it is only available at creation time on the resource. Names-only sites (sites the caller can see exists but cannot read, per the troop-membership permission model) are intentionally excluded from this list because the additional fields would be unknown.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troop": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "Owning account identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "can_manage": {
+            "type": "bool",
+            "description": "Whether the calling principal can manage this troop (owning account/account-PAT, or the principal's membership `manage` permission).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "number",
+            "description": "Creation timestamp in milliseconds since the Unix epoch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Troop identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Troop kind (`personal` or `shared`).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Troop name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner_email": {
+            "type": "string",
+            "description": "Email of the troop's owning account. Returned only to callers who manage the troop; null otherwise.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Plan tier inherited from the owning account.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Caputchin troop by id.",
+        "description_kind": "plain"
+      }
+    },
+    "caputchin_troops": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "troops": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "Owning account identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "can_manage": {
+                  "type": "bool",
+                  "description": "Whether the calling principal can manage this troop (owning account/account-PAT, or the principal's membership `manage` permission).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "number",
+                  "description": "Creation timestamp in milliseconds since the Unix epoch.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Troop identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "Troop kind (`personal` or `shared`).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Troop name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "owner_email": {
+                  "type": "string",
+                  "description": "Email of the troop's owning account. Returned only for troops the caller manages; null otherwise.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tier": {
+                  "type": "string",
+                  "description": "Plan tier inherited from the owning account.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Visible troops.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "All Caputchin troops visible to the caller (own-account troops plus troops where the caller has a membership). Use this for cross-resource lookup.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

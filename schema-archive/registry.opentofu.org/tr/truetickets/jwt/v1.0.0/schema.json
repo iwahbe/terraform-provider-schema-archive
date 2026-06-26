@@ -1,0 +1,155 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "description": "Generate JSON Web Tokens (JWTs) directly inside Terraform/OpenTofu configuration. The provider has no configuration: declare it and use the jwt_signed_token or jwt_hashed_token resources, or the jwt_decoded_token data source.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "jwt_hashed_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algorithm": {
+            "type": "string",
+            "description": "HMAC algorithm. One of `HS256`, `HS384`, `HS512`. Defaults to `HS512`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "claims_json": {
+            "type": "string",
+            "description": "The token's claims, as a JSON object.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "SHA-256 hex digest of the signed token. Stable for a given (algorithm, secret, secret_encoding, claims_json) tuple.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "kid": {
+            "type": "string",
+            "description": "Optional `kid` (key ID) value to set in the JWT header so downstream verifiers can pick the matching shared secret from a key registry.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "HMAC secret used to sign the JWT.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "secret_encoding": {
+            "type": "string",
+            "description": "How `secret` is encoded. One of `raw`, `base64`, `hex`. Defaults to `raw`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The signed JWT, as a compact-serialized string.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Generates a JWT signed with an HMAC secret (HS256/HS384/HS512). The token is computed locally during apply and stored in state as a sensitive computed attribute.",
+        "description_kind": "plain"
+      }
+    },
+    "jwt_signed_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algorithm": {
+            "type": "string",
+            "description": "Signing algorithm. One of `RS256`, `RS384`, `RS512`, `ES256`, `ES384`, `ES512`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "claims_json": {
+            "type": "string",
+            "description": "The token's claims, as a JSON object.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "SHA-256 hex digest of the signed token. Stable for a given (algorithm, key, claims_json) tuple.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "PEM-encoded RSA or ECDSA private key matching `algorithm`.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "kid": {
+            "type": "string",
+            "description": "Optional `kid` (key ID) value to set in the JWT header. Required when consumers look up the public key from a JWKS keyed by `kid` (for example, Google service account JWKS at `https://www.googleapis.com/service_accounts/v1/jwk/<email>`).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The signed JWT, as a compact-serialized string.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Generates a JWT signed with an asymmetric private key (RSA or ECDSA). The token is computed locally during apply and stored in state as a sensitive computed attribute.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "jwt_decoded_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algorithm": {
+            "type": "string",
+            "description": "Signing algorithm declared in the header `alg` claim.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "claims_json": {
+            "type": "string",
+            "description": "JSON-encoded JWT claims payload.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "header_json": {
+            "type": "string",
+            "description": "JSON-encoded JWT header (JOSE header).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "signature_b64": {
+            "type": "string",
+            "description": "Base64url-encoded JWT signature (third segment).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The compact-serialized JWT to decode.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "Decodes a compact-serialized JWT into its header, claims, and signature. The signature is **not** verified: use this data source to read claims out of a token whose trust is already established by other means (TLS, mTLS, key-rotated upstream service).",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
