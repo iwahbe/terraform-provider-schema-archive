@@ -1,0 +1,604 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "allow_domain_create_delete": {
+          "type": "bool",
+          "description": "Whether to use AddDomain / DeleteDomain to send domain registration/deletion requests, otherwise will only read and update domains, never register or delete (extreme caution should be taken when enabling this option!)",
+          "description_kind": "plain",
+          "required": true
+        },
+        "high_performance": {
+          "type": "bool",
+          "description": "Whether to use high-performance connection establishment (might need additional setup) (environment variable HEXONET_HIGH_PERFORMANCE)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "live": {
+          "type": "bool",
+          "description": "Whether to use the live (true) or the OTE/test (false) system (environment variable HEXONET_LIVE)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "mfa_token": {
+          "type": "string",
+          "description": "MFA token (required if MFA is enabled) (environment variable HEXONET_MFA_TOKEN)",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password (environment variable HEXONET_PASSWORD)",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "role": {
+          "type": "string",
+          "description": "Role (sub-user) (environment variable HEXONET_ROLE)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Username (environment variable HEXONET_USERNAME)",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Provider for Hexonet domain API",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "hexonet_contact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address_line_1": {
+            "type": "string",
+            "description": "Address line 1",
+            "description_kind": "plain",
+            "required": true
+          },
+          "address_line_2": {
+            "type": "string",
+            "description": "Address line 2",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "city": {
+            "type": "string",
+            "description": "City",
+            "description_kind": "plain",
+            "required": true
+          },
+          "country": {
+            "type": "string",
+            "description": "Country (2-letter country code)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "disclose": {
+            "type": "bool",
+            "description": "Whether to disclose personal details of this contact publicly",
+            "description_kind": "plain",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "description": "E-Mail address",
+            "description_kind": "plain",
+            "required": true
+          },
+          "extra_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of X- attributes, the X- is prefixed automatically (see https://github.com/hexonet/hexonet-api-documentation/blob/master/API/DOMAIN/CONTACT/MODIFYCONTACT.md)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "fax": {
+            "type": "string",
+            "description": "Fax number (example: +1.5555555555)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name of contact person",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the contact",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id_authority": {
+            "type": "string",
+            "description": "Authority of the government ID used in id_number",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "id_number": {
+            "type": "string",
+            "description": "Government ID number",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name of contact person",
+            "description_kind": "plain",
+            "required": true
+          },
+          "middle_name": {
+            "type": "string",
+            "description": "Middle name of contact person",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "organization": {
+            "type": "string",
+            "description": "Organization",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number (example: +1.5555555555)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "State",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of contact person (example: Mr., Mrs., Dr., ...)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vat_id": {
+            "type": "string",
+            "description": "VAT ID",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zip": {
+            "type": "string",
+            "description": "ZIP code",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Contact object, used for domain owner/admin/...",
+        "description_kind": "plain"
+      }
+    },
+    "hexonet_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Admin contacts (ADMIN-C) (between 1 and 3 entries)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_code": {
+            "type": "string",
+            "description": "Auth code of the domain (for transfers)",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "billing_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Billing contacts (BILLING-C) (between 0 and 3 entries)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dnssec_dnskey_records": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "DNSSEC DNSKEY records",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dnssec_ds_records": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "DNSSEC DS records",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dnssec_max_sig_lifespan": {
+            "type": "number",
+            "description": "DNSSEC maximum key lifespan",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain name (example: example.com)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "extra_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of X- attributes, the X- is prefixed automatically (see https://github.com/hexonet/hexonet-api-documentation/blob/master/API/DOMAIN/MODIFYDOMAIN.md)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name_servers": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Name servers to associate with the domain (between 1 and 12)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "owner_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Owner contact (exactly 1 entry)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Various status flags of the domain (clientTransferProhibited, ...)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tech_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Tech contacts (TECH-C) (between 0 and 3 entries)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Domain object, can be used to configure most attributes of domains",
+        "description_kind": "plain"
+      }
+    },
+    "hexonet_nameserver": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "Hostname of the nameserver (example: ns1.example.com)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ip_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IP addresses of the nameserver (between 1 and 12 entries)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Nameserver object, used to register so-called \"glue\" records when a domain's nameservers use hosts on the same domain (example: example.com using ns1.example.com)",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "hexonet_contact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address_line_1": {
+            "type": "string",
+            "description": "Address line 1",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "address_line_2": {
+            "type": "string",
+            "description": "Address line 2",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "city": {
+            "type": "string",
+            "description": "City",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "country": {
+            "type": "string",
+            "description": "Country (2-letter country code)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disclose": {
+            "type": "bool",
+            "description": "Whether to disclose personal details of this contact publicly",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "E-Mail address",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "extra_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of X- attributes, the X- is prefixed automatically (see https://github.com/hexonet/hexonet-api-documentation/blob/master/API/DOMAIN/CONTACT/MODIFYCONTACT.md)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fax": {
+            "type": "string",
+            "description": "Fax number (example: +1.5555555555)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name of contact person",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the contact",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id_authority": {
+            "type": "string",
+            "description": "Authority of the government ID used in id_number",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "id_number": {
+            "type": "string",
+            "description": "Government ID number",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name of contact person",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "middle_name": {
+            "type": "string",
+            "description": "Middle name of contact person",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization": {
+            "type": "string",
+            "description": "Organization",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number (example: +1.5555555555)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "State",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of contact person (example: Mr., Mrs., Dr., ...)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vat_id": {
+            "type": "string",
+            "description": "VAT ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zip": {
+            "type": "string",
+            "description": "ZIP code",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Contact object, used for domain owner/admin/...",
+        "description_kind": "plain"
+      }
+    },
+    "hexonet_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Admin contacts (ADMIN-C) (between 1 and 3 entries)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_code": {
+            "type": "string",
+            "description": "Auth code of the domain (for transfers)",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "billing_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Billing contacts (BILLING-C) (between 0 and 3 entries)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dnssec_dnskey_records": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "DNSSEC DNSKEY records",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dnssec_ds_records": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "DNSSEC DS records",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dnssec_max_sig_lifespan": {
+            "type": "number",
+            "description": "DNSSEC maximum key lifespan",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain name (example: example.com)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "extra_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of X- attributes, the X- is prefixed automatically (see https://github.com/hexonet/hexonet-api-documentation/blob/master/API/DOMAIN/MODIFYDOMAIN.md)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name_servers": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Name servers to associate with the domain (between 1 and 12)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Owner contact (exactly 1 entry)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Various status flags of the domain (clientTransferProhibited, ...)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tech_contacts": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Tech contacts (TECH-C) (between 0 and 3 entries)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Domain object",
+        "description_kind": "plain"
+      }
+    },
+    "hexonet_nameserver": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "Hostname of the nameserver (example: ns1.example.com)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ip_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IP addresses of the nameserver (between 1 and 12 entries)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Nameserver object, used to register so-called \"glue\" records when a domain's nameservers use hosts on the same domain (example: example.com using ns1.example.com)",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

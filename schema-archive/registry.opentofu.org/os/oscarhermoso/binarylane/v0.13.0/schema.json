@@ -1,0 +1,1627 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_endpoint": {
+          "type": "string",
+          "description": "Binary Lane API endpoint. Defaults to `https://api.binarylane.com.au/v2`, but can be overridden by setting this attribute or the `BINARYLANE_API_ENDPOINT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "api_token": {
+          "type": "string",
+          "description": "Binary Lane API token. If not defined, will default to `BINARYLANE_API_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "binarylane_load_balancer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "forwarding_rules": {
+            "nested_type": {
+              "attributes": {
+                "entry_protocol": {
+                  "type": "string",
+                  "description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The load balancer will forward HTTP traffic that matches this rule. |\n| https | The load balancer will forward HTTPS traffic that matches this rule. |\n\n",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "health_check": {
+            "nested_type": {
+              "attributes": {
+                "path": {
+                  "type": "string",
+                  "description": "Leave null to accept the default '/' path.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "Leave null to accept the default HTTP protocol.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the load balancer to fetch.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "The IPv4 address of the load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname of the load balancer.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Leave null to create an anycast load balancer.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_ids": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "A list of server IDs to assign to this load balancer.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers. See [the docs](https://support.binarylane.com.au/support/solutions/articles/1000025661-load-balancer) for more information.",
+        "description_kind": "markdown"
+      }
+    },
+    "binarylane_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "advanced_features": {
+            "nested_type": {
+              "attributes": {
+                "cloud_init": {
+                  "type": "bool",
+                  "description": "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "driver_disk": {
+                  "type": "bool",
+                  "description": "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "emulated_devices": {
+                  "type": "bool",
+                  "description": "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "emulated_hyperv": {
+                  "type": "bool",
+                  "description": "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "emulated_tpm": {
+                  "type": "bool",
+                  "description": "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "local_rtc": {
+                  "type": "bool",
+                  "description": "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "nested_virt": {
+                  "type": "bool",
+                  "description": "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "qemu_guest_agent": {
+                  "type": "bool",
+                  "description": "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "uefi_boot": {
+                  "type": "bool",
+                  "description": "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "unset_uuid": {
+                  "type": "bool",
+                  "description": "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "backups": {
+            "type": "bool",
+            "description": "If `true` this will enable two daily backups for the server. By default, backups are disabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "disk": {
+            "type": "number",
+            "description": "The total storage in GB for this server. Leave null to accept the default for the size Valid values:\n  - must be a multiple of 5\n  - \\> 60 GB must be a multiple of 10\n  - \\> 200 GB must be a multiple of 100",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the server to fetch.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ipv6": {
+            "type": "bool",
+            "description": "If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "The total memory in MB for this server. Leave null to accept the default size. Valid values:\n  - must be a multiple of 128\n  - \\> 2048 MB must be a multiple of 1024\n  - \\> 16384 MB must be a multiple of 2048\n  - \\> 24576 MB must be a multiple of 4096",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "password_change_supported": {
+            "type": "bool",
+            "description": "If this is true then the `password` attribute can be changed with Terraform. If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear the root/administrator password allowing the password to be changed via the web console.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permalink": {
+            "type": "string",
+            "description": "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "port_blocking": {
+            "type": "bool",
+            "description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "private_ipv4_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The private IPv4 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "private_ipv6_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The private IPv6 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_ipv4_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The public IPv4 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_ipv4_count": {
+            "type": "number",
+            "description": "The number of public IPv4 addresses to assign to the server.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "public_ipv6_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The public IPv6 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The slug of the selected region.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "separate_private_network_interface": {
+            "type": "bool",
+            "description": "This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled, a separate private network interface is provided for the server's VPC traffic.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "size": {
+            "type": "string",
+            "description": "The slug of the selected size.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_and_destination_check": {
+            "type": "bool",
+            "description": "This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled (which is `true` by default), your server will only be able to send or receive packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able to send and receive packets addressed to any server. This is typically used when you want to use your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.\n",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_data": {
+            "type": "string",
+            "description": "A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows). See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "vpc_id": {
+            "type": "number",
+            "description": "Leave null to use default (public) network for the selected region.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "vpc_ipv4_address": {
+            "type": "string",
+            "description": "If provided this will be the IPv4 address for the server's private VPC network adapter. If this is unspecified, then an unused IPv4 address will be assigned. This field is only valid when `vpc_id` is provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_server_firewall_rules": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "firewall_rules": {
+            "nested_type": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "destination_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "destination_ports": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The destination ports to match for this rule. Leave null or empty to match on all ports.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "source_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "number",
+            "description": "The ID of the server for which firewall rules should be listed.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieve details about the External Firewall Rules assigned to a BinaryLane server.",
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default": {
+            "type": "bool",
+            "description": "If `true`, this SSH key will be included on all new server installations (if the operating system supports SSH key injection). Default is `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "The fingerprint of the SSH key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The numeric ID of the SSH key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name to help you identify the key.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The public key in OpenSSH \"authorized_keys\" format. This should be a valid public key, such as one generated by `ssh-keygen`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_vpc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The target vpc id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ip_range": {
+            "type": "string",
+            "description": "A private address range that you select during creation, such as the default value of 10.240.0.0/16. Because the virtual network is dedicated to your use, you may use whatever IP address range you like.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name to help identify this VPC.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_vpc_route_entries": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "route_entries": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "An optional description for the route.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "The destination address for this route entry. This may be in CIDR format.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "router": {
+                  "type": "string",
+                  "description": "The server that will receive traffic sent to the destination property in this VPC.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Submit null to leave unaltered, submit an empty list to clear all route entries. It is not possible to PATCH individual route entries, to alter a route entry submit the entire list of route entries you wish to save.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "vpc_id": {
+            "type": "number",
+            "description": "The target vpc id.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "binarylane_images": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "images": {
+            "nested_type": {
+              "attributes": {
+                "backup_info": {
+                  "nested_type": {
+                    "attributes": {
+                      "backup_disks": {
+                        "nested_type": {
+                          "attributes": {
+                            "description": {
+                              "type": "string",
+                              "description": "A description of this disk.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "id": {
+                              "type": "number",
+                              "description": "The ID of this backup disk.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "min_disk_size": {
+                              "type": "number",
+                              "description": "This is the minimum disk size in GB required to restore this disk image.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "size_gigabytes": {
+                              "type": "number",
+                              "description": "This is the compressed size of the disk image in GB.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "A list of the individual disks that make up this backup.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "iso": {
+                        "type": "bool",
+                        "description": "If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "locked": {
+                        "type": "bool",
+                        "description": "If this is true the backup is locked and cannot be replaced.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "offsite": {
+                        "type": "bool",
+                        "description": "If this is true, an attempt to create an offsite copy was made. This does not mean that the offsite copy attempt was successful or that the copy still exists.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "server_id": {
+                        "type": "number",
+                        "description": "The server ID that was used to create this backup.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "\n| Value | Description |\n| ----- | ----------- |\n| daily | A backup which is scheduled to be taken each day. |\n| weekly | A backup which is scheduled to be taken each week. |\n| monthly | A backup which is scheduled to be taken each month. |\n| temporary | A backup which is created on demand and only retained for a maximum of seven days. |\n\n",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "If this image is a backup, this object will provide further information.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "If this is a backup image this is the date and time in ISO8601 format when the image was created.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description that may provide further details or warnings about the image.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "distribution": {
+                  "type": "string",
+                  "description": "If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "distribution_info": {
+                  "nested_type": {
+                    "attributes": {
+                      "features": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Features supported by this distribution.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "image_id": {
+                        "type": "number",
+                        "description": "If this is a backup image, the operating system ID of the server at the time the backup was created.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "password_recovery": {
+                        "type": "string",
+                        "description": "Supported methods of password recovery.\n\n| Value | Description |\n| ----- | ----------- |\n| manual | Password must be reset manually using the recovery console and rescue disk. |\n| offline-clear | Password can be cleared for the admin/root user only. New password needs to be provided on login via the console (Requires restart). |\n| offline-change | Password can be reset and new credentials sent (Requires restart). |\n| online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |\n\n",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "remote_access_user": {
+                        "type": "string",
+                        "description": "User name to use when connecting via remote access (RDP or SSH).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "This object may provide further information about the distribution.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "distribution_surcharges": {
+                  "nested_type": {
+                    "attributes": {
+                      "surcharge_base_cost": {
+                        "type": "number",
+                        "description": "The additional cost for using this operating system as the base image for a size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "surcharge_min_vcpu": {
+                        "type": "number",
+                        "description": "The minimum vcpu count for surcharge calculations.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "surcharge_per_memory_max_megabytes": {
+                        "type": "number",
+                        "description": "The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "surcharge_per_memory_megabyte": {
+                        "type": "number",
+                        "description": "The additional cost per MB for using this operating system as the base image for a size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "surcharge_per_vcpu": {
+                        "type": "number",
+                        "description": "The additional cost per vcpu for using this operating system as the base image for a size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "error_message": {
+                  "type": "string",
+                  "description": "If the image creation failed this may provide further information.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "full_name": {
+                  "type": "string",
+                  "description": "If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "The ID of this image.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "min_disk_size": {
+                  "type": "number",
+                  "description": "For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "min_memory_megabytes": {
+                  "type": "number",
+                  "description": "This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "public": {
+                  "type": "bool",
+                  "description": "A public image is available to all users. A private image is available only to the account that created the image.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "regions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The slugs of the regions where the image is available for use.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "size_gigabytes": {
+                  "type": "number",
+                  "description": "For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "\n| Value | Description |\n| ----- | ----------- |\n| NEW | The image is new. |\n| available | The image is available for use. |\n| pending | The image is pending and is not yet available for use. |\n| deleted | The image has been deleted and is no longer available for use. |\n\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "\n| Value | Description |\n| ----- | ----------- |\n| custom | An image uploaded by a user. |\n| snapshot | A snapshot. Snapshot creation is not currently supported so only distribution images will have this value. |\n| backup | A backup of a server. |\n\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Queries for distribution will include images that have pre-installed applications.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_load_balancer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "forwarding_rules": {
+            "nested_type": {
+              "attributes": {
+                "entry_protocol": {
+                  "type": "string",
+                  "description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The load balancer will forward HTTP traffic that matches this rule. |\n| https | The load balancer will forward HTTPS traffic that matches this rule. |\n\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "health_check": {
+            "type": [
+              "object",
+              {
+                "path": "string",
+                "protocol": "string"
+              }
+            ],
+            "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the load balancer to fetch.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "The IPv4 address of the load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname of the load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Leave null to create an anycast load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_ids": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "A list of server IDs to assign to this load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve details about a BinaryLane Load Balancer.",
+        "description_kind": "markdown"
+      }
+    },
+    "binarylane_regions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "available": {
+                  "type": "bool",
+                  "description": "Whether this region is available for the allocation of new resources.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "features": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "A list of features available for resources in this region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name_servers": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "A list of nameservers available for resources in this region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "sizes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The slugs of the sizes available in this region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "The unique slug for this region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "advanced_features": {
+            "type": [
+              "object",
+              {
+                "cloud_init": "bool",
+                "driver_disk": "bool",
+                "emulated_devices": "bool",
+                "emulated_hyperv": "bool",
+                "emulated_tpm": "bool",
+                "local_rtc": "bool",
+                "nested_virt": "bool",
+                "qemu_guest_agent": "bool",
+                "uefi_boot": "bool",
+                "unset_uuid": "bool"
+              }
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "backups": {
+            "type": "bool",
+            "description": "If `true` this will enable two daily backups for the server. By default, backups are disabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "disk": {
+            "type": "number",
+            "description": "The total storage in GB for this server. Leave null to accept the default for the size Valid values:\n  - must be a multiple of 5\n  - \\> 60 GB must be a multiple of 10\n  - \\> 200 GB must be a multiple of 100",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the server to fetch.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ipv6": {
+            "type": "bool",
+            "description": "If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "The total memory in MB for this server. Leave null to accept the default size. Valid values:\n  - must be a multiple of 128\n  - \\> 2048 MB must be a multiple of 1024\n  - \\> 16384 MB must be a multiple of 2048\n  - \\> 24576 MB must be a multiple of 4096",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permalink": {
+            "type": "string",
+            "description": "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "port_blocking": {
+            "type": "bool",
+            "description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "private_ipv4_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The private IPv4 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "private_ipv6_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The private IPv6 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_ipv4_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The public IPv4 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_ipv6_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The public IPv6 addresses assigned to the server.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The slug of the selected region.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "separate_private_network_interface": {
+            "type": "bool",
+            "description": "This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled, a separate private network interface is provided for the server's VPC traffic.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "size": {
+            "type": "string",
+            "description": "The slug of the selected size.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source_and_destination_check": {
+            "type": "bool",
+            "description": "This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled (which is `true` by default), your server will only be able to send or receive packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able to send and receive packets addressed to any server. This is typically used when you want to use your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.\n",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_data": {
+            "type": "string",
+            "description": "A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows). See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vpc_id": {
+            "type": "number",
+            "description": "Leave null to use default (public) network for the selected region.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vpc_ipv4_address": {
+            "type": "string",
+            "description": "If provided this will be the IPv4 address for the server's private VPC network adapter. If this is unspecified, then an unused IPv4 address will be assigned. This field is only valid when `vpc_id` is provided.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve details about a BinaryLane Server.",
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_server_firewall_rules": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "firewall_rules": {
+            "nested_type": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "destination_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "destination_ports": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The destination ports to match for this rule. Leave null or empty to match on all ports.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "source_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "number",
+            "description": "The ID of the server for which firewall rules should be listed.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieve details about the External Firewall Rules assigned to a BinaryLane server.",
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_sizes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "image": {
+            "type": "string",
+            "description": "If null or not provided regions that support the size are included in the returned objects regardless of operating system. If this is provided it must be the id or slug of an operating system image and will cause only valid regions for the size and operating system to be included in the returned objects.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "number",
+            "description": "If supplied only sizes available for a resize the specified server will be returned. This parameter is only available when authenticated.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "sizes": {
+            "nested_type": {
+              "attributes": {
+                "available": {
+                  "type": "bool",
+                  "description": "If this is false the size is not available for new servers.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cpu_description": {
+                  "type": "string",
+                  "description": "A description of the CPU provided in this size.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description of this size.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "disk": {
+                  "type": "number",
+                  "description": "The included storage for this size in GB.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "excess_transfer_cost_per_gigabyte": {
+                  "type": "number",
+                  "description": "The excess charged for any transfer above the included data transfer in AU$ per GB.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "The included memory for this size in MB.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "options": {
+                  "nested_type": {
+                    "attributes": {
+                      "backups_cost_per_backup_per_gigabyte": {
+                        "type": "number",
+                        "description": "The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "daily_backups": {
+                        "type": "number",
+                        "description": "The number of daily backups included in the base size cost.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "discount_for_no_public_ipv4": {
+                        "type": "number",
+                        "description": "This is the discount (if any) that is applied if no public IPv4 addresses are selected.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "disk_cost_per_additional_gigabyte": {
+                        "type": "number",
+                        "description": "The additional cost per GB per month for additional storage space.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "disk_max": {
+                        "type": "number",
+                        "description": "The maximum storage in GB permitted on this size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "disk_min": {
+                        "type": "number",
+                        "description": "The minimum storage in GB permitted on this size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "ipv4_addresses_cost_per_address": {
+                        "type": "number",
+                        "description": "The additional cost per public IPv4 address per month for additional IPv4 addresses.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "ipv4_addresses_max": {
+                        "type": "number",
+                        "description": "The maximum number of IPv4 addresses permitted on this size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "memory_cost_per_additional_megabyte": {
+                        "type": "number",
+                        "description": "The additional cost per MB per month for additional memory.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "memory_max": {
+                        "type": "number",
+                        "description": "The maximum memory in MB permitted on this size.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "monthly_backups": {
+                        "type": "number",
+                        "description": "The number of monthly backups included in the base size cost.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "offsite_backup_frequency_cost": {
+                        "nested_type": {
+                          "attributes": {
+                            "daily_per_gigabyte": {
+                              "type": "number",
+                              "description": "The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "monthly_per_gigabyte": {
+                              "type": "number",
+                              "description": "The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "weekly_per_gigabyte": {
+                              "type": "number",
+                              "description": "The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "offsite_backups_cost_per_gigabyte": {
+                        "type": "number",
+                        "description": "The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "restricted_disk_values": {
+                        "type": [
+                          "list",
+                          "number"
+                        ],
+                        "description": "If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "transfer_cost_per_additional_gigabyte": {
+                        "type": "number",
+                        "description": "The additional cost per GB per month for additional included transfer.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "transfer_max": {
+                        "type": "number",
+                        "description": "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "weekly_backups": {
+                        "type": "number",
+                        "description": "The number of weekly backups included in the base size cost.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "price_hourly": {
+                  "type": "number",
+                  "description": "Hourly price in AU$.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "price_monthly": {
+                  "type": "number",
+                  "description": "Monthly Price in AU$.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "regions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "A list of region slugs where this size is available regardless of stock.\nIf this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,\notherwise not all regions listed will support all operating systems on this size.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "regions_out_of_stock": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "A list of region slugs where the size is normally available but is currently not available due to lack of stock.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "size_type": {
+                  "nested_type": {
+                    "attributes": {
+                      "description": {
+                        "type": "string",
+                        "description": "The description of this size type, generally used to indicate the intended use case for sizes of this type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of this size type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "slug": {
+                        "type": "string",
+                        "description": "The slug of this size type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The type of this size, generally used to differentiate sizes optimized for different usages.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "The slug of this size.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "storage_description": {
+                  "type": "string",
+                  "description": "A description of the storage provided in this size.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "transfer": {
+                  "type": "number",
+                  "description": "The included data transfer for this size in TB.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "vcpu_units": {
+                  "type": "string",
+                  "description": "This is the unit that the vcpus field counts, e.g. \"core\" or \"thread\".",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "vcpus": {
+                  "type": "number",
+                  "description": "The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default": {
+            "type": "bool",
+            "description": "If `true`, this SSH key will be included on all new server installations (if the operating system supports SSH key injection).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "The fingerprint of the SSH key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID or fingerprint of the SSH Key to fetch.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name to help you identify the key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The public key in OpenSSH \"authorized_keys\" format. This should be a valid public key, such as one generated by `ssh-keygen`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_vpc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The target vpc id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ip_range": {
+            "type": "string",
+            "description": "A private address range that you select during creation, such as the default value of 10.240.0.0/16. Because the virtual network is dedicated to your use, you may use whatever IP address range you like.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name to help identify this VPC.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "binarylane_vpc_route_entries": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "route_entries": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "An optional description for the route.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "The destination address for this route entry. This may be in CIDR format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "router": {
+                  "type": "string",
+                  "description": "The server that will receive traffic sent to the destination property in this VPC.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The route entries that control how network traffic is directed through the VPC environment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vpc_id": {
+            "type": "number",
+            "description": "The target vpc id.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

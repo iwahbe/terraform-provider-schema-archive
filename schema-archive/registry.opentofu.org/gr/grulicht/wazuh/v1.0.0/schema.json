@@ -1,0 +1,1577 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "Full URL to Wazuh API endpoint (e.g. https://wazuh.example.com:55000).",
+          "description_kind": "plain",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Wazuh API password.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "skip_ssl_verify": {
+          "type": "bool",
+          "description": "Skip SSL certificate verification.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "user": {
+          "type": "string",
+          "description": "Wazuh API username.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "wazuh_active_response": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of agent IDs on which to run the command. If empty, all agents are targeted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "arguments": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of arguments for the Active Response command.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "command": {
+            "type": "string",
+            "description": "Active Response command to run (as defined in Wazuh). If it starts with '!', it refers to a script name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message from Wazuh after the command execution.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when the command was executed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents affected by the command.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "Wazuh agent ID. If not set, the manager may assign one and it will be populated from the API response.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "force_after_registration_time": {
+            "type": "string",
+            "description": "Time the agent must have been registered to allow forced insertion (e.g. \"1h\", \"2h\", \"7d\").",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_disconnected_time_enabled": {
+            "type": "bool",
+            "description": "Whether to enforce the disconnected_time condition when using force.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_disconnected_time_value": {
+            "type": "string",
+            "description": "Time the agent must have been disconnected to allow forced insertion (e.g. \"30m\", \"2h\", \"7d\").",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_enabled": {
+            "type": "bool",
+            "description": "If true, enable force insertion. Allows replacing existing agents matching name/ID/IP according to additional force conditions.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP or IP/NET or ANY. If omitted, Wazuh will try to detect it automatically.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Shared key used for communication with the manager. If omitted, Wazuh may generate / manage it separately.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "manager": {
+            "type": "string",
+            "description": "Manager hostname where the agent is connected.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Agent name in Wazuh.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_name": {
+            "type": "string",
+            "description": "Cluster node name the agent is connected to (if any).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "purge_on_destroy": {
+            "type": "bool",
+            "description": "If true, permanently delete the agent from the key store on destroy (DELETE /agents with purge=true).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "register_ip": {
+            "type": "string",
+            "description": "IP used when registering the agent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Agent status (e.g. active, pending, never_connected, disconnected).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Agent version.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "Wazuh agent ID (e.g. \"001\"). If set, per-agent endpoints are used. If omitted, bulk /agents/group endpoints are used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of agent IDs for bulk operations via /agents/group. If agent_id is set, this is ignored.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "error_code": {
+            "type": "number",
+            "description": "Error code returned by Wazuh (0 = success, >0 indicates partial/failed states).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "force_single_group": {
+            "type": "bool",
+            "description": "If true, removes the agent(s) from all groups they belong to and assigns them only to the specified group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Wazuh group ID (group name) used in the assignment/removal operation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh about the assignment/removal operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the last operation (assign/remove) was performed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of affected items according to the Wazuh API response.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of failed items according to the Wazuh API response.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_node_restart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by Wazuh API (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after sending the restart command.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node_id": {
+            "type": "string",
+            "description": "Cluster node name whose agents should be restarted.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the restart request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which the restart command was processed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where the restart command failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_reconnect": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of agent IDs to force reconnect (e.g. [\"001\", \"002\"]). If omitted, all agents are targeted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by the Wazuh API (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after sending the force reconnect command.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the force reconnect request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which the force reconnect command was processed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where the force reconnect command failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_restart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of agent IDs to restart (e.g. [\"001\", \"002\"]). If omitted, all agents are restarted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by Wazuh API (0 = success, 2 = partial failure, etc.).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after sending the restart command.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the restart request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which the restart command was processed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where the restart command failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_restart_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by Wazuh API (0 = success, >0 indicates partial/failed states).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Wazuh group ID (group name) whose agents will be restarted.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after sending the restart command.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the restart request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which the restart command was processed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where the restart command failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_upgrade": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "affected_items": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "agent": "string",
+                  "task_id": "number"
+                }
+              ]
+            ],
+            "description": "List of affected agents and their corresponding upgrade task IDs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of agent IDs to upgrade (e.g. [\"001\", \"002\"]) or the keyword \"all\" to select all agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by Wazuh API (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "force": {
+            "type": "bool",
+            "description": "Force upgrade, even if the agent appears to be already on the requested version.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after creating the upgrade tasks.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "package_type": {
+            "type": "string",
+            "description": "Package type to use for the upgrade (e.g. \"rpm\" or \"deb\"). By default, the manager infers this.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the upgrade request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which upgrade tasks were created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where upgrade tasks could not be created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "upgrade_version": {
+            "type": "string",
+            "description": "Wazuh version to upgrade agents to (e.g. \"4.14.0\").",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "use_http": {
+            "type": "bool",
+            "description": "Use HTTP instead of HTTPS when downloading the WPK. Default is false (HTTPS).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wpk_repo": {
+            "type": "string",
+            "description": "WPK repository URL/path.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_agent_upgrade_custom": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "affected_items": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "agent": "string",
+                  "task_id": "number"
+                }
+              ]
+            ],
+            "description": "List of affected agents and their corresponding upgrade task IDs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "agents_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of agent IDs to upgrade (e.g. [\"001\", \"002\"]) or the keyword \"all\" to select all agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by Wazuh API (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Full path to the WPK file on the Wazuh manager (must be under Wazuh installation directory, e.g. /var/ossec).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "installer": {
+            "type": "string",
+            "description": "Installation script to use (e.g. upgrade.sh or upgrade.bat). If omitted, Wazuh defaults apply.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after creating the custom upgrade tasks.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the custom upgrade request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of agents for which upgrade tasks were created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of agents where upgrade tasks could not be created.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_cdb_list": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "CDB list file content to upload (plain text).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "filename": {
+            "type": "string",
+            "description": "CDB list filename (e.g. 'lists/mylist.cdb'). The Wazuh API searches this recursively.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "Whether to overwrite the file if it already exists. Maps to the 'overwrite' query parameter.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_decoder": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Full XML content of the decoder file.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "filename": {
+            "type": "string",
+            "description": "Decoder XML filename (e.g. 'local_decoder.xml'). Only the filename, no absolute path.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "Whether to overwrite the file if it already exists. Maps to 'overwrite' query parameter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "relative_dirname": {
+            "type": "string",
+            "description": "Optional relative directory name where the decoder resides (e.g. 'decoders/local'). Maps to 'relative_dirname' query parameter.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_event": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "events": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of events to ingest. Each element is a string (plain text or JSON string). Max 100 events per request.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description returned by Wazuh after ingesting events.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when the events were ingested.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of events successfully forwarded to analysisd.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of events that failed to be forwarded.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "string",
+            "description": "Wazuh group name. Must match pattern [a-zA-Z0-9_.-] and not be '.' or '..'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_group_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration_xml": {
+            "type": "string",
+            "description": "Full XML configuration for the group (content of agent.conf).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Wazuh group ID (group name).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_logtest": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert": {
+            "type": "bool",
+            "description": "Whether the event raised an alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "codemsg": {
+            "type": "number",
+            "description": "Numeric code returned by logtest (e.g. 1 for no alert, 0 for success, etc.).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "event": {
+            "type": "string",
+            "description": "Event/log line to evaluate.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "Location string (path) used by logtest.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "log_format": {
+            "type": "string",
+            "description": "Log format for logtest (e.g. syslog, json, eventchannel, command, etc.).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "messages": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of diagnostic messages returned by logtest.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "output": {
+            "type": "string",
+            "description": "Raw JSON output object from logtest, serialized as a string.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when logtest was executed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Logtest session token. If omitted, a new session is created by Wazuh.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_manager_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration_xml": {
+            "type": "string",
+            "description": "Full ossec.conf XML content for the Wazuh manager configuration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_updated_timestamp": {
+            "type": "string",
+            "description": "Timestamp when the manager configuration was last updated via Terraform.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after updating the manager configuration.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_manager_restart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after sending the restart request.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the restart request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of managers/nodes affected by the restart request.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of managers/nodes where the restart request failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_node_analysisd_reload": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message from Wazuh after sending the reload request.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of node IDs to reload analysisd on. If empty, all nodes in the cluster will be targeted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when the reload request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of nodes where the reload request was sent successfully.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of nodes where the reload request failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_node_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration_xml": {
+            "type": "string",
+            "description": "Full XML content of the node ossec.conf.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node_id": {
+            "type": "string",
+            "description": "Cluster node name (node_id) whose configuration is managed.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_node_restart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message from Wazuh after sending the restart request.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of node IDs to restart. If empty, all nodes in the cluster will be restarted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when the restart request was sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of nodes for which restart was requested.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of nodes where restart request failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Policy name (\u2264 64 characters). Should be unique to allow reliable lookup on creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "policy": {
+            "type": "string",
+            "description": "JSON-encoded policy definition as expected by Wazuh (e.g. via jsonencode()).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "policy_id": {
+            "type": "string",
+            "description": "Numeric Wazuh policy ID as returned by the Wazuh API.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_policy_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code from the Wazuh API response (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after linking/unlinking policies.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "policy_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of Wazuh policy IDs to link to this role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Optional security position for policies within the role.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "Wazuh role ID to which the policies will be assigned.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp (RFC3339) when this mapping was last applied.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of affected items reported by the Wazuh API.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of failed items reported by the Wazuh API.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name (max 64 characters).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "Numeric Wazuh role ID. This matches the Terraform resource ID.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_role_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_code": {
+            "type": "number",
+            "description": "Raw Wazuh API 'error' code of the last operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after assigning/removing roles.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Security position for roles/policies (Wazuh 'position' parameter). Applies when assigning roles.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Wazuh role IDs assigned to the user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp of the last assign/remove operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of items affected by the last assign/remove operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of items that failed in the last assign/remove operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Wazuh user ID to which roles are assigned.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_rootcheck": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "Wazuh agent ID (e.g. '001') for which rootcheck is managed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_scan_timestamp": {
+            "type": "string",
+            "description": "Timestamp when the last rootcheck scan was triggered via Terraform.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_message": {
+            "type": "string",
+            "description": "Message returned when fetching rootcheck results.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_total_affected": {
+            "type": "number",
+            "description": "Total number of rootcheck items returned for this agent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_total_failed": {
+            "type": "number",
+            "description": "Number of failed items when retrieving rootcheck results.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_message": {
+            "type": "string",
+            "description": "Message returned by Wazuh when starting rootcheck scan.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_total_affected": {
+            "type": "number",
+            "description": "Number of agents for which rootcheck scan was restarted (should include this agent).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_total_failed": {
+            "type": "number",
+            "description": "Number of agents where starting rootcheck scan failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Full XML content of the Wazuh rules file.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "filename": {
+            "type": "string",
+            "description": "Name of the rules file (e.g. 'local_rules.xml').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "Whether to overwrite an existing rules file with the same name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "relative_dirname": {
+            "type": "string",
+            "description": "Optional relative directory under the Wazuh rules path (e.g. 'rules').",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_security_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth_token_exp_timeout": {
+            "type": "number",
+            "description": "Time in seconds until the JWT token expires (>= 30).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "rbac_mode": {
+            "type": "string",
+            "description": "RBAC mode: 'white' or 'black'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_security_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Security rule name (<= 64 characters).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rule": {
+            "type": "string",
+            "description": "JSON-encoded security rule body as expected by the Wazuh API.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rule_id": {
+            "type": "string",
+            "description": "Numeric Wazuh security rule ID.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_security_rule_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_code": {
+            "type": "number",
+            "description": "Raw error code returned by the Wazuh API (0 = success).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message returned by Wazuh after linking/unlinking rules.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "ID of the Wazuh role to which security rules will be linked.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rule_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of security rule IDs to link to this role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "UTC timestamp when the relation was last applied.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_affected": {
+            "type": "number",
+            "description": "Number of security rules for which the relation was processed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_failed": {
+            "type": "number",
+            "description": "Number of security rules where the relation failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_syscheck": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "Wazuh agent ID (e.g. '001') for which syscheck (FIM) is managed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_scan_timestamp": {
+            "type": "string",
+            "description": "Timestamp when the last syscheck scan was triggered via Terraform.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_message": {
+            "type": "string",
+            "description": "Message returned when fetching FIM findings for the agent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_total_affected": {
+            "type": "number",
+            "description": "Total number of FIM findings (items) returned for this agent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results_total_failed": {
+            "type": "number",
+            "description": "Number of failed items when retrieving FIM findings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_message": {
+            "type": "string",
+            "description": "Message returned by Wazuh when the syscheck scan is started.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_total_affected": {
+            "type": "number",
+            "description": "Number of agents for which the syscheck scan was restarted.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scan_total_failed": {
+            "type": "number",
+            "description": "Number of agents where starting the syscheck scan failed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wazuh_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for the Wazuh API user. On update, changing this will rotate the user's password.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Numeric Wazuh user ID. This matches the Terraform resource ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Wazuh API username (4\u201364 characters).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
