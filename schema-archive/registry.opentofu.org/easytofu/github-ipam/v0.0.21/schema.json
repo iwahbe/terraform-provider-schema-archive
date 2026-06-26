@@ -1,0 +1,438 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "allocations_file": {
+          "type": "string",
+          "description": "Path to allocations.yaml in repository. Defaults to `config/allocations.yaml`. This file is read-write by the provider with optimistic concurrency control.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "base_delay_ms": {
+          "type": "number",
+          "description": "Base delay in milliseconds for exponential backoff. Defaults to `200`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "branch": {
+          "type": "string",
+          "description": "Git branch for IPAM data. Defaults to `main`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "max_retries": {
+          "type": "number",
+          "description": "Maximum retry attempts on conflict. Defaults to `10`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "owner": {
+          "type": "string",
+          "description": "GitHub repository owner (user or organization).",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "pools_file": {
+          "type": "string",
+          "description": "Path to pools.yaml in repository. Defaults to `config/pools.yaml`. This file is read-only by the provider; pool definitions are managed via PR.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "repository": {
+          "type": "string",
+          "description": "GitHub repository name containing IPAM data files.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "token": {
+          "type": "string",
+          "description": "GitHub Personal Access Token or App Installation Token. Can also be set via `GITHUB_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      "description": "Git-backed IPAM provider using GitHub API for optimistic concurrency control.\n\nUses a dual-file architecture:\n- **pools.yaml** - Pool definitions (managed via `github-ipam_pool` resource or PR)\n- **allocations.yaml** - Allocation state with optimistic concurrency control\n\nThis provider enables GitOps-native IP address management without the cost of AWS VPC IPAM.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "github-ipam_allocation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "Allocated CIDR block (computed at apply time).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cidr_mask": {
+            "type": "number",
+            "description": "Prefix length for the allocation (e.g., `16` for /16, `24` for /24).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "contiguous_with": {
+            "type": "string",
+            "description": "CIDR of an existing allocation that this block must be immediately adjacent to. If the constraint cannot be satisfied, the plan will fail.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this allocation (UUID).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value metadata for the allocation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for this allocation. Can be updated in-place.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_cidr": {
+            "type": "string",
+            "description": "CIDR of an existing allocation to sub-allocate from (Mode 2). Use this for allocating subnets within a VPC CIDR. Mutually exclusive with `pool_id`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "Pool ID from pools.yaml to allocate from (Mode 1). Mutually exclusive with `parent_cidr`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the allocation: `allocation` (default) or `reservation`. Reservations hold space for future use.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Allocates a CIDR block from an IPAM pool or from an existing allocation.\n\n**Two allocation modes:**\n- **Mode 1 (pool_id)**: Allocate from a pool defined in pools.yaml\n- **Mode 2 (parent_cidr)**: Sub-allocate from an existing allocation (e.g., subnets within a VPC)\n\nExactly one of `pool_id` or `parent_cidr` must be specified.",
+        "description_kind": "markdown"
+      }
+    },
+    "github-ipam_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_size": {
+            "type": "number",
+            "description": "CIDR prefix length for the pool (e.g., `12` for /12, `16` for /16).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "Allocated CIDR block (computed automatically).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the pool.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value metadata for the pool.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique name/identifier for this pool (used as `pool_id` in allocations).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "private_range": {
+            "type": "string",
+            "description": "Private IP range to allocate from: `10.0.0.0/8`, `172.16.0.0/12`, or `192.168.0.0/16`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "reserved": {
+            "type": "bool",
+            "description": "If `true`, this pool is reserved and allocations are not allowed. Reserved pools hold space for future use.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages an IPAM pool definition in pools.yaml.\n\nPools are automatically allocated a non-overlapping CIDR block from the specified\nprivate IP range. The provider finds the next available block that doesn't conflict\nwith existing pools.\n\n**Private Ranges (RFC 1918):**\n- `10.0.0.0/8` - Class A (10.0.0.0 - 10.255.255.255)\n- `172.16.0.0/12` - Class B (172.16.0.0 - 172.31.255.255)\n- `192.168.0.0/16` - Class C (192.168.0.0 - 192.168.255.255)\n\n**Limitation:** Each pool managed through this provider receives a single contiguous\nCIDR block. While the underlying pools.yaml format supports multiple non-contiguous\nCIDR ranges per pool, this provider only manages single-CIDR pools. For pools with\nmultiple CIDRs, manage pools.yaml directly outside of Terraform.\n\n**Example:**\n```hcl\nresource \"github-ipam_pool\" \"stake\" {\n  name          = \"stake\"\n  private_range = \"10.0.0.0/8\"\n  block_size    = 12\n  description   = \"Stake product IP pool\"\n}\n\n# Output: cidr = \"10.0.0.0/12\" (or next available)\n```",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "github-ipam_allocation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "The allocated CIDR block.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Allocation ID (UUID). Either `id` or `name` must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value metadata for the allocation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Allocation name. Either `id` or `name` must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "parent_cidr": {
+            "type": "string",
+            "description": "Parent CIDR if this is a sub-allocation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "The pool this allocation belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Looks up a specific allocation by ID or name.\n\nThis data source is useful when you need to reference an allocation created by another\nTerraform workspace or process.\n\n**Example:**\n```hcl\ndata \"github-ipam_allocation\" \"vpc\" {\n  name = \"vpc-stake-stake-can\"\n}\n\nresource \"aws_vpc\" \"main\" {\n  cidr_block = data.github-ipam_allocation.vpc.cidr\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "github-ipam_allocations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allocations": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The allocated CIDR block.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the allocation was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier for the allocation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable name for the allocation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "parent_cidr": {
+                  "type": "string",
+                  "description": "The parent CIDR this allocation is carved from.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "pool_id": {
+                  "type": "string",
+                  "description": "The pool ID this allocation belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of allocations matching the filter criteria.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_cidr": {
+            "type": "string",
+            "description": "Filter allocations by parent CIDR. Mutually exclusive with pool_id.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "Filter allocations by pool ID. Mutually exclusive with parent_cidr.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lists allocations from `allocations.yaml`, optionally filtered by `pool_id` or `parent_cidr`.",
+        "description_kind": "markdown"
+      }
+    },
+    "github-ipam_next_available": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "The next available CIDR block that would be allocated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cidr_mask": {
+            "type": "number",
+            "description": "The prefix length for the allocation (e.g., 24 for /24).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_cidr": {
+            "type": "string",
+            "description": "Parent CIDR to sub-allocate from (Mode 2). Must be an existing allocation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "Pool ID to allocate from (Mode 1). Mutually exclusive with parent_cidr.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Preview the next available CIDR block without allocating it.\n\nThis data source is useful for planning and dry-run scenarios. Note that the returned CIDR\nis not reserved and may be claimed by another allocation before you use it.\n\n**Important:** Either `pool_id` or `parent_cidr` must be specified, but not both.",
+        "description_kind": "markdown"
+      }
+    },
+    "github-ipam_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidrs": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "CIDR ranges available in this pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary metadata associated with the pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "The pool identifier to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Retrieves details about a specific IP pool defined in `pools.yaml`.",
+        "description_kind": "markdown"
+      }
+    },
+    "github-ipam_pools": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pools": {
+            "nested_type": {
+              "attributes": {
+                "cidrs": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "CIDR ranges available in this pool.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Human-readable description of the pool.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "pool_id": {
+                  "type": "string",
+                  "description": "Unique identifier for the pool.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of IP pools defined in `pools.yaml`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all IP pools defined in `pools.yaml`. This data source provides a summary of available pools for allocation.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
