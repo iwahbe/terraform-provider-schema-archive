@@ -1,0 +1,2272 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Anthropic API key. Defaults to the `ANTHROPIC_API_KEY` environment variable. Marked sensitive: not shown in plan output.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "API base URL. Defaults to `https://api.anthropic.com`. Override for self-hosted gateways or to point at a local test server.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "max_retries": {
+          "type": "number",
+          "description": "Maximum number of retries for transient failures (5xx, 429). Defaults to 3.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Terraform provider for Anthropic Claude Managed Agents (community, unofficial).",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "claude-managed-agents_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the agent was archived, or `null` if active. `terraform destroy` issues an archive call against this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the agent was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-form description. Optional. Set to `null` to clear.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `agent_01ABC...`). Use this value with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mcp_servers": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Logical name. Referenced by `tools[mcp_toolset].mcp_server_name`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Currently only `url`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Server URL.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "MCP servers the agent may connect to at session runtime. Mutable. Sending an empty list clears server-side state. The upstream API requires that every MCP server be referenced by a matching `tools` entry of type `mcp_toolset`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary string-string labels. Full-replace on update: the provider sends the exact map declared in HCL, and the upstream API replaces whatever was stored. Removing a key from your HCL deletes it server-side. Omit the attribute to leave it unset; an explicit empty map (`{}`) is rejected.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "model": {
+            "type": "string",
+            "description": "Model identifier (e.g. `claude-opus-4-7`). Mutable. The API also accepts an object form with `speed`; this provider exposes only the bare string in v0.1.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "multiagent": {
+            "nested_type": {
+              "attributes": {
+                "agents": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "Agent id (`agent_*`). Required when `type = \"agent\"`; must be omitted when `type = \"self\"`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "`agent` to reference another agent, or `self` for self-delegation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Members of the coordinator's roster.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Currently only `coordinator`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Multi-agent coordinator config. Mutable. Set to null to clear.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable agent name. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "skills": {
+            "nested_type": {
+              "attributes": {
+                "skill_id": {
+                  "type": "string",
+                  "description": "For `anthropic`: short name (e.g. `xlsx`). For `custom`: `skill_*` id.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "`anthropic` for pre-built skills or `custom` for user-uploaded skills.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Version selector for `custom` skills. Defaults server-side to `latest`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Skills the agent has access to. Mutable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "system": {
+            "type": "string",
+            "description": "System prompt for the agent. Optional. Set to `null` to clear.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tools": {
+            "nested_type": {
+              "attributes": {
+                "configs": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Per-tool enable/disable.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Tool name (e.g. `bash`, `web_fetch`).",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "permission_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "type": {
+                              "type": "string",
+                              "description": "Either `always_allow` or `always_ask`.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Per-tool permission policy.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Per-tool overrides. Only meaningful when `type` is `agent_toolset_20260401` or `mcp_toolset`. Each entry's `name` must match the tool to override.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "default_config": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "When `false`, every tool in the toolset is disabled by default.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "permission_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "type": {
+                              "type": "string",
+                              "description": "Either `always_allow` (run automatically) or `always_ask` (wait for approval).",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Default permission policy for the toolset.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Toolset-wide default config. Only meaningful when `type` is `agent_toolset_20260401` or `mcp_toolset`. The upstream API enriches this field on read; the provider drops the enrichment to keep state in sync with HCL.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Required when `type = \"custom\"`. Free-form description shown to the model.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "input_schema": {
+                  "type": "string",
+                  "description": "Required when `type = \"custom\"`. JSON Schema as a JSON-encoded string (use `jsonencode({...})`). JSON Schema is recursive, so this provider keeps it as a string rather than a nested attribute.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mcp_server_name": {
+                  "type": "string",
+                  "description": "Required when `type = \"mcp_toolset\"`. Must match the `name` of an entry in `mcp_servers`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Required when `type = \"custom\"`. Tool identifier the model uses to call the tool.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Discriminator: `agent_toolset_20260401` (the bundled Anthropic toolset), `mcp_toolset` (exposes an MCP server's tools), or `custom` (a user-defined tool).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Tools the agent has access to. Each entry is one of three variants discriminated by `type`:\n\n  - `agent_toolset_20260401` \u2014 the bundled Anthropic toolset (bash, edit, web_fetch, etc.). Use `default_config` for toolset-wide defaults and `configs[*]` to override individual tools by `name`.\n  - `mcp_toolset` \u2014 exposes the tools of an MCP server. `mcp_server_name` must reference an entry of `mcp_servers`. Like `agent_toolset_20260401`, supports `default_config` + `configs[*]` where `name` is an MCP-exposed tool name.\n  - `custom` \u2014 a user-defined tool. Requires `name`, `description`, and `input_schema` (a JSON-encoded JSON Schema; pass via `jsonencode({...})`).\n\nPermission policies (`default_config.permission_policy.type` or `configs[*].permission_policy.type`) are `always_allow` (run automatically) or `always_ask` (wait for approval). MCP toolsets default to `always_ask` server-side; the bundled Anthropic toolset defaults to `always_allow`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the most recent change.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Server-managed monotonic version. Used internally for optimistic concurrency on update.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents agent.\n\n### Lifecycle\n\n`terraform destroy` issues `POST /v1/agents/{id}/archive`. The upstream API does not expose a DELETE endpoint for agents; archive is the terminal lifecycle operation and is one-way (archived agents cannot be unarchived).\n\n### Updates\n\nUpdates use server-side optimistic concurrency via the `version` field, which the provider manages automatically. If you see a version conflict in a plan, run `terraform apply -refresh-only` to pull the current server version into state.\n\n### Metadata\n\nThe `metadata` map uses full-replace semantics: the provider sends the exact map declared in HCL on every update, and the upstream API replaces whatever was stored. Removing a key from your HCL deletes it server-side.\n\n### Server-side nested fields\n\nAll four nested-config fields (`tools`, `mcp_servers`, `skills`, `multiagent`) are first-class HCL as of v0.2. Sending an empty list clears server-side state; omitting the attribute leaves it unchanged.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent": {
+            "type": "string",
+            "description": "Agent id (e.g. `agent_01ABC...`) to deploy. The deployment pins the agent's latest version at create/update time; the resolved version is exposed as `agent_version`. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "agent_version": {
+            "type": "number",
+            "description": "The concrete agent version the API resolved `agent` to. Computed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or `null` if active. `terraform destroy` archives the deployment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-form description. Optional. Set to `null` to clear.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "desired_status": {
+            "type": "string",
+            "description": "Intended run state: `active` or `paused`. Defaults to `active`. Changing it pauses or resumes the deployment via the pause/resume endpoints. This is your INTENT \u2014 it is independent of the observed `status`, so an automatic error-pause (which moves `status` to `paused` while `desired_status` stays `active`) does NOT cause Terraform to fight the API. To resume after an error-pause, run `terraform apply` once the underlying cause is fixed.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "Container environment id the agent runs in. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `depl_01ABC...`). Use with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "initial_events": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "For `user.message`/`system.message`: a JSON-encoded array of content blocks. Use `jsonencode([{ type = \"text\", text = \"...\" }])`. Kept as a JSON string (not nested HCL) because content blocks are a deep union (text/image/document with nested sources); this round-trips any block the API accepts.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "For `user.define_outcome`: the task specification.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "max_iterations": {
+                  "type": "number",
+                  "description": "For `user.define_outcome`: max refine iterations (default 3, max 20).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "rubric": {
+                  "nested_type": {
+                    "attributes": {
+                      "content": {
+                        "type": "string",
+                        "description": "Required when `type = \"text\"` (max 262144 chars).",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "file_id": {
+                        "type": "string",
+                        "description": "Required when `type = \"file\"`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "`file` or `text`.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "For `user.define_outcome`: success rubric, either an uploaded file or inline text.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "`user.message`, `system.message`, or `user.define_outcome`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Events sent to each session when the deployment fires (1-50 entries). Changing this list forces replacement of the deployment (the API does not patch initial events in place). Three variants discriminated by `type`:\n\n  - `user.message` \u2014 set `content` to a `jsonencode`d array of content blocks.\n  - `system.message` \u2014 privileged context; set `content` likewise. Must be the **last** event in the list and follow a `user.message`; supported only on models that accept system messages.\n  - `user.define_outcome` \u2014 set `description` (task), optional `rubric`, optional `max_iterations`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary string-string labels (max 16 keys). Merge semantics: removing a key from HCL deletes it server-side. Omit the attribute to leave it unset; an explicit empty map (`{}`) is rejected.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable deployment name. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "paused_reason": {
+            "nested_type": {
+              "attributes": {
+                "error": {
+                  "nested_type": {
+                    "attributes": {
+                      "message": {
+                        "type": "string",
+                        "description": "Human-readable error detail.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Error type (e.g. `vault_not_found_error`).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Typed error that caused an auto-pause (present only when `type = \"error\"`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "`manual` or `error`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Why the deployment is paused, or `null` when active. `type` is `manual` (paused via `desired_status`) or `error` (auto-paused), with the typed error in `error`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "resources": {
+            "nested_type": {
+              "attributes": {
+                "access": {
+                  "type": "string",
+                  "description": "For `memory_store`: `read_write` or `read_only`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "authorization_token": {
+                  "type": "string",
+                  "description": "For `github_repository`: access token for cloning. Write-only \u2014 sent to the API but never persisted to state or returned on read. Pair with `authorization_token_wo_version` to trigger re-send on rotation.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "authorization_token_wo_version": {
+                  "type": "number",
+                  "description": "Increment to signal that the write-only `authorization_token` was rotated and must be re-sent. Stored in state (the token itself is not), so changing it produces a diff that re-sends the whole `resources` list from config.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "checkout": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Branch name (when `type = \"branch\"`).",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "sha": {
+                        "type": "string",
+                        "description": "Full commit SHA (when `type = \"commit\"`).",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "`branch` or `commit`.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "For `github_repository`: pin to a branch or commit. Defaults to the repo's default branch.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "file_id": {
+                  "type": "string",
+                  "description": "For `file`: the uploaded file id.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "instructions": {
+                  "type": "string",
+                  "description": "For `memory_store`: usage instructions for the agent (max 4096 chars).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "memory_store_id": {
+                  "type": "string",
+                  "description": "For `memory_store`: the memory store id.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mount_path": {
+                  "type": "string",
+                  "description": "For `github_repository`/`file`: where to mount. Defaults are server-assigned.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "`github_repository`, `file`, or `memory_store`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "For `github_repository`: the repository URL.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Resources mounted into each session (max 500). Three variants discriminated by `type`: `github_repository` (with a write-only `authorization_token`), `file`, and `memory_store`. The whole list is replaced on any change.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "schedule": {
+            "nested_type": {
+              "attributes": {
+                "expression": {
+                  "type": "string",
+                  "description": "5-field POSIX cron (e.g. `0 3 * * *`). No `@daily`-style shortcuts.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "timezone": {
+                  "type": "string",
+                  "description": "IANA timezone (e.g. `UTC`, `America/Los_Angeles`).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Currently only `cron`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Optional cron schedule. Omit for a manually-triggered deployment. The API's read-only next-run enrichment is not surfaced in state (to keep plans clean); query it via the API/console.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Observed run state reported by the API: `active` or `paused`. Read-only. Compare against `desired_status` and `paused_reason` to detect error-pauses.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vault_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Vault ids whose credentials are mounted into each session (max 50). Mutable. Omit the attribute to leave it unset; an explicit empty list (`[]`) is rejected.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents deployment: a configured, persistent instance of an agent bound to an environment, vaults, resources, initial events, and an optional cron schedule.\n\n### Lifecycle\n\n`terraform destroy` issues `POST /v1/deployments/{id}/archive` (one-way). There is no DELETE endpoint.\n\n### Pause / resume\n\nSet `desired_status` to `active` or `paused`; the provider calls the pause/resume endpoints to reconcile. `desired_status` is your intent and is deliberately decoupled from the observed `status`: if the API auto-pauses the deployment on an error, `status` becomes `paused` while `desired_status` stays `active`, and Terraform will NOT fight it. Inspect `paused_reason` to see why, fix the cause, then `terraform apply` to resume.\n\n### Updates\n\nThe deployments API has no optimistic-concurrency version; updates are last-write-wins `PATCH`. Changing `initial_events` forces replacement.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the environment was archived, or `null` if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "config": {
+            "nested_type": {
+              "attributes": {
+                "networking": {
+                  "nested_type": {
+                    "attributes": {
+                      "allow_mcp_servers": {
+                        "type": "bool",
+                        "description": "When `type = \"limited\"`, whether the agent may call out to MCP servers. Must be unset (null) when `type = \"unrestricted\"`.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "allow_package_managers": {
+                        "type": "bool",
+                        "description": "When `type = \"limited\"`, whether the agent may run package-manager installs. Must be unset (null) when `type = \"unrestricted\"`.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "allowed_hosts": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Bare hostnames the agent may reach (e.g. `api.example.com`). URL schemes are rejected by the upstream API. Only valid when `type = \"limited\"`. Omit the attribute to leave it unset; an explicit empty list (`[]`) is rejected (the API normalizes empty to null, which Terraform cannot represent consistently).",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Either `unrestricted` (allow all outbound) or `limited` (restrict to `allowed_hosts`).",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Outbound networking policy. Discriminated on `type`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "packages": {
+                  "nested_type": {
+                    "attributes": {
+                      "apt": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "APT packages to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "cargo": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Cargo crates to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "gem": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "RubyGems to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "go": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Go modules to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "npm": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "npm packages to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "pip": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "pip packages to install.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Per-package-manager install lists. All fields optional.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Config discriminator. Currently only `cloud` is supported.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Sandbox configuration. Immutable \u2014 changing any field forces replacement.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the environment was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `env_01ABC...`). Use this value with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable environment name. Immutable \u2014 changing forces replacement.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the most recent change.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents sandbox environment.\n\n### Immutability\n\nThe upstream API does not expose an update endpoint for environments. Every attribute is marked `RequiresReplace`: changing any field \u2014 including a single package list entry \u2014 causes Terraform to destroy and re-create the environment.\n\n### Lifecycle on destroy\n\n`terraform destroy` first issues `DELETE /v1/environments/{id}`. If the API returns 409 (typically because an active session references the environment), the provider falls back to `POST /v1/environments/{id}/archive`. Archived environments remain visible via the data source until the API server prunes them, but they no longer accept new sessions.\n\n### Networking policy\n\n`config.networking.type` is a discriminator:\n\n  - `unrestricted` \u2014 the agent may reach any host. Leave `allowed_hosts`, `allow_mcp_servers`, and `allow_package_managers` unset.\n  - `limited` \u2014 the agent is restricted to `allowed_hosts`. The two `allow_*` booleans gate MCP-server and package-manager access; both default to `false`.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_memory_store": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the memory store was archived, or `null` if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the memory store was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "delete_on_destroy": {
+            "type": "bool",
+            "description": "When `true`, `terraform destroy` issues `DELETE /v1/memory_stores/{id}` which permanently removes every memory and every memory version inside the store. When `false` (the default), destroy archives the store instead, preserving the audit trail. Set to `true` only if you are sure you do not need the audit trail.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-form description. Surfaced in the agent's system prompt when the store is attached to a session, so make it informative. Optional; set to `null` to clear.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `memstore_01ABC...`). Use this value with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable memory store name. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the most recent change.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents memory store.\n\nMemory stores are workspace-scoped collections of text documents that persist across sessions. The agent mounts the store as a directory inside its sandbox and a brief note describing the store is added to the system prompt \u2014 so `description` is user-facing both for humans and for the agent.\n\n### Lifecycle on destroy\n\nBy default, `terraform destroy` archives the store (`POST /v1/memory_stores/{id}/archive`). Archive is reversible-ish: existing memories and versions remain queryable but the store no longer accepts new attachments. Set `delete_on_destroy = true` to hard-delete instead \u2014 every memory and every memory version is removed, with no recovery path.\n\n### Updates\n\n`name` and `description` are mutable; the upstream API merges fields you send. Provide `description = null` to clear the description.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_skill": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content_hash": {
+            "type": "string",
+            "description": "Sha256 over the sorted `source_dir` contents combined with `version_rotation`. Recomputed at every plan; drift is detected by comparing this to the value last applied. Hex-encoded, no `sha256:` prefix.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the skill was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_title": {
+            "type": "string",
+            "description": "Human-readable skill title. Limited to 64 characters by the upstream API. Immutable \u2014 the Skills API has no PATCH endpoint for display title, so changing it forces destroy + recreate (which re-uploads every file and rotates the `id`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `skill_01ABC...`). Use this value with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "latest_version": {
+            "type": "string",
+            "description": "Server-side version string of the most recent uploaded version. Epoch-timestamp form (e.g. `1747000000`). Updates every time the provider uploads a new version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Either `custom` (resource-managed) or `anthropic` (prebuilt). Always `custom` for this resource \u2014 the resource refuses to manage prebuilt skills.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source_dir": {
+            "type": "string",
+            "description": "Local directory containing `SKILL.md` and any sibling files. Walked at every plan to compute `content_hash`; a byte-level change to any file (or any rename / add / remove) produces a new hash, which uploads a new immutable version on the next apply.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "version_rotation": {
+            "type": "number",
+            "description": "Manual rotation counter. Incrementing this integer forces a new version even if every file in `source_dir` is unchanged. Useful to invalidate cached state on a downstream agent without editing skill content.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents custom skill.\n\nSkills are immutable, versioned bundles of files (a `SKILL.md` plus supporting assets) that an agent can call as a packaged capability. This resource owns the skill end-to-end: uploading content, tracking the latest version, and tearing down every version on destroy.\n\n### Lifecycle on destroy\n\n`terraform destroy` issues `DELETE /v1/skills/{id}/versions/{v}` for every version returned by `GET /v1/skills/{id}/versions`, then `DELETE /v1/skills/{id}`. The API rejects deleting a skill while versions remain, so the cascade is required. Every step tolerates 404 so already-gone resources do not fail destroy. There is no archive concept for skills \u2014 destroy is permanent.\n\n### Versions\n\nThe provider walks `source_dir` at every plan and computes a sha256 over the sorted contents combined with `version_rotation`. When the resulting `content_hash` differs from the stored value, `terraform apply` calls `POST /v1/skills/{id}/versions` to upload a new immutable version and refreshes `latest_version`. Old versions remain visible via `GET /v1/skills/{id}/versions` until destroy.\n\n### Drift detection\n\nThe Skills API does not return file contents on read, so drift is detected exclusively by comparing the locally-walked hash to the value last applied. Out-of-band version uploads (via `curl`) are visible on next refresh as a new `latest_version` but do not cause the provider to download or replace local content. If you edit local files AND a sibling out-of-band version was uploaded, the next apply uploads your local version on top, making it the new `latest_version`.\n\n### 30 MB upload cap\n\nThe total walked size of `source_dir` (sum of every file's bytes) must be \u2264 30 MB. The provider validates this at plan time so the error surfaces before any network call.\n\n### Display title is immutable\n\nThe Skills API exposes only POST (create), POST (version), GET, and DELETE \u2014 there is no PATCH for `display_title`. Changing it in HCL plans destroy + recreate, which rotates the `id` and re-uploads every file. Avoid touching `display_title` after first apply unless you mean it.\n\n### Prebuilt skills\n\nAnthropic's prebuilt skills (`pptx`, `xlsx`, `docx`, `pdf`, etc.) cannot be managed by this resource \u2014 `Read` errors loudly if the server returns `source = \"anthropic\"`. Use the `claude-managed-agents_skill` data source to reference them instead.\n\n### Import\n\n`terraform import` accepts the bare `skill_*` id. After import, the next plan will require `source_dir` and `display_title` to be set in HCL; the provider cannot reconstruct them from the API alone. If your local `source_dir` matches the server-side content, `content_hash` will pin without re-uploading; otherwise the next apply uploads your local content as a new version.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_vault": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or `null` if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "delete_on_destroy": {
+            "type": "bool",
+            "description": "When `true`, `terraform destroy` issues `DELETE /v1/vaults/{id}` which permanently removes the vault and cascades through every credential. When `false` (the default), destroy archives the vault, preserving the audit trail while purging secrets and freeing the bound MCP server URLs.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable vault name. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `vlt_01ABC...`). Use this value with `terraform import`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary string-string labels. Full-replace on update: removing a key from your HCL deletes it server-side. Omit the attribute to leave it unset; an explicit empty map (`{}`) is rejected.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Claude Managed Agents vault \u2014 a workspace-scoped container of credentials, typically modeling one end-user.\n\n### Lifecycle on destroy\n\nBy default, `terraform destroy` archives the vault (`POST /v1/vaults/{id}/archive`). Archive cascades through credentials: their secret payloads are purged but the records remain visible for audit. Set `delete_on_destroy = true` to hard-delete; that removes the vault and every credential without retention.\n\n### Updates\n\n`display_name` and `metadata` are mutable. The metadata map uses full-replace semantics: the provider sends the exact map declared in HCL on every update, and the upstream API replaces whatever was stored. Removing a key from your HCL deletes it server-side.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_vault_credential": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auth": {
+            "nested_type": {
+              "attributes": {
+                "access_token": {
+                  "type": "string",
+                  "description": "Access token for `mcp_oauth` auth. Write-only. Pair with `access_token_wo_version` for rotation.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "access_token_wo_version": {
+                  "type": "number",
+                  "description": "Rotation counter for `access_token`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "expires_at": {
+                  "type": "string",
+                  "description": "RFC 3339 timestamp at which the access token expires. Only meaningful for `mcp_oauth`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "mcp_server_url": {
+                  "type": "string",
+                  "description": "MCP server URL this credential is bound to. Immutable; changing forces replacement. The API rejects duplicate URLs within the same vault.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "refresh": {
+                  "nested_type": {
+                    "attributes": {
+                      "client_id": {
+                        "type": "string",
+                        "description": "OAuth client_id. Immutable; changing forces replacement.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "refresh_token": {
+                        "type": "string",
+                        "description": "OAuth refresh token. Write-only. Pair with `refresh_token_wo_version` for rotation.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "sensitive": true
+                      },
+                      "refresh_token_wo_version": {
+                        "type": "number",
+                        "description": "Rotation counter for `refresh_token`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "scope": {
+                        "type": "string",
+                        "description": "Space-delimited OAuth scopes. Mutable.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "token_endpoint": {
+                        "type": "string",
+                        "description": "OAuth token endpoint URL. Immutable; changing forces replacement.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "token_endpoint_auth": {
+                        "nested_type": {
+                          "attributes": {
+                            "client_secret": {
+                              "type": "string",
+                              "description": "Client secret for non-`none` token-endpoint-auth types. Write-only. Pair with `client_secret_wo_version` for rotation.",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "sensitive": true
+                            },
+                            "client_secret_wo_version": {
+                              "type": "number",
+                              "description": "Rotation counter for `client_secret`.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "One of `none`, `client_secret_basic`, `client_secret_post`.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "How to authenticate the refresh call. Type `none` for public clients, `client_secret_basic` for HTTP Basic, `client_secret_post` for body-form.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "OAuth refresh configuration. Set when you want Anthropic to refresh the access token on your behalf.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "token": {
+                  "type": "string",
+                  "description": "Bearer token for `static_bearer` auth. Write-only: never persisted to state. Pair with `token_wo_version` to trigger rotation.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "token_wo_version": {
+                  "type": "number",
+                  "description": "Increment this integer to signal that the corresponding write-only secret has been rotated and should be re-sent to the API.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Either `static_bearer` or `mcp_oauth`. Immutable; changing forces replacement.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Auth payload. Discriminated on `auth.type`: `static_bearer` carries a single bearer token; `mcp_oauth` carries an access token + optional refresh block.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable credential name. Mutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `cred_01ABC...`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vault_id": {
+            "type": "string",
+            "description": "ID of the parent vault. Immutable; changing forces replacement.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a single credential within a vault. Bind a token or OAuth client to an MCP server URL so that future sessions referencing the parent vault can authenticate against that server.\n\n### Secrets are write-only\n\n`token`, `access_token`, `refresh_token`, and `client_secret` are TF 1.11 write-only attributes \u2014 they are sent to the API but never stored in state. To rotate a secret, increment the matching `*_wo_version` field; the provider re-sends the secret from your config on the next plan.\n\n### Immutability\n\n`auth.type`, `auth.mcp_server_url`, `auth.refresh.token_endpoint`, and `auth.refresh.client_id` are immutable. Changing any of them forces Terraform to destroy and re-create the credential. The API rejects creating two active credentials with the same `mcp_server_url` in the same vault.\n\n### Lifecycle on destroy\n\n`terraform destroy` archives the credential (`POST /archive`), which purges the secret payload while keeping the audit record visible. Use the parent `claude-managed-agents_vault` with `delete_on_destroy = true` to hard-delete a vault and its credentials together.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "claude-managed-agents_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `agent_01ABC...`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mcp_servers": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "MCP servers configured on the agent.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Metadata map.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "model": {
+            "type": "string",
+            "description": "Model identifier.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "multiagent": {
+            "nested_type": {
+              "attributes": {
+                "agents": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Multi-agent coordinator config, if any.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Agent name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "skills": {
+            "nested_type": {
+              "attributes": {
+                "skill_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Skills configured on the agent.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "system": {
+            "type": "string",
+            "description": "System prompt, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tools": {
+            "nested_type": {
+              "attributes": {
+                "configs": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "permission_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "type": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "default_config": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "permission_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "type": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "input_schema": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mcp_server_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Tools configured on the agent. See the resource for the full schema.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Server-managed version number.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Claude Managed Agents agent by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_agent_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "Agent id (`agent_*`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description at this version, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Metadata at this version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "model": {
+            "type": "string",
+            "description": "Model identifier at this version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Agent name at this version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "system": {
+            "type": "string",
+            "description": "System prompt at this version, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Version number to look up. Server-managed monotonic counter starting at 1.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Look up a specific historical version of an agent. The upstream API only exposes a list endpoint for versions, so this data source pages through the version history and returns the entry whose `version` field matches.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent": {
+            "type": "string",
+            "description": "Agent id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "agent_version": {
+            "type": "number",
+            "description": "Resolved agent version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "desired_status": {
+            "type": "string",
+            "description": "Intended run state (mirrors `status` when read via the data source).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "Environment id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `depl_01ABC...`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "initial_events": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_iterations": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "rubric": {
+                  "nested_type": {
+                    "attributes": {
+                      "content": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "file_id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Events sent to each session on start.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Metadata map.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Deployment name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "paused_reason": {
+            "nested_type": {
+              "attributes": {
+                "error": {
+                  "nested_type": {
+                    "attributes": {
+                      "message": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Why the deployment is paused, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "resources": {
+            "nested_type": {
+              "attributes": {
+                "access": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "authorization_token": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "authorization_token_wo_version": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "checkout": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "sha": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "file_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "instructions": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory_store_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mount_path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Mounted resources. `authorization_token` is write-only upstream and always null here.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "schedule": {
+            "nested_type": {
+              "attributes": {
+                "expression": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "timezone": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Cron schedule, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Observed run state: `active` or `paused`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vault_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Mounted vault ids.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Claude Managed Agents deployment by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_deployment_runs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment_id": {
+            "type": "string",
+            "description": "Filter to a single deployment. Omit to list runs across all deployments in the workspace.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "has_error": {
+            "type": "bool",
+            "description": "Filter: `true` for failed runs, `false` for successful runs. Omit for all.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of runs to return (default 20, max 1000). Only the first page is fetched.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "runs": {
+            "nested_type": {
+              "attributes": {
+                "agent_id": {
+                  "type": "string",
+                  "description": "Resolved agent id.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "agent_version": {
+                  "type": "number",
+                  "description": "Resolved agent version.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "ISO 8601 run timestamp.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "deployment_id": {
+                  "type": "string",
+                  "description": "Owning deployment id.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "error_message": {
+                  "type": "string",
+                  "description": "Human-readable failure detail, else null.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "error_type": {
+                  "type": "string",
+                  "description": "Typed failure reason on failure, else null.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Run id (`drun_...`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "scheduled_at": {
+                  "type": "string",
+                  "description": "Scheduled fire time (schedule trigger only), else null.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "session_id": {
+                  "type": "string",
+                  "description": "Created session id on success, else null.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "trigger_type": {
+                  "type": "string",
+                  "description": "`schedule` or `manual`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The matching run records, newest first.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "trigger_type": {
+            "type": "string",
+            "description": "Filter by trigger: `schedule` or `manual`. Omit for all.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "List append-only run records for deployments. Each scheduled or manual fire produces one run; exactly one of `session_id` (success) or `error_type` (failure) is set.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "config": {
+            "nested_type": {
+              "attributes": {
+                "networking": {
+                  "nested_type": {
+                    "attributes": {
+                      "allow_mcp_servers": {
+                        "type": "bool",
+                        "description": "Whether MCP-server traffic is allowed under `limited` networking.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "allow_package_managers": {
+                        "type": "bool",
+                        "description": "Whether package-manager installs are allowed under `limited` networking.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "allowed_hosts": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Hostnames the agent may reach.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Either `unrestricted` or `limited`.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Outbound networking policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "packages": {
+                  "nested_type": {
+                    "attributes": {
+                      "apt": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "APT packages.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "cargo": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Cargo crates.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "gem": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "RubyGems.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "go": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Go modules.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "npm": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "npm packages.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "pip": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "pip packages.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Per-package-manager install lists.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Config discriminator (currently always `cloud`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Sandbox configuration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `env_01ABC...`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Environment name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Claude Managed Agents environment by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "filename": {
+            "type": "string",
+            "description": "Original filename at upload time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "File id (`file_*`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "Detected MIME type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "Identifier of the resource (typically a session) the file is scoped to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "size_bytes": {
+            "type": "number",
+            "description": "File size in bytes.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up metadata for a file uploaded to the Managed Agents Files API. Only metadata is exposed; binary content download is not modeled in this provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_memory_store": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null if active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `memstore_01ABC...`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Memory store name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Claude Managed Agents memory store by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_skill": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_title": {
+            "type": "string",
+            "description": "Human-readable skill title.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Canonical server-side id. For prebuilts this equals `skill_id`; for custom skills it is the `skill_*` form.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "latest_version": {
+            "type": "string",
+            "description": "Most recent version string. Date form for prebuilts, epoch form for custom skills.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "skill_id": {
+            "type": "string",
+            "description": "Either a prebuilt short name (e.g. `xlsx`) or a `skill_*` id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Either `anthropic` (prebuilt) or `custom` (user-uploaded).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing skill \u2014 either an Anthropic prebuilt skill (e.g. `xlsx`, `pptx`, `docx`, `pdf`) or a custom `skill_*` you previously created. The data source does not upload anything, and works for both `custom` and `anthropic` source types.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_vault": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Vault display name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Server-assigned identifier (e.g. `vlt_01ABC...`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Vault metadata map.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing Claude Managed Agents vault by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "claude-managed-agents_vault_credential": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived_at": {
+            "type": "string",
+            "description": "ISO 8601 archive timestamp, or null.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auth": {
+            "nested_type": {
+              "attributes": {
+                "expires_at": {
+                  "type": "string",
+                  "description": "Access token expiry (mcp_oauth only).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mcp_server_url": {
+                  "type": "string",
+                  "description": "MCP server URL this credential is bound to.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "refresh": {
+                  "nested_type": {
+                    "attributes": {
+                      "client_id": {
+                        "type": "string",
+                        "description": "OAuth client_id.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "scope": {
+                        "type": "string",
+                        "description": "OAuth scope.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "token_endpoint": {
+                        "type": "string",
+                        "description": "OAuth token endpoint.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "token_endpoint_auth": {
+                        "nested_type": {
+                          "attributes": {
+                            "type": {
+                              "type": "string",
+                              "description": "One of `none`, `client_secret_basic`, `client_secret_post`.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Token endpoint auth.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "OAuth refresh config (mcp_oauth only).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "`static_bearer` or `mcp_oauth`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Auth shape (secrets omitted).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Credential display name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Credential id (`cred_*`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 last-modified timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vault_id": {
+            "type": "string",
+            "description": "Parent vault id.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Look up an existing vault credential by `vault_id` and credential `id`. Secret payloads are never returned by the API and so are never populated by this data source.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
