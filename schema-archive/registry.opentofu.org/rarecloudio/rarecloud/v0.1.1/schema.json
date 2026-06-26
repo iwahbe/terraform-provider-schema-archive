@@ -1,0 +1,675 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_endpoint": {
+          "type": "string",
+          "description": "Base URL of the RareCloud API. Defaults to `https://api.rarecloud.io`. May also be set via `RARECLOUD_API` env.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Personal Access Token from `/dashboard/account/api`. May also be set via `RARECLOUD_TOKEN` env.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Terraform provider for the RareCloud platform. Wraps the public API at https://api.rarecloud.io/v1/.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "rarecloud_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dns_management": {
+            "type": "bool",
+            "description": "Request DNS management. Immutable on the initial order.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Fully-qualified domain to register (e.g. `example.com`). Immutable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "expiry_date": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The WHMCS domain id once assigned (falls back to the order id until the domain record exists).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id_protection": {
+            "type": "bool",
+            "description": "Request WHOIS ID protection. Immutable on the initial order.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "invoice_id": {
+            "type": "string",
+            "description": "The invoice id for the register order (may be null).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "nameservers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Initial nameservers (up to 5). Changing them after registration is a separate operation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "order_id": {
+            "type": "string",
+            "description": "The WHMCS order id created by the register request.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "registrar": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Domain/order status (`Pending` until the registrar fulfils).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "years": {
+            "type": "number",
+            "description": "Registration period in years (1\u201310, default 1). Immutable on the initial order \u2014 renewals are a separate operation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Registers a domain via an ORDER (`POST /v1/domains`). **Registration is order-driven and asynchronous** \u2014 WHMCS has no register-now API, so this places a register order (+ invoice) and the registrar fulfils once the order is accepted/paid (`status` starts `Pending`). The resource reflects the order / domain record; it does not block on registrar fulfilment. **Destroying this resource only drops it from Terraform state \u2014 it does NOT cancel the domain at the registrar.** Use the `rarecloud_tld_pricing` data source for pre-purchase pricing.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_load_balancer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "health_check": {
+            "type": "bool",
+            "description": "Enable health-checking of members (defaults to on server-side). Immutable \u2014 changing it recreates the load balancer.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ipv4": {
+            "type": "string",
+            "description": "Public IPv4 (floating IP) of the load balancer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_server_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "`rarecloud_server.id` values to balance across (at least one). Immutable \u2014 changing the set recreates the load balancer.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "address": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "port": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Live pool members (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name. Immutable \u2014 changing it recreates the load balancer.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Listener + member port (1\u201365535). Immutable \u2014 changing it recreates the load balancer.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A RareCloud L4 (TCP) load balancer (Octavia) with a public floating IP. Balances `port` across the `member_server_ids` VMs. Usage-billed.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_network": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "Auto-allocated IPv4 CIDR (e.g. `10.1.0.0/16`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Whether this is the project's default VPC.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Network name. Immutable \u2014 changing it recreates the network.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A RareCloud private network (VPC). The CIDR is auto-allocated (`10.N.0.0/16`). Launch VMs into it via `rarecloud_server.vpc_id`.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_reserved_ip": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attached": {
+            "type": "bool",
+            "description": "Whether the IP is currently attached to a VM.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "The allocated public IPv4 address.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "`rarecloud_server.id` to attach the IP to. The VM must have a private (VPC) NIC. Set/clear to attach/detach in place.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A reserved (static) public IPv4. Flat-rate billed while reserved. Attach to a `rarecloud_server` by setting `server_id`; destroying the resource RELEASES the IP (not reversible).",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hostname": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The Nova server UUID assigned at provision time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "OS image slug (e.g. `ubuntu-24.04`) \u2014 see the `rarecloud_image` data source. Immutable \u2014 changing it recreates the VM.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ipv4": {
+            "type": "string",
+            "description": "Primary/public IPv4 address (floating IP).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ipv6": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name / hostname for the VM. Visible in the dashboard + CLI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "plan": {
+            "type": "string",
+            "description": "Public catalog SKU (e.g. `g-2vcpu-8gb`). Changing this triggers an in-place resize via `POST /v1/services/{id}/resize` (async cold-migrate); the VM reboots and settles on the next status poll.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "private_ip": {
+            "type": "string",
+            "description": "Internal tenant-net (VPC) IPv4 address.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Region slug (e.g. `bucharest-ro`). Immutable \u2014 changing it recreates the VM.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "root_password": {
+            "type": "string",
+            "description": "Initial root password injected via cloud-init. Prefer `ssh_public_key`. Immutable \u2014 changing it recreates the VM.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_public_key": {
+            "type": "string",
+            "description": "OpenSSH public-key material (`ssh-ed25519 ...`) injected into the VM via cloud-init at boot. This is the actual key string, not a key id. Immutable \u2014 changing it recreates the VM.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Free-form tags.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "vpc_id": {
+            "type": "string",
+            "description": "Optional `rarecloud_network.id` (VPC) to launch the VM into. Immutable \u2014 changing it recreates the VM.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Provisions a RareCloud cloud compute VM via `POST /v1/services` (category `cloud-vm`). The VM is usage-billed (hourly). Use the `rarecloud_catalog_plan` data source to validate a `plan` at plan-time and `rarecloud_image` / `rarecloud_regions` to discover image + region slugs.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fingerprint": {
+            "type": "string",
+            "description": "Server-computed fingerprint of the public key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name shown in the dashboard.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "OpenSSH public key string (ssh-ed25519 / ssh-rsa / etc.). Take care to use the public half \u2014 private keys must stay on the operator's machine.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "An account-level SSH public key (`/v1/account/ssh-keys`). The key material is immutable \u2014 changing `name` or `public_key` recreates the key.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_volume": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name. Immutable \u2014 changing it recreates the volume.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "`rarecloud_server.id` to attach the volume to. Set/clear to attach/detach in place.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "size_gb": {
+            "type": "number",
+            "description": "Size in GB (1\u20132048). Immutable \u2014 changing it recreates the volume.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A RareCloud block volume (Cinder) \u2014 per-GB usage-billed. Attach it to a `rarecloud_server` by setting `server_id`.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "rarecloud_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "country": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email_verified": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "first_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "preferred_currency": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads the authenticated account's profile. Useful for setting `tags` or naming conventions based on the operator's email.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_catalog_plan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bandwidth_gb": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "billing_tracks": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Subset of [\"prepay\", \"cloud\"] indicating which billing models the plan supports.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "disk_gb": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hourly_price_cents_eur": {
+            "type": "number",
+            "description": "Hourly cloud-billing price in EUR cents (0 if cloud track not offered).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monthly_price_cents_eur": {
+            "type": "number",
+            "description": "Monthly prepay price in EUR cents (0 if prepay track not offered).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "product_sku": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ram_mb": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sku": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vcpu": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up a catalog plan by SKU. Returns specs + billing track availability.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "available_backends": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "os_family": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Image slug to look up (e.g. `ubuntu-24.04`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up a catalog OS image by `slug` (e.g. `ubuntu-24.04`). The slug is the value passed to `rarecloud_server.image`.",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_regions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backend": {
+            "type": "string",
+            "description": "Only regions supporting this backend.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "line": {
+            "type": "string",
+            "description": "`cloud` \u2192 openstack+gardener; `legacy` \u2192 whmcs+virtualizor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "active": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "available_backends": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "city": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "country_code": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "display_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_group": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists the public RareCloud regions. Optionally filter by `backend` (`openstack`/`gardener`/`whmcs`/`virtualizor`) or `line` (`cloud`/`legacy`).",
+        "description_kind": "markdown"
+      }
+    },
+    "rarecloud_tld_pricing": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "currency": {
+            "type": "string",
+            "description": "ISO currency code (e.g. `EUR`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "register": {
+            "type": "number",
+            "description": "First-period registration price (0 if not offered).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "renew": {
+            "type": "number",
+            "description": "Renewal price (0 if not offered).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tld": {
+            "type": "string",
+            "description": "TLD without the leading dot (e.g. `com`, `io`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "transfer": {
+            "type": "number",
+            "description": "Transfer-in price (0 if not offered).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Register / transfer / renew price for a single TLD (e.g. `com`). Requires the `domains:read` scope on the token.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

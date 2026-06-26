@@ -1,0 +1,432 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "host": {
+          "type": "string",
+          "description": "URI for the Deno API. For normal use cases this value doesn't need to be set, in which case it defaults to https://api.deno.com/v1. May be set by the DENO_API_HOST environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "organization_id": {
+          "type": "string",
+          "description": "Deploy organization id. May be set by the DENO_DEPLOY_ORGANIZATION_ID environment variable. The organization id is visible in the url of the organization's project list - https://dash.deno.com/orgs/<organization_id>",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Access token. May be set by the DENO_DEPLOY_TOKEN environment variable. Tokens are created here: https://dash.deno.com/account#access-tokens.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "\nThe terraform provider for Deno Deploy offering management on Deno projects, custom domains, and deployments.\n\t\t",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "deno_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assets": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "The inlined content of the asset. This is valid only for `file` asset. If both `content` and `content_source_path` are specified, it will error out.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "content_source_path": {
+                  "type": "string",
+                  "description": "The file path of the asset in the local filesystem.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "encoding": {
+                  "type": "string",
+                  "description": "The encoding of the inlined content. This takes effect only when `content` is present. Possible values are `utf-8` and `base64`. If omitted, the content will be interpreted as `utf-8`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "The kind of entity: \"file\" or \"symlink\".",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "target": {
+                  "type": "string",
+                  "description": "The target file path of the symlink in the the runtime virtual filesystem. It is only available for `symlink` asset.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The entities that compose the deployment. A key represents a path to the entity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "compiler_options": {
+            "nested_type": {
+              "attributes": {
+                "jsx": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "jsx_factory": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "jsx_fragment_factory": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "jsx_import_source": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Compiler options to be used when building the deployment. If this is omitted and a deno config file (`deno.json` or `deno.jsonc`) is found in the assets, the value in the config file will be used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time the deployment was created, formmatting in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deployment_id": {
+            "type": "string",
+            "description": "The ID of the deployment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domains": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The domain(s) that can be used to access the deployment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "entry_point_url": {
+            "type": "string",
+            "description": "The path to the file that will be executed when the deployment is invoked.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "env_vars": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "The environment variables to be set in the runtime environment of the deployment.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "import_map_url": {
+            "type": "string",
+            "description": "The path to the import map file. If this is omitted and a deno config file (`deno.json` or `deno.jsonc`) is found in the assets, the value in the config file will be used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "lock_file_url": {
+            "type": "string",
+            "description": "The path to the lock file. If this is omitted and a deno config file (`deno.json` or `deno.jsonc`) is found in the assets, the value in the config will be used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The project ID that this deployment belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the deployment, indicating whether the deployment succeeded or not. It can be \"failed\", \"pending\", or \"success\"",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time the deployment was last updated, formmatting in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uploaded_assets": {
+            "nested_type": {
+              "attributes": {
+                "git_sha1": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The assets that have been uploaded in previous deployments, keyed with hash of the content. This is inteneded to be used to avoid uploading the same assets multiple times.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nA resource for a Deno Deploy deployment.\n\nA deployment belongs to a project, is an immutable, invokable snapshot of the project's assets, can be assigned a custom domain.\n\t\t",
+        "description_kind": "plain"
+      }
+    },
+    "deno_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time the domain was created, formmatting in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dns_records": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "The content of the DNS record. The value depends on the type of the DNS record. For example, for `A` record, it is the IP address of the domain.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the DNS record.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the DNS record such as `A`, `CNAME`, etc.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The DNS records that need to be added to the DNS nameserver.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The custom domain, such as `foo.example.com`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the domain.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token used for verifying the ownership of the domain.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time the domain was updated, formmatting in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "\nA resource for a custom domain.\n\nA custom domain is a per-organization resource, which can be associated with a deployment.\nIn order to associate a custom domain with a deployment, you need to verify the ownership of the domain, then prepare TLS certificates for the domain. Refer to the example below for practical usage.\n\t\t",
+        "description_kind": "plain"
+      }
+    },
+    "deno_domain_certificate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain_id": {
+            "type": "string",
+            "description": "The ID of the domain to provision certificates for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "provisioning_status": {
+            "type": "string",
+            "description": "The status of the certificate provisioning. Possible values are `success`, `failed`, `pending`, and `manual`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nA resource for an automatic certificate provisioning of a custom domain.\n\nIn order to assoaicte a custom domain with a deployment, certificates needs to be ready in some way. For more information regarding the setup process, please refer to the doc of deno_domain resource.\n\t\t",
+        "description_kind": "plain"
+      }
+    },
+    "deno_domain_verification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain_id": {
+            "type": "string",
+            "description": "The ID of the domain to verify ownership of.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "verified": {
+            "type": "bool",
+            "description": "Whether or not the domain has been verified.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nA resource for a ownership verification of a custom domain.\n\nIn order to assoaicte a custom domain with a deployment, this process must be completed. For more information regarding the setup process, please refer to the doc of deno_domain resource.\n\t\t",
+        "description_kind": "plain"
+      }
+    },
+    "deno_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time the project was created, formatted in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project. This must be globally unique, and must be between 3 and 26 characters, only contain a-z, 0-9 and -, must not start or end with a hyphen (-), and characters after hyphen (-) shouldn't be 8 or 12 in length. If not provided, a random name will be generated.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time the project was last updated, formatted in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "\nA resource for a Deno Deploy project.\n\nA project consists of a collection of deployments and belongs to an organization.\n\t\t",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "deno_assets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "output": {
+            "nested_type": {
+              "attributes": {
+                "content_source_path": {
+                  "type": "string",
+                  "description": "The file path of the asset in the local filesystem.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "The kind of the asset. It can be either `file` or `symlink`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "target": {
+                  "type": "string",
+                  "description": "The target file path of the symlink in the the runtime virtual filesystem. It is only available for `symlink` asset.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The assets map, whose key is the asset path used in the runtime virtual filesystem, and the value is the asset metadata.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The root directory path of the assets. e.g. `../dist`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pattern": {
+            "type": "string",
+            "description": "The glob pattern to match the assets within the directory specified in `path`. e.g. `**/*.{js,ts,json}`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "target": {
+            "type": "string",
+            "description": "The target directory path where the assets will be put in the runtime virtual filesystem.\nFor example, if \"target\" is set to \"foo/bar\", then the assets will be placed under the directory \"foo/bar\" in the runtime virtual filesystem.\n\nIf this field is omitted, the assets will be put under the \".\" directory in the runtime virtual filesystem.\n\t\t\t\t",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "\nA data source for a list of assets to be deployed.\n\nFor how to use this data source with deno_deployment resource, please refer to the doc of deno_deployment resource.\n\t\t",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

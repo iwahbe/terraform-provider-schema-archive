@@ -1,0 +1,973 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "authorization": {
+          "type": "string",
+          "description": "Authorization token for Unleash API",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Unleash base URL (everything before `/api`)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "max_concurrent_requests": {
+          "type": "number",
+          "description": "Maximum number of concurrent HTTP requests the provider sends to the Unleash API. Defaults to `2`, which is the recommended value for most Unleash deployments. Increasing this value can overload Unleash instances with small database connection pools and should only be done when the backend capacity is known to support it. Can also be set with `UNLEASH_MAX_CONCURRENT_REQUESTS`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Interface with [Unleash server API](https://docs.getunleash.io/reference/api/unleash). This provider implements a subset of the operations that can be done with Unleash. The focus is mostly in setting up the instance with projects, roles, permissions, groups, and other typical configuration usually performed by admins.\n\nYou can check a complete example [here](https://github.com/Unleash/terraform-provider-unleash/tree/main/examples/staged) under stage_4 folder.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "unleash_api_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "An environment the token has access to.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "When the token expires",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "A project the token belongs to.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "projects": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of projects this token has access to. If the token has access to specific projects they will be listed here. If the token has access to all projects it will be represented as `[*]`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Secret token value.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "token_name": {
+            "type": "string",
+            "description": "The name of the token.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the token.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "ApiToken schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_context_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the context field.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "legal_values": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Description of the allowed value.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The allowed value.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Legal values for this context field. If not set, then any value is available for this context field.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the context field.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stickiness": {
+            "type": "bool",
+            "description": "Whether this field is available for custom stickiness. Defaults to false if not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Fetch a context field.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "The name of the environment. Must be a URL-friendly string according to RFC 3968. Changing this property will require the resource to be replaced, it's generally safer to remove this resource and create a new one.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the environment. Unleash recognizes 'development', 'test', 'preproduction' and 'production'. You can pass other values and Unleash will accept them but they will carry no special semantics.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manage Unleash environments.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the group's purpose.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mappings_sso": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "External SSO/IdP group names that should map users into this Unleash group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name for this group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "root_role": {
+            "type": "number",
+            "description": "The root role ID for this group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "users": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of user IDs to add to this group",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manage an Unleash group. The mappings_sso attribute contains external SSO/IdP group names that should map users into this Unleash group.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_oidc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_create": {
+            "type": "bool",
+            "description": "Whether to auto create users when they login to Unleash for the first time.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "The OIDC public identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "default_root_role": {
+            "type": "number",
+            "description": "The default root role give to a user when that user is created. Only used if auto_create is set to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "discover_url": {
+            "type": "string",
+            "description": "A URL pointing to the .well-known configuration of the OIDC provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether or not OIDC is enabled.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "The OIDC secret.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages OIDC configuration.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the project's purpose.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "feature_naming": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "A human-readable description of the pattern.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "example": {
+                  "type": "string",
+                  "description": "An example feature name that matches the pattern.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "A JavaScript regular expression pattern, without the start and end delimiters.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Optional feature naming pattern applied to all features created in this project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "link_templates": {
+            "nested_type": {
+              "attributes": {
+                "title": {
+                  "type": "string",
+                  "description": "Link title shown in the Unleash UI.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "url_template": {
+                  "type": "string",
+                  "description": "URL template that can contain {{project}} or {{feature}} placeholders.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Optional list of link templates automatically added to new feature flags.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "The project's collaboration mode. Determines whether non project members can submit change requests and the projects visibility to non members. Valid values are 'open', 'protected' and 'private'. If a value is not set, the project will default to 'open'",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Project schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_project_access": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project": {
+            "type": "string",
+            "description": "Project identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": [
+                    "set",
+                    "number"
+                  ],
+                  "description": "List of projects with this role assigned.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "role": {
+                  "type": "number",
+                  "description": "The role identifier.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "number"
+                  ],
+                  "description": "List of users with this role assigned.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Roles available in this project with their members.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "ProjectAccess schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_project_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "change_requests_enabled": {
+            "type": "bool",
+            "description": "If change requests are required for this environment, the environment must be enabled for this to have effect.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "environment_name": {
+            "type": "string",
+            "description": "Environment identifier, equivalent to the environment name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "required_approvals": {
+            "type": "number",
+            "description": "Number of approvals required for change requests.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "ProjectEnvironment schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A more detailed description of the role and what use it's intended for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of this role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "environment": {
+                  "type": "string",
+                  "description": "For which environment this permission applies (note that only environment-type permissions can have an environment).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this permission.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A more detailed description of the role and what use it's intended for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "A role can either be a global root role (applies to all roles) or a role role.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Role schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_saml": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_create": {
+            "type": "bool",
+            "description": "Whether to auto create users when they login to Unleash for the first time.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "certificate": {
+            "type": "string",
+            "description": "The x509 certificate used by the SAML provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "default_root_role": {
+            "type": "number",
+            "description": "The default root role give to a user when that user is created. Only used if auto_create is set to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether SAML is enabled.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "The SAML entity ID.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sign_on_url": {
+            "type": "string",
+            "description": "The SAML sign-on URL.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages SAML configuration.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the service account.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the service account.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "root_role": {
+            "type": "number",
+            "description": "The root role ID for the service account.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username for the service account.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Service accounts do nothing on their own, they need service account tokens to be created to do anything useful.\n\t\tAll tokens bound to a service account will take on the permissions of the root role assigned to the service account. It's strongly\n\t\trecommended to use the unleash_role data source to retrieve one of the built-in roles and use the id from that to set the service account\n\t\trole id.\n\n\t\tSee the [Unleash documentation](https://docs.getunleash.io/reference/service-accounts) for more information.",
+        "description_kind": "markdown"
+      }
+    },
+    "unleash_service_account_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the service account token.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "The expiration date of the service account token.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the service account.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "The secret of the service account token.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "service_account_id": {
+            "type": "number",
+            "description": "The ID of the service account this token is bound to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Allows for managing the tokens bound to a service account. Note that service account tokens in Unleash\n\t\tare both immutable and cannot be recovered once created. This means you must use them immediately when creating them via terraform.\n\t\tTypically by piping them to an external secret manager or binding them to some other external terraform resource that requires Unleash tokens.\n\n\t\tBecause service account tokens are immutable, any changes to the terraform resource will trigger a deletion and recreation of those tokens,\n\t\tmeaning that the secrets will be rotated out.",
+        "description_kind": "markdown"
+      }
+    },
+    "unleash_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email of the user.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password of the user.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "root_role": {
+            "type": "number",
+            "description": "The role id for the user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "send_email": {
+            "type": "bool",
+            "description": "Send a welcome email to the customer or not. Defaults to false",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "User schema",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "unleash_context_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the context field.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "legal_values": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Description of the allowed value.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The allowed value.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Legal values for this context field. If not set, then any value is available for this context field.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the context field.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stickiness": {
+            "type": "bool",
+            "description": "Whether this field is available for custom stickiness",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Fetch a context field.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "The name of the environment. Must be a URL-friendly string according to RFC 3968.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the environment. Unleash recognizes 'development', 'test', 'preproduction' and 'production'. You can pass other values and Unleash will accept them but they will carry no special semantics.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Access existing environments.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the group's purpose.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Group ID to look up. If name is also provided, it must match the returned group name.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mappings_sso": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "External SSO/IdP group names mapped to this Unleash group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Group name to look up. If id is also provided, the group returned by that id must have this name.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "root_role": {
+            "type": "number",
+            "description": "The root role ID for this group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of user IDs in this group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetch a group by id or name. The mappings_sso attribute contains external SSO/IdP group names mapped to this Unleash group.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "display_name": {
+            "type": "string",
+            "description": "The name to display in listings of permissions.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "Which environment this permission applies to.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Identifier for this permission.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the permission.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "What level this permission applies to. Either root, project or the name of the environment it applies to.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetch a permission.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the project's purpose.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of this project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "The project's collaboration mode. Determines whether non project members can submit change requests and the projects visibility to non members. Valid values are 'open', 'protected' and 'private'. If a value is not set, the project will default to 'open'",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this project.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetch a project definition.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_project_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "change_requests_enabled": {
+            "type": "bool",
+            "description": "If change requests are required for this environment, the environment must be enabled for this to have effect.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "If the environment is enabled for this project. This affects whether or not users will be able to enable flags for this environment on this project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment_name": {
+            "type": "string",
+            "description": "Environment identifier, equivalent to the environment name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "required_approvals": {
+            "type": "number",
+            "description": "Number of approvals required for change requests.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "ProjectEnvironment schema",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A more detailed description of the role and what use it's intended for.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The id of this role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "A role can either be a global root role (applies to all roles) or a role role.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetch a role definition.",
+        "description_kind": "plain"
+      }
+    },
+    "unleash_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email of the user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "root_role": {
+            "type": "number",
+            "description": "The role id for the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username of the user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Fetch a user by id or email.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
