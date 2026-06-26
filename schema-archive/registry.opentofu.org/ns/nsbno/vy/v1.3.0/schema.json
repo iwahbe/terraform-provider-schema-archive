@@ -1,0 +1,511 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "central_cognito_base_url": {
+          "type": "string",
+          "description": "The base url for the central shared cognito service",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "deployment_service_environment": {
+          "type": "string",
+          "description": "The environment of the deployment service. This should be left blank unless you're testing the deployment service.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "enroll_account_base_url": {
+          "type": "string",
+          "description": "The base url for the deployment enrollment service",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "environment": {
+          "type": "string",
+          "description": "The environment to interact with.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "version_handler_v2_base_url": {
+          "type": "string",
+          "description": "The base url for the version handler v2 service (for testing only)",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "A provider for Vy's internal services.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "vy_app_client": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "callback_urls": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Callback URLs to use. Used together with `type` set to `frontend`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "The ID used for your client to authenticate itself. ",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "A secret used for your client to authenticate itself. Only populated when using the `backend` type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "generate_secret": {
+            "type": "bool",
+            "description": "Should a secret be generated? Automatically set by `type`, but you're able to override it with this option.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logout_urls": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Logout URLs to use. Used together with `type` set to `frontend`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this app client",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scopes": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Scopes that this client has access to",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The use-case for this app client. Used to automatically add OAuth options. Must be either `frontend` or `backend`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "App clients are the user pool authentication resources attached to your app. Use an app client to configure the permitted authentication actions towards a resource server.",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_deployment_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slack_channel": {
+            "type": "string",
+            "description": "A Slack channel where info about deployments go",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Register the current AWS account into the deployment service",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_environment_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner_account_id": {
+            "type": "string",
+            "description": "The deployment account that owns this account. Aka the service account.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Register the current AWS account as an environment for the deployment service",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_resource_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identity of this resource server",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this resource server",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scopes": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "A description of what this scope is for",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "A name for this scope",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Scopes for this resource server",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A resource server is an integration between a user pool and an API. Each resource server has custom scopes that you must activate in your app client. When you configure a resource server, your app can generate access tokens with OAuth scopes that authorize read and write operations to your API server.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "vy_artifact_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application": {
+            "type": "string",
+            "description": "The application you want to find an artifact for. For S3 artifacts, this is the name of the application defined in `.deployment/config.yaml`. For ECR artifacts, this is the name of the ECR repository.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path in the store where your application is stored. For S3 this is the key. For ECR this is the image tag.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "store": {
+            "type": "string",
+            "description": "The base location of where the artifact is stored. S3 or ECR.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uri": {
+            "type": "string",
+            "description": "The URI of the given resource",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the artifact. For S3 this is the object version ID. For ECR this is the image digest.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Get information about a specific artifact version. Artifacts are uploaded to S3 or ECR during the CI process.",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_cognito_info": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth_url": {
+            "type": "string",
+            "description": "The URL where users can authenticate",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "issuer": {
+            "type": "string",
+            "description": "The URI for the issuer",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "jwks_url": {
+            "type": "string",
+            "description": "The URL for the /.well-known/jwks.json",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "open_id_url": {
+            "type": "string",
+            "description": "The URL for the /.well-known/openid-configuration",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "vy_ecs_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branch": {
+            "type": "string",
+            "description": "The Git branch of the commit that was used to build the image.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecr_repository_name": {
+            "type": "string",
+            "description": "The ECR repository name where the image to the ECS service is stored.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecr_repository_uri": {
+            "type": "string",
+            "description": "The ECR repository URI where the image is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "git_sha": {
+            "type": "string",
+            "description": "The Git SHA of the commit that was used to build the image.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "github_repository_name": {
+            "type": "string",
+            "description": "The GitHub repository name for the ECS service.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource. Format: [github_repository_name]/[working_directory]/[ecr_repository_name]",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region where the image is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The service account ID that was used to build the image.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "The directory in the GitHub repository where the code is stored.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Get information about a specific ECS image version. Images are uploaded to ECR during the CI process.",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_frontend_artifact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branch": {
+            "type": "string",
+            "description": "The Git branch of the commit that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "git_sha": {
+            "type": "string",
+            "description": "The Git SHA of the commit that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "github_repository_name": {
+            "type": "string",
+            "description": "The GitHub repository name to find the artifact for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource. Format: [github_repository_name]/[working_directory]",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region where the artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_bucket_name": {
+            "type": "string",
+            "description": "The S3 bucket where the frontend artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_object_path": {
+            "type": "string",
+            "description": "The S3 object path where the frontend artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_object_version": {
+            "type": "string",
+            "description": "The S3 object version of the frontend artifact stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_source_path": {
+            "type": "string",
+            "description": "The S3 source path in the format `bucket_name/object_path` where the frontend artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The service account ID that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "The directory in the GitHub repository to find the artifact for.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Get information about a specific frontend artifact version. Artifacts are uploaded to S3 during the CI process for static website hosting. NOTE: This data source uses the same endpoints as the Lambda Artifact data source.",
+        "description_kind": "markdown"
+      }
+    },
+    "vy_lambda_artifact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branch": {
+            "type": "string",
+            "description": "The Git branch of the commit that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecr_repository_name": {
+            "type": "string",
+            "description": "*Only if artifact type is ECR.* The ECR repository name where the Lambda image is stored.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ecr_repository_uri": {
+            "type": "string",
+            "description": "*Only if artifact type is ECR.* The computed ECR repository URI where the Lambda image is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "git_sha": {
+            "type": "string",
+            "description": "The Git SHA of the commit that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "github_repository_name": {
+            "type": "string",
+            "description": "The GitHub repository name to find the artifact for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource. Format: [github_repository_name]/[working_directory]",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Directory to where the artifact is located, under `github_repository_name` and `working_directory`.Only relevant for S3 artifacts.Use `path` if you have multiple artifacts under the same `working_directory` or Terraform state",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region where the artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_bucket_name": {
+            "type": "string",
+            "description": "*Only if artifact type is S3.* The S3 bucket where the Lambda artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_object_path": {
+            "type": "string",
+            "description": "*Only if artifact type is S3.* The S3 bucket path where the Lambda artifact is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "s3_object_version": {
+            "type": "string",
+            "description": "*Only if artifact type is S3.* The S3 object version of the Lambda artifact stored.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The service account ID that was used to build the artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "Directory in the GitHub repository to find the artifact.`working_directory` is useful for monorepo systems, where you have multiple Terraform States.When specified, we require that you also specify [`working-directory` for the Terraform deploy job in Github actions](https://github.com/nsbno/platform-actions/blob/main/.github/workflows/deployment.all-environments-terraform.yml#L15)",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Get information about a specific Lambda artifact version. Artifacts are uploaded to S3 or ECR during the CI process through reusable workflows in Github Actions. Ref [platform-actions](https://github.com/nsbno/platform-actions/blob/main/.github/workflows/deployment.all-environments-terraform.yml)",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
