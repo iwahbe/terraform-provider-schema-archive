@@ -1,0 +1,164 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "The mijn.host API key. Can also be set via the MIJNHOST_API_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Interact with mijn.host to manage DNS records for your domains.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "mijnhost_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name (e.g. example.com).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this DNS record, in the format domain/type/name/value.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "DNS record name/hostname. Use the bare domain name for apex records (e.g. example.com), or a subdomain (e.g. www.example.com).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to live in seconds.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "DNS record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, etc.).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "DNS record value (e.g. an IP address for A records, or the target for CNAME records).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single DNS record for a mijn.host domain. Changes to domain, type, name, or value will force a new resource. Only TTL can be updated in place.",
+        "description_kind": "plain"
+      }
+    },
+    "mijnhost_dns_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name to manage DNS records for (e.g. example.com).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The domain name (used as the resource ID).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "DNS record name/hostname.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Time to live in seconds.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "DNS record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, etc.).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "DNS record value.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The complete set of DNS records for the domain. All existing records not listed here will be deleted.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the complete set of DNS records for a mijn.host domain. On every apply the entire record set is replaced with exactly what is listed here \u2014 any record not listed, including records added outside of Terraform or created automatically by mijn.host, will be deleted. Use mijnhost_dns_record instead to manage individual records without affecting others.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "mijnhost_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name to look up (e.g. example.com).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The domain name (used as the data source ID).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "renewal_date": {
+            "type": "string",
+            "description": "The date on which the domain will be renewed (YYYY-MM-DD).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the domain (e.g. active, Cancelled).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tags associated with the domain.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a mijn.host domain.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
