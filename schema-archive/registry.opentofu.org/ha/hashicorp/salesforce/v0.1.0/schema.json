@@ -1,0 +1,249 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_version": {
+          "type": "string",
+          "description": "API version of the salesforce org in the format in the format: MAJOR.MINOR (please omit any leading 'v'). The provider requires at least version 53.0. Can be specified with the environment variable SALESFORCE_API_VERSION.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "client_id": {
+          "type": "string",
+          "description": "Client ID of the connected app. Corresponds to Consumer Key in the user interface. Can be specified with the environment variable SALESFORCE_CLIENT_ID.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "login_url": {
+          "type": "string",
+          "description": "Directs the authentication request, defaults to the production endpoint https://login.salesforce.com, should be set to https://test.salesforce.com for sandbox organizations. Can be specified with the environment variable SALESFORCE_LOGIN_URL.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "private_key": {
+          "type": "string",
+          "description": "Private Key associated to the public certificate that was uploaded to the connected app. This may point to a file location or be set directly. This should not be confused with the Consumer Secret in the user interface. Can be specified with the environment variable SALESFORCE_PRIVATE_KEY.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Salesforce Username of a System Administrator like user for the provider to authenticate as. Can be specified with the environment variable SALESFORCE_USERNAME.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "A Provider for managing a Salesforce Organization",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "salesforce_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the profile.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the profile.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "map",
+              "bool"
+            ],
+            "description": "Map of permissions for the profile. At this time specific permissions can only be set, the comprehensive list will not be read from Salesforce. The keys should follow Salesforce 'SnakeCase' format however the 'Permissions' prefix should be omitted. Permissions will not import to state due to a technical limitation, you will need to run a subsequent apply if you have permissions set in config during import.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_license_id": {
+            "type": "string",
+            "description": "ID of the UserLicense associated with this profile. Forces replacement if updated.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Profile Resource for the Salesforce Provider. Please note that Users must have a Profile assigned to them, Profiles cannot be deleted if a User is assigned to it, and Salesforce does not allow the deletion of Users, only deactivation. Terraform will warn after destroy of a User that it has only been deactivated and now removed from state. A common issue with this pattern is a Profile and User created in tandem will fail to delete the Profile on destroy due to the lingering assignment. Should you wish to destroy a created Profile, it's advised that an apply that moves all affected Users to a static Profile be run first, after which the Profile can be safely destroyed.",
+        "description_kind": "plain"
+      }
+    },
+    "salesforce_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "The user\u2019s alias. For example, jsmith.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The user\u2019s email address.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "email_encoding_key": {
+            "type": "string",
+            "description": "The email encoding for the user, such as ISO-8859-1 or UTF-8. Defaults to UTF-8.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "language_locale_key": {
+            "type": "string",
+            "description": "The user\u2019s language. Defaults to en_US.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The user\u2019s last name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "locale_sid_key": {
+            "type": "string",
+            "description": "The value of the field affects formatting and parsing of values, especially numeric values, in the user interface. It doesn\u2019t affect the API. The field values are named according to the language, and the country if necessary, using two-letter ISO codes. The set of names is based on the ISO standard. You can also manually set a user\u2019s locale in the user interface, and then use that value for inserting or updating other users via the API. Defaults to en_US.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "profile_id": {
+            "type": "string",
+            "description": "ID of the user\u2019s Profile. Use this value to cache metadata based on profile.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reset_password": {
+            "type": "bool",
+            "description": "Reset password and send an email to the user. No reset is performed if this field is omitted, is false, or was true and remained true on subsequent apply. Please set to false and then true in subsequent applies, or have it set to true on create to trigger the reset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "time_zone_sid_key": {
+            "type": "string",
+            "description": "A User time zone affects the offset used when displaying or entering times in the user interface. But the API doesn\u2019t use a User time zone when querying or setting values. Values for this field are named using region and key city, according to ISO standards. You can also manually set one User time zone in the user interface, and then use that value for creating or updating other User records via the API. Defaults to America/New_York.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "user_role_id": {
+            "type": "string",
+            "description": "ID of the user\u2019s UserRole.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Contains the name that a user enters to log in to the API or the user interface. The value for this field must be in the form of an email address, using all lowercase characters. It must also be unique across all organizations. If you try to create or update a User with a duplicate value for this field, the operation is rejected. Each inserted User also counts as a license. Every organization has a maximum number of licenses. If you attempt to exceed the maximum number of licenses by inserting User records, the create request is rejected.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "User Resource for the Salesforce Provider",
+        "description_kind": "plain"
+      }
+    },
+    "salesforce_user_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "developer_name": {
+            "type": "string",
+            "description": "The unique name of the object in the API. This name can contain only underscores and alphanumeric characters, and must be unique in your org. It must begin with a letter, not include spaces, not end with an underscore, and not contain two consecutive underscores. In managed packages, this field prevents naming conflicts on package installations. With this field, a developer can change the object\u2019s name in a managed package and the changes are reflected in a subscriber\u2019s organization. Corresponds to Role Name in the user interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the role. Corresponds to Label on the user interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_role_id": {
+            "type": "string",
+            "description": "The ID of the parent role.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "User Role Resource for the Salesforce Provider",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "salesforce_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the profile.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Profile Data Source for the Salesforce Provider",
+        "description_kind": "plain"
+      }
+    },
+    "salesforce_user_license": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "license_definition_key": {
+            "type": "string",
+            "description": "A string that uniquely identifies a particular user license. Valid options vary depending on organization type and configuration. For a complete list see https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_objects_userlicense.htm",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "User License Data Source for the Salesforce Provider",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

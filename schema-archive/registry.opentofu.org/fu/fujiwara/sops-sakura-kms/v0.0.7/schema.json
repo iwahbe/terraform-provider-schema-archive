@@ -1,0 +1,180 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_request_rate_limit": {
+          "type": "number",
+          "description": "Maximum API calls per second.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_request_timeout": {
+          "type": "number",
+          "description": "API request timeout in seconds.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_root_url": {
+          "type": "string",
+          "description": "Custom API root URL.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "key_id": {
+          "type": "string",
+          "description": "Sakura Cloud KMS resource ID (12-digit number). Optional: not required for decryption as key ID is read from SOPS file metadata.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "private_key_path": {
+          "type": "string",
+          "description": "Path to the private key file for service principal authentication.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "profile": {
+          "type": "string",
+          "description": "Profile name for shared credentials (~/.usacloud/<profile>/config.json).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "retry_max": {
+          "type": "number",
+          "description": "Maximum number of API call retries.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "secret": {
+          "type": "string",
+          "description": "API access token secret. Can also be set via SAKURA_ACCESS_TOKEN_SECRET environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "server_addr": {
+          "type": "string",
+          "description": "Address for the local Vault-compatible server. Defaults to 127.0.0.1:8200.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "service_principal_id": {
+          "type": "string",
+          "description": "Service principal ID for authentication.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "service_principal_key_id": {
+          "type": "string",
+          "description": "Service principal key ID for authentication.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "API access token. Can also be set via SAKURA_ACCESS_TOKEN environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "trace": {
+          "type": "string",
+          "description": "Enable API trace logging.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Provides SOPS decryption using Sakura Cloud KMS. Starts a Vault Transit Engine compatible server and provides data sources for decrypting SOPS-encrypted files.",
+      "description_kind": "plain"
+    }
+  },
+  "data_source_schemas": {
+    "sops_external": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Decrypted data",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this data source",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "input_type": {
+            "type": "string",
+            "description": "`yaml`, `json` `dotenv` (`.env`), `ini` or `raw`, depending on the structure of the un-encrypted data.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "raw": {
+            "type": "string",
+            "description": "Raw decrypted content",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "source": {
+            "type": "string",
+            "description": "A string with sops-encrypted data",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Read data from a sops-encrypted string. Useful if the data does not reside on disk locally (otherwise use `sops_file`).",
+        "description_kind": "plain"
+      }
+    },
+    "sops_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "The unmarshalled data as a dictionary. Use dot-separated keys to access nested data.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "input_type": {
+            "type": "string",
+            "description": "The provider will use the file extension to determine how to unmarshal the data. If your file does not have the usual extension, set this argument to `yaml`, `json`, `dotenv` (`.env`), `ini` accordingly, or `raw` if the encrypted data is encoded differently.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "raw": {
+            "type": "string",
+            "description": "The entire unencrypted file as a string.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "source_file": {
+            "type": "string",
+            "description": "Path to the encrypted file.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Read data from a sops-encrypted file on disk.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
