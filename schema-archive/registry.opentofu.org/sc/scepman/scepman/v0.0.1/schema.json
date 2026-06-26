@@ -1,0 +1,261 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "app_id": {
+          "type": "string",
+          "description": "Application ID of the SCEPman-api in the target tenant.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_certificate": {
+          "type": "string",
+          "description": "Base64 encoded PKCS#12 certificate bundle to use when authenticating as a Service Principal using a Client Certificate",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_certificate_password": {
+          "type": "string",
+          "description": "Password used to access the Client Certificate",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_certificate_path": {
+          "type": "string",
+          "description": "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_id": {
+          "type": "string",
+          "description": "Client ID to use for authenticating SCEPman API requests",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_secret": {
+          "type": "string",
+          "description": "Client secret to use for authenticating SCEPman API requests",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "SCEPman API endpoint",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "environment": {
+          "type": "string",
+          "description": "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`. Not used and should not be specified when `metadata_host` is specified.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "msi_endpoint": {
+          "type": "string",
+          "description": "The URL of the Managed Service Identity (MSI) endpoint, if different from the Azure public cloud",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "tenant_id": {
+          "type": "string",
+          "description": "Tenant ID to use for authenticating SCEPman API requests",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "use_cli": {
+          "type": "bool",
+          "description": "Use Azure CLI for authentication",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "use_msi": {
+          "type": "bool",
+          "description": "Use Managed Service Identity for authentication",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "use_oidc": {
+          "type": "bool",
+          "description": "Use OpenID Connect for authentication",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The SCEPman provider allows managing SCEPman certificate authority related resources with terraform/opentofu.\nIt also integrates with Entra Global Secure Access (GSA) to manage TLS Inspection certificates.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "scepman_certificate_from_csr": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "csr": {
+            "type": "string",
+            "description": "CSR in PEM format.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "der_base64": {
+            "type": "string",
+            "description": "Root certificate in DER format (base64 encoded).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Timestamp of the expiration of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Timestamp of the last update of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pem": {
+            "type": "string",
+            "description": "Certificate in PEM format.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Resource to get a SCEPman issued certificate from a CSR.\n\n## Authorization Requirements\nTo be able to use this resource, the calling service principal must have the following application permissions:\n- CSR.Request on the SCEPman API application in the target tenant.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "scepman_gsa_tls_inspection_certificate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "common_name": {
+            "type": "string",
+            "description": "Common name of the certificate. Changing requires replacement.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Timestamp of the expiration of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the TLS Inspection certificate graph resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Timestamp of the last update of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the certificate. Autogenerated, because it needs to be unique on every certificate and would otherwise prevent rotation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_name": {
+            "type": "string",
+            "description": "Organization name of the certificate. Changing requires replacement.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pem": {
+            "type": "string",
+            "description": "Certificate in PEM format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "renew_before": {
+            "type": "number",
+            "description": "Number of days before the certificate expires that the provider should renew it.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the certificate as reported by Microsoft Graph.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Resource to manage a Entra GSA TLS Inspection certificate together with SCEPman.\nIt creates a externalCertificateAuthorityCertificate resource in Microsoft Graph, then signs it with SCEPman and updates the certificate resource with the generated certificate.\nFor day two operations, it will replace the certificate if it is going to expire in less than the configured renew_before threshold.\n\n## Authorization Requirements\nTo be able to use this resource, the calling service principal must have the following application permissions:\n- CSR.Request on the SCEPman API application in the target tenant.\n- NetworkAccess.ReadWrite.All on the Microsoft Graph API application in the target tenant.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "scepman_root_certificate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "der_base64": {
+            "type": "string",
+            "description": "Root certificate in DER format (base64 encoded).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Timestamp of the expiration of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Timestamp of the last update of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pem": {
+            "type": "string",
+            "description": "Root certificate in PEM format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_message": {
+            "type": "string",
+            "description": "Status message of the root certificate creation request.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Resource to trigger the initial creation of the root certificate for SCEPman.\n\nThis resource has no configurable attributes and cannot be modified. Deletion is a no-op.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "scepman_root_certificate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "der_base64": {
+            "type": "string",
+            "description": "Root certificate in DER format (base64 encoded).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Timestamp of the expiration of the certificate.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pem": {
+            "type": "string",
+            "description": "Root certificate in PEM format.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Data source to retrieve the root certificate of a SCEPman installation.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
