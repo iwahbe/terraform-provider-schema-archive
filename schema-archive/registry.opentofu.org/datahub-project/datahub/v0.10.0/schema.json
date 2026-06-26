@@ -1,0 +1,3053 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "frontend_url": {
+          "type": "string",
+          "description": "DataHub frontend URL for native user operations (sign-up, password reset). For example: `https://datahub.example.com:9002`. If not set, the provider reads `DATAHUB_FRONTEND_URL` from the environment, or derives it from `gms_url` by stripping any `/gms` suffix and replacing port 8080 with 9002. Only needed when using `datahub_local_user_login`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "gms_token": {
+          "type": "string",
+          "description": "DataHub GMS token for authentication. If not set, the provider will read the token from the `DATAHUB_GMS_TOKEN` environment variable, or fall back to the local DataHub CLI configuration at `~/.datahubenv`.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "gms_url": {
+          "type": "string",
+          "description": "DataHub GMS URL. For example: `https://datahub.example.com`. If not set, the provider will read `DATAHUB_GMS_URL` from the environment, or fall back to `gms.server` in `~/.datahubenv`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Terraform provider for managing DataHub platform configuration as code.\n\n**What this provider manages:** Platform-level configuration that controls how metadata flows into DataHub -- ingestion source recipes, encrypted secrets referenced in those recipes, and Remote Executor Pool registrations for private-network ingestion.\n\n**What this provider does not do:** It does not provision a DataHub instance; for that, see [DataHub Cloud](https://datahub.com/cloud) or the [DataHub deployment guides](https://docs.datahub.com/docs/category/deployment-guides). It also does not manage the data assets and metadata that DataHub ingests -- datasets, dashboards, tags, glossary terms, ownership, and similar enrichment are populated by your ingestion pipelines, not Terraform.\n\n**Terraform version:** Most resources work with any recent Terraform version. Resources that use WriteOnly attributes (`datahub_secret`, `datahub_connection`) require Terraform >= 1.11; add `required_version = \">= 1.11\"` to your `terraform {}` block when using those resources.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "datahub_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config_wo_version": {
+            "type": "number",
+            "description": "Rotation counter for the connection config. Increment this integer (e.g., `1` -> `2`) to trigger a replacement of the connection with the updated config from your current configuration. The integer itself is arbitrary; only changes to it matter. **Requires Terraform CLI 1.11+.**",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "connection_id": {
+            "type": "string",
+            "description": "Unique identifier for this connection. Becomes the URN suffix (`urn:li:dataHubConnection:<connection_id>`). Must be URL-safe. Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the connection, shown in the DataHub Integrations UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "DataHub platform identifier (e.g., `databricks`, `snowflake`). Derived from the configured platform block. Drift-detected: if the platform changes outside Terraform, the next plan will surface it.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this connection (e.g., `urn:li:dataHubConnection:prod-databricks`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "bigquery": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "private_key_json_wo": {
+                  "type": "string",
+                  "description": "Full service account JSON key file contents (the JSON string from the downloaded key file). The project ID is read from inside the JSON; no separate field is needed.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a BigQuery connection. See field reference in the resource description.",
+              "description_kind": "markdown"
+            }
+          },
+          "databricks": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auth_type": {
+                  "type": "string",
+                  "description": "Authentication type: `PERSONAL_ACCESS_TOKEN` or `OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "client_id_wo": {
+                  "type": "string",
+                  "description": "OAuth M2M client ID. Required when `auth_type = OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "client_secret_wo": {
+                  "type": "string",
+                  "description": "OAuth M2M client secret. Required when `auth_type = OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "personal_access_token_wo": {
+                  "type": "string",
+                  "description": "Personal access token. Required when `auth_type = PERSONAL_ACCESS_TOKEN`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "warehouse_id": {
+                  "type": "string",
+                  "description": "SQL Warehouse ID.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "workspace_url": {
+                  "type": "string",
+                  "description": "Databricks workspace URL (e.g., `https://dbc-39f83129-3f92.cloud.databricks.com`).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a Databricks connection. See field reference in the resource description.",
+              "description_kind": "markdown"
+            }
+          },
+          "dataplex": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "private_key_json_wo": {
+                  "type": "string",
+                  "description": "Full service account JSON key file contents (the JSON string from the downloaded key file). The project ID is read from inside the JSON.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a Google Cloud Dataplex connection. Uses the same GCP service account credential structure as the `bigquery` block.",
+              "description_kind": "markdown"
+            }
+          },
+          "raw_config": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "config_json_wo": {
+                  "type": "string",
+                  "description": "Full platform config serialized as a JSON string. The schema depends on the platform; consult the DataHub source for the expected fields.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "platform_urn_suffix": {
+                  "type": "string",
+                  "description": "DataHub platform identifier (the URN suffix, e.g., `looker`, `tableau`). Used to construct `urn:li:dataPlatform:<platform_urn_suffix>`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Generic escape hatch for platforms without a dedicated typed block. Supply the platform identifier and the full config JSON directly.",
+              "description_kind": "markdown"
+            }
+          },
+          "redshift": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "database": {
+                  "type": "string",
+                  "description": "Database name.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "host_port": {
+                  "type": "string",
+                  "description": "Redshift endpoint and port (e.g., `cluster.region.redshift.amazonaws.com:5439`).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password_wo": {
+                  "type": "string",
+                  "description": "Redshift password.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "Redshift username.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a Redshift connection. See field reference in the resource description.",
+              "description_kind": "markdown"
+            }
+          },
+          "snowflake": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "Snowflake account identifier (e.g., `xy12345.us-east-1`).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "auth_type": {
+                  "type": "string",
+                  "description": "Authentication type: `DEFAULT_AUTHENTICATOR` (password-based) or `KEY_PAIR_AUTHENTICATOR`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password_wo": {
+                  "type": "string",
+                  "description": "Snowflake password. Used when `auth_type = DEFAULT_AUTHENTICATOR`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "private_key_passphrase_wo": {
+                  "type": "string",
+                  "description": "Private key passphrase for encrypted private keys. Optional.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "private_key_wo": {
+                  "type": "string",
+                  "description": "PEM-encoded private key. Required when `auth_type = KEY_PAIR_AUTHENTICATOR`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "Snowflake role. Defaults to the user's default role when omitted.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "Snowflake username.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "warehouse": {
+                  "type": "string",
+                  "description": "Snowflake warehouse name.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a Snowflake connection. See field reference in the resource description.",
+              "description_kind": "markdown"
+            }
+          },
+          "unity_catalog": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auth_type": {
+                  "type": "string",
+                  "description": "Authentication type: `PERSONAL_ACCESS_TOKEN` or `OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "client_id_wo": {
+                  "type": "string",
+                  "description": "OAuth M2M client ID. Required when `auth_type = OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "client_secret_wo": {
+                  "type": "string",
+                  "description": "OAuth M2M client secret. Required when `auth_type = OAUTH_M2M`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "personal_access_token_wo": {
+                  "type": "string",
+                  "description": "Personal access token. Required when `auth_type = PERSONAL_ACCESS_TOKEN`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "warehouse_id": {
+                  "type": "string",
+                  "description": "SQL Warehouse ID.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "workspace_url": {
+                  "type": "string",
+                  "description": "Databricks workspace URL.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Configuration for a Databricks Unity Catalog connection. Fields are identical to the `databricks` block but target the `unity-catalog` platform URN.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub Connection.\n\nDataHub Connections are named, encrypted credential configurations for data platforms (Databricks, Snowflake, BigQuery, Redshift, Unity Catalog) and are displayed on the DataHub Cloud Integrations page. A connection can also be referenced in an ingestion source recipe via the `connection` field (Snowflake only; e.g., `connection: urn:li:dataHubConnection:my-conn`).\n\n## Security model\n\nDataHub encrypts the entire connection config blob server-side (AES-GCM-256) before persisting it. The encrypted blob is never returned by the read API. As a result:\n\n- All fields inside the platform config blocks are **WriteOnly**: they are sent to DataHub on create/update but are not stored in Terraform state.\n- Only top-level metadata (`name`, `platform`) is drift-detected via the strongly-consistent OpenAPI v3 read path.\n\n**Requires Terraform CLI 1.11 or later** (WriteOnly attribute support).\n\n## Credential rotation\n\nBecause all config fields are WriteOnly, Terraform cannot detect per-field drift on its own. To update any connection config (credentials or other settings), increment `config_wo_version` (e.g., from `1` to `2`). Terraform will plan a replacement -- deleting and recreating the connection with the updated config from your current configuration.\n\n## Platform config blocks\n\nExactly one platform block must be configured. Use the block matching your data platform (`databricks`, `snowflake`, `bigquery`, `dataplex`, `redshift`, `unity_catalog`). For platforms without a dedicated block, use `raw_config` and supply the JSON directly.\n\n### Databricks field reference\n\n| Field | Description |\n|---|---|\n| `workspace_url` | Databricks workspace URL (e.g., `https://dbc-xxx.cloud.databricks.com`) |\n| `warehouse_id` | SQL Warehouse ID |\n| `auth_type` | `PERSONAL_ACCESS_TOKEN` or `OAUTH_M2M` |\n| `personal_access_token_wo` | PAT credential (required when `auth_type = PERSONAL_ACCESS_TOKEN`) |\n| `client_id_wo` | OAuth client ID (required when `auth_type = OAUTH_M2M`) |\n| `client_secret_wo` | OAuth client secret (required when `auth_type = OAUTH_M2M`) |\n\n### Snowflake field reference\n\n| Field | Description |\n|---|---|\n| `account_id` | Snowflake account identifier (e.g., `xy12345.us-east-1`) |\n| `username` | Snowflake username (optional when using key-pair auth without a username) |\n| `warehouse` | Snowflake warehouse name (optional) |\n| `role` | Snowflake role (optional) |\n| `auth_type` | `DEFAULT_AUTHENTICATOR` (password) or `KEY_PAIR_AUTHENTICATOR` |\n| `password_wo` | Password (used when `auth_type = DEFAULT_AUTHENTICATOR`) |\n| `private_key_wo` | PEM-encoded private key (required when `auth_type = KEY_PAIR_AUTHENTICATOR`) |\n| `private_key_passphrase_wo` | Private key passphrase (optional, for encrypted private keys) |\n\n### BigQuery field reference\n\n| Field | Description |\n|---|---|\n| `private_key_json_wo` | Full service account JSON key file contents (the JSON string from the downloaded key file). The project ID is read from inside the JSON. |\n\n### Dataplex field reference\n\nIdentical to the `bigquery` block -- Dataplex uses the same GCP service account credential structure.\n\n| Field | Description |\n|---|---|\n| `private_key_json_wo` | Full service account JSON key file contents. |\n\n### Redshift field reference\n\n| Field | Description |\n|---|---|\n| `host_port` | Redshift endpoint and port (e.g., `cluster.region.redshift.amazonaws.com:5439`) |\n| `database` | Database name |\n| `username` | Redshift username |\n| `password_wo` | Redshift password |\n\n### Unity Catalog field reference\n\nIdentical to the `databricks` block but targets the Unity Catalog platform URN.\n\n## Post-import note\n\nAfter `terraform import`, only `name` and `platform` are populated from DataHub (the config blob is encrypted and unavailable). You must add a matching platform block in your configuration and set `config_wo_version` before the next apply.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the group's purpose.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email address for the group.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Unique identifier for the group. Becomes the URN suffix (`urn:li:corpGroup:<group_id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the group, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "slack": {
+            "type": "string",
+            "description": "Slack channel or handle for the group (e.g., `#data-platform`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this group (e.g., `urn:li:corpGroup:data-platform`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a native DataHub group (`corpGroup`).\n\nGroups are collections of users used as a unit in ownership and access policies. This resource manages **native** groups (created and owned in DataHub). It is not intended for IdP-synced groups, whose membership and properties are owned by your identity provider and would be overwritten on apply.\n\nMembership is managed separately via the `datahub_corp_group_member` resource so that users and group bindings can be composed independently.\n\n## Naming\n\n`group_id` becomes the URN suffix (`urn:li:corpGroup:<group_id>`). Supplying an explicit, deterministic id avoids the random UUID that the DataHub UI assigns, and keeps the URN stable and predictable for use as a policy actor or owner reference.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_group_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_urn": {
+            "type": "string",
+            "description": "Full URN of the group (e.g., `urn:li:corpGroup:data-platform`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier: `<group_urn>|<user_urn>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_urn": {
+            "type": "string",
+            "description": "Full URN of the user (e.g., `urn:li:corpuser:alice`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nManages a single membership edge: one user's membership in one native DataHub group.\n\nFollowing the HashiCorp idiom, each membership is its own resource rather than a list on the group. This lets group definitions and membership bindings be composed and owned independently, and lets memberships be added or removed without rewriting the whole group.\n\nMembership is stored on the user (the `nativeGroupMembership` aspect), so this resource targets **native** groups created in DataHub. It is not intended for IdP-synced groups, whose membership is owned by your identity provider.\n\n## References\n\nPrefer expression inputs so Terraform orders operations correctly: set `group_urn` to `datahub_corp_group.<name>.urn` and `user_urn` to `data.datahub_corp_user.<name>.urn`.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "full_name": {
+            "type": "string",
+            "description": "Full legal name of the user.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Job title of the user.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this user (e.g. `urn:li:corpuser:alice`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for the user. Becomes the URN suffix (`urn:li:corpuser:<username>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub user catalog record (`corpUser`).\n\nThis resource manages the user's profile metadata (display name, email, title). It does **not** create login credentials -- for native-auth login, use the `datahub_local_user_login` resource.\n\nUses upsert semantics: if the user entity already exists (e.g. from SSO/JIT provisioning, metadata ingestion, or a prior `datahub_local_user_login`), this resource adopts it and manages the profile fields going forward.\n\n## Naming\n\n`username` becomes the URN suffix (`urn:li:corpuser:<username>`). This matches the convention used by the DataHub Python SDK (`datahub` CLI) and SSO/JIT provisioning, avoiding duplicate entities.\n\n## Deletion\n\nDestroying this resource hard-deletes the entire user entity (profile, credentials, group memberships, references). If the user also has a `datahub_local_user_login` resource, that will self-remove from state on its next refresh.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_custom_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assertion_type": {
+            "type": "string",
+            "description": "Type label for the assertion (e.g. `CUSTOM`, `FRESHNESS`, `VOLUME`). Arbitrary string used for display and filtering in DataHub.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this assertion checks.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "external_url": {
+            "type": "string",
+            "description": "URL linking to the assertion definition in an external system.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "field_path": {
+            "type": "string",
+            "description": "Column or field path this assertion relates to. Omit for table-level assertions.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logic": {
+            "type": "string",
+            "description": "Logic description or expression for the assertion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "platform_urn": {
+            "type": "string",
+            "description": "URN of the data platform that evaluates this assertion (e.g. `urn:li:dataPlatform:dbt`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a custom (external) DataHub assertion.\n\nCustom assertions are evaluated by an external system (e.g. dbt tests, Great Expectations, a custom script) and reported back to DataHub via the `reportAssertionResult` API. This resource declares the assertion definition and associates it with a dataset; it does not run the assertion itself.\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`).",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_data_product": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_properties": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value map of custom metadata properties to attach to this data product.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "data_product_id": {
+            "type": "string",
+            "description": "Unique identifier for the data product. Becomes the URN suffix (`urn:li:dataProduct:<data_product_id>`). Use a stable human-readable slug (e.g. `orders-v2`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the data product's purpose, contents, and intended consumers.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Full DataHub URN of the domain that owns this data product (e.g. `urn:li:domain:finance`). Accepts a reference such as `datahub_domain.finance.urn` so Terraform can order creation automatically.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "external_url": {
+            "type": "string",
+            "description": "URL of external documentation or a data product catalog page for this data product.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the data product, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this data product (e.g. `urn:li:dataProduct:orders-v2`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub data product.\n\nA data product is a curated, domain-scoped grouping of data assets with a stable identity, description, and external documentation link. Data products are the primary way to publish well-defined, discoverable data offerings in DataHub's data mesh model.\n\n## Naming\n\n`data_product_id` becomes the URN suffix (`urn:li:dataProduct:<data_product_id>`). Supply a stable human-readable slug (e.g. `orders-v2`) rather than a UUID. This matches the DataHub Python SDK convention (`make_data_product_urn`) and ensures the URN is predictable and importable across environments.\n\nThe DataHub UI creates data products with a random UUID when no id is supplied. To import a UI-created data product, use the UUID from its URN as `data_product_id`.\n\n## Asset membership\n\nThis resource manages the data product definition only: id, name, description, domain, external URL, and custom properties. It does **not** manage the list of member assets (datasets, charts, etc.) or their output-port flags. Asset membership is intended to be set via the DataHub UI, CLI, or SDK. Membership managed outside Terraform will not be affected by `terraform apply`.\n\n## Write path\n\nCreate and update write the `dataProductProperties` aspect (and optionally the `domains` aspect) directly via the DataHub OpenAPI v3 endpoint with the user-supplied `data_product_id`. The GraphQL `createDataProduct` and `updateDataProduct` mutations are not used because they cannot set `external_url` or `custom_properties`.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the domain's scope and purpose.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain_id": {
+            "type": "string",
+            "description": "Unique identifier for the domain. Becomes the URN suffix (`urn:li:domain:<domain_id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the domain, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_domain": {
+            "type": "string",
+            "description": "Full URN of the parent domain (e.g., `urn:li:domain:finance`). Set to `datahub_domain.<name>.urn` (not a raw string) so Terraform's dependency graph orders creation and destruction correctly. Omit for a root domain. Changing this value reparents the domain in place without forcing replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this domain (e.g., `urn:li:domain:marketing`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub domain.\n\nDomains organize data assets into a logical business hierarchy. They can be nested to any depth via `parent_domain`, forming a tree (e.g. Business Area -> Business Domain -> Service Domain).\n\n## Ordering\n\nSet `parent_domain` to the `.urn` attribute of another `datahub_domain` resource (rather than a raw URN string) so Terraform's dependency graph creates parents before children and destroys children before parents. DataHub hard-deletes domains and refuses deletion if any child domains exist; correct ordering is required for `terraform destroy` to succeed.\n\n## Naming\n\n`domain_id` becomes the URN suffix (`urn:li:domain:<domain_id>`). Supplying an explicit, deterministic id avoids the random UUID that the DataHub UI assigns, and keeps the URN stable and predictable.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_field_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this field assertion checks.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_cron": {
+            "type": "string",
+            "description": "Cron expression defining when DataHub evaluates this assertion.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_timezone": {
+            "type": "string",
+            "description": "Timezone for the evaluation cron schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "exclude_nulls": {
+            "type": "bool",
+            "description": "FIELD_VALUES: whether null values are excluded from evaluation. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "executor_id": {
+            "type": "string",
+            "description": "ID of the remote executor pool to use for evaluation. Omit to use the default executor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fail_threshold_type": {
+            "type": "string",
+            "description": "FIELD_VALUES failure threshold mode: `COUNT` or `PERCENTAGE` of failing rows tolerated.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fail_threshold_value": {
+            "type": "number",
+            "description": "FIELD_VALUES failure threshold value (paired with `fail_threshold_type`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "failure_severity": {
+            "type": "string",
+            "description": "Severity raised when this assertion fails: `LOW`, `MEDIUM`, or `HIGH`. Omit for the DataHub default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "field_assertion_type": {
+            "type": "string",
+            "description": "Field assertion sub-type: `FIELD_VALUES` (per-row value check) or `FIELD_METRIC` (aggregate column metric).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "field_native_type": {
+            "type": "string",
+            "description": "Platform-native column type (e.g. `VARCHAR`, `INTEGER`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "field_path": {
+            "type": "string",
+            "description": "Path (name) of the column this assertion checks.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "field_type": {
+            "type": "string",
+            "description": "DataHub standard type of the column: `STRING`, `NUMBER`, `BOOLEAN`, `DATE`, `TIME`, `BYTES`, `ENUM`, `FIXED`, `MAP`, `ARRAY`, `UNION`, `STRUCT`, or `NULL`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "filter_sql": {
+            "type": "string",
+            "description": "Optional SQL `WHERE` clause (without the `WHERE` keyword) restricting which rows are checked.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_value": {
+            "type": "string",
+            "description": "Maximum value (used with `operator = \"BETWEEN\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "metric": {
+            "type": "string",
+            "description": "Column metric for `FIELD_METRIC`: one of `UNIQUE_COUNT`, `UNIQUE_PERCENTAGE`, `NULL_COUNT`, `NULL_PERCENTAGE`, `MIN`, `MAX`, `MEAN`, `MEDIAN`, `STDDEV`, `NEGATIVE_COUNT`, `NEGATIVE_PERCENTAGE`, `ZERO_COUNT`, `ZERO_PERCENTAGE`, `MIN_LENGTH`, `MAX_LENGTH`, `EMPTY_COUNT`, `EMPTY_PERCENTAGE`. Required for FIELD_METRIC.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "min_value": {
+            "type": "string",
+            "description": "Minimum value (used with `operator = \"BETWEEN\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Monitoring mode. `ACTIVE` enables scheduled evaluation. `PASSIVE` records results without scheduling.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "Comparison operator, e.g. `EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `BETWEEN`, `IN`, `NOT_NULL`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "single_value": {
+            "type": "string",
+            "description": "Comparison value (used with non-BETWEEN operators).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "How DataHub reads the column: `ALL_ROWS_QUERY`, `CHANGED_ROWS_QUERY`, `TABLE_STATISTICS`, or `DATAHUB_DATASET_PROFILE`. FIELD_VALUES requires a query source.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "transform_type": {
+            "type": "string",
+            "description": "Optional FIELD_VALUES transform applied before comparison. Currently `LENGTH`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub field (column) assertion monitor on a dataset.\n\nField assertions check a single column. `FIELD_VALUES` evaluates every row's value against an operator (e.g. `id >= 0`); `FIELD_METRIC` evaluates an aggregate column metric (e.g. `NULL_COUNT = 0`).\n\n## Sub-types\n\nSet `field_assertion_type = \"FIELD_VALUES\"` with `operator` + a value (`single_value` or `min_value`/`max_value`), optionally `transform_type`, `fail_threshold_type`/`fail_threshold_value`, and `exclude_nulls`. Set `field_assertion_type = \"FIELD_METRIC\"` with `metric` + `operator` + a value. FIELD_VALUES requires a warehouse-backed `source_type` and platform.\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`). Only NATIVE (author-as-code) assertions can be imported; ingested EXTERNAL or smart/AI INFERRED assertions are refused.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_freshness_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cron_schedule": {
+            "type": "string",
+            "description": "Cron expression defining the freshness window (for `schedule_type = \"CRON\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cron_timezone": {
+            "type": "string",
+            "description": "Timezone for the cron window schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this freshness assertion checks.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_cron": {
+            "type": "string",
+            "description": "Cron expression defining when DataHub evaluates this assertion.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_timezone": {
+            "type": "string",
+            "description": "Timezone for the evaluation cron schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "executor_id": {
+            "type": "string",
+            "description": "ID of the remote executor pool to use for evaluation. Omit to use the default executor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "failure_severity": {
+            "type": "string",
+            "description": "Severity raised when this assertion fails: `LOW`, `MEDIUM`, or `HIGH`. Omit to use the DataHub default. (Conditional per-result severity rules are not modeled.)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_sql": {
+            "type": "string",
+            "description": "Optional SQL `WHERE` clause (without the `WHERE` keyword) restricting which rows the freshness check considers, e.g. `\"region = 'EU'\"`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fixed_interval_multiple": {
+            "type": "number",
+            "description": "Number of units in the fixed interval (e.g. `24` for 24 hours). Required when `schedule_type = \"FIXED_INTERVAL\"`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fixed_interval_unit": {
+            "type": "string",
+            "description": "Time unit for a fixed-interval schedule: `HOUR`, `DAY`, `WEEK`, `MONTH`, or `YEAR`. Required when `schedule_type = \"FIXED_INTERVAL\"`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Monitoring mode. `ACTIVE` enables scheduled evaluation. `PASSIVE` records results without scheduling.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "schedule_type": {
+            "type": "string",
+            "description": "Freshness window type: `FIXED_INTERVAL` (rolling window), `CRON` (calendar window), or `SINCE_THE_LAST_CHECK` (any change since the previous evaluation; no window sub-configuration).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "How DataHub determines freshness. `AUDIT_LOG` uses the platform audit log. `INFORMATION_SCHEMA` queries the source catalog.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub freshness assertion monitor on a dataset.\n\nFreshness assertions check that a dataset has been updated within an expected window (e.g. within the last 24 hours). DataHub evaluates whether a new batch of data arrived within the configured schedule window.\n\n## Schedule types\n\nSet `schedule_type` to `FIXED_INTERVAL` and supply `fixed_interval_unit` / `fixed_interval_multiple` for a rolling window (e.g. data must arrive every 1 day). Set `schedule_type` to `CRON` and supply `cron_schedule` / `cron_timezone` for a calendar-based window. Set `schedule_type` to `SINCE_THE_LAST_CHECK` to require that the dataset changed at all between consecutive evaluations; this type takes no window sub-configuration.\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`). Only NATIVE (author-as-code) assertions can be imported; ingested EXTERNAL (e.g. dbt) or smart/AI INFERRED assertions are refused.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_node": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the term group's scope and purpose.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Full URN of the DataHub domain to associate with this term group (e.g. `urn:li:domain:finance`). Set to `datahub_domain.<name>.urn` so Terraform's dependency graph creates the domain before the term group. Changing this updates the association in place without forcing replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the term group, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "node_id": {
+            "type": "string",
+            "description": "Unique identifier for the glossary node. Becomes the URN suffix (`urn:li:glossaryNode:<node_id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_node": {
+            "type": "string",
+            "description": "Full URN of the parent glossary node (e.g. `urn:li:glossaryNode:finance`). Set to `datahub_glossary_node.<name>.urn` (not a raw string) so Terraform's dependency graph orders creation and destruction correctly. Omit for a root-level term group. Changing this value reparents the node in place without forcing replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this glossary node (e.g. `urn:li:glossaryNode:finance`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub glossary node (also called a **Term Group** in the DataHub UI).\n\nGlossary nodes are the folder-like containers of the Business Glossary hierarchy. They can be nested inside other nodes to any depth, and glossary terms (`datahub_glossary_term`) hang off nodes as leaves.\n\n## Ordering\n\nSet `parent_node` to the `.urn` attribute of another `datahub_glossary_node` resource (rather than a raw URN string) so Terraform's dependency graph creates parents before children and destroys children before parents.\n\n**Note:** unlike domains, DataHub does not refuse to delete a node that still has children -- the server will succeed, leaving child nodes or terms parentless. Correct `parent_node = <resource>.urn` references are the only thing that guarantees safe destroy ordering.\n\n## Naming\n\n`node_id` becomes the URN suffix (`urn:li:glossaryNode:<node_id>`). Supplying an explicit, deterministic id avoids the random UUID that the DataHub UI assigns, and keeps the URN stable and predictable.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_term": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Definition of the term's meaning and scope.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Full URN of the DataHub domain to associate with this term (e.g. `urn:li:domain:finance`). Set to `datahub_domain.<name>.urn` so Terraform's dependency graph creates the domain before the term. Changing this updates the association in place without forcing replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the term, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_node": {
+            "type": "string",
+            "description": "Full URN of the parent glossary node (Term Group), e.g. `urn:li:glossaryNode:finance`. Set to `datahub_glossary_node.<name>.urn` (not a raw string) so Terraform's dependency graph orders creation and destruction correctly. The parent must be a glossary node -- terms cannot be parents of other terms. Omit to place the term at the root level. Changing this value reparents the term in place without forcing replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "term_id": {
+            "type": "string",
+            "description": "Unique identifier for the glossary term. Becomes the URN suffix (`urn:li:glossaryTerm:<term_id>`). Changing this forces a new resource. Maximum 56 characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this glossary term (e.g. `urn:li:glossaryTerm:revenue`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub glossary term (also called a **Term** in the DataHub UI).\n\nGlossary terms are the leaf concepts of the Business Glossary. Each term lives under a glossary node (`datahub_glossary_node`), which provides the folder-like hierarchy. Terms cannot be parents of other terms.\n\n## Ordering\n\nSet `parent_node` to the `.urn` attribute of a `datahub_glossary_node` resource (rather than a raw URN string) so Terraform's dependency graph creates the parent node before the term and destroys the term before the node.\n\n**Note:** unlike domains, DataHub does not refuse to delete a glossary node that still has children -- the server will succeed, leaving terms parentless. Correct `parent_node = datahub_glossary_node.<name>.urn` references are the only thing that guarantees safe destroy ordering.\n\n## Naming\n\n`term_id` becomes the URN suffix (`urn:li:glossaryTerm:<term_id>`). Supplying an explicit, deterministic id avoids the random UUID that the DataHub UI assigns, keeps the URN stable and predictable, and prevents duplicate entities when coexisting with SDK-created terms. The DataHub model caps the id at 56 characters.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ingestion_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cli_version": {
+            "type": "string",
+            "description": "Optional DataHub ingestion CLI version used by DataHub to execute the source. If omitted, it is not sent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "cron_interval": {
+            "type": "string",
+            "description": "Optional cron schedule expression for the ingestion source. If omitted, no schedule is sent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "debug_mode": {
+            "type": "bool",
+            "description": "Whether to run this ingestion source in debug mode (DataHub `config.debugMode`). Enables verbose logging in the ingestion executor for troubleshooting failing runs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "extra_args": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Optional extra arguments sent to DataHub as `config.extraArgs` (map of string keys to string values). This can be used for settings like `extra_pip_requirements`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "Optional DataPlatform URN to associate with this ingestion source (e.g. `urn:li:dataPlatform:bigquery`). Used by the DataHub UI for icons and filtering.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "recipe": {
+            "type": "string",
+            "description": "Recipe JSON string. Avoid embedding secrets directly; prefer `${SECRET_NAME}` / `${ENV_VAR}` placeholders so DataHub can resolve credentials via Secrets or environment variables. Compared by JSON semantic equality, so formatting and key-order differences (e.g. between your config and the form DataHub returns on read) do not produce spurious plan diffs.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "remote_executor_id": {
+            "type": "string",
+            "description": "Optional remote executor id (DataHub `config.executorId`). If omitted, it is not sent and will be omitted from the stored ingestion source config.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "Unique id for the ingestion source (DataHub identifier). If omitted, it is derived from `source_name` as `<sanitized-source_name>-<hash>`. This is also used as the Terraform resource id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source_name": {
+            "type": "string",
+            "description": "Human-friendly name for the ingestion source as shown in the DataHub UI. Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "Ingestion source type. If omitted, it is derived from `recipe.source.type`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Optional timezone for the schedule (e.g. `UTC`). If `cron_interval` is set and timezone is omitted, `UTC` is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub Ingestion Source using a raw recipe JSON string.\n\nThis is similar in spirit to `aws_iam_policy`: the resource stores a JSON document (the recipe) in the target system (DataHub).\n\n## Argument Reference\n\n- `source_id` (Optional) Unique id for the ingestion source. If omitted, it is derived from `source_name` as `<sanitized-source_name>-<hash>`. This becomes the Terraform resource id.\n- `source_name` (Required) Human-friendly name shown in the DataHub UI.\n- `recipe` (Required) Recipe JSON string. Build it with `jsonencode({...})` or any mechanism that produces valid JSON.\n- `cron_interval` (Optional) Cron schedule expression (e.g. `0 10 * * *`). If omitted, no schedule is sent.\n- `timezone` (Optional) Schedule timezone. If `cron_interval` is set and timezone is omitted, `UTC` is used.\n- `cli_version` (Optional) DataHub ingestion CLI version used by DataHub to execute the source. If omitted, it is not sent.\n- `extra_args` (Optional) Extra arguments sent to DataHub as `config.extraArgs` (map of string keys to string values). For example, set `extra_pip_requirements` to add pip deps.\n- `debug_mode` (Optional) Enable debug mode for this ingestion source (`config.debugMode`). Produces verbose executor logs for troubleshooting.\n- `platform` (Optional) DataPlatform URN to associate with this ingestion source (e.g. `urn:li:dataPlatform:bigquery`). Used by the DataHub UI for icons and filtering.\n- `source_type` (Optional) Ingestion source type. If omitted, it is derived from `recipe.source.type`. If set, it must match the type inside the recipe.\n\n## Security Note\n\n**Warning:** The recipe content is stored in DataHub as part of the Ingestion Source configuration. If you embed credentials directly in the recipe JSON, they can be stored in DataHub and may be visible to users/services with access to ingestion source configurations.\n\n**Recommended:** Use DataHub Secrets / environment variable substitution (e.g. `${SECRET_NAME}`) instead of hard-coded credentials.\n\nReferences: https://docs.datahub.com/docs/ui-ingestion/#configuring-secrets and https://docs.datahub.com/docs/metadata-ingestion/recipe_overview#loading-sensitive-data-as-files-in-recipes.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_local_user_login": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "Email address passed to the sign-up endpoint. Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "full_name": {
+            "type": "string",
+            "description": "Full name passed to the sign-up endpoint. Changing this forces a new resource (profile updates go through `datahub_corp_user`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_password": {
+            "type": "string",
+            "description": "Initial password for the user. When omitted, the provider generates a random throwaway password and exposes a `password_reset_url` instead. **Requires Terraform CLI 1.11+.** Not stored in state.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "initial_password_wo_version": {
+            "type": "number",
+            "description": "Rotation counter for `initial_password`. Increment this to force replacement and re-run the sign-up flow with the new password.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "password_reset_url": {
+            "type": "string",
+            "description": "Single-use password reset URL (24h TTL). Populated only when `initial_password` is omitted. Send this to the user so they can set their own password. Null after import or when `initial_password` is set.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Job title passed to the sign-up endpoint. Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "user_urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this user (e.g. `urn:li:corpuser:bob`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for the user. Becomes the URN suffix (`urn:li:corpuser:<username>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates a native-auth login for a DataHub user.\n\nThis resource provisions a user entity with local credentials (username + password) via the DataHub sign-up flow. It is separate from `datahub_corp_user` (which manages the catalog profile) because the credential lifecycle is fundamentally different: different API path, different auth requirements, one-way ratchet (credentials cannot be removed without deleting the user entity).\n\n**When `initial_password` is omitted** (recommended), the provider generates a random throwaway password, signs up the user, then generates a single-use password reset link (24h TTL) exposed as `password_reset_url`. Send this link to the user so they can set their own password. DataHub has no server-side email; distribution is your responsibility.\n\n**When `initial_password` is set**, the provider uses it directly and does not generate a reset link. Use this for automation or test fixtures where the caller controls the credential.\n\n## Deletion\n\n**Warning:** destroying this resource hard-deletes the entire user entity (profile, credentials, group memberships, references) -- not just the credentials. This is a DataHub API limitation (there is no endpoint to remove only credentials). If `datahub_corp_user` also exists for the same username, it will self-remove from state on its next refresh (404).\n\n## Two-resource pattern\n\nWhen using both resources for the same user, reference the login's `username` output from the corp_user resource to ensure correct ordering:\n\n```hcl\nresource \"datahub_local_user_login\" \"bob\" {\n  username  = \"bob\"\n  full_name = \"Bob Jones\"\n  email     = \"bob@example.com\"\n}\n\nresource \"datahub_corp_user\" \"bob\" {\n  username = datahub_local_user_login.bob.username\n  title    = \"Analytics Engineer\"\n}\n```\n\nOn OSS DataHub, the login resource **must** be created before `datahub_corp_user` (the sign-up endpoint rejects pre-existing entities). On DataHub Cloud, either order works. The reference pattern above is safe on both.\n\n## DataHub Cloud: username must be the email address\n\nOn DataHub Cloud, the sign-up endpoint ignores the `username` field and derives the user URN from the `email` field. Non-SSO local users on Cloud always have their email address as their username (e.g. `urn:li:corpuser:alice@example.com`). Set `username` to the same value as `email` when targeting Cloud.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ownership_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the ownership type's purpose and intended usage.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the ownership type, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type_id": {
+            "type": "string",
+            "description": "Unique identifier for the ownership type. Becomes the URN suffix (`urn:li:ownershipType:<type_id>`). Use a stable human-readable slug (e.g. `data_quality_lead`). Must not begin with `__system__` (reserved for built-in types). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this ownership type (e.g. `urn:li:ownershipType:data_quality_lead`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a custom DataHub ownership type.\n\nOwnership types define named roles for asset owners, such as \"Data Steward\", \"Producer\", or \"Data Quality Lead\". Once created, they can be assigned to assets alongside owner identities in DataHub's ownership model.\n\nDataHub ships four built-in system ownership types (`Technical Owner`, `Business Owner`, `Data Steward`, `None`). These have URN ids prefixed with `__system__` and cannot be managed or deleted by this resource. To look up a built-in type's URN, use the `datahub_ownership_type` data source.\n\n## Naming\n\n`type_id` becomes the URN suffix (`urn:li:ownershipType:<type_id>`). Supply a stable human-readable slug (e.g. `data_quality_lead`) rather than a UUID. This matches the DataHub Python SDK convention and ensures the URN is predictable and importable across environments.\n\n## Write path\n\nCreate and update write the `ownershipTypeInfo` aspect directly via the DataHub OpenAPI v3 endpoint with the user-supplied `type_id`. The GraphQL `createOwnershipType` mutation is not used because it generates a server-side random UUID for the id, which is incompatible with Terraform's declarative model.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "actors": {
+            "nested_type": {
+              "attributes": {
+                "all_groups": {
+                  "type": "bool",
+                  "description": "Apply the policy to all groups. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "all_users": {
+                  "type": "bool",
+                  "description": "Apply the policy to all users. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "groups": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of group URNs (e.g. `[\"urn:li:corpGroup:data-platform\"]`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "resource_owners": {
+                  "type": "bool",
+                  "description": "Apply the policy to owners of the targeted resource (METADATA policies only). Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "resource_owners_types": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of ownership-type URNs the resource_owners filter applies to (when `resource_owners = true`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of user URNs (e.g. `[\"urn:li:corpuser:alice\"]`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The actors the policy's privileges are granted to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the policy's purpose.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the policy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy_id": {
+            "type": "string",
+            "description": "Unique identifier for the policy. Becomes the URN suffix (`urn:li:dataHubPolicy:<policy_id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "privileges": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of privilege strings the policy grants (e.g. `[\"MANAGE_POLICIES\"]`). Not validated by the provider.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resources": {
+            "nested_type": {
+              "attributes": {
+                "all_resources": {
+                  "type": "bool",
+                  "description": "Apply to all resources of `type`. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "resources": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of specific resource URNs the policy applies to.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The resource type the policy applies to (e.g. `dataset`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Resource scope for METADATA policies. Omit for platform-wide PLATFORM policies.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Policy state: `ACTIVE` (enforced) or `INACTIVE`. Defaults to `ACTIVE`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Policy type: `PLATFORM` or `METADATA`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this policy (e.g., `urn:li:dataHubPolicy:my-policy`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub access policy (`dataHubPolicy`).\n\nPolicies grant a set of privileges to a set of actors (users and/or groups), optionally scoped to a set of resources. There are two policy types:\n\n- `PLATFORM` -- top-level administrative privileges (e.g. `MANAGE_POLICIES`, `MANAGE_INGESTION`). Omit the `resources` block.\n- `METADATA` -- privileges over metadata entities (e.g. `EDIT_ENTITY_TAGS`), optionally scoped via the `resources` block.\n\n## Naming\n\n`policy_id` becomes the URN suffix (`urn:li:dataHubPolicy:<policy_id>`). Supplying an explicit id keeps the URN deterministic and stable, avoiding the random UUID the DataHub UI assigns.\n\n## List ownership\n\nThis resource owns the complete `privileges`, `actors`, and `resources` sets and writes the full desired state on every apply. Privileges or actors added outside Terraform are removed on the next apply. These are modeled as sets, so element order is not significant.\n\n## Privileges\n\n`privileges` are free-form strings and are not validated by the provider, since the valid set differs between DataHub releases and between OSS and DataHub Cloud. See the DataHub `PoliciesConfig` for the authoritative list.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_remote_executor_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "UTC timestamp (milliseconds since epoch) when this pool was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable description for the pool.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Whether this pool is the global default. When set to `true`, this pool becomes the default for new ingestion sources, and any previously-default pool is automatically demoted. Cannot be directly set to `false` on a default pool; set another pool as default instead.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_embedded": {
+            "type": "bool",
+            "description": "Whether this pool is embedded in the DataHub Cloud coordinator pod. Managed by DataHub Cloud; not configurable.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "Unique identifier for the pool. Must contain only alphanumeric characters, underscores (`_`), dots (`.`), or hyphens (`-`). The IDs `default` and `embedded` are reserved; use the `datahub_remote_executor_pool` data source to reference them. Changing this value forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state_message": {
+            "type": "string",
+            "description": "Error message when `state_status` is `PROVISIONING_FAILED`, otherwise empty.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state_status": {
+            "type": "string",
+            "description": "Provisioning state of the pool: `PROVISIONING_PENDING`, `PROVISIONING_IN_PROGRESS`, `READY`, `PROVISIONING_FAILED`, or `OLD_CHANNEL_DRAINING`. Workers can connect once the pool reaches `READY`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this pool (e.g. `urn:li:dataHubRemoteExecutorPool:my-pool`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub Remote Executor Pool.\n\n**API stability notice.** The underlying GraphQL mutations used by this resource are classified as `internal` in DataHub Cloud and carry no external API stability guarantee. They may change between Cloud releases without notice. This is documented as a known risk in the provider; file an issue at https://github.com/datahub-project/terraform-provider-datahub if a breaking change is encountered.\n\n## What is a Remote Executor Pool?\n\nA Remote Executor Pool is a server-side entity that acts as a named registration point for one or more Remote Executor worker processes. Workers are deployed in your own environment (Kubernetes via the `datahub-executor-worker` Helm chart, or ECS) and connect outbound to DataHub Cloud. Each worker references the pool by setting `DATAHUB_EXECUTOR_POOL_ID` to the pool's `pool_id`. Workers self-attach when they start up; the pool entity itself must already exist.\n\n## Reserved pool IDs\n\nThe pool IDs `default` and `embedded` are reserved by DataHub Cloud and cannot be created via this resource. Use the `datahub_remote_executor_pool` data source to reference them:\n\n```terraform\ndata \"datahub_remote_executor_pool\" \"default\" {\n  pool_id = \"default\"\n}\n```\n\n## Default pool\n\nSetting `is_default = true` promotes this pool to the global default for new ingestion sources. This atomically demotes any previously-default pool on the server side. You cannot directly unset `is_default` to `false` on a default pool; set another pool as default instead, and this resource's `is_default` will reflect `false` on the next refresh.\n\n## Ingestion source linkage\n\nTo route an ingestion source to this pool, set `remote_executor_id` on the ingestion source resource to this pool's `pool_id`:\n\n```terraform\nresource \"datahub_remote_executor_pool\" \"analytics\" {\n  pool_id = \"analytics-team\"\n}\n\nresource \"datahub_ingestion_source\" \"postgres_warehouse\" {\n  # ...\n  remote_executor_id = datahub_remote_executor_pool.analytics.pool_id\n}\n```\n\n## Pool state\n\nAfter creation, Cloud provisions the underlying infrastructure (e.g. an SQS queue). The `state_status` attribute tracks this: `PROVISIONING_PENDING` -> `PROVISIONING_IN_PROGRESS` -> `READY`. Workers can connect once the pool reaches `READY`. If provisioning fails, `state_status` is `PROVISIONING_FAILED` and `state_message` contains the error detail.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_role_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "actor_urn": {
+            "type": "string",
+            "description": "URN of the actor to assign the role to: a user (`urn:li:corpuser:<username>`) or group (`urn:li:corpGroup:<id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Mirrors `actor_urn` (the natural key: one role per actor).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_urn": {
+            "type": "string",
+            "description": "URN of the built-in role to assign (e.g. `urn:li:dataHubRole:Editor`). Can be changed in place to reassign.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nAssigns a built-in DataHub role (`Admin`, `Editor`, or `Reader`) to an actor -- a user or a group.\n\nDataHub enforces **one role per actor**: assigning a new role replaces the previous one. For that reason the actor is the natural key (the resource `id` is the actor URN), and **exactly one `datahub_role_assignment` may target a given actor**. Defining two for the same actor causes them to clobber each other on every apply.\n\nRoles themselves are built-in and read-only; resolve a role URN with the `datahub_role` data source. Deleting this resource removes the role from the actor (its roleMembership is cleared).\n\n## References\n\nPrefer expression inputs: set `actor_urn` to `datahub_corp_group.<name>.urn` or `data.datahub_corp_user.<name>.urn`, and `role_urn` to `data.datahub_role.<name>.urn`.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_schema_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "compatibility": {
+            "type": "string",
+            "description": "Schema match mode: `EXACT_MATCH`, `SUPERSET`, or `SUBSET`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this schema assertion checks.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_cron": {
+            "type": "string",
+            "description": "Cron expression defining when DataHub evaluates this assertion.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_timezone": {
+            "type": "string",
+            "description": "Timezone for the evaluation cron schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "executor_id": {
+            "type": "string",
+            "description": "ID of the remote executor pool to use for evaluation. Omit to use the default executor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fields": {
+            "nested_type": {
+              "attributes": {
+                "native_type": {
+                  "type": "string",
+                  "description": "Platform-native column type (e.g. `VARCHAR`, `INTEGER`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Column path (field name).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "DataHub standard type for the column: `STRING`, `NUMBER`, `BOOLEAN`, `DATE`, `TIME`, `BYTES`, `ENUM`, `FIXED`, `MAP`, `ARRAY`, `UNION`, `STRUCT`, or `NULL`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The expected columns, in order. The resource owns the complete list -- fields added to the dataset outside Terraform are evaluated against this set per the `compatibility` mode.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Monitoring mode. `ACTIVE` enables scheduled evaluation. `PASSIVE` records results without scheduling.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub schema assertion monitor on a dataset.\n\nSchema assertions check that a dataset's columns match an expected set, catching unexpected schema drift. The resource owns the complete expected field list and the comparison `compatibility` mode.\n\n## Compatibility\n\n`EXACT_MATCH` requires the actual schema to equal the expected fields exactly. `SUPERSET` allows the actual schema to contain additional fields. `SUBSET` allows it to contain a subset.\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`). Only NATIVE (author-as-code) assertions can be imported; ingested EXTERNAL or smart/AI INFERRED assertions are refused.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable description for the secret, shown in the DataHub UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique name for the secret. Becomes the URN suffix and the `${NAME}` reference used in recipes. Changing the name forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this secret (e.g. `urn:li:dataHubSecret:my-secret`). Use this value as `${my-secret}` in ingestion source recipes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Plaintext secret value. DataHub encrypts this server-side and never returns it in plaintext. It is not stored in Terraform state. **Requires Terraform CLI 1.11+.**",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "value_wo_version": {
+            "type": "number",
+            "description": "Rotation counter for the `value` attribute. Increment this integer (e.g. `1` -> `2`) to trigger a replacement of the secret with the updated `value` from config. The integer itself is arbitrary; only changes to it matter.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub Secret.\n\nDataHub Secrets are named, encrypted values stored by DataHub and referenced in ingestion recipes via `${SECRET_NAME}` placeholders. At run time, the DataHub ingestion executor resolves the placeholders by calling the DataHub GraphQL API and substituting the decrypted values into the recipe before execution.\n\n## Security model\n\nThe `value` attribute is **WriteOnly**: Terraform sends the plaintext value to the provider on each apply, but it is never persisted to `terraform.tfstate`. DataHub encrypts the value server-side (AES-GCM-256) before storing it. The plaintext is never returned by any read operation.\n\n**Requires Terraform CLI 1.11 or later** (WriteOnly attribute support).\n\n## Rotation\n\nBecause `value` is write-only, Terraform cannot detect drift in the value on its own. To rotate a secret, update the value in your config and increment `value_wo_version` (e.g. from `1` to `2`). Terraform will plan a replacement -- deleting and recreating the secret with the new value. The URN (and therefore all recipe references like `${MY_SECRET}`) remain unchanged after rotation because the name does not change.\n\n```terraform\nresource \"datahub_secret\" \"bq_creds\" {\n  name             = \"tf-bq-service-account-json\"\n  description      = \"Service account for BigQuery ingestion\"\n  value            = file(\"${path.module}/bq-key.json\")\n  value_wo_version = 1  # bump to rotate\n}\n```\n\n## Post-import note\n\nAfter `terraform import`, the `value` attribute has no recorded state (it was never stored). You must set `value` in your config and run `terraform apply` before any subsequent update will succeed, because the DataHub update mutation requires the value on every call.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_sql_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "change_type": {
+            "type": "string",
+            "description": "How the metric change is measured: `ABSOLUTE` (a raw delta) or `PERCENTAGE` (a percentage change). Required when `sql_type = \"METRIC_CHANGE\"`; must be omitted otherwise.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this SQL assertion checks.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_cron": {
+            "type": "string",
+            "description": "Cron expression defining when DataHub evaluates this assertion.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_timezone": {
+            "type": "string",
+            "description": "Timezone for the evaluation cron schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "executor_id": {
+            "type": "string",
+            "description": "ID of the remote executor pool to use for evaluation. Omit to use the default executor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "failure_severity": {
+            "type": "string",
+            "description": "Severity raised when this assertion fails: `LOW`, `MEDIUM`, or `HIGH`. Omit to use the DataHub default. (Conditional per-result severity rules are not modeled.)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Monitoring mode. `ACTIVE` enables scheduled evaluation. `PASSIVE` records results without scheduling.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "Comparison operator. One of `EQUAL_TO`, `NOT_EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL_TO`, `LESS_THAN`, `LESS_THAN_OR_EQUAL_TO`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sql_type": {
+            "type": "string",
+            "description": "SQL assertion sub-type. One of `METRIC` (assert on the absolute value the query returns) or `METRIC_CHANGE` (assert on the change in that value between evaluations). `METRIC_CHANGE` requires `change_type` and a non-empty `description`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "statement": {
+            "type": "string",
+            "description": "SQL SELECT statement that returns a single numeric value to compare against `value`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Expected numeric result of the SQL statement (as a string, e.g. `\"0\"`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub SQL assertion monitor on a dataset.\n\nSQL assertions run a custom SQL query against the dataset and compare the numeric result to an expected value. Use them for business-logic checks that volume and freshness assertions cannot express (e.g. no negative values, referential integrity counts).\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`). Only NATIVE (author-as-code) assertions can be imported; ingested EXTERNAL (e.g. dbt) or smart/AI INFERRED assertions are refused.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_structured_property": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_entity_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Entity type short names that URN values may reference. Only meaningful when `value_type = \"urn\"`. E.g. `[\"corpuser\", \"corpGroup\"]`. Adding entity types is applied in-place; removing any forces a new resource.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "allowed_values": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Human-readable description of what this value means.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "number_value": {
+                  "type": "number",
+                  "description": "Numeric allowed value. Set exactly one of `string_value` or `number_value`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "string_value": {
+                  "type": "string",
+                  "description": "String allowed value. Set exactly one of `string_value` or `number_value`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Optional list of allowed values. When set, only values in this list may be applied to assets. Each entry specifies exactly one of `string_value` or `number_value` and an optional `description`. Adding values is applied in-place; removing any forces a new resource.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cardinality": {
+            "type": "string",
+            "description": "Whether each asset may have one (`SINGLE`) or multiple (`MULTIPLE`) values for this property. Defaults to `SINGLE`. Widening from `SINGLE` to `MULTIPLE` is applied in-place; narrowing forces a new resource.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the property's purpose and intended usage.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name shown in the DataHub UI. Defaults to `property_id` if not set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of entity type short names this property can be applied to (e.g. `[\"dataset\", \"dashboard\"]`). Corresponds to `urn:li:entityType:datahub.<name>` URNs. Adding entity types is applied in-place; removing any forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "immutable": {
+            "type": "bool",
+            "description": "Whether values applied to assets are immutable once set. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "property_id": {
+            "type": "string",
+            "description": "Unique identifier for the structured property. Becomes the URN suffix and `qualifiedName` (`urn:li:structuredProperty:<property_id>`). Use a dotted reverse-DNS form (e.g. `io.acme.privacy.classification`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "qualified_name": {
+            "type": "string",
+            "description": "The qualified name of the property (equal to `property_id`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "settings": {
+            "nested_type": {
+              "attributes": {
+                "hide_in_asset_summary_when_empty": {
+                  "type": "bool",
+                  "description": "Hide the property from the asset summary when no value is set. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "is_hidden": {
+                  "type": "bool",
+                  "description": "Hide this property from the DataHub UI entirely. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "show_as_asset_badge": {
+                  "type": "bool",
+                  "description": "Show the property value as a badge on asset cards. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "show_in_asset_summary": {
+                  "type": "bool",
+                  "description": "Show this property in the asset summary panel. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "show_in_columns_table": {
+                  "type": "bool",
+                  "description": "Show the property in the schema columns table. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "show_in_search_filters": {
+                  "type": "bool",
+                  "description": "Show this property as a search filter facet. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Display and search settings for this property in the DataHub UI. If `is_hidden` is true, all other flags must be false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this structured property (e.g., `urn:li:structuredProperty:io.acme.retention`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value_type": {
+            "type": "string",
+            "description": "Data type for values of this property. One of: `string`, `number`, `date`, `urn`, `rich_text`. Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub structured property definition.\n\nA structured property defines a typed, named custom property that can be applied to data assets in DataHub (e.g. a `number`-valued `retentionDays` applicable to datasets). This resource manages the *definition* only -- the schema object that declares the property type, cardinality, entity applicability, and allowed values. Applying property values to individual assets is per-asset enrichment and is outside the scope of this provider.\n\n## Naming\n\n`property_id` becomes both the URN suffix (`urn:li:structuredProperty:<property_id>`) and the `qualifiedName`. Use a dotted reverse-DNS form (e.g. `io.acme.privacy.classification`) to avoid collisions and to match the convention used by the DataHub Python SDK. A Terraform-managed property and a Python-SDK-created property with the same `property_id` reference the same DataHub entity.\n\n## Update semantics\n\nDataHub's `updateStructuredProperty` mutation is append-only for `entity_types`, `allowed_values`, and `allowed_entity_types`, and cardinality can only widen from `SINGLE` to `MULTIPLE`. Additive changes (adding elements to these lists, or widening cardinality) are applied in-place. If you remove an element from any of these lists or narrow cardinality from `MULTIPLE` to `SINGLE`, Terraform will destroy and recreate the property. **Destroying a property hard-deletes it and removes all applied values from every asset.**\n\n## Value types\n\nSpecify `value_type` as a short name: `string`, `number`, `date`, `urn`, or `rich_text`. When `value_type = \"urn\"`, use `allowed_entity_types` to restrict which entity types the URN values may reference.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color_hex": {
+            "type": "string",
+            "description": "Display colour for the tag badge in the DataHub UI. Must be a six-digit hex colour string including the leading `#` (e.g. `#FF6B6B`). Case-insensitive.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tag's meaning and intended usage.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for the tag, shown throughout the DataHub UI.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tag_id": {
+            "type": "string",
+            "description": "Unique identifier for the tag. Becomes the URN suffix (`urn:li:tag:<tag_id>`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this tag (e.g., `urn:li:tag:pii`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nCreates and manages a DataHub tag.\n\nTags are flat labels applied to data assets across DataHub. This resource manages the tag entity itself -- its name, description, and display colour -- rather than where the tag is applied. Tag application to datasets, columns, or other assets is per-asset enrichment and is out of scope for this provider.\n\n## Naming\n\n`tag_id` becomes the URN suffix (`urn:li:tag:<tag_id>`). Supplying an explicit, deterministic id avoids the random UUID the DataHub UI assigns, and keeps the URN stable and predictable across environments.\n\n## Renaming\n\nDataHub's generic `updateName` mutation does not support the Tag entity type. Renames are performed by writing the `tagProperties` aspect directly via the OpenAPI v3 collection endpoint; this is transparent to Terraform users.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_volume_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "change_type": {
+            "type": "string",
+            "description": "How the row-count change is measured: `ABSOLUTE` (a raw row delta) or `PERCENTAGE` (a percentage change). Required when `volume_type = \"ROW_COUNT_CHANGE\"`; must be omitted otherwise.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this volume assertion checks.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_cron": {
+            "type": "string",
+            "description": "Cron expression defining when DataHub evaluates this assertion (e.g. `\"0 */8 * * *\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "evaluation_timezone": {
+            "type": "string",
+            "description": "Timezone for the evaluation cron schedule (e.g. `\"UTC\"`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "executor_id": {
+            "type": "string",
+            "description": "ID of the remote executor pool to use for evaluation. Omit to use the default executor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_sql": {
+            "type": "string",
+            "description": "Optional SQL `WHERE` clause (without the `WHERE` keyword) restricting which rows the assertion counts, e.g. `\"country = 'US'\"`. Requires a `source_type` that queries the source system rather than a pre-computed profile.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_value": {
+            "type": "string",
+            "description": "Maximum row count (used with `operator = \"BETWEEN\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "min_value": {
+            "type": "string",
+            "description": "Minimum row count (used with `operator = \"BETWEEN\"`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Monitoring mode. `ACTIVE` enables scheduled evaluation. `PASSIVE` records results without scheduling.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "on_failure_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion fails (e.g. `[\"RAISE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "on_success_actions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Actions to take when the assertion passes (e.g. `[\"RESOLVE_INCIDENT\"]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "Comparison operator. One of `BETWEEN`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL_TO`, `LESS_THAN`, `LESS_THAN_OR_EQUAL_TO`, `EQUAL_TO`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "single_value": {
+            "type": "string",
+            "description": "Row count threshold (used with non-BETWEEN operators).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "How DataHub obtains the row count. `DATAHUB_DATASET_PROFILE` uses a previously ingested DatasetProfile aspect (no live DB query needed). `INFORMATION_SCHEMA` or `QUERY` queries the source system directly.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this assertion (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "volume_type": {
+            "type": "string",
+            "description": "Volume assertion sub-type. One of `ROW_COUNT_TOTAL` (assert on the absolute row count) or `ROW_COUNT_CHANGE` (assert on the change in row count between evaluations -- the UI's \"row count is growing by ...\"). `ROW_COUNT_CHANGE` requires `change_type`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nCreates and manages a DataHub volume assertion monitor on a dataset.\n\nVolume assertions check that a dataset has an expected number of rows at scheduled evaluation times. DataHub evaluates the assertion against a previously ingested `DatasetProfile` (set `source_type = \"DATAHUB_DATASET_PROFILE\"`) or by querying the source system directly.\n\n## URN\n\nDataHub generates a server-side UUID for each assertion. The `urn` and `id` attributes are populated after creation and are stable across updates. ImportState requires the full assertion URN (e.g. `urn:li:assertion:<uuid>`). Only NATIVE (author-as-code) assertions can be imported; ingested EXTERNAL (e.g. dbt) or smart/AI INFERRED assertions are refused.\n\n## Operator and value attributes\n\nFor `BETWEEN` operator: supply `min_value` and `max_value`. For all other operators (`GREATER_THAN`, `LESS_THAN`, `EQUAL_TO`, etc.): supply `single_value`.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "datahub_assertion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assertion_type": {
+            "type": "string",
+            "description": "The assertion type as reported by DataHub (e.g. `FRESHNESS`, `VOLUME`, `SQL`, `CUSTOM`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "entity_urn": {
+            "type": "string",
+            "description": "URN of the DataHub dataset this assertion monitors.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full assertion URN to look up (e.g. `urn:li:assertion:<uuid>`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub assertion by URN.\n\nUse this to reference an assertion created outside Terraform -- for example via the DataHub UI or the `upsertCustomAssertion` API -- without taking ownership of it.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_assertions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all assertions (e.g. `[\"urn:li:assertion:<uuid>\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub assertions visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` (OpenSearch). Assertions created within the last few seconds may not yet appear.\n\nThis lists assertions of every type and source (including ingested `EXTERNAL` assertions such as dbt tests, and `INFERRED` smart/AI assertions). Not all are importable: only NATIVE assertions of a type the provider models import cleanly, and the assertion resources refuse a non-NATIVE import. For bulk import prefer `datahub-tf-extract enumerate`, which filters to importable assertions automatically; use this data source for inventory or when you want to select URNs yourself.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_connections": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all connections (e.g. `[\"urn:li:dataHubConnection:prod-databricks\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub Connections visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` with entity type `DATAHUB_CONNECTION` (OpenSearch). Entities created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing connections into Terraform state.\n\nConnection credentials are encrypted at rest; only top-level metadata (`name`, `platform`) is readable after import. Sensitive fields must be re-supplied in configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the group. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email address for the group. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "The unique identifier of the group to look up (the URN suffix).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "slack": {
+            "type": "string",
+            "description": "Slack channel or handle for the group. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this group (e.g. `urn:li:corpGroup:data-platform`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub group (`corpGroup`) by `group_id`.\n\nUse this to reference a group that already exists in DataHub -- for example one created in the DataHub UI or by your identity provider -- as a policy actor or owner.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all groups (e.g. `[\"urn:li:corpGroup:data-platform\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub groups visible to the authenticated principal.\n\nBacked by `listGroups` (OpenSearch). Groups created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing groups into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_corp_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description": "Whether the user account is active.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the user. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Provisioning status of the user (e.g. `ACTIVE`). Empty if the status aspect is not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Job title of the user. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this user (e.g. `urn:li:corpuser:alice`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username of the user to look up. Becomes the URN suffix (`urn:li:corpuser:<username>`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub user (`corpUser`) by `username`.\n\nUse this to resolve a username to its URN for use as a policy actor, group member, or ownership reference -- for example `data.datahub_corp_user.alice.urn`.\n\nTo manage a user's profile as code, see the `datahub_corp_user` resource. For native-auth login credentials, see the `datahub_local_user_login` resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_data_product": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_properties": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom metadata properties attached to this data product.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "data_product_id": {
+            "type": "string",
+            "description": "The unique identifier of the data product to look up (the URN suffix, e.g. `orders-v2`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the data product. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Full DataHub URN of the owning domain, or empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "external_url": {
+            "type": "string",
+            "description": "External documentation URL. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the data product.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this data product (e.g. `urn:li:dataProduct:orders-v2`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub data product by `data_product_id`.\n\nUse this to reference a data product's URN in other resources (e.g. as a `domain` reference) without taking ownership of it in Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_data_products": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all data products (e.g. `[\"urn:li:dataProduct:orders-v2\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub data products visible to the authenticated principal.\n\nBacked by the `searchAcrossEntities` GraphQL query (entity type `DATA_PRODUCT`). Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing data products into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the domain. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "domain_id": {
+            "type": "string",
+            "description": "The unique identifier of the domain to look up (the URN suffix, e.g. `marketing`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the domain.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parent_domain": {
+            "type": "string",
+            "description": "Full URN of the parent domain, or empty if this is a root domain.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this domain (e.g. `urn:li:domain:marketing`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub domain by `domain_id`.\n\nUse this to reference a domain that already exists in DataHub -- for example one created in the DataHub UI or via the Python SDK -- as a `parent_domain` in a `datahub_domain` resource without taking ownership of it.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_domains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all domains (e.g. `[\"urn:li:domain:marketing\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub domains visible to the authenticated principal, across all levels of the domain hierarchy.\n\nBacked by `searchAcrossEntities` (OpenSearch). Domains created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import an existing domain hierarchy into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_node": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the term group. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the term group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "node_id": {
+            "type": "string",
+            "description": "The unique identifier of the glossary node to look up (the URN suffix, e.g. `finance`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_node": {
+            "type": "string",
+            "description": "Full URN of the parent glossary node, or empty if this is a root-level term group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this glossary node (e.g. `urn:li:glossaryNode:finance`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub glossary node (Term Group) by `node_id`.\n\nUse this to reference a term group that already exists in DataHub -- for example one created in the DataHub UI or via the Python SDK -- as a `parent_node` in a `datahub_glossary_node` or `datahub_glossary_term` resource without taking ownership of it.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_nodes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all glossary nodes (e.g. `[\"urn:li:glossaryNode:finance\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub glossary nodes (Term Groups) visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` (OpenSearch). Nodes created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import an existing glossary hierarchy into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_term": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Definition of the term. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the term.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parent_node": {
+            "type": "string",
+            "description": "Full URN of the parent glossary node (Term Group), or empty if this term is at the root level.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "term_id": {
+            "type": "string",
+            "description": "The unique identifier of the glossary term to look up (the URN suffix, e.g. `revenue`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this glossary term (e.g. `urn:li:glossaryTerm:revenue`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub glossary term by `term_id`.\n\nUse this to reference a term that already exists in DataHub -- for example one created in the DataHub UI or via the Python SDK -- as a `parent_node` input or to read its URN for use in other resources (e.g. policies).",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_glossary_terms": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all glossary terms (e.g. `[\"urn:li:glossaryTerm:revenue\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub glossary terms visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` (OpenSearch). Terms created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import an existing glossary into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ingestion_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cli_version": {
+            "type": "string",
+            "description": "Pinned `datahub-ingestion` CLI version. Empty if not pinned.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cron_interval": {
+            "type": "string",
+            "description": "Cron expression for the scheduled run interval. Empty if no schedule is configured.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "debug_mode": {
+            "type": "bool",
+            "description": "Whether debug mode is enabled for this ingestion run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "extra_args": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Additional key/value arguments passed to the ingestion executor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Mirrors `source_id`; provided for framework compatibility.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "DataHub platform URN associated with the source (e.g. `urn:li:dataPlatform:postgres`). Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "recipe": {
+            "type": "string",
+            "description": "Ingestion recipe as a JSON-encoded string. Use `jsondecode(...)` to access specific fields.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "remote_executor_id": {
+            "type": "string",
+            "description": "Executor or Remote Executor Pool ID that runs this source. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "The unique identifier of the ingestion source to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_name": {
+            "type": "string",
+            "description": "Human-readable display name of the ingestion source.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "Ingestion source type (e.g. `postgres`, `bigquery`, `csv-enricher`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Timezone for `cron_interval` (e.g. `America/Los_Angeles`). Empty if no schedule is configured.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this ingestion source (e.g. `urn:li:dataHubIngestionSource:prod-postgres-abc123`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub Ingestion Source by `source_id`.\n\nUse this data source to reference an ingestion source that already exists in DataHub -- for example, one created via the DataHub UI or a different Terraform root module.\n\n## Finding `source_id` for a UI-created source\n\nIf the ingestion source was created in the DataHub UI, the `source_id` appears in the browser URL when you open the source detail page:\n\n> `https://<your-datahub>/ingestion/sources/<source_id>`\n\n## Recipe\n\nThe `recipe` attribute is returned as a JSON-encoded string. Use `jsondecode(...)` to access individual fields:\n\n```terraform\noutput \"warehouse_host\" {\n  value = jsondecode(data.datahub_ingestion_source.warehouse.recipe).source.config.host_port\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ingestion_sources": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all ingestion sources (e.g. `[\"urn:li:dataHubIngestionSource:prod-postgres\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub Ingestion Sources visible to the authenticated principal.\n\nBacked by the `listIngestionSources` GraphQL query (OpenSearch). Entities created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing ingestion sources into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_me": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "display_name": {
+            "type": "string",
+            "description": "The display name of the authenticated user, if set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the authenticated user, if set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The DataHub entity type of the authenticated user (typically `CORP_USER`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "The DataHub URN of the authenticated user (e.g. `urn:li:corpuser:jane`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The DataHub username of the authenticated user.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the identity of the authenticated DataHub user.\n\nReading this data source makes a lightweight GraphQL call to DataHub. Referencing it in your configuration is a convenient way to smoke-test provider credentials at `terraform plan` time without creating any resources.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ownership_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the ownership type. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the ownership type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type_id": {
+            "type": "string",
+            "description": "The unique identifier of the ownership type to look up (the URN suffix, e.g. `data_quality_lead` or `__system__technical_owner`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this ownership type (e.g. `urn:li:ownershipType:data_quality_lead`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub ownership type by `type_id`.\n\nUse this to reference an ownership type -- including the built-in system types (`__system__technical_owner`, `__system__business_owner`, `__system__data_steward`, `__system__none`) -- without taking ownership of it in Terraform state.\n\nCustom ownership types managed by the `datahub_ownership_type` resource can also be looked up here if you need a cross-module URN reference.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_ownership_types": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all ownership types (e.g. `[\"urn:li:ownershipType:data_quality_lead\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub ownership types visible to the authenticated principal, including built-in system types (`__system__technical_owner`, etc.).\n\nBacked by the `listOwnershipTypes` GraphQL query. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing custom ownership types into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all policies (e.g. `[\"urn:li:dataHubPolicy:my-policy\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub policies visible to the authenticated principal.\n\nBacked by `listPolicies` (OpenSearch). Policies created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing policies into Terraform state. Note that DataHub ships default system policies, which will also be returned.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_remote_executor_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "UTC timestamp (milliseconds since epoch) when this pool was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the pool.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Whether this pool is the global default for new ingestion sources.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_embedded": {
+            "type": "bool",
+            "description": "Whether this pool is embedded in the DataHub Cloud coordinator pod.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "pool_id": {
+            "type": "string",
+            "description": "The unique pool identifier to look up (e.g. `default`, `analytics-team`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state_message": {
+            "type": "string",
+            "description": "Error message when `state_status` is `PROVISIONING_FAILED`, otherwise empty.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state_status": {
+            "type": "string",
+            "description": "Provisioning state of the pool: `PROVISIONING_PENDING`, `PROVISIONING_IN_PROGRESS`, `READY`, `PROVISIONING_FAILED`, or `OLD_CHANNEL_DRAINING`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this pool (e.g. `urn:li:dataHubRemoteExecutorPool:default`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u274c | DataHub Cloud \u2705**\n\nLooks up an existing DataHub Remote Executor Pool by pool ID.\n\n## Common use cases\n\n**Reference the reserved `default` pool** (auto-provisioned by DataHub Cloud; cannot be created via the `datahub_remote_executor_pool` resource):\n\n```terraform\ndata \"datahub_remote_executor_pool\" \"default\" {\n  pool_id = \"default\"\n}\n\nresource \"datahub_ingestion_source\" \"postgres_warehouse\" {\n  # ...\n  remote_executor_id = data.datahub_remote_executor_pool.default.pool_id\n}\n```\n\n**Reference a pool created by another Terraform root module:**\n\n```terraform\ndata \"datahub_remote_executor_pool\" \"analytics\" {\n  pool_id = \"analytics-team\"\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "editable": {
+            "type": "bool",
+            "description": "Whether the role is editable. Built-in roles return `false`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The role name to look up: `Admin`, `Editor`, or `Reader`. Becomes the URN suffix (`urn:li:dataHubRole:<name>`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this role (e.g. `urn:li:dataHubRole:Admin`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up a built-in DataHub role by name and returns its URN.\n\nDataHub ships three built-in roles -- `Admin`, `Editor`, and `Reader` -- seeded at bootstrap. They are not creatable, editable, or deletable. Use this data source to resolve a role name to its URN for use with `datahub_role_assignment`.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub role URNs (e.g. `[\"urn:li:dataHubRole:Admin\", \"urn:li:dataHubRole:Editor\", \"urn:li:dataHubRole:Reader\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all built-in DataHub roles (`Admin`, `Editor`, `Reader`).",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_secrets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all secrets (e.g. `[\"urn:li:dataHubSecret:my-db-password\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub Secrets visible to the authenticated principal.\n\nBacked by the `listSecrets` GraphQL query (OpenSearch). Entities created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing secrets into Terraform state.\n\nSecret *values* are never returned. Only the URN (and internally the name) is used.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_structured_properties": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all structured properties.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub structured property definitions visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` (OpenSearch). Properties created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing structured properties into Terraform state.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_structured_property": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_entity_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Entity types that URN values may reference (when value_type is `urn`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "allowed_values": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Description of what this value means.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "number_value": {
+                  "type": "number",
+                  "description": "Numeric allowed value.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "string_value": {
+                  "type": "string",
+                  "description": "String allowed value.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Allowed values for this property, if constrained.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cardinality": {
+            "type": "string",
+            "description": "Cardinality of values: `SINGLE` or `MULTIPLE`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the property.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "entity_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Short entity-type names this property can be applied to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "immutable": {
+            "type": "bool",
+            "description": "Whether values are immutable once applied.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "property_id": {
+            "type": "string",
+            "description": "The unique identifier of the structured property to look up (the URN suffix, e.g. `io.acme.retention`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "qualified_name": {
+            "type": "string",
+            "description": "The qualified name of the property.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "settings": {
+            "nested_type": {
+              "attributes": {
+                "hide_in_asset_summary_when_empty": {
+                  "type": "bool",
+                  "description": "Whether to hide the property when no value is set.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_hidden": {
+                  "type": "bool",
+                  "description": "Whether the property is hidden from the UI.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "show_as_asset_badge": {
+                  "type": "bool",
+                  "description": "Whether the value appears as a badge on asset cards.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "show_in_asset_summary": {
+                  "type": "bool",
+                  "description": "Whether the property appears in the asset summary panel.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "show_in_columns_table": {
+                  "type": "bool",
+                  "description": "Whether the property appears in the schema columns table.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "show_in_search_filters": {
+                  "type": "bool",
+                  "description": "Whether the property appears as a search filter facet.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Display and search settings.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this structured property.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value_type": {
+            "type": "string",
+            "description": "Data type for values of this property (e.g. `number`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub structured property definition by `property_id`.\n\nUse this to reference a structured property that already exists in DataHub -- for example one created via the DataHub UI or Python SDK -- without taking ownership of it.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color_hex": {
+            "type": "string",
+            "description": "Display colour of the tag badge (e.g. `#FF6B6B`). Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tag. Empty if not set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the tag.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tag_id": {
+            "type": "string",
+            "description": "The unique identifier of the tag to look up (the URN suffix, e.g. `pii`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "urn": {
+            "type": "string",
+            "description": "Full DataHub URN for this tag (e.g. `urn:li:tag:pii`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nLooks up an existing DataHub tag by `tag_id`.\n\nUse this to reference a tag that already exists in DataHub -- for example one created in the DataHub UI or via the Python SDK -- without taking ownership of it.",
+        "description_kind": "markdown"
+      }
+    },
+    "datahub_tags": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "urns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DataHub URNs for all tags (e.g. `[\"urn:li:tag:pii\"]`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "**DataHub \u2705 | DataHub Cloud \u2705**\n\nReturns the URNs of all DataHub tags visible to the authenticated principal.\n\nBacked by `searchAcrossEntities` (OpenSearch). Tags created within the last few seconds may not yet appear. Use the returned `urns` list as the `for_each` value in `import {}` blocks to bulk-import existing tags into Terraform state.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
