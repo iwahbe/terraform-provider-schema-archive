@@ -1,0 +1,2418 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "jwt_folder_path": {
+          "type": "string",
+          "description": "Allows to override the default file system folder where the JWT token is stored. Relevant if `reuse_jwt` is set to true.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "reuse_jwt": {
+          "type": "bool",
+          "description": "Terraform provider generates a JWT token on each run. For frequent terraform runs, this option allows token storage in the file system and reusing it if valid. The usage of this option should be carefully considered as it may lead to token leak. Defaults to `false`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "satori_account": {
+          "type": "string",
+          "description": "Your Satori account ID.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "service_account": {
+          "type": "string",
+          "description": "Service account ID with administrative privileges. Can be specified with the `SATORI_SA` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "service_account_key": {
+          "type": "string",
+          "description": "Service account key. Can be specified with the `SATORI_SA_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "url": {
+          "type": "string",
+          "description": "Defaults to `https://app.satoricyber.com`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "verify_tls": {
+          "type": "bool",
+          "description": "Defaults to `true`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "satori_access_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "Access level to grant, valid values are: READ_ONLY, READ_WRITE, OWNER.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Enable the rule. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "expire_on": {
+            "type": "string",
+            "description": "Expire the rule on the given date and time. RFC3339 date format is expected. Time must be in UTC (i.e. YYYY-MM-DD***T***HH:MM:SS***Z***). Empty value = never expire.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_data_policy": {
+            "type": "string",
+            "description": "Parent data policy ID, the data_policy_id field of a dataset.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "revoke_if_not_used_in_days": {
+            "type": "number",
+            "description": "Revoke access if rule not used in the last given days. Zero = do not revoke. Max value is 180. Defaults to `0`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "security_policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs of security policies to apply to this rule. Empty list for default dataset security policies. [ \"none\" ] list for no policies.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "identity": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "group_id": {
+                  "type": "string",
+                  "description": "Directory group ID for identity of type GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "User/group name for identity types of USER and IDP_GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Identity type, valid types are: USER, DB_USER, IDP_GROUP, GROUP, DATABRICKS_GROUP, DATABRICKS_SERVICE_PRINCIPAL, SNOWFLAKE_ROLE, EVERYONE.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Identity to apply the rule for.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Access rules configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_custom_taxonomy_category": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "string",
+            "description": "Category color.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Category description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Category name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_category": {
+            "type": "string",
+            "description": "Parent category ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag": {
+            "type": "string",
+            "description": "Category tag.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Custom taxonomy category.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_custom_taxonomy_classifier": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "additional_satori_categories": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of additional Satori taxonomy category IDs.\nSee https://satoricyber.com/docs/taxonomy/standard-categories for a list of possible values.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Classifier description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Classifier name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_category": {
+            "type": "string",
+            "description": "Parent category ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag": {
+            "type": "string",
+            "description": "Classifier tag.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Classifier type, valid types are: NON_AUTOMATIC, CUSTOM, SATORI_BASED.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "custom_config": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "field_name_pattern": {
+                  "type": "string",
+                  "description": "Field name pattern.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "field_type": {
+                  "type": "string",
+                  "description": "Field type, valid types are: ANY, TEXT, NUMERIC, DATE.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value_case_sensitive": {
+                  "type": "bool",
+                  "description": "Should value match be case sensitive. Relevant for `values` and `value_pattern` only, in other cases ignored. Defaults to `true`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "value_pattern": {
+                  "type": "string",
+                  "description": "Value pattern.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of possible field values.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Configuration for CUSTOM classifier type.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "satori_based_config": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "satori_base_classifier": {
+                  "type": "string",
+                  "description": "Base Satori classifier ID.\nSee https://satoricyber.com/docs/taxonomy/standard-classifiers for a list of possible values.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Configuration for SATORI_BASED classifier type.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "scope": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "datasets": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "IDs of datasets to include in the scope.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "include_location": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "datastore": {
+                        "type": "string",
+                        "description": "Data store ID.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "location_parts": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "The part separated location path in the data store. Includes an array of path parts when part types are defined with default definitions. For example ['a', 'b', 'c'] in Snowflake data store will path to table 'a' under schema 'b' under database 'a'. Conflicts with 'location', 'location_path', and 'location_parts_full' fields",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "location_path": {
+                        "type": "string",
+                        "description": "The short presentation of the location path in the data store. Includes `.` separated string when part types are defined with default definitions. For example 'a.b.c' in Snowflake data store will path to table 'a' under schema 'b' under database 'a'.  Conflicts with 'location', 'location_parts', and 'location_parts_full' fields.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "location": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "block_types": {
+                            "athena_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "catalog": {
+                                    "type": "string",
+                                    "description": "Catalog name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for Athena data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mongo_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "collection": {
+                                    "type": "string",
+                                    "description": "Collection name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "description": "Location for MongoDB data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mysql_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for MySql and MariaDB data stores.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "relational_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "schema": {
+                                    "type": "string",
+                                    "description": "Schema name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for a relational data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "s3_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "bucket": {
+                                    "type": "string",
+                                    "description": "Bucket name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "object_key": {
+                                    "type": "string",
+                                    "description": "Object Key name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for S3 data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Location for a data store. Can include only one location type field from the above: relational_location, mysql_location, athena_location, mongo_location and s3_location . Conflicts with 'location_path', 'location_parts' and 'location_parts_full' fields. The 'location' field has been deprecated. Please use the 'location_path', `location_parts` or `location_parts_full` fields instead.",
+                          "description_kind": "markdown",
+                          "deprecated": true
+                        },
+                        "max_items": 1
+                      },
+                      "location_parts_full": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the location part.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of the location part. Optional values: TABLE, COLUMN, SEMANTIC_MODEL, REPORT, DASHBOARD, DATABASE, SCHEMA, JSON_PATH, WAREHOUSE, ENDPOINT, TYPE, FIELD, EXTERNAL_LOCATION, CATALOG, BUCKET, OBJECT, COLLECTION, VIEW, etc",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "description": "The full location path definition in the data store. Includes an array of objects with path name and path type. Can be used when the path type should be defined explicitly and not as defined by default. For example [{name= 'a', type= 'DATABASE'},{name= 'b', type= 'SCHEMA'},{name= 'view.c', type= 'VIEW'}]. Conflicts with 'location', 'location_path', and 'location_parts' fields.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Location to include in the scope.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "Scope of relevant locations.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Custom taxonomy classifier.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_dataset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_policy_id": {
+            "type": "string",
+            "description": "Parent ID for dataset permissions.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs of security policies to apply to this dataset.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "access_control_settings": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enable_access_control": {
+                  "type": "bool",
+                  "description": "Enforce access control to this dataset. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "enable_custom_access_requests": {
+                  "type": [
+                    "list",
+                    "bool"
+                  ],
+                  "description": "Enable users to request access to a dataset without selecting a predefined access rule.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Dataset access controls.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "custom_policy": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "priority": {
+                  "type": "number",
+                  "description": "Dataset custom policy priority. Defaults to `100`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "rules_yaml": {
+                  "type": "string",
+                  "description": "Custom policy rules YAML.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tags_yaml": {
+                  "type": "string",
+                  "description": "Custom policy tags YAML.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Dataset custom policy.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "definition": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Dataset description.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Dataset name.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "owners": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "IDs of Satori users that will be set as dataset owners.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "approvers": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "The ID of the approver entity",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Approver type, can be either `GROUP` (IdP Group alone) or `USER`",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Identities of Satori users/groups that will be set as dataset approvers.",
+                    "description_kind": "markdown"
+                  }
+                },
+                "exclude_location": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "datastore": {
+                        "type": "string",
+                        "description": "Data store ID.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "location_parts": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "The part separated location path in the data store. Includes an array of path parts when part types are defined with default definitions. For example ['a', 'b', 'c'] in Snowflake data store will path to table 'a' under schema 'b' under database 'a'. Conflicts with 'location', 'location_path', and 'location_parts_full' fields",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "location_path": {
+                        "type": "string",
+                        "description": "The short presentation of the location path in the data store. Includes `.` separated string when part types are defined with default definitions. For example 'a.b.c' in Snowflake data store will path to table 'a' under schema 'b' under database 'a'.  Conflicts with 'location', 'location_parts', and 'location_parts_full' fields.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "location": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "block_types": {
+                            "athena_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "catalog": {
+                                    "type": "string",
+                                    "description": "Catalog name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for Athena data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mongo_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "collection": {
+                                    "type": "string",
+                                    "description": "Collection name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "description": "Location for MongoDB data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mysql_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for MySql and MariaDB data stores.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "relational_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "schema": {
+                                    "type": "string",
+                                    "description": "Schema name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for a relational data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "s3_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "bucket": {
+                                    "type": "string",
+                                    "description": "Bucket name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "object_key": {
+                                    "type": "string",
+                                    "description": "Object Key name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for S3 data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Location for a data store. Can include only one location type field from the above: relational_location, mysql_location, athena_location, mongo_location and s3_location . Conflicts with 'location_path', 'location_parts' and 'location_parts_full' fields. The 'location' field has been deprecated. Please use the 'location_path', `location_parts` or `location_parts_full` fields instead.",
+                          "description_kind": "markdown",
+                          "deprecated": true
+                        },
+                        "max_items": 1
+                      },
+                      "location_parts_full": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the location part.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of the location part. Optional values: TABLE, COLUMN, SEMANTIC_MODEL, REPORT, DASHBOARD, DATABASE, SCHEMA, JSON_PATH, WAREHOUSE, ENDPOINT, TYPE, FIELD, EXTERNAL_LOCATION, CATALOG, BUCKET, OBJECT, COLLECTION, VIEW, etc",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "description": "The full location path definition in the data store. Includes an array of objects with path name and path type. Can be used when the path type should be defined explicitly and not as defined by default. For example [{name= 'a', type= 'DATABASE'},{name= 'b', type= 'SCHEMA'},{name= 'view.c', type= 'VIEW'}]. Conflicts with 'location', 'location_path', and 'location_parts' fields.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Location to exclude from dataset.",
+                    "description_kind": "markdown"
+                  }
+                },
+                "include_location": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "datastore": {
+                        "type": "string",
+                        "description": "Data store ID.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "location_parts": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "The part separated location path in the data store. Includes an array of path parts when part types are defined with default definitions. For example ['a', 'b', 'c'] in Snowflake data store will path to table 'a' under schema 'b' under database 'a'. Conflicts with 'location', 'location_path', and 'location_parts_full' fields",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "location_path": {
+                        "type": "string",
+                        "description": "The short presentation of the location path in the data store. Includes `.` separated string when part types are defined with default definitions. For example 'a.b.c' in Snowflake data store will path to table 'a' under schema 'b' under database 'a'.  Conflicts with 'location', 'location_parts', and 'location_parts_full' fields.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "location": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "block_types": {
+                            "athena_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "catalog": {
+                                    "type": "string",
+                                    "description": "Catalog name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for Athena data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mongo_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "collection": {
+                                    "type": "string",
+                                    "description": "Collection name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "description": "Location for MongoDB data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "mysql_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for MySql and MariaDB data stores.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "relational_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "db": {
+                                    "type": "string",
+                                    "description": "Database name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "schema": {
+                                    "type": "string",
+                                    "description": "Schema name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "table": {
+                                    "type": "string",
+                                    "description": "Table name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for a relational data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "s3_location": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "bucket": {
+                                    "type": "string",
+                                    "description": "Bucket name.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "object_key": {
+                                    "type": "string",
+                                    "description": "Object Key name.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Location for S3 data store.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Location for a data store. Can include only one location type field from the above: relational_location, mysql_location, athena_location, mongo_location and s3_location . Conflicts with 'location_path', 'location_parts' and 'location_parts_full' fields. The 'location' field has been deprecated. Please use the 'location_path', `location_parts` or `location_parts_full` fields instead.",
+                          "description_kind": "markdown",
+                          "deprecated": true
+                        },
+                        "max_items": 1
+                      },
+                      "location_parts_full": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the location part.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "The type of the location part. Optional values: TABLE, COLUMN, SEMANTIC_MODEL, REPORT, DASHBOARD, DATABASE, SCHEMA, JSON_PATH, WAREHOUSE, ENDPOINT, TYPE, FIELD, EXTERNAL_LOCATION, CATALOG, BUCKET, OBJECT, COLLECTION, VIEW, etc",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "description": "The full location path definition in the data store. Includes an array of objects with path name and path type. Can be used when the path type should be defined explicitly and not as defined by default. For example [{name= 'a', type= 'DATABASE'},{name= 'b', type= 'SCHEMA'},{name= 'view.c', type= 'VIEW'}]. Conflicts with 'location', 'location_path', and 'location_parts' fields.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Location to include in dataset.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "Parameters for dataset definition.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Full dataset configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_datastore": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_ingress_port": {
+            "type": "number",
+            "description": "Custom ingress port number description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dataaccess_controller_id": {
+            "type": "string",
+            "description": "Host FQDN name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "Data provider's FQDN hostname.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "DataStore resource id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "DataStore name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "origin_port": {
+            "type": "number",
+            "description": "Port number description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "ProjectIds list of project IDs",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "satori_hostname": {
+            "type": "string",
+            "description": "Satori Hostname.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The datastore type, for example: POSTGRESQL, SNOWFLAKE, etc. The full list is available at https://app.satoricyber.com/docs/api#post-/api/v1/datastore",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "baseline_security_policy": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "DataStore security policy. Defaults to `BASELINE_POLICY`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "exclusions": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "block_types": {
+                      "excluded_identities": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "identity": {
+                              "type": "string",
+                              "description": "Username",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "identity_type": {
+                              "type": "string",
+                              "description": "USER type is supported",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "description": "Exempt Users from the Baseline Security Policy",
+                          "description_kind": "markdown"
+                        }
+                      },
+                      "excluded_query_patterns": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "pattern": {
+                              "type": "string",
+                              "description": "Query pattern",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "description": "Exempt Queries from the Baseline Security Policy",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Exempt users and patterns from baseline security policy",
+                    "description_kind": "markdown"
+                  },
+                  "min_items": 1,
+                  "max_items": 1
+                },
+                "unassociated_queries_category": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "query_action": {
+                        "type": "string",
+                        "description": "Default policy action for querying locations that are not associated with a dataset, modes supported:  PASS\u2503REDACT\u2503BLOCK.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "UnassociatedQueriesCategory",
+                    "description_kind": "markdown"
+                  },
+                  "min_items": 1,
+                  "max_items": 1
+                },
+                "unsupported_queries_category": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "query_action": {
+                        "type": "string",
+                        "description": "Default policy action for unsupported queries and objects, modes supported:  PASS\u2503REDACT\u2503BLOCK",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "UnsupportedQueriesCategory",
+                    "description_kind": "markdown"
+                  },
+                  "min_items": 1,
+                  "max_items": 1
+                }
+              },
+              "description": "Baseline security policy.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "databricks_settings": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "Account ID",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "warehouse_id": {
+                  "type": "string",
+                  "description": "SQL Warehouse ID",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "credentials": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "client_id": {
+                        "type": "string",
+                        "description": "Application (client) ID",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "client_secret": {
+                        "type": "string",
+                        "description": "Client secret value",
+                        "description_kind": "markdown",
+                        "required": true,
+                        "sensitive": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Credentials type, user `AWS_SERVICE_PRINCIPAL_TOKEN` for AWS Service Principal Authentication",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Credentials for Databricks Data Store type",
+                    "description_kind": "markdown"
+                  },
+                  "min_items": 1
+                }
+              },
+              "description": "Settings for a Databricks Data Store type",
+              "description_kind": "markdown"
+            }
+          },
+          "datastore_settings": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "aws_hosted_zone_id": {
+                  "type": "string",
+                  "description": "MongoDB AWS Hosted Zone ID, The Hosted AWS DNS Zone created for mapping MongoDB SRV records to Satori.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "aws_service_role_arn": {
+                  "type": "string",
+                  "description": "MongoDB AWS Service Role ARN, The IAM role ARN assumed by the DAC and used for updating records in the hosted DNS zone.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "deployment_type": {
+                  "type": "string",
+                  "description": "MongoDB deployment type, for now supports only mongodb+srv and mongodb deployment",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Settings for a MongoDB Data Store type",
+              "description_kind": "markdown"
+            }
+          },
+          "network_policy": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "allowed_rules": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "note": {
+                        "type": "string",
+                        "description": "custom description for allowed IP ranges",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "ip_ranges": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "ip_range": {
+                              "type": "string",
+                              "description": "Range (IP or CIDR)",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "description": "Defines IP addresses or CIDR ranges allowed to access the datastore",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Allowed Ip Rules",
+                    "description_kind": "markdown"
+                  }
+                },
+                "blocked_rules": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "note": {
+                        "type": "string",
+                        "description": "custom description for blocked IP ranges",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "ip_ranges": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "ip_range": {
+                              "type": "string",
+                              "description": "Range (IP or CIDR)",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "description": "Defines IP addresses or CIDR ranges allowed to access the datastore",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Blocked Ips Rules",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "A network Policy for a Data Store",
+              "description_kind": "markdown"
+            }
+          },
+          "satori_auth_settings": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enable_personal_access_token": {
+                  "type": "bool",
+                  "description": "Enables Satori Personal Access Token authentication for this data store. to be able using personal access token for authentication on this data store - data store temporary credentials must be enabled and personal access token feature should be enabled for the current account (see Account setting page in Satori platform). Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enables Satori Data Store authentication. Defaults to `false`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "credentials": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "aws_service_role_arn": {
+                        "type": "string",
+                        "description": "AWS IAM service role ARN.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "password": {
+                        "type": "string",
+                        "description": "Password of root user. This property is sensitive, and API does not return it in output. In order to bypass terraform update, use lifecycle.ignore_changes, see example.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "sensitive": true
+                      },
+                      "username": {
+                        "type": "string",
+                        "description": "Username of root user.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "Root user credentials. Either username and password should be defined or aws_service_role_arn.",
+                    "description_kind": "markdown"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Sets the authentication settings for the Data Store",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Full DataStore configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_directory_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Group description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Group name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "member": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "data_store_type": {
+                  "type": "string",
+                  "description": "Data store type for member of type DB_ROLE, valid types are: SNOWFLAKE, REDSHIFT, BIGQUERY, POSTGRESQL, ATHENA, MSSQL, SYNAPSE",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "email": {
+                  "type": "string",
+                  "description": "Member email available for types: USERNAME.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "group_id": {
+                  "type": "string",
+                  "description": "Directory group ID for member of type DIRECTORY_GROUP.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "identity_provider": {
+                  "type": "string",
+                  "description": "Identity provider type for member of type IDP_GROUP, valid identity providers are: OKTA, AZURE, ONELOGIN",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Member name for types: USERNAME, IDP_GROUP and DB_ROLE.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Member type, valid types are: USERNAME, IDP_GROUP, DB_ROLE, DIRECTORY_GROUP.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Group members.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Directory group configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_masking_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Masking profile description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Masking profile name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "condition": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "replacement": {
+                  "type": "string",
+                  "description": "Replacement, relevant for: REPLACE_CHAR, REPLACE_STRING.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "sql_function": {
+                  "type": "string",
+                  "description": "SQL function, relevant for: SQL_FUNCTION.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tag": {
+                  "type": "string",
+                  "description": "Tag.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "truncate": {
+                  "type": "number",
+                  "description": "Truncate, relevant for: TRUNCATE, TRUNCATE_END.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type. Can be one of [TRUNCATE, TRUNCATE_END, REPLACE_CHAR, REPLACE_STRING, HASH, EMAIL_PREFIX, EMAIL_SUFFIX, EMAIL_FULL, EMAIL_HASH, CREDIT_CARD_PREFIX, CREDIT_CARD_FULL, CREDIT_CARD_HASH, IP_SUFFIX, IP_FULL, IP_HASH, DATE_YEAR_ONLY, DATE_1970_AGAIN, NO_ACTION, REDACT, NUMBER_ZERO, NUMBER_ROUND, SQL_FUNCTION, ...]",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Masking profile condition.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1
+          }
+        },
+        "description": "Masking Profile.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_request_access_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "Access level to grant, valid values are: READ_ONLY, READ_WRITE, OWNER.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Enable the rule. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_data_policy": {
+            "type": "string",
+            "description": "Parent data policy ID, the data_policy_id field of a dataset.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "require_approver_note": {
+            "type": "bool",
+            "description": "Require from the approver an `approver note` when approving the request created from the defined rule. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "revoke_if_not_used_in_days": {
+            "type": "number",
+            "description": "Revoke access if rule not used in the last given days. Zero = do not revoke. Max value is 180. Defaults to `0`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "security_policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs of security policies to apply to this rule. Empty list for default dataset security policies. [ \"none\" ] list for no policies.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "approvers": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the approver entity, when type is `MANAGER` this field must not be set.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Approver type, can be either `GROUP` (IdP Group alone) or `USER`",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Identities of Satori users/IdP groups that will be set as access rule approvers. Once an access rule approver is defined, it is the ONLY entity that can approve the request generated from this access rule",
+              "description_kind": "markdown"
+            }
+          },
+          "expire_in": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "unit_type": {
+                  "type": "string",
+                  "description": "Unit type for units field, possible values are: MINUTES, HOURS, DAYS, WEEKS, MONTHS, YEARS.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "units": {
+                  "type": "number",
+                  "description": "Number of units of unit_type.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Rule expiration settings.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "identity": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "group_id": {
+                  "type": "string",
+                  "description": "Directory group ID for identity of type GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "User/group name for identity types of USER and IDP_GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Identity type, valid types are: USER, DB_USER, IDP_GROUP, GROUP, DATABRICKS_GROUP, DATABRICKS_SERVICE_PRINCIPAL, SNOWFLAKE_ROLE, EVERYONE.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Identity to apply the rule for.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Request rules configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_security_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Security policy name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "profile": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "masking": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "active": {
+                        "type": "bool",
+                        "description": "Is active.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "block_types": {
+                      "rule": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "active": {
+                              "type": "bool",
+                              "description": "Is active rule.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "Rule description.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Rule id, has to be unique.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "block_types": {
+                            "action": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "masking_profile_id": {
+                                    "type": "string",
+                                    "description": "The reference id to be applied as masking profile.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "description": "Rule type. Defaults to `APPLY_MASKING_PROFILE`.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "description": "Rule action.",
+                                "description_kind": "markdown"
+                              },
+                              "min_items": 1,
+                              "max_items": 1
+                            },
+                            "conditional_masking": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "where_condition": {
+                                    "type": "string",
+                                    "description": "Where condition.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "description": "Conditional masking. Only supported in the Databricks and Snowflake Native Integrations.",
+                                "description_kind": "markdown"
+                              },
+                              "max_items": 1
+                            },
+                            "criteria": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "condition": {
+                                    "type": "string",
+                                    "description": "Identity condition, for example IS_NOT, IS, etc.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "block_types": {
+                                  "identity": {
+                                    "nesting_mode": "list",
+                                    "block": {
+                                      "attributes": {
+                                        "group_id": {
+                                          "type": "string",
+                                          "description": "Directory group ID for identity of type GROUP.\nCan not be changed after creation.",
+                                          "description_kind": "markdown",
+                                          "optional": true
+                                        },
+                                        "name": {
+                                          "type": "string",
+                                          "description": "User/group name for identity types of USER and IDP_GROUP or a custom expression based on attributes of the identity for CEL identity type.\nCan not be changed after creation.",
+                                          "description_kind": "markdown",
+                                          "optional": true
+                                        },
+                                        "type": {
+                                          "type": "string",
+                                          "description": "Identity type, valid types are: USER, DB_USER, IDP_GROUP, GROUP, DATABRICKS_GROUP, DATABRICKS_SERVICE_PRINCIPAL, SNOWFLAKE_ROLE, CEL, EVERYONE.\nCan not be changed after creation.",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        }
+                                      },
+                                      "description": "Identity to apply the rule for.",
+                                      "description_kind": "markdown"
+                                    },
+                                    "min_items": 1,
+                                    "max_items": 1
+                                  }
+                                },
+                                "description": "Masking criteria.",
+                                "description_kind": "markdown"
+                              },
+                              "min_items": 1,
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Masking Rule.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Masking profile.",
+                    "description_kind": "markdown"
+                  },
+                  "max_items": 1
+                },
+                "row_level_security": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "active": {
+                        "type": "bool",
+                        "description": "Row level security activation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "block_types": {
+                      "mapping": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Filter name, has to be unique in this policy.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "block_types": {
+                            "defaults": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "type": {
+                                    "type": "string",
+                                    "description": "Default values type. Allowed options: STRING, NUMERIC, CEL, SQL, NO_VALUE, ALL_OTHER_VALUES.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "value": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "List of values, when NO_VALUE or ALL_OTHER_VALUES are defined, the list has to be empty",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "description": "A list of default values to be applied in this filter if there was no match. Values are dependent on their type and has to be homogeneous",
+                                "description_kind": "markdown"
+                              },
+                              "min_items": 1,
+                              "max_items": 1
+                            },
+                            "filter": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "block_types": {
+                                  "criteria": {
+                                    "nesting_mode": "list",
+                                    "block": {
+                                      "attributes": {
+                                        "condition": {
+                                          "type": "string",
+                                          "description": "Identity condition, for example IS_NOT, IS, etc.",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        }
+                                      },
+                                      "block_types": {
+                                        "identity": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "group_id": {
+                                                "type": "string",
+                                                "description": "Directory group ID for identity of type GROUP.\nCan not be changed after creation.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              },
+                                              "name": {
+                                                "type": "string",
+                                                "description": "User/group name for identity types of USER and IDP_GROUP or a custom expression based on attributes of the identity for CEL identity type.\nCan not be changed after creation.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              },
+                                              "type": {
+                                                "type": "string",
+                                                "description": "Identity type, valid types are: USER, DB_USER, IDP_GROUP, GROUP, DATABRICKS_GROUP, DATABRICKS_SERVICE_PRINCIPAL, SNOWFLAKE_ROLE, CEL, EVERYONE.\nCan not be changed after creation.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              }
+                                            },
+                                            "description": "Identity to apply the rule for.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "min_items": 1,
+                                          "max_items": 1
+                                        }
+                                      },
+                                      "description": "Filter criteria.",
+                                      "description_kind": "markdown"
+                                    },
+                                    "min_items": 1,
+                                    "max_items": 1
+                                  },
+                                  "values": {
+                                    "nesting_mode": "list",
+                                    "block": {
+                                      "attributes": {
+                                        "type": {
+                                          "type": "string",
+                                          "description": "Values type. Allowed options: STRING, NUMERIC, CEL, SQL, ANY_VALUE, ALL_OTHER_VALUES.",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        },
+                                        "value": {
+                                          "type": [
+                                            "list",
+                                            "string"
+                                          ],
+                                          "description": "List of values, when ANY_VALUE or ALL_OTHER_VALUES are defined, the list has to be empty",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        }
+                                      },
+                                      "description": "A list of values to be applied in this filter. Values are dependent on their type and has to be homogeneous",
+                                      "description_kind": "markdown"
+                                    },
+                                    "min_items": 1,
+                                    "max_items": 1
+                                  }
+                                },
+                                "description": "Filter definition.",
+                                "description_kind": "markdown"
+                              },
+                              "min_items": 1,
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Row Level Security Mapping.",
+                          "description_kind": "markdown"
+                        }
+                      },
+                      "rule": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "active": {
+                              "type": "bool",
+                              "description": "Is active rule.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "Rule description.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Rule id, has to be unique.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "block_types": {
+                            "filter": {
+                              "nesting_mode": "list",
+                              "block": {
+                                "attributes": {
+                                  "advanced": {
+                                    "type": "bool",
+                                    "description": "Describes if logic yaml contains complex configuration. Defaults to `true`.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "datastore_id": {
+                                    "type": "string",
+                                    "description": "Datastore ID.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "location_parts": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "The part separated location path in the data store. Includes an array of path parts when part types are defined with default definitions. For example ['a', 'b', 'c'] in Snowflake data store will path to table 'a' under schema 'b' under database 'a'. Conflicts with 'location', 'location_path', and 'location_parts_full' fields",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "location_path": {
+                                    "type": "string",
+                                    "description": "The short presentation of the location path in the data store. Includes `.` separated string when part types are defined with default definitions. For example 'a.b.c' in Snowflake data store will path to table 'a' under schema 'b' under database 'a'.  Conflicts with 'location', 'location_parts', and 'location_parts_full' fields.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "logic_yaml": {
+                                    "type": "string",
+                                    "description": "Conditional rule, for more info see https://satoricyber.com/docs/security-policies/#setting-up-data-filtering.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "block_types": {
+                                  "location": {
+                                    "nesting_mode": "list",
+                                    "block": {
+                                      "block_types": {
+                                        "athena_location": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "catalog": {
+                                                "type": "string",
+                                                "description": "Catalog name.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              },
+                                              "db": {
+                                                "type": "string",
+                                                "description": "Database name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              },
+                                              "table": {
+                                                "type": "string",
+                                                "description": "Table name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              }
+                                            },
+                                            "description": "Location for Athena data store.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "max_items": 1
+                                        },
+                                        "mongo_location": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "collection": {
+                                                "type": "string",
+                                                "description": "Collection name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              },
+                                              "db": {
+                                                "type": "string",
+                                                "description": "Database name.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              }
+                                            },
+                                            "description": "Location for MongoDB data store.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "max_items": 1
+                                        },
+                                        "mysql_location": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "db": {
+                                                "type": "string",
+                                                "description": "Database name.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              },
+                                              "table": {
+                                                "type": "string",
+                                                "description": "Table name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              }
+                                            },
+                                            "description": "Location for MySql and MariaDB data stores.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "max_items": 1
+                                        },
+                                        "relational_location": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "db": {
+                                                "type": "string",
+                                                "description": "Database name.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              },
+                                              "schema": {
+                                                "type": "string",
+                                                "description": "Schema name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              },
+                                              "table": {
+                                                "type": "string",
+                                                "description": "Table name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              }
+                                            },
+                                            "description": "Location for a relational data store.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "max_items": 1
+                                        },
+                                        "s3_location": {
+                                          "nesting_mode": "list",
+                                          "block": {
+                                            "attributes": {
+                                              "bucket": {
+                                                "type": "string",
+                                                "description": "Bucket name.",
+                                                "description_kind": "markdown",
+                                                "required": true
+                                              },
+                                              "object_key": {
+                                                "type": "string",
+                                                "description": "Object Key name.",
+                                                "description_kind": "markdown",
+                                                "optional": true
+                                              }
+                                            },
+                                            "description": "Location for S3 data store.",
+                                            "description_kind": "markdown"
+                                          },
+                                          "max_items": 1
+                                        }
+                                      },
+                                      "description": "Location to be included in the rule. The 'location' field has been deprecated. Please use the 'location_path', `location_parts` or `location_parts_full` fields instead.",
+                                      "description_kind": "markdown",
+                                      "deprecated": true
+                                    }
+                                  },
+                                  "location_parts_full": {
+                                    "nesting_mode": "list",
+                                    "block": {
+                                      "attributes": {
+                                        "name": {
+                                          "type": "string",
+                                          "description": "The name of the location part.",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        },
+                                        "type": {
+                                          "type": "string",
+                                          "description": "The type of the location part. Optional values: TABLE, COLUMN, SEMANTIC_MODEL, REPORT, DASHBOARD, DATABASE, SCHEMA, JSON_PATH, WAREHOUSE, ENDPOINT, TYPE, FIELD, EXTERNAL_LOCATION, CATALOG, BUCKET, OBJECT, COLLECTION, VIEW, etc",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        }
+                                      },
+                                      "description": "The full location path definition in the data store. Includes an array of objects with path name and path type. Can be used when the path type should be defined explicitly and not as defined by default. For example [{name= 'a', type= 'DATABASE'},{name= 'b', type= 'SCHEMA'},{name= 'view.c', type= 'VIEW'}]. Conflicts with 'location', 'location_path', and 'location_parts' fields.",
+                                      "description_kind": "markdown"
+                                    }
+                                  }
+                                },
+                                "description": "Rule filter.",
+                                "description_kind": "markdown"
+                              },
+                              "min_items": 1,
+                              "max_items": 1
+                            }
+                          },
+                          "description": "Row Level Security Rule definition.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "Row level security profile",
+                    "description_kind": "markdown"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Security policy profile.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Security Policy.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_self_service_access_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "Access level to grant, valid values are: READ_ONLY, READ_WRITE, OWNER.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Enable the rule. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_data_policy": {
+            "type": "string",
+            "description": "Parent data policy ID, the data_policy_id field of a dataset.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "revoke_if_not_used_in_days": {
+            "type": "number",
+            "description": "Revoke access if rule not used in the last given days. Zero = do not revoke. Max value is 180. Defaults to `0`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "security_policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs of security policies to apply to this rule. Empty list for default dataset security policies. [ \"none\" ] list for no policies.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "expire_in": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "unit_type": {
+                  "type": "string",
+                  "description": "Unit type for units field, possible values are: MINUTES, HOURS, DAYS, WEEKS, MONTHS, YEARS.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "units": {
+                  "type": "number",
+                  "description": "Number of units of unit_type.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Rule expiration settings.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "identity": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "group_id": {
+                  "type": "string",
+                  "description": "Directory group ID for identity of type GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "User/group name for identity types of USER and IDP_GROUP.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Identity type, valid types are: USER, DB_USER, IDP_GROUP, GROUP, DATABRICKS_GROUP, DATABRICKS_SERVICE_PRINCIPAL, SNOWFLAKE_ROLE, EVERYONE.\nCan not be changed after creation.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Identity to apply the rule for.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Self service access rules configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_user_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": "string",
+            "description": "User's set of attributes in JSON object format. may include the following types: int, string, float, boolean, string[], number[], where number may be float/int. The value may be a path to a json file that contains the attributes for a user or a raw JSON string, for example: \"./attribute_files/user_a.json\" OR \"{\"company\": \"SatoriCyber\",\"age\": 30.5,\"cities\": [\"Washington\", \"Lisbon\"],\"kids_age\": [1, 3.14759, 7], \"isActive\": true}\"",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID to manage settings for.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Satori user settings allows to config existing user's configuration. Currently supports only user's attributes configuration",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "satori_dac_deployment_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "DAC's id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account": {
+            "type": "string",
+            "description": "The DAC's deployments service account",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Get deployment settings by DAC id",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_data_access_controller": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "DAC's cloud provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "DAC's ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ips": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "DAC's IPs list.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "DAC's region.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "DAC's type. The available values are: PRIVATE, PRIVATE_MANAGED or PUBLIC.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Find DAC by type, region and cloud provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "satori_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "User's email address.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "User's ID.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Find user ID by email",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

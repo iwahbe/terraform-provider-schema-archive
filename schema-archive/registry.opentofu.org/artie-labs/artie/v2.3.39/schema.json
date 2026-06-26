@@ -1,0 +1,1773 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Artie API key to authenticate requests to the Artie API. Generate an API key in the Artie web app at https://app.artie.com/settings?tab=apiKeys (only company admins can create API keys). We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+          "description_kind": "markdown",
+          "required": true,
+          "sensitive": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Artie API endpoint. This defaults to https://api.artie.com and should not need to be changed except when developing the provider.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The Artie Terraform provider can be used to manage your data pipelines in Artie. You must already have an Artie account to use this provider. If you don't have one, you can request access at https://www.artie.com/.\n\nTo set up a new data pipeline, you'll need to create a few resources:\n\n- Source Connector: this holds connection information for the source database.\n\n- Destination Connector: this holds connection information for the destination database or data warehouse.\n\n- Source Reader: this represents a process that reads data from a source connector and inserts it info Kafka. A Source Reader can be used by multiple Pipelines, e.g. to read from a single PostgreSQL replication slot and copy the data to multiple destinations.\n\n- Pipeline: this represents a data pipeline that syncs data from a single source (e.g., PostgreSQL) to a single destination (e.g., Snowflake).\n\nWe recommend using [tflint](https://github.com/terraform-linters/tflint) to lint your Terraform configuration.\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "artie_column_hashing_salt": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the salt's purpose.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A human-readable name for the column hashing salt.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "salt": {
+            "type": "string",
+            "description": "The salt value used when hashing column values. If omitted, Artie will generate a strong random salt. This value is sensitive and cannot be rotated in place; changing it forces replacement.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Artie Column Hashing Salt resource. This resource manages salts used when hashing column values in pipelines. Reference a salt's `uuid` from an `artie_pipeline`'s `column_hashing_salt_uuid` to apply it to any table that has `columns_to_hash` set.",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_connector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bigquery_config": {
+            "nested_type": {
+              "attributes": {
+                "credentials_data": {
+                  "type": "string",
+                  "description": "The credentials data for the Google Cloud service account that we should use to connect to BigQuery. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "location": {
+                  "type": "string",
+                  "description": "The location of the BigQuery dataset. This must be either `US` or `EU`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "The ID of the Google Cloud project.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `bigquery`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cockroach_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the CockroachDB database.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for CockroachDB is 26257.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "snapshot_host": {
+                  "type": "string",
+                  "description": "The hostname of the CockroachDB database that we should use to snapshot the database. This can be a read replica and will only be used if this connector is being used as a source. If not provided, we will use the `host` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "snapshot_port": {
+                  "type": "number",
+                  "description": "The port of the CockroachDB database that we should use to snapshot the database. If not provided, we will use the `port` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the CockroachDB database.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `cockroach`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "data_plane_name": {
+            "type": "string",
+            "description": "The name of the data plane this connector is in (if applicable; this does not apply to cloud-based connectors like BigQuery and Snowflake). If this is not set, we will use the default data plane for your account. To see the full list of supported data planes on your account, click on 'New pipeline' in our UI.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "databricks_config": {
+            "nested_type": {
+              "attributes": {
+                "client_id": {
+                  "type": "string",
+                  "description": "The OAuth M2M client ID for authenticating with Databricks. Must be provided together with `client_secret`. Conflicts with `personal_access_token`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "client_secret": {
+                  "type": "string",
+                  "description": "The OAuth M2M client secret for authenticating with Databricks. Must be provided together with `client_id`. Conflicts with `personal_access_token`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the Databricks cluster.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "http_path": {
+                  "type": "string",
+                  "description": "The HTTP path of the Databricks cluster.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "personal_access_token": {
+                  "type": "string",
+                  "description": "The personal access token for the service account we should use to connect to Databricks. Conflicts with `client_id` and `client_secret`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "volume": {
+                  "type": "string",
+                  "description": "The volume of the Databricks cluster.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `databricks`. Exactly one authentication method must be configured: either `personal_access_token` alone, or both `client_id` and `client_secret` together (OAuth M2M).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dynamodb_config": {
+            "nested_type": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "The AWS Access Key ID for the service account we should use to connect to DynamoDB. Required if `role_arn` is not set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "The external ID to use when assuming the IAM role. Only applicable when `role_arn` is set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "The ARN of the IAM role to assume for connecting to DynamoDB. If set, `access_key_id` and `secret_access_key` are not required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "The AWS Secret Access Key for the service account we should use to connect to DynamoDB. Required if `role_arn` is not set. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "stream_arn": {
+                  "type": "string",
+                  "description": "The ARN (Amazon Resource Name) of the DynamoDB Stream.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `dynamodb`. You must provide either `role_arn` (for IAM role assumption) or both `access_key_id` and `secret_access_key` (for static credentials).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "gcs_config": {
+            "nested_type": {
+              "attributes": {
+                "credentials_data": {
+                  "type": "string",
+                  "description": "The credentials data for the Google Cloud service account that we should use to connect to GCS. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "The ID of the Google Cloud project.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `gcs`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "iceberg_config": {
+            "nested_type": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "The AWS Access Key ID for connecting to S3 Tables. Required if `provider` is `s3tables`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "auth_uri": {
+                  "type": "string",
+                  "description": "The OAuth2 token endpoint URL. Required when using `credential` authentication (without `token`).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "bucket_arn": {
+                  "type": "string",
+                  "description": "The ARN of the S3 Tables table bucket (e.g. `arn:aws:s3tables:us-east-1:123456789012:bucket/my-bucket`). Required if `provider` is `s3tables`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "credential": {
+                  "type": "string",
+                  "description": "OAuth2 client credentials in the format `client_id:client_secret` for authenticating with the REST catalog. Either `token` or `credential` must be provided if `provider` is `rest`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "prefix": {
+                  "type": "string",
+                  "description": "An optional catalog prefix for namespacing in the REST catalog.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "provider": {
+                  "type": "string",
+                  "description": "The Iceberg provider type. Must be `s3tables` or `rest`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The AWS region for S3 Tables. Optional; can be parsed from the `bucket_arn`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "scope": {
+                  "type": "string",
+                  "description": "The OAuth2 scope. Optional; defaults to `catalog` on the server side.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "The AWS Secret Access Key for connecting to S3 Tables. Required if `provider` is `s3tables`. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "token": {
+                  "type": "string",
+                  "description": "A bearer token for authenticating with the REST catalog. Either `token` or `credential` must be provided if `provider` is `rest`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "uri": {
+                  "type": "string",
+                  "description": "The REST catalog endpoint URL. Required if `provider` is `rest`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "warehouse": {
+                  "type": "string",
+                  "description": "The warehouse identifier for the REST catalog. Required if `provider` is `rest`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `iceberg`. The `provider` field determines which additional fields are required: for `s3tables`, provide AWS credentials and bucket ARN; for `rest`, provide the catalog URI, warehouse, and authentication credentials.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "keyspaces_config": {
+            "nested_type": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "The AWS Access Key ID for connecting to Amazon Keyspaces. Required if `role_arn` is not set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "The external ID to use when assuming the IAM role. Only applicable when `role_arn` is set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the Amazon Keyspaces endpoint.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for Amazon Keyspaces is 9142.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The AWS region of the Amazon Keyspaces instance.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "The ARN of the IAM role to assume for connecting to Amazon Keyspaces. If set, `access_key_id` and `secret_access_key` are not required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "The AWS Secret Access Key for connecting to Amazon Keyspaces. Required if `role_arn` is not set. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `keyspaces`. You must provide either `role_arn` (for IAM role assumption) or both `access_key_id` and `secret_access_key` (for static credentials).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mongodb_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The connection string for the MongoDB server. This can be either SRV or standard format.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account we will use to connect to the MongoDB database. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the MongoDB database.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `mongodb`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mssql_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the Microsoft SQL Server. This must point to the primary host, not a read replica.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for Microsoft SQL Server is 1433.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "snapshot_host": {
+                  "type": "string",
+                  "description": "The hostname of the Microsoft SQL Server that we should use to snapshot the database. This can be a read replica and will only be used if this connector is being used as a source. If not provided, we will use the `host` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the database.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `mssql`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mysql_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the MySQL database. This must point to the primary host, not a read replica.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for MySQL is 3306.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "snapshot_host": {
+                  "type": "string",
+                  "description": "The hostname of the MySQL database that we should use to snapshot the database. This can be a read replica and will only be used if this connector is being used as a source. If not provided, we will use the `host` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "snapshot_port": {
+                  "type": "number",
+                  "description": "The port of the MySQL database that we should use to snapshot the database. If not provided, we will use the `port` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "tls_mode": {
+                  "type": "string",
+                  "description": "The TLS mode for the MySQL connection. Use `\"\"` (empty string) to disable TLS, or `\"preferred\"` to enable TLS preferred mode.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the MySQL database. This service account needs enough permissions to read from the server binlogs.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `mysql`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "An optional human-readable label for this connector.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "oracle_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the Oracle database. This must point to the primary host, not a read replica. This database must also have `ARCHIVELOG` mode and supplemental logging enabled.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for Oracle is 1521.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "snapshot_host": {
+                  "type": "string",
+                  "description": "The hostname of the Oracle database that we should use to snapshot the database. This can be a read replica and will only be used if this connector is being used as a source. If not provided, we will use the `host` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the Oracle database.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `oracle`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "postgresql_config": {
+            "nested_type": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The hostname of the PostgreSQL database. This can point to a read replica if you are using PostgreSQL 16 or higher, not on Amazon Aurora, and `hot_standby_feedback` is enabled; otherwise it must point to the primary host. This database must also have its `WAL_LEVEL` set to `logical`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password of the service account. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The default port for PostgreSQL is 5432.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "snapshot_host": {
+                  "type": "string",
+                  "description": "The hostname of the PostgreSQL database that we should use to snapshot the database. This can be a read replica and will only be used if this connector is being used as a source. If not provided, we will use the `host` value.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we will use to connect to the PostgreSQL database. This service account needs enough permissions to create and read from the replication slot.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `postgresql`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "redshift_config": {
+            "nested_type": {
+              "attributes": {
+                "endpoint": {
+                  "type": "string",
+                  "description": "The endpoint URL of your Redshift cluster. This should include both the host and port.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password for the service account we should use to connect to Redshift. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we should use to connect to Redshift.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `redshift`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "s3_config": {
+            "nested_type": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "The AWS Access Key ID for the service account we should use to connect to S3. Required if `role_arn` is not set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "The external ID to use when assuming the IAM role. Only applicable when `role_arn` is set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The AWS region where we should store your data in S3.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "The ARN of the IAM role to assume for connecting to S3. If set, `access_key_id` and `secret_access_key` are not required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "The AWS Secret Access Key for the service account we should use to connect to S3. Required if `role_arn` is not set. We recommend storing this in a secret manager and referencing it via a *sensitive* Terraform variable, instead of putting it in plaintext in your Terraform config file.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `s3`. You must provide either `role_arn` (for IAM role assumption) or both `access_key_id` and `secret_access_key` (for static credentials).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snowflake_config": {
+            "nested_type": {
+              "attributes": {
+                "account_identifier": {
+                  "type": "string",
+                  "description": "The [account identifier](https://docs.snowflake.com/user-guide/admin-account-identifier) of your Snowflake account. We recommend using this instead of `account_url`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "account_url": {
+                  "type": "string",
+                  "description": "(Legacy) The [URL](https://docs.snowflake.com/user-guide/admin-account-identifier) of your Snowflake account. We recommend using `account_identifier` instead.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "(Legacy) The password for the service account we should use to connect to Snowflake. We recommend using `private_key` instead.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "private_key": {
+                  "type": "string",
+                  "description": "The private key for the service account we should use to connect to Snowflake. We recommend using this instead of `password`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username of the service account we should use to connect to Snowflake.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "virtual_dwh": {
+                  "type": "string",
+                  "description": "The name of your Snowflake virtual data warehouse.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This should be filled out if the connector type is `snowflake`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_tunnel_uuid": {
+            "type": "string",
+            "description": "This can point to an `artie_ssh_tunnel` resource if you need us to use an SSH tunnel to connect.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of connector. This must be one of the following: `api`, `bigquery`, `cockroach`, `databricks`, `dynamodb`, `gcs`, `iceberg`, `keyspaces`, `mongodb`, `mssql`, `mysql`, `oracle`, `postgresql`, `redshift`, `s3`, `snowflake`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Artie Connector resource. This represents a database or data warehouse that you want to sync data from or to. Connectors are used by Pipelines and Source Readers.",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_encryption_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the key's purpose.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key material (passphrase or encrypted DEK). This value is sensitive and will not be displayed in plan output.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "kms_key_uuid": {
+            "type": "string",
+            "description": "UUID of an `artie_kms_key`. If omitted, a passphrase-type key is generated. Changing this forces replacement.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A human-readable name for the encryption key.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the encryption key: `passphrase` or `kms`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Artie Encryption Key resource. This resource manages encryption keys used for column-level encryption in pipelines. Keys can be passphrase-based (default) or KMS-backed.",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_pipeline": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "append_only": {
+            "type": "bool",
+            "description": "If set to true, data will always be appended instead of merged into the destination table. This should only be used for data that is known to be append-only (e.g. event tracking data). Rows will not be deduplicated.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_replicate_new_tables": {
+            "type": "bool",
+            "description": "If set to true, Artie will automatically start replicating any new tables that are created in the source database.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "column_hashing_salt_uuid": {
+            "type": "string",
+            "description": "UUID of an `artie_column_hashing_salt` used when hashing column values. Required if any table has `columns_to_hash` set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "data_plane_name": {
+            "type": "string",
+            "description": "The name of the data plane to use for this pipeline. If this is not set, we will use the default data plane for your account. To see the full list of supported data planes on your account, click on 'New pipeline' in our UI.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_source_schema": {
+            "type": "string",
+            "description": "If set, tables from this schema will not be prefixed with this schema name in the destination. Tables from other schemas will be prefixed with their source schema name to avoid table name collisions (unless `use_same_schema_as_source` is set to true).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "destination_config": {
+            "nested_type": {
+              "attributes": {
+                "bucket": {
+                  "type": "string",
+                  "description": "The name of the S3 or GCS bucket that data should be synced to. This should be filled if the destination is S3, GCS, or Iceberg with provider `s3tables` (for Iceberg S3 Tables, this bucket is where delta files will be stored). Not used for Iceberg REST catalog.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "create_iceberg_namespaces": {
+                  "type": "bool",
+                  "description": "If set to true, Artie will automatically create namespaces if they don't exist. This is only applicable if the destination is Iceberg.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "database": {
+                  "type": "string",
+                  "description": "The name of the database that data should be synced to in the destination. This should be filled if the destination is MS SQL or Snowflake, unless `use_same_schema_as_source` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "dataset": {
+                  "type": "string",
+                  "description": "The name of the dataset that data should be synced to in the destination. This should be filled if the destination is BigQuery.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "folder": {
+                  "type": "string",
+                  "description": "If provided, all files will be stored under this folder inside the S3 or GCS bucket. This is optional and only applies if the destination is S3 or GCS.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema": {
+                  "type": "string",
+                  "description": "The name of the schema or namespace that data should be synced to in the destination. This should be filled if the destination is MS SQL, Redshift, Iceberg, or Snowflake (unless `use_same_schema_as_source` is set to true).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema_name_prefix": {
+                  "type": "string",
+                  "description": "If `use_same_schema_as_source` is enabled, this prefix will be added to each schema name in the destination. This is useful if you want to namespace all of this pipeline's schemas in the destination.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "table_name_separator": {
+                  "type": "string",
+                  "description": "If provided, this is the separator between database, schema and table name. This is only applicable if the destination is S3 or GCS.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "use_same_schema_as_source": {
+                  "type": "bool",
+                  "description": "If set to true, each table from the source database will be synced to a schema with the same name as its source schema. This can only be used if both the source and destination support multiple schemas (e.g. PostgreSQL, Redshift, Snowflake, etc).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This contains configuration that pertains to the destination database but is specific to this pipeline. The basic connection settings for the destination, which can be shared by multiple pipelines, are stored in the corresponding `artie_connector` resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "destination_connector_uuid": {
+            "type": "string",
+            "description": "This must point to an `artie_connector` resource that represents the destination database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "disable_alerts": {
+            "type": "bool",
+            "description": "If set to true, Artie will not send email alerts for this pipeline (connection failures, replication errors, ingestion lag, etc.). Pipeline health is still tracked in the dashboard.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "drop_deleted_columns": {
+            "type": "bool",
+            "description": "If set to true, when a column is dropped from the source it will also be dropped in the destination.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "encryption_key_uuid": {
+            "type": "string",
+            "description": "UUID of an `artie_encryption_key` to use for column-level encryption. Required if any table has `columns_to_encrypt` set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "flush_rules": {
+            "nested_type": {
+              "attributes": {
+                "buffer_rows": {
+                  "type": "number",
+                  "description": "The number of rows to buffer before flushing to the destination.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "flush_interval_seconds": {
+                  "type": "number",
+                  "description": "The flush interval in seconds for how often Artie should flush data to the destination.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "flush_size_kb": {
+                  "type": "number",
+                  "description": "The size in kb of data to buffer before flushing to the destination.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "This contains rules for how often Artie should flush data to the destination. If not specified, Artie will provide default values. A flush will happen when any of the rules are met (e.g. 30 seconds since the last flush OR 150k rows OR 50MB of data).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "force_utc_timezone": {
+            "type": "bool",
+            "description": "If set to true, timestamps without timezone information in the source will be written as UTC in the destination.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_artie_operation_column": {
+            "type": "bool",
+            "description": "If set to true, Artie will add a new column called `__artie_operation` to the destination table that indicates the operation type (insert, update, delete) for each row.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_artie_updated_at_column": {
+            "type": "bool",
+            "description": "If set to true, Artie will add a new column called `__artie_updated_at` to the destination table to indicate when the row was last updated by Artie.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_database_updated_at_column": {
+            "type": "bool",
+            "description": "If set to true, Artie will add a new column called `__artie_db_updated_at` to the destination table to indicate when the row was last updated by the source database.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_full_source_table_name_column": {
+            "type": "bool",
+            "description": "If set to true, Artie will add a new column called `__artie_full_source_table_name` to the destination table containing the fully qualified source table name (e.g., schema.table). Useful when unifying tables across schemas/databases.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_full_source_table_name_column_as_primary_key": {
+            "type": "bool",
+            "description": "If set to true, includes the full source table name column as part of the primary key in destination tables. Requires `include_full_source_table_name_column` to be true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "include_source_metadata_column": {
+            "type": "bool",
+            "description": "If set to true, Artie will add a new column called `__artie_source_metadata` to the destination table which will contain a JSON blob of metadata about the source event.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human-readable name of the pipeline. This is used only as a label and can contain any characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "snowflake_eco_schedule_uuid": {
+            "type": "string",
+            "description": "If the pipeline's destination is Snowflake, this can point to a Snowflake Eco Mode Schedule that will be used to adjust the pipeline's flush rules according to a schedule. This can currently only be configured via our UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "soft_delete_rows": {
+            "type": "bool",
+            "description": "If set to true, when a row is deleted from the source it will not be deleted from the destination. Instead, a new boolean column called `__artie_delete` will be added to the destination table to indicate which rows have been deleted in the source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source_reader_uuid": {
+            "type": "string",
+            "description": "This must point to an `artie_source_reader` resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "split_events_by_type": {
+            "type": "bool",
+            "description": "If set to true, Artie will split events by type and store them in separate tables. This is only applicable if the source is API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "staging_schema": {
+            "type": "string",
+            "description": "If set, Artie's temporary staging tables will be created in this schema instead of in the same schema as the destination table. This can be used to avoid cluttering the destination schema. Note: this only applies to destinations that support schemas/namespaces.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "static_columns": {
+            "nested_type": {
+              "attributes": {
+                "column": {
+                  "type": "string",
+                  "description": "The name of the column to add to the destination table.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The static value to populate for this column in all rows.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Static columns allow you to add hardcoded column/value pairs to all destination rows. This is useful for tagging data with metadata like environment, source identifier, etc.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status_override": {
+            "type": "string",
+            "description": "Override the pipeline status after update. Currently only `paused` is supported. If set to `paused`, the pipeline will be paused instead of started after an update. This cannot be set on creation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tables": {
+            "nested_type": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "An optional alias for the table. If set, this will be the name of the destination table.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "backfill_history_table": {
+                  "type": "bool",
+                  "description": "If set to true, Artie will backfill the history table with existing data. This is only applicable if `enable_history_mode` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_compress": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to compress using transparent GZIP compression. This can help reduce Kafka payload sizes for columns with large values.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_encrypt": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to encrypt during replication. Requires `encryption_key_uuid` to be set on the pipeline.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_exclude": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to exclude from syncing to the destination.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_hash": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to hash in the destination. Values for these columns will be obscured with a one-way hash.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_include": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to include in replication. If not provided, all columns will be replicated. A pipeline can only have one of `columns_to_include` or `columns_to_exclude` set in any of its tables.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "ctid_backfill": {
+                  "type": "bool",
+                  "description": "If set to true, enables CTID backfill for this table. This is only applicable if the source type is `postgres`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "ctid_chunk_size": {
+                  "type": "number",
+                  "description": "The chunk size to use for CTID backfill. This should be between 100,000 and 1,000,000. This is only applicable if the source type is `postgres` and `ctid_backfill` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "ctid_max_parallelism": {
+                  "type": "number",
+                  "description": "The maximum parallelism for CTID backfill. This should be between 5 and 20. This is only applicable if the source type is `postgres` and `ctid_backfill` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "disable_replication": {
+                  "type": "bool",
+                  "description": "If set to true along with `enable_history_mode`, this table will only replicate to the history table and not the main destination table.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "enable_history_mode": {
+                  "type": "bool",
+                  "description": "If set to true, we will create an additional table in the destination (suffixed with `__history`) to store all changes to the source table over time.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "encrypt_jsonb_columns": {
+                  "type": "bool",
+                  "description": "If set to true, all JSONB (struct) columns will be automatically encrypted before writing to the destination. Requires `encryption_key_uuid` to be set on the pipeline.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "merge_predicates": {
+                  "nested_type": {
+                    "attributes": {
+                      "partition_field": {
+                        "type": "string",
+                        "description": "The name of the column the destination table is partitioned by.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "partition_type": {
+                        "type": "string",
+                        "description": "The type of partition to use. One of 'time' or 'integer'. Required for BigQuery.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Optional: if the destination table is partitioned, specify the partition column(s) and type. This helps merge performance and currently only applies to Snowflake and BigQuery. For BigQuery, only one column can be specified and it may be either a time-partitioned or an integer range-partitioned column; set `partition_type` to 'time' or 'integer' accordingly.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the table in the source database.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "range_backfill": {
+                  "type": "bool",
+                  "description": "If set to true, enables range-based parallel backfill for this table.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "range_batch_size": {
+                  "type": "number",
+                  "description": "The batch size Artie should use while processing each range backfill chunk. Set to 0 to use Artie's default. This is only applicable if `range_backfill` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "range_chunk_size": {
+                  "type": "number",
+                  "description": "The number of source rows or range units Artie should target per range backfill chunk. This is only applicable if `range_backfill` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "range_max_parallelism": {
+                  "type": "number",
+                  "description": "The maximum number of range backfill chunks Artie should process in parallel for this table. This is only applicable if `range_backfill` is set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema": {
+                  "type": "string",
+                  "description": "The name of the schema the table belongs to in the source database. This must be specified if your source database uses schemas (such as PostgreSQL), e.g. `public`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "skip_backfill": {
+                  "type": "bool",
+                  "description": "If set to true, Artie will skip backfilling this table and only process new changes going forward.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "skip_deletes": {
+                  "type": "bool",
+                  "description": "If set to true, we will skip delete events for this table and only process insert and update events.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "skip_no_op_updates": {
+                  "type": "bool",
+                  "description": "If set to true, update events where the before and after rows are identical (after applying column inclusion/exclusion) will be skipped. Only supported for Postgres and requires REPLICA IDENTITY FULL.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "soft_partitioning": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether soft partitioning is enabled for this table.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "max_partitions": {
+                        "type": "number",
+                        "description": "The maximum number of partitions to maintain.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "partition_column": {
+                        "type": "string",
+                        "description": "The column to use for soft partitioning. To prevent duplicate rows, the partition column should be immutable, for example `created_at`.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "partition_frequency": {
+                        "type": "string",
+                        "description": "The frequency of partitioning ('monthly' and 'daily' are supported).",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Optional: configuration for soft partitioning of the destination table. This can improve query performance for large tables by partitioning data based on a specified column.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "unify_across_databases": {
+                  "type": "bool",
+                  "description": "If set to true, we will replicate tables with the same name and schema name from all specified databases into the same destination table. This is only applicable if the source reader has `enable_unify_across_databases` set to true and `databases_to_unify` filled.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "unify_across_schemas": {
+                  "type": "bool",
+                  "description": "If set to true, we will replicate tables with the same name from all schemas into the same destination table. This is only applicable if the source reader has `enable_unify_across_schemas` set to true. You should still specify a schema name where this table exists; we will use that schema to fetch metadata for the table and validate its configuration.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "A map of tables from the source database that you want to replicate to the destination. The key for each table should be formatted as `schema_name.table_name` if your source database uses schemas, otherwise just `table_name`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "turbo_latency_threshold_minutes": {
+            "type": "number",
+            "description": "The replication latency threshold, in minutes, for enabling Turbo mode on Snowflake pipelines.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "turbo_row_threshold": {
+            "type": "number",
+            "description": "The source row threshold for enabling Turbo mode on Snowflake pipelines.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "turbo_warehouse": {
+            "type": "string",
+            "description": "The Snowflake warehouse Artie should use for Turbo mode.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "write_raw_binary_values": {
+            "type": "bool",
+            "description": "If set to true, binary columns (e.g. BINARY type) are created in the destination table for raw binary data instead of creating string columns that store Base64-encoded values. It only applies when the destination is Databricks.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Artie Pipeline resource. This represents a pipeline that syncs data from a single source (e.g., Postgres) to a single destination (e.g., Snowflake).",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_private_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "az_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of AWS Availability Zone IDs where the PrivateLink endpoint is available (e.g., [\"use1-az1\", \"use1-az2\"]).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "data_plane_name": {
+            "type": "string",
+            "description": "The data plane name associated with this PrivateLink connection. If not provided, it will be computed by the server.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dns_entry": {
+            "type": "string",
+            "description": "The DNS entry for the PrivateLink connection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the PrivateLink connection.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region of the VPC endpoint (e.g., us-east-1).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the PrivateLink connection (e.g., available, pending).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The unique identifier for this PrivateLink connection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vpc_endpoint_id": {
+            "type": "string",
+            "description": "The VPC Endpoint ID (e.g., vpce-xxxxxxxxxxxxxxxxx) that connects to Artie's endpoint service.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vpc_service_name": {
+            "type": "string",
+            "description": "The VPC endpoint service name for Artie's service (e.g., com.amazonaws.vpce.us-east-1.vpce-svc-xxxxx).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Artie PrivateLink connection resource. This resource represents an AWS PrivateLink connection to Artie.",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_source_reader": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backfill_batch_size": {
+            "type": "number",
+            "description": "The number of rows to read from the source database in each batch while backfilling. Maximum allowed value is 50,000. Default is 5,000.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "composite_types_as_text": {
+            "type": "bool",
+            "description": "If set to true, Postgres composite (row) type columns will be replicated as their text representation (e.g. (book,abc123)) instead of being stored as Base64 encoded strings. This is only applicable if the source type is PostgreSQL. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "connector_uuid": {
+            "type": "string",
+            "description": "The source connector that we should read data from.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "data_plane_name": {
+            "type": "string",
+            "description": "The name of the data plane to deploy this source reader in. If this is not set, we will use the default data plane for your account. To see the full list of supported data planes on your account, click on 'New pipeline' in our UI.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "database_name": {
+            "type": "string",
+            "description": "The name of the database we should read data from in the source connector. This should be specified if the source connector's type is DocumentDB, MongoDB, MySQL, MS SQL, Oracle (this maps to the service name), or PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "databases_to_unify": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "If `enable_unify_across_databases` is set to true, this should be a list of databases within your Microsoft SQL Server that we should sync data from. All tables that you opt into being unified should exist in each of these databases. This is only applicable if the source type is Microsoft SQL Server.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "disable_auto_fetch_tables": {
+            "type": "bool",
+            "description": "If set to true, Artie will not automatically fetch tables from the source database on the UI. This is useful if you have a large number of tables and you want to manually specify the schema before we fetch all the tables.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_heartbeats": {
+            "type": "bool",
+            "description": "If the source database is a very low-traffic PostgreSQL database (e.g., a dev database) and is running on Amazon RDS, we recommend setting this to true to prevent WAL growth issues. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_unify_across_databases": {
+            "type": "bool",
+            "description": "If set to true, you can specify multiple databases within your Microsoft SQL Server that we should sync data from, and we will unify tables with the same name and schema into a single destination table. This is useful if you have multiple identical databases and want to fan-in the data. This is only applicable if the source type is Microsoft SQL Server and `mssql_replication_method` is set to `fn_dblog` or `change_tracking`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_unify_across_schemas": {
+            "type": "bool",
+            "description": "If set to true, you can specify tables that should be generalized to all schemas, meaning we will sync all tables with the same name into the same destination table. This is useful if you have multiple identical schemas and want to fan-in the data. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_shared": {
+            "type": "bool",
+            "description": "If set to true, this source reader can be used by multiple pipelines.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "message_compression": {
+            "type": "string",
+            "description": "When set to `gzip`, large Kafka messages produced by this source reader will be gzip-compressed before being sent. Transfer must be deployed with decompression support before enabling this. Valid values: `gzip` or omit/empty to disable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mssql_replication_method": {
+            "type": "string",
+            "description": "If unset, we will use the default replication method (Capture Instances). If set to `fn_dblog`, we will stream data from transaction logs via SQL access. This is only applicable if the source type is Microsoft SQL Server.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "An optional human-readable label for this source reader.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "one_topic_per_schema": {
+            "type": "bool",
+            "description": "If set to true, Artie will write all incoming CDC events into a single Kafka topic per schema. This is currently only supported if your source is Oracle and your account has this feature enabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "oracle_container_name": {
+            "type": "string",
+            "description": "The name of the container (pluggable database) if the source type is Oracle and you are using a container database.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "postgres_publication_mode": {
+            "type": "string",
+            "description": "This should be set to `filtered` if the PostgreSQL publication in the source database is not set to include `ALL TABLES`. If that's the case, you will need to explicitly add tables to the publication. Otherwise, this should be set to `\"\"`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "postgres_publication_name_override": {
+            "type": "string",
+            "description": "If set, this will override the name of the PostgreSQL publication. Otherwise, we will use our default value, `dbz_publication`. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "postgres_replication_slot_override": {
+            "type": "string",
+            "description": "If set, this will override the name of the PostgreSQL replication slot. Otherwise, we will use our default value, `artie`. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "publish_via_partition_root": {
+            "type": "bool",
+            "description": "If set to true, changes to partitioned tables will be published using the root partitioned table's identity rather than the actual partition that was changed (The API defaults this to true). This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status_override": {
+            "type": "string",
+            "description": "Only available if the source reader has `is_shared` set to true. This setting overrides the source reader status after update. Currently only `paused` is supported. If set to `paused`, a shared source reader will be paused instead of deployed after an update. This cannot be set on creation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tables": {
+            "nested_type": {
+              "attributes": {
+                "child_partition_schema_name": {
+                  "type": "string",
+                  "description": "If the source table is partitioned and its child partitions are in a different schema, this should specify the name of that schema.",
+                  "description_kind": "markdown",
+                  "deprecated": true,
+                  "optional": true,
+                  "computed": true
+                },
+                "columns_to_exclude": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to exclude from CDC events. This cannot be used if `columns_to_include` is also specified.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "columns_to_include": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An optional list of columns to include in CDC events. If not provided, all columns will be included. This cannot be used if `columns_to_exclude` is also specified.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "is_partitioned": {
+                  "type": "bool",
+                  "description": "If the source table is partitioned, set this to true and we will ingest data from all of its partitions.",
+                  "description_kind": "markdown",
+                  "deprecated": true,
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the table in the source database.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "schema": {
+                  "type": "string",
+                  "description": "The name of the schema the table belongs to in the source database. This must be specified if your source database uses schemas (such as PostgreSQL), e.g. `public`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "unify_across_databases": {
+                  "type": "bool",
+                  "description": "This should be set to true for any tables that you intend to unify across databases in any pipeline that uses this source reader. This is only applicable if the source reader has `enable_unify_across_databases` set to true and `databases_to_unify` filled.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "unify_across_schemas": {
+                  "type": "bool",
+                  "description": "This should be set to true for any tables that you intend to unify across schemas in any pipeline that uses this source reader. This is only applicable if the source reader has `enable_unify_across_schemas` set to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "A map of tables from the source database that you want this source reader to include CDC events for. This should be specified if (and only if) the source reader has `is_shared` set to true, and it must include all tables that are specified in the `tables` attribute of any pipeline that uses this source reader. The key for each table should be formatted as `schema_name.table_name` if your source database uses schemas, otherwise just `table_name`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "unify_across_schemas_regex": {
+            "type": "string",
+            "description": "If unify across schemas is enabled, this is an additional regex pattern that you can use to filter which schemas should be unified. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "use_advance_on_primary_keep_alive": {
+            "type": "bool",
+            "description": "If set to true, Artie will use the `pg_logical_emit_message` function to advance the replication slot LSN on keepalive messages from the primary. This is only applicable if the source type is PostgreSQL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Artie Source Reader resource. This represents a process that reads data from a source connector and inserts it info Kafka. A Source Reader can be used by multiple Pipelines, e.g. to read from a single PostgreSQL replication slot and copy the data to multiple destinations.",
+        "description_kind": "markdown"
+      }
+    },
+    "artie_ssh_tunnel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "The public hostname or IP address of your SSH server.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A human-readable label for this SSH tunnel.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port number of your SSH server.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "When you create an SSH tunnel in Artie, we generate a public/private key pair. Once generated, you'll need to add this public key to `~/.ssh/authorized_keys` on your SSH server.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username we should use when connecting to your SSH server.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Artie SSH Tunnel resource. This resource allows you to create an SSH tunnel to connect to your source or destination databases.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
