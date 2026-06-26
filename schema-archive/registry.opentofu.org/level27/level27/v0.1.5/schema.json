@@ -1,0 +1,576 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Level27 API key. Can also be set via the `LEVEL27_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "Level27 API base URL. Defaults to `https://api.level27.eu/v1`. Can also be set via `LEVEL27_API_URL`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The **Level27** Terraform provider lets you manage your Level27 hosting resources (apps, components, URLs, SSL certificates) via the Level27 CP4 API.\n\nAuthenticate with your Level27 API key. Set `LEVEL27_API_KEY` in the environment to avoid storing credentials in your Terraform code.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "level27_app": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_teams": {
+            "type": "string",
+            "description": "Comma-separated list of team IDs to auto-assign to this app.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_upgrades": {
+            "type": "string",
+            "description": "Comma-separated list of upgrade names to apply automatically.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "billing_status": {
+            "type": "string",
+            "description": "Billing status of the app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "custom_package_id": {
+            "type": "number",
+            "description": "ID of the custom package (billing product).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "custom_package_name": {
+            "type": "string",
+            "description": "Name of the custom package, e.g. `drupal_run`, `wordpress_walk`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "external_info": {
+            "type": "string",
+            "description": "External reference (required when billableitemInfo entities exist for the organisation).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hosting_type": {
+            "type": "string",
+            "description": "Hosting type: `Agency` or `Classic`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the app/project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organisation_id": {
+            "type": "number",
+            "description": "ID of the organisation that owns this app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the app (e.g. `ok`, `to_create`, `creating`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_category": {
+            "type": "string",
+            "description": "Status category: `green`, `yellow`, `red`, or `grey`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Level27 **App** (project). An app groups components like PHP web-apps, databases, mail, etc.",
+        "description_kind": "markdown"
+      }
+    },
+    "level27_app_component": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_id": {
+            "type": "number",
+            "description": "ID of the parent app.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "appcomponenttype": {
+            "type": "string",
+            "description": "Component type. One of: `mysql`, `php`, `keyvalue_redis`, `sftp`, `asp`, `mssql`, `solr`, `memcached`, `elasticsearch`, `redis`, `ruby`, `url`, `mongodb`, `nodejs`, `python`, `postgresql`, `dotnet`, `rabbitmq`, `varnish`, `java`, `mail`, `wasp`, `wmssql`, `mailpit`, `meilisearch`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "category": {
+            "type": "string",
+            "description": "Component category assigned by Level27 (e.g. `Web-apps`, `Databases`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "extraconfig": {
+            "type": "string",
+            "description": "Extra configuration for PHP/ASP components (custom php.ini directives, etc.).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the component.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "limit_group": {
+            "type": "string",
+            "description": "Limit group for this component, e.g. `database` or `application`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the component.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_appcomponent": {
+            "type": "number",
+            "description": "ID of the parent app component. Required for component types that depend on a parent (e.g. `varnish` requires a `php` parent).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "pass": {
+            "type": "string",
+            "description": "Password for the component. Auto-generated if omitted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative web root path. Defaults to `/public_html` for PHP/ASP components.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "sshkeys": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of SSH key IDs to deploy onto this component.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the component.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_category": {
+            "type": "string",
+            "description": "Status category: `green`, `yellow`, `red`, or `grey`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "system": {
+            "type": "number",
+            "description": "ID of the system to deploy on. Mutually exclusive with `systemgroup`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "systemgroup": {
+            "type": "number",
+            "description": "ID of the system group to deploy on. Mutually exclusive with `system`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the component runtime (e.g. PHP version `8.2`, MySQL version `8.4`). If omitted, the version is auto-detected from the system's installed services.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a Level27 **App Component**. A component is one of the buildable blocks of an app: PHP, MySQL, SFTP, mail, etc.\n\n> **Note:** `appcomponenttype`, `system`, and `systemgroup` are immutable after creation \u2014 changing them forces a replacement.",
+        "description_kind": "markdown"
+      }
+    },
+    "level27_app_component_url": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_id": {
+            "type": "number",
+            "description": "ID of the parent app.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "authentication": {
+            "type": "bool",
+            "description": "Enable HTTP basic authentication (default: `false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_ssl_certificate": {
+            "type": "bool",
+            "description": "Automatically create a Let's Encrypt certificate. Requires `handle_dns = true` (default: `false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "caching": {
+            "type": "bool",
+            "description": "Enable caching for this URL (default: `false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "component_id": {
+            "type": "number",
+            "description": "ID of the parent component.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "content": {
+            "type": "string",
+            "description": "The hostname/URL, e.g. `www.example.com`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "handle_dns": {
+            "type": "bool",
+            "description": "Automatically create DNS records for this URL (default: `false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "https": {
+            "type": "bool",
+            "description": "Whether HTTPS is active on this URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssl_certificate_id": {
+            "type": "number",
+            "description": "ID of an existing SSL certificate to attach.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssl_force": {
+            "type": "bool",
+            "description": "Force HTTPS redirect (default: `true`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a **URL** linked to a Level27 App Component (PHP, ASP, etc.).",
+        "description_kind": "markdown"
+      }
+    },
+    "level27_ssl_certificate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_id": {
+            "type": "number",
+            "description": "ID of the parent app.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "auto_ssl_certificate_urls": {
+            "type": "string",
+            "description": "Comma-separated list of URLs for Let's Encrypt certificate (required when `ssl_type = letsencrypt`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_url_link": {
+            "type": "bool",
+            "description": "Automatically link matching app URLs to this certificate (default: `false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the certificate.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ssl_cabundle": {
+            "type": "string",
+            "description": "PEM-encoded CA bundle (required when `ssl_type = own`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssl_crt": {
+            "type": "string",
+            "description": "PEM-encoded certificate (required when `ssl_type = own`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssl_force": {
+            "type": "bool",
+            "description": "Force HTTPS on all linked URLs (default: `true`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ssl_key": {
+            "type": "string",
+            "description": "PEM-encoded private key (required when `ssl_type = own`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssl_status": {
+            "type": "string",
+            "description": "Status of the SSL certificate itself (e.g. `ok`, `pending`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ssl_type": {
+            "type": "string",
+            "description": "Certificate type: `letsencrypt`, `xolphin`, or `own`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Platform status of the SSL certificate resource.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an **SSL Certificate** for a Level27 App. Supports Let's Encrypt (`letsencrypt`), Xolphin (`xolphin`), and custom (`own`) certificates.",
+        "description_kind": "markdown"
+      }
+    },
+    "level27_system": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_install": {
+            "type": "bool",
+            "description": "When `true` (default), triggers OS installation (`autoInstall`) immediately after the system is allocated and networks are configured, by calling `POST /systems/{id}/actions` with `autoInstall`. The provider waits until installation completes. Set to `false` to skip automatic installation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "cpu": {
+            "type": "number",
+            "description": "Number of virtual CPUs.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "customer_fqdn": {
+            "type": "string",
+            "description": "Customer-facing FQDN. Defaults to `name` when omitted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "disk": {
+            "type": "number",
+            "description": "Disk size in GB.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "external_info": {
+            "type": "string",
+            "description": "External reference / billing info.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier of the system.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "management_type": {
+            "type": "string",
+            "description": "Management level. Common values: `infra_plus`, `basic`, `enterprise`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "Memory in GB.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Hostname (FQDN) of the system, e.g. `myserver.example.com`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "networks": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of network-name \u2192 IPv4 address to assign. Use `\"auto\"` to have the provider pick a free address from `GET /networks/{id}/locate`. Use an empty string `\"\"` for no IP on that interface. Once `\"auto\"` is applied, the state preserves `\"auto\"` so subsequent plans are stable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organisation_id": {
+            "type": "number",
+            "description": "ID of the organisation that owns this system.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parentsystem_id": {
+            "type": "number",
+            "description": "ID of the parent (host) system for nested virtualisation. Assigned automatically by the API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "period": {
+            "type": "number",
+            "description": "Billing period in months (default: `1`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current provisioning status of the system (e.g. `ok`, `creating`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_category": {
+            "type": "string",
+            "description": "Status category: `green`, `yellow`, `red`, or `grey`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "systemimage_id": {
+            "type": "number",
+            "description": "ID of the system image to use for provisioning.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "systemprovider_configuration_id": {
+            "type": "number",
+            "description": "ID of the system provider configuration (hypervisor / datacenter profile).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "System type, e.g. `kvmguest`, `vmware`, `baremetal`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "ID of the zone (network/datacenter zone) to deploy the system in.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a Level27 **System** (virtual server). The `type`, `systemimage_id`, `systemprovider_configuration_id`, `zone_id`, and `parentsystem_id` are immutable after creation \u2014 changing them forces a replacement.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "level27_app": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "billing_status": {
+            "type": "string",
+            "description": "Billing status of the app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "custom_package_name": {
+            "type": "string",
+            "description": "Name of the custom package.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hosting_type": {
+            "type": "string",
+            "description": "Hosting type: `Agency` or `Classic`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Numeric ID of the app to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organisation_id": {
+            "type": "number",
+            "description": "ID of the owning organisation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the app.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_category": {
+            "type": "string",
+            "description": "Status category: `green`, `yellow`, `red`, or `grey`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about an existing Level27 **App** by its numeric ID.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
