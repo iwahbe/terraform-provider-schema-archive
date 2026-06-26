@@ -1,0 +1,3244 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "doppler_token": {
+          "type": "string",
+          "description": "A Doppler token, either a personal or service token. This can also be set via the DOPPLER_TOKEN environment variable. Only one of `doppler_token` or OIDC authentication (`oidc_identity` + `oidc_token`/`oidc_token_file`) may be specified.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "The Doppler API host (i.e. https://api.doppler.com). This can also be set via the DOPPLER_API_HOST environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "oidc_identity": {
+          "type": "string",
+          "description": "The identity ID (UUID) of the Doppler service account identity for OIDC authentication. This can also be set via the DOPPLER_OIDC_IDENTITY environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "oidc_token": {
+          "type": "string",
+          "description": "A JWT token to use for OIDC authentication. Only one of `oidc_token` or `oidc_token_file` may be set. This can also be set via the DOPPLER_OIDC_TOKEN environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "oidc_token_file": {
+          "type": "string",
+          "description": "A path to a file containing a JWT token for OIDC authentication (e.g. a Kubernetes projected service account token). Only one of `oidc_token` or `oidc_token_file` may be set. This can also be set via the DOPPLER_OIDC_TOKEN_FILE environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "verify_tls": {
+          "type": "bool",
+          "description": "Whether or not to verify TLS. This can also be set via the DOPPLER_VERIFY_TLS environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "doppler_change_request_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description of the change request policy",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the change request policy",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The unique identifier of the change request policy",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "rules": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "auto_assign_reviewers": {
+                  "type": "string",
+                  "description": "If set, the strategy used to automatically assign reviewers to CRs targeted by this policy. Valid values: all, matchCount, never (default)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "disallow_self_review": {
+                  "type": "bool",
+                  "description": "If true, approvals from the author of a change request will be excluded when evaluating this policy",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "required_reviewers": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "count": {
+                        "type": "number",
+                        "description": "The number of approvals a change request must receive before it can be applied",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "group_slugs": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "If set, only approvals from members of these groups will satisfy this rule",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "user_slugs": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "If set, only approvals from these users will satisfy this rule",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Enforces that a specific number of users approve a change request before it can be applied",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Rules that the policy will apply to its targets",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "targets": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_projects": {
+                  "type": "bool",
+                  "description": "Whether or not the policy applies to all projects in the workplace",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "project": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "all": {
+                        "type": "bool",
+                        "description": "Whether or not the policy applies to all configs in the project",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "config_names": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "Specific configs the policy applies to",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "environment_slugs": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "Entire environments the policy applies to",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "project_name": {
+                        "type": "string",
+                        "description": "The name of the project to apply the policy to",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "A project that the policy will apply to",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Where the policy will apply",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "descriptor": {
+            "type": "string",
+            "description": "The descriptor (project.config) of the Doppler config",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "The name of the Doppler environment where the config is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "inheritable": {
+            "type": "bool",
+            "description": "Whether or not the Doppler config can be inherited by other configs",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "inherits": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of other Doppler config descriptors that this config inherits from. Descriptors match the format \"project.config\" (e.g. backend.stg), which is most easily retrieved as the computed descriptor of a doppler_config resource (e.g. doppler_config.backend_stg.descriptor)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the config is located",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "personal_configs": {
+            "type": "bool",
+            "description": "Whether or not personal configs are enabled for the environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the environment is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the Doppler environment",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_project_role": {
+            "type": "string",
+            "description": "The default project role assigned to the group when added to a Doppler project. If set to null, the default project role is inherited from the workplace setting.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workplace_role": {
+            "type": "string",
+            "description": "The workplace role assigned to members of the group. If omitted, state will be tracked in Terraform but not updated in Doppler. Use \"no_access\" to ensure the group has no workplace permissions",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_group_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "user_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler workplace user",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_group_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_slug": {
+            "type": "string",
+            "description": "The slug of the group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "user_slugs": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of user slugs in the group",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_iam_user_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "IAM Role ARN for role assumption",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_mssql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "IAM Role ARN for role assumption",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "lambda_arn": {
+            "type": "string",
+            "description": "The Lambda ARN",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_mysql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "IAM Role ARN for role assumption",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "lambda_arn": {
+            "type": "string",
+            "description": "The Lambda ARN",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_parameter_store": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "The ARN of the AWS role for Doppler to assume",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_postgres": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "IAM Role ARN for role assumption",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "lambda_arn": {
+            "type": "string",
+            "description": "The Lambda ARN",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_aws_secrets_manager": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assume_role_arn": {
+            "type": "string",
+            "description": "The ARN of the AWS role for Doppler to assume",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_azure_vault_service_principal": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Service Principal Client ID. See https://docs.doppler.com/docs/azure-key-vault#custom-service-principal for details.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The Service Principal Client Secret. See https://docs.doppler.com/docs/azure-key-vault#custom-service-principal for details.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "The Service Principal Tenant ID. See https://docs.doppler.com/docs/azure-key-vault#custom-service-principal for details.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_circleci": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_token": {
+            "type": "string",
+            "description": "A CircleCI API token. See https://docs.doppler.com/docs/circleci for details.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_cloudflare_tokens": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_token": {
+            "type": "string",
+            "description": "The API Token",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_external_id": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration_type": {
+            "type": "string",
+            "description": "The integration type for the external id",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_flyio": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "A Fly.io API key.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_gcp_cloudsql_mysql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_key": {
+            "type": "string",
+            "description": "The GCP service account key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_gcp_cloudsql_postgres": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_key": {
+            "type": "string",
+            "description": "The GCP service account key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_gcp_cloudsql_sqlserver": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_key": {
+            "type": "string",
+            "description": "The GCP service account key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_gcp_secret_manager": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_key": {
+            "type": "string",
+            "description": "The IAM Service Account JSON key. See https://docs.doppler.com/docs/gcp-secret-manager for details.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "gcp_secret_prefix": {
+            "type": "string",
+            "description": "The prefix added to any secret created by this integration in GCP. See https://docs.doppler.com/docs/gcp-secret-manager for details.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_gcp_service_account_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "external_id": {
+            "type": "string",
+            "description": "The Doppler-generated external id (placed in the service account description field)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "impersonated_service_account": {
+            "type": "string",
+            "description": "The service account email of the account to be impersonated",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_member_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the Doppler integration where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The integration role identifier for the access. Must use either one of the built-in integration role slugs (`admin`, `consumer`, `viewer`, or `no_access`), or the slug for a custom integration role.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_member_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the Doppler integration where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The integration role identifier for the access. Must use either one of the built-in integration role slugs (`admin`, `consumer`, `viewer`, or `no_access`), or the slug for a custom integration role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_account_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler service account",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_member_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the Doppler integration where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The integration role identifier for the access. Must use either one of the built-in integration role slugs (`admin`, `consumer`, `viewer`, or `no_access`), or the slug for a custom integration role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler workplace user",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_mongodb_atlas": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "The Private Key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The Public Key",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_sendgrid": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "The API Key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_terraform_cloud": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "A Terraform Cloud API key.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_integration_twilio": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_sid": {
+            "type": "string",
+            "description": "The Account SID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_secret": {
+            "type": "string",
+            "description": "The Key Secret",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "key_sid": {
+            "type": "string",
+            "description": "The Key SID (cannot equal accountSID)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the Doppler project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_project_member_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The environments in the project where this access will apply (null or omitted for roles with access to all environments)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The project role identifier for the access. Must use either one of the built-in project role slugs (`admin`, `owner`, `collaborator`, or `no_access`), or the slug for a custom project role.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_project_member_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The environments in the project where this access will apply (null or omitted for roles with access to all environments)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The project role identifier for the access. Must use either one of the built-in project role slugs (`admin`, `owner`, `collaborator`, or `no_access`), or the slug for a custom project role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_account_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler service account",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_project_member_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The environments in the project where this access will apply (null or omitted for roles with access to all environments)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the access is applied",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The project role identifier for the access. Must use either one of the built-in project role slugs (`admin`, `owner`, `collaborator`, or `no_access`), or the slug for a custom project role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_slug": {
+            "type": "string",
+            "description": "The slug of the Doppler workplace user",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_project_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The role's unique identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_custom_role": {
+            "type": "bool",
+            "description": "Whether or not the role is custom (as opposed to Doppler built-in)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler project role",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of [Doppler project permissions](https://docs.doppler.com/reference/project_roles-create)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_aws_iam_user_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The IAM username (excluding ARN and scope prefix)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_aws_mssql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database": {
+            "type": "string",
+            "description": "The DB database",
+            "description_kind": "plain",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The DB Host",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The DB Port",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_aws_mysql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database": {
+            "type": "string",
+            "description": "The DB database",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The DB Host",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "managing_user_password": {
+            "type": "string",
+            "description": "The managing user password",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "managing_user_username": {
+            "type": "string",
+            "description": "The managing user username",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The DB Port",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_aws_postgres": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database": {
+            "type": "string",
+            "description": "The DB database",
+            "description_kind": "plain",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The DB Host",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "managing_user_password": {
+            "type": "string",
+            "description": "The managing user password",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "managing_user_username": {
+            "type": "string",
+            "description": "The managing user username",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The DB Port",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ssl_ca": {
+            "type": "string",
+            "description": "An optional SSL CA for the AWS region the DB is in",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_cloudflare_tokens": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_gcp_cloudsql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database_instance": {
+            "type": "string",
+            "description": "Cloud SQL database instance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "user_host_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_gcp_service_account_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_account": {
+            "type": "string",
+            "description": "The Service Account Email whose keys should be rotated",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_mongodb_atlas": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The Mongo DB Atlas Project ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Rotated secret credentials",
+              "description_kind": "plain"
+            },
+            "min_items": 2,
+            "max_items": 2
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_sendgrid": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scopes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "SendGrid scopes",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_rotated_secret_twilio": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rotated secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rotation_period_sec": {
+            "type": "number",
+            "description": "How frequently to rotate the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "computed": {
+            "type": "string",
+            "description": "The computed secret value, after resolving secret references",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The raw secret value",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "value_type": {
+            "type": "string",
+            "description": "The value type of the secret",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "visibility": {
+            "type": "string",
+            "description": "The visibility of the secret. One of `masked`, `unmasked`, or `restricted`. Defaults to `masked`.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secret_note": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the secret. Notes are scoped per project + secret name and apply across all configs.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "note": {
+            "type": "string",
+            "description": "The note content to attach to the secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project that owns the secret",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_aws_parameter_store": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "advanced_parameter": {
+            "type": "bool",
+            "description": "Whether or not the parameters are explicitly stored as an advanced parameter",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "kms_key_id": {
+            "type": "string",
+            "description": "The AWS KMS key used to encrypt the parameter (ID, Alias, or ARN) ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name_transform": {
+            "type": "string",
+            "description": "An optional secret name transformer (e.g. DOPPLER_CONFIG in lower-kebab would be doppler-config). Valid transformers: none, camel, upper-camel, lower-snake, tf-var, dotnet, dotnet-env, lower-kebab",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path to the parameters in AWS",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secure_string": {
+            "type": "bool",
+            "description": "Whether or not the parameters are stored as a secure string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sync_strategy": {
+            "type": "string",
+            "description": "Determines whether secrets are synced to a single secret (`single-secret`) as a JSON object or multiple discrete secrets (`multi-secret`). Defaults to `multi-secret` if unspecified.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "AWS tags to attach to the parameters",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_resource_tags": {
+            "type": "string",
+            "description": "Behavior for AWS resource tags on updates (`never` update, `upsert` tags (leaving non-Doppler tags alone), `replace` tags (remove non-Doppler tags))",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_aws_secrets_manager": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "kms_key_id": {
+            "type": "string",
+            "description": "The AWS KMS key used to encrypt the secret (ID, Alias, or ARN)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name_transform": {
+            "type": "string",
+            "description": "An optional secret name transformer (e.g. DOPPLER_CONFIG in lower-kebab would be doppler-config). Valid transformers: none, camel, upper-camel, lower-snake, tf-var, dotnet, dotnet-env, lower-kebab",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path to the secret in AWS",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path_behavior": {
+            "type": "string",
+            "description": "The behavior to modify the provided path. Either `add_doppler_suffix` (default) which appends `doppler` to the provided path or `none` which leaves the path unchanged.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sync_strategy": {
+            "type": "string",
+            "description": "Determines whether secrets are synced to a single secret (`single-secret`) as a JSON object or multiple discrete secrets (`multi-secret`). Defaults to `single-secret` if unspecified.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "AWS tags to attach to the secrets",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_metadata": {
+            "type": "bool",
+            "description": "If enabled, Doppler will update the AWS secret metadata (e.g. KMS key) during every sync. If disabled, Doppler will only set secret metadata for new AWS secrets.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_resource_tags": {
+            "type": "string",
+            "description": "Behavior for AWS resource tags on updates (`never` update, `upsert` tags (leaving non-Doppler tags alone), `replace` tags (remove non-Doppler tags))",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_azure_vault": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "single_secret_name": {
+            "type": "string",
+            "description": "The name of the secret being synced to when using the \"single-secret\" sync strategy. Required when using \"single-secret\" sync strategy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sync_strategy": {
+            "type": "string",
+            "description": "Determines whether secrets are synced to a single secret (`single-secret`) as a JSON object or multiple discrete secrets (`multi-secret`).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vault_uri": {
+            "type": "string",
+            "description": "The Azure Vault URI for the vault secrets will be synced to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_circleci": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_slug": {
+            "type": "string",
+            "description": "The organization slug where the resource is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_id": {
+            "type": "string",
+            "description": "The resource ID (either project or context) to sync to",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "Either \"project\" or \"context\", based on the resource type to sync to",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_flyio": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_id": {
+            "type": "string",
+            "description": "The app ID ",
+            "description_kind": "plain",
+            "required": true
+          },
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "restart_machines": {
+            "type": "bool",
+            "description": "Whether or not to restart the Fly.io machines when secrets are updated",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_gcp_secret_manager": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "format": {
+            "type": "string",
+            "description": "Specifies the format secrets will be stored in. Either `env` or `json`. Defaults to `json`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name used to store the secret when sync_strategy is set to `single-secret` (note that the integration's `gcp_secret_prefix` will be prepended to this).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The GCP regions used for replication. Can include any supported GCP region or `[\"automatic\"]`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sync_strategy": {
+            "type": "string",
+            "description": "Determines whether secrets are synced to a single secret (`single-secret`) as a JSON object or multiple discrete secrets (`multi-secret`).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_github_actions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment_name": {
+            "type": "string",
+            "description": "The GitHub repo environment name to sync to (only used when `sync_target` is set to \"repo\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "org_scope": {
+            "type": "string",
+            "description": "Either \"all\" or \"private\", based on the which repos you want to have access (only used when `sync_target` is set to \"org\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repo_name": {
+            "type": "string",
+            "description": "The GitHub repo name to sync to (only used when `sync_target` is set to \"repo\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sync_target": {
+            "type": "string",
+            "description": "Either \"repo\" or \"org\", based on the resource type to sync to",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sync_unmasked_as_variables": {
+            "type": "bool",
+            "description": "When enabled, causes secrets with the `unmasked` visibility type to get synced as GitHub Action Variables. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_github_codespaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "org_scope": {
+            "type": "string",
+            "description": "Either \"all\" or \"private\", based on the which repos you want to have access (only used when `sync_target` is set to \"org\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repo_name": {
+            "type": "string",
+            "description": "The GitHub repo name to sync to (only used when `sync_target` is set to \"repo\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sync_target": {
+            "type": "string",
+            "description": "Either \"repo\" or \"org\", based on the resource type to sync to",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_github_dependabot": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "org_scope": {
+            "type": "string",
+            "description": "Either \"all\" or \"private\", based on the which repos you want to have access (only used when `sync_target` is set to \"org\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repo_name": {
+            "type": "string",
+            "description": "The GitHub repo name to sync to (only used when `sync_target` is set to \"repo\")",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sync_target": {
+            "type": "string",
+            "description": "Either \"repo\" or \"org\", based on the resource type to sync to",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets_sync_terraform_cloud": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_behavior": {
+            "type": "string",
+            "description": "The behavior to be performed on the secrets in the sync target when this resource is deleted or recreated. Either `leave_in_target` (default) or `delete_from_target`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration": {
+            "type": "string",
+            "description": "The slug of the integration to use for this sync",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name_transform": {
+            "type": "string",
+            "description": "A name transform to apply before syncing secrets: \"none\" or \"lowercase\"",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sync_target": {
+            "type": "string",
+            "description": "Either \"workspace\" or \"variableSet\", based on the resource type to sync to",
+            "description_kind": "plain",
+            "required": true
+          },
+          "variable_set_id": {
+            "type": "string",
+            "description": "The Terraform Cloud variable set ID to sync to",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "variable_sync_type": {
+            "type": "string",
+            "description": "Either \"terraform\" to sync secrets as Terraform variables or \"env\" to sync as environment variables",
+            "description_kind": "plain",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The Terraform Cloud workspace ID to sync to",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the service account",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the service account",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workplace_permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of the workplace permissions for the service account (or use `workplace_role`)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workplace_role": {
+            "type": "string",
+            "description": "The identifier of the workplace role for the service account (or use `workplace_permissions`)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_service_account_identity": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the service account identity",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_account_slug": {
+            "type": "string",
+            "description": "Slug of the service account",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the service account identity",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ttl_seconds": {
+            "type": "number",
+            "description": "The amount of time, in seconds, that auth tokens for this identity will be valid",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "config_oidc": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "claims_type": {
+                  "type": "string",
+                  "description": "If \"wildcard\", wildcard characters will be expanded during claims validation. Defaults to \"exact\"",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "discovery_url": {
+                  "type": "string",
+                  "description": "The public URL of the OpenID discovery service",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "claims": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "key": {
+                        "type": "string",
+                        "description": "The key of the claim to validate",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "values": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "The set of valid values for this claim",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "A set of valid values for a specific claim. At least \"aud\" and \"sub\" must be provided",
+                    "description_kind": "plain"
+                  },
+                  "min_items": 2
+                }
+              },
+              "description": "The OIDC configuration for the identity",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_service_account_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "The api key used to authenticate the service account",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The datetime that the token was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "The datetime at which the API token should expire. If not provided, the API token will remain valid indefinitely unless manually revoked",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the API token",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_account_slug": {
+            "type": "string",
+            "description": "Slug of the service account",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the service account token",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_service_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access": {
+            "type": "string",
+            "description": "The access level (read or read/write)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config where the service token is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key for the Doppler service token",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler service token",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the service token is located",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_trusted_ips": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the config is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "trusted_ips": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of trusted IP ranges in CIDR notation (e.g. 203.0.113.0/24, 1.2.3.4/32). Use 0.0.0.0/0 to allow all traffic.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the webhook is enabled or disabled.  Default to true.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enabled_configs": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Configs this webhook will trigger for",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the webhook",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "payload": {
+            "type": "string",
+            "description": "The webhook's payload as a JSON string.  Leave empty to use the default webhook payload",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project where the webhook is located",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Secret used for request signing",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the Webhook",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the webhook endpoint",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "authentication": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "password": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "token": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Authentication method used by the webhook",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_workplace_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The role's unique identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_custom_role": {
+            "type": "bool",
+            "description": "Whether or not the role is custom (as opposed to Doppler built-in)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler workplace role",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of [Doppler workplace permissions](https://docs.doppler.com/reference/workplace_roles-create)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "doppler_environments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "list": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "created_at": "string",
+                  "name": "string",
+                  "project": "string",
+                  "slug": "string"
+                }
+              ]
+            ],
+            "description": "List of environments in the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The project to list environments for",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Doppler group",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the Doppler group",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_secrets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The name of the Doppler config (required for personal tokens)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "map": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A mapping of secret names to computed secret values",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The name of the Doppler project (required for personal tokens)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "doppler_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the Doppler user",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the Doppler user",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
