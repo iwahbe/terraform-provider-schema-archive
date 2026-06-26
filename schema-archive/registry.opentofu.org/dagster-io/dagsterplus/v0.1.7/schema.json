@@ -1,0 +1,3692 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "A Dagster+ API token. May also be set via the `DAGSTER_CLOUD_API_TOKEN` environment variable. Generate a token at Dagster+ \u2192 Account Settings \u2192 API Tokens.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Override the base URL for the Dagster+ API. Defaults to `https://{organization}.dagster.cloud`. Only needed for on-prem or custom deployments.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "organization": {
+          "type": "string",
+          "description": "The Dagster+ organization name (e.g. `my-org` for `my-org.dagster.cloud`). May also be set via the `DAGSTER_CLOUD_ORGANIZATION` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Interact with Dagster+ (Dagster Cloud) to manage deployments, code locations, and teams.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "dagsterplus_agent_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "all_branch_deployments": {
+            "type": "bool",
+            "description": "Whether the token holds the AGENT grant across all branch deployments. Defaults to false.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "branch_deployments_grants": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Names of full (parent) deployments whose branch deployments the token is granted the AGENT permission on.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment_grants": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Names of full deployments the token is granted the AGENT permission on.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The token ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The label for the agent token. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization": {
+            "type": "bool",
+            "description": "Whether the token holds the organization-scoped AGENT grant. Dagster+ creates this grant automatically with every new token; set to false to remove it. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The agent token value. Only populated on creation; not recoverable after import.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a Dagster+ agent token and its permission grants. The token value is only available at creation time; it cannot be recovered after import. Changing the name forces a new resource. Agent tokens only ever carry the AGENT permission, so the grant attributes only control which scopes the token is granted on.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_agent_token_deployment_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_token_id": {
+            "type": "string",
+            "description": "The ID of the agent token to grant access. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to grant access to. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{agent_token_id}/{deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Grants an agent token the AGENT permission on a specific deployment. Agent tokens only ever carry the AGENT permission, so there is no grant level to configure.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_alert_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment this alert policy belongs to (e.g. `prod`).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the alert policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the alert policy is active.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "event_types": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Event types that trigger the alert. Read-only \u2014 always derived by the provider from the policy-type-specific block.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{deployment}/{name}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the alert policy. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "policy_type": {
+            "type": "string",
+            "description": "The category of alert policy. Valid values: `asset`, `run`, `code_location`, `automation`, `budget`, `insight_metric`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "asset": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_assets": {
+                  "type": "bool",
+                  "description": "When true, the policy applies to all assets. Mutually exclusive with asset_selection and asset_key.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "asset_key": {
+                  "type": "string",
+                  "description": "A specific asset key path (e.g. `my_asset` or `group/my_asset`). Mutually exclusive with all_assets and asset_selection.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "asset_selection": {
+                  "type": "string",
+                  "description": "An asset selection string (e.g. `tag:my-tag`). Mutually exclusive with all_assets and asset_key.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "health_status": {
+                  "type": "string",
+                  "description": "Trigger on a health status transition: degraded, warning, or healthy. Mutually exclusive with specific_events.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "specific_events": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Trigger on specific asset events. Mutually exclusive with health_status. Valid values \u2014 materializations: materialization_success, materialization_failure; asset checks: check_passed, check_warn, check_error, check_execution_failed; freshness: freshness_passing, freshness_warning, freshness_failure.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Asset-specific configuration. Use when policy_type = asset. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "automation": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_schedules_and_sensors": {
+                  "type": "bool",
+                  "description": "When true, the policy applies to all schedules and sensors.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "code_locations": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter by code location names.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "include_schedules": {
+                  "type": "bool",
+                  "description": "Include schedules in monitoring.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "include_sensors": {
+                  "type": "bool",
+                  "description": "Include sensors in monitoring.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "min_consecutive_failures": {
+                  "type": "number",
+                  "description": "Minimum number of consecutive failures before alerting.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schedules_and_sensors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Specific schedule or sensor names to monitor.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Automation-specific configuration. Use when policy_type = automation. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "budget": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "operator": {
+                  "type": "string",
+                  "description": "Comparison operator. Valid values: `greater_than`, `less_than`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "period_days": {
+                  "type": "number",
+                  "description": "The period in days over which to measure.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "threshold": {
+                  "type": "number",
+                  "description": "The budget threshold value.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Budget-specific configuration. Use when policy_type = budget. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "code_location": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_locations": {
+                  "type": "bool",
+                  "description": "When true, the policy applies to all code locations.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "A specific code location name to monitor.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Code location-specific configuration. Use when policy_type = code_location. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "insight_metric": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "asset_group": {
+                  "type": "string",
+                  "description": "Filter by asset group name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "asset_key": {
+                  "type": "string",
+                  "description": "Filter by asset key (slash-delimited path).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "job_name": {
+                  "type": "string",
+                  "description": "Filter by job name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "metric": {
+                  "type": "string",
+                  "description": "The metric to monitor (e.g. dagster_credits).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "Comparison operator. Valid values: `greater_than`, `less_than`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "period_days": {
+                  "type": "number",
+                  "description": "The period in days over which to measure.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "threshold": {
+                  "type": "number",
+                  "description": "The metric threshold value.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Insight metric-specific configuration. Use when policy_type = insight_metric. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "notification_service": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "default_email_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Fallback email addresses when no code owners are found. Used when type = email_owners.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "email_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Email addresses to notify. Required when type = email.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "integration_key": {
+                  "type": "string",
+                  "description": "PagerDuty integration key. Required when type = pagerduty.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "slack_channel_name": {
+                  "type": "string",
+                  "description": "Slack channel name (e.g. '#alerts'). Required when type = slack.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "slack_workspace_name": {
+                  "type": "string",
+                  "description": "Slack workspace name. Required when type = slack.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Notification type. Valid values: `email`, `email_owners`, `slack`, `microsoft_teams`, `pagerduty`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "webhook_url": {
+                  "type": "string",
+                  "description": "Microsoft Teams incoming webhook URL. Required when type = microsoft_teams.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "description": "The notification channel for this alert policy. Exactly one notification type should be configured.",
+              "description_kind": "plain"
+            }
+          },
+          "run": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_runs": {
+                  "type": "bool",
+                  "description": "When true, the policy applies to all runs.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "code_locations": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter runs by code location names.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "job_names": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Filter runs by job names.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "on_failure": {
+                  "type": "bool",
+                  "description": "Alert on run failure.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "on_success": {
+                  "type": "bool",
+                  "description": "Alert on run success.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "on_timeout_hours": {
+                  "type": "number",
+                  "description": "Alert when a run exceeds this many hours.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tags": {
+                  "type": "string",
+                  "description": "Filter runs by tag in `key=value` format.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Run-specific configuration. Use when policy_type = run. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Dagster+ alert policy for a specific deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_atlan_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The Atlan domain (e.g. my-org.atlan.com).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization name (used as the resource identifier).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The Atlan API token.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages the Atlan integration for the Dagster+ organization. This is a singleton resource \u2014 one per organization. Destroying this resource removes the Atlan integration settings.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_code_location": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_queue": {
+            "type": "string",
+            "description": "The agent queue to use for this code location.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "attribute": {
+            "type": "string",
+            "description": "Python attribute containing the Definitions object.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "container_context": {
+            "type": "string",
+            "description": "JSON-encoded container context configuration for this code location. Supports keys such as `k8s`, `ecs`, and `docker`, each with platform-specific settings.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment this code location belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "executable_path": {
+            "type": "string",
+            "description": "Path to the Python executable inside the container.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{deployment}/{name}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The Docker image to use for this code location. Exactly one of image or git must be specified.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the code location.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "The working directory inside the container.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "code_source": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "module_name": {
+                  "type": "string",
+                  "description": "Python module name containing the repository. Mutually exclusive with python_file and package_name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "package_name": {
+                  "type": "string",
+                  "description": "Python package name containing the repository. Mutually exclusive with python_file and module_name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "python_file": {
+                  "type": "string",
+                  "description": "Path to a Python file containing the repository. Mutually exclusive with package_name and module_name.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Specifies where Dagster finds the code.",
+              "description_kind": "plain"
+            }
+          },
+          "git": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "commit_hash": {
+                  "type": "string",
+                  "description": "The git commit hash to use.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The URL of the git repository.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Git-based code location. Exactly one of image or git must be specified.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Dagster+ code location within a deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_code_location_from_document": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment this code location belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "document": {
+            "type": "string",
+            "description": "The code location configuration as a JSON document. Must include a `locationName` key. Changing the `locationName` within the document requires replacing this resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{deployment}/{name}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The code location name, extracted from the document.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ code location defined by a raw JSON configuration document. Use the dagsterplus_configuration_document data source to convert a YAML document to JSON.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_custom_metric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_timestamp": {
+            "type": "number",
+            "description": "Unix timestamp of when the custom metric was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional description for the metric.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "An optional human-readable display name for the metric.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The custom metric ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata_key": {
+            "type": "string",
+            "description": "The metadata key used to identify the custom metric. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "update_timestamp": {
+            "type": "number",
+            "description": "Unix timestamp of when the custom metric was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ custom metric.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment_id": {
+            "type": "string",
+            "description": "The numeric deployment ID as a decimal string. Use this with GraphQL mutations such as `createOrUpdateAgentPermissions`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Deployment identifier (same as name).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the deployment. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the deployment (e.g. ACTIVE, PENDING_DELETION).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_deployment_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to configure. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The deployment name (used as the resource identifier).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settings_json": {
+            "type": "string",
+            "description": "JSON string of deployment settings configuration.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages Dagster+ deployment-level settings as a JSON blob. On destroy, the settings are reset to an empty configuration ({}).",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_external_asset_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "connection_type": {
+            "type": "string",
+            "description": "The type of external connection. Changing this forces a new resource. Valid values: `SNOWFLAKE`, `BIGQUERY`, `POSTGRES`, `DATABRICKS`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cron_string": {
+            "type": "string",
+            "description": "Cron expression for the connection schedule.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the connection.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The connection ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the external asset connection.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "schedule_status": {
+            "type": "string",
+            "description": "The current schedule status: `RUNNING` or `STOPPED`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_config_yaml": {
+            "type": "string",
+            "description": "YAML configuration for the connection source. May contain credentials \u2014 treated as sensitive.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Timezone for the connection schedule.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ external asset connection.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_github_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_name": {
+            "type": "string",
+            "description": "The GitHub account or organization name that has the app installed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "app_id": {
+            "type": "string",
+            "description": "The GitHub App ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization name (used as the resource identifier).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repos": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of repositories accessible via the GitHub App installation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settings_url": {
+            "type": "string",
+            "description": "URL to the GitHub App installation settings.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Selects the active GitHub App installation for the Dagster+ organization. This is a singleton resource \u2014 one per organization. The GitHub App must already be installed via the GitHub OAuth flow before using this resource. Destroying this resource deselects (deactivates) the GitHub App installation.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_organization_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Always set to the organization name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settings_json": {
+            "type": "string",
+            "description": "JSON string of organization settings configuration.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages Dagster+ organization-level settings as a JSON blob. This is a singleton resource \u2014 only one instance should exist per organization. On destroy, settings are reset to an empty configuration ({}).",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the role.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon name for the role (e.g. an emoji).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The role ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The permissions granted by this role. At least one permission is required. Valid values: `delete_runs`, `edit_alerts`, `edit_all_catalog_views`, `edit_code_locations`, `edit_concurrency_limits`, `edit_custom_roles`, `edit_deployment_permissions`, `edit_deployment_settings`, `edit_dynamic_partitions`, `edit_external_asset_connections`, `edit_insights_metrics`, `edit_issues`, `edit_secrets`, `edit_sensor_cursors`, `edit_users_and_teams`, `manage_billing`, `manage_branch_deployments`, `manage_full_deployments`, `manage_service_users`, `manage_sso_and_scim`, `read_and_edit_agent_tokens`, `read_and_edit_all_user_tokens`, `read_audit_log`, `read_secret_values`, `redeploy_code_locations`, `report_asset_events`, `start_and_stop_runs`, `toggle_schedules`, `toggle_sensors`, `wipe_assets`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_type": {
+            "type": "string",
+            "description": "The scope of the role. Changing this forces a new resource. Valid values: `deployment`, `organization`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Dagster+ custom role.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_scim_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Whether SCIM sync is enabled for the organization.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization name (used as the resource identifier).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages SCIM sync settings for the Dagster+ organization. This is a singleton resource \u2014 one per organization. Destroying this resource sets SCIM sync to disabled.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "all_branch_deployments_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to all branch deployments.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "full_deployment_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to the full deployment.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The secret ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "local_deployment_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to local deployments.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Code location names the secret is scoped to. Empty means all locations.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "secret_name": {
+            "type": "string",
+            "description": "The name of the secret (e.g. MY_API_KEY).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secret_value": {
+            "type": "string",
+            "description": "The value of the secret.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "specific_branch_deployment_scope": {
+            "type": "string",
+            "description": "A specific branch deployment name to scope the secret to.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ environment secret.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "An optional description for the token.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The token ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "service_user_id": {
+            "type": "string",
+            "description": "The ID of the service user this token belongs to. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The service token value. Only populated on creation; not recoverable after import.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a Dagster+ service token. The token value is only available at creation time; it cannot be recovered after import. Changing service_user_id forces a new resource.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "An optional description for the service user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The service user ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the service user.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "all_branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Permission grant for the service user across all branch deployments. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "parent_deployment": {
+                  "type": "string",
+                  "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Permission grant across all branch deployments of a specific parent (full) deployment. One block per parent deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "deployment_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "deployment": {
+                  "type": "string",
+                  "description": "The name of the deployment to grant access to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Deployment-level permission grant for the service user. One block per deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "organization_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Organization-level permission grant for the service user. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Dagster+ service user.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user_all_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the service_user_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "service_user_id": {
+            "type": "string",
+            "description": "The ID of the service user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ service user across all branch deployments.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{service_user_id}/{parent_deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_deployment": {
+            "type": "string",
+            "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_user_id": {
+            "type": "string",
+            "description": "The ID of the service user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ service user across all branch deployments of a specific parent (full) deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user_deployment_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to grant access to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{service_user_id}/{deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "service_user_id": {
+            "type": "string",
+            "description": "The ID of the service user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "location_grants": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "Custom role ID for this location. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "The name of the code location.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Per-code-location permission overrides within this deployment.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a deployment-level permission grant for a Dagster+ service user.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user_organization_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the service_user_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "service_user_id": {
+            "type": "string",
+            "description": "The ID of the service user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages an organization-level permission grant for a Dagster+ service user.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The team ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "all_branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Permission grant for all branch deployments. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "parent_deployment": {
+                  "type": "string",
+                  "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Permission grant for all branch deployments of a specific parent (full) deployment. One block per parent deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "deployment_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "deployment": {
+                  "type": "string",
+                  "description": "The name of the deployment to grant access to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Deployment-level permission grant for the team. One block per deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "member": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "user_id": {
+                  "type": "string",
+                  "description": "The ID of the user to add to the team.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "A user who is a member of this team. One block per user.",
+              "description_kind": "plain"
+            }
+          },
+          "organization_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Organization-level permission grant for the team. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Dagster+ team.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team_all_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the team_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The ID of the team to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ team across all branch deployments. If you manage the team with dagsterplus_team, prefer the inline all_branch_deployments_grant block instead.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{team_id}/{parent_deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_deployment": {
+            "type": "string",
+            "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The ID of the team to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ team across all branch deployments of a specific parent (full) deployment. If you manage the team with dagsterplus_team, prefer the inline branch_deployments_grant block instead.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team_deployment_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to grant access to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{team_id}/{deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The ID of the team to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "location_grants": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "Custom role ID for this location. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "The name of the code location.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Per-code-location permission overrides within this deployment.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a deployment-level permission grant for a Dagster+ team. Use this resource when the team is managed separately from its deployment permissions. If you manage the team with dagsterplus_team, prefer the inline deployment_grant block instead.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{team_id}/{user_id}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The ID of the team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to add to the team.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single user's membership in a Dagster+ team. Use this resource when the team itself is managed separately. If you manage the team with dagsterplus_team, prefer the inline member block instead.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team_organization_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the team_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The ID of the team to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages an organization-level permission grant for a Dagster+ team. Use this resource when the team is managed separately from its organization permissions. If you manage the team with dagsterplus_team, prefer the inline organization_grant block instead.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user to invite. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The user ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the user (set by Dagster+ after the user accepts the invite).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "picture": {
+            "type": "string",
+            "description": "URL to the user's profile picture.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The organization-level role as returned by Dagster+. Read-only mirror of organization_grant.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "all_branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Permission grant for the user across all branch deployments. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          },
+          "branch_deployments_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "parent_deployment": {
+                  "type": "string",
+                  "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Permission grant across all branch deployments of a specific parent (full) deployment. One block per parent deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "deployment_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "deployment": {
+                  "type": "string",
+                  "description": "The name of the deployment to grant access to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Deployment-level permission grant for the user. One block per deployment.",
+              "description_kind": "plain"
+            }
+          },
+          "organization_grant": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Organization-level permission grant for the user. At most one block is allowed.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Dagster+ organization member. Invites the user on create and removes them on delete.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_all_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the user_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ user across all branch deployments.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_branch_deployments_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{user_id}/{parent_deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_deployment": {
+            "type": "string",
+            "description": "The name of the full (parent) deployment whose branch deployments this grant applies to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a permission grant for a Dagster+ user across all branch deployments of a specific parent (full) deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_deployment_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to grant access to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{user_id}/{deployment}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "location_grants": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "custom_role_id": {
+                  "type": "string",
+                  "description": "Custom role ID for this location. Exactly one of grant or custom_role_id must be set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grant": {
+                  "type": "string",
+                  "description": "Standard permission level. Exactly one of grant or custom_role_id must be set. Valid values: `VIEWER`, `LAUNCHER`, `EDITOR`, `ADMIN`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "The name of the code location.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Per-code-location permission overrides within this deployment.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a deployment-level permission grant for a Dagster+ user.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_organization_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "The ID of a custom role to assign. Exactly one of grant or custom_role_id must be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant": {
+            "type": "string",
+            "description": "Organization-level permission. For any non-admin role use custom_role_id with an organization-scoped custom role. Exactly one of grant or custom_role_id must be set. Valid values: `ADMIN`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (the user_id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user to grant access.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages an organization-level permission grant for a Dagster+ user.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The token ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The label for the user token. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The user token value. Only populated on creation; not recoverable after import.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user who owns this token. Required for revocation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Dagster+ user token. The token value is only available at creation time; it cannot be recovered after import. Changing the name forces a new resource.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "dagsterplus_agent_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The token ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The label of the agent token to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Reads an existing Dagster+ agent token by label. The token value is not available via this data source \u2014 it is only accessible at creation time.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_alert_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_policies": {
+            "nested_type": {
+              "attributes": {
+                "asset": {
+                  "nested_type": {
+                    "attributes": {
+                      "all_assets": {
+                        "type": "bool",
+                        "description": "True when the policy applies to all assets.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "asset_key": {
+                        "type": "string",
+                        "description": "Specific asset key path.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "asset_selection": {
+                        "type": "string",
+                        "description": "Asset selection string (e.g. 'tag:my-tag').",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "health_status": {
+                        "type": "string",
+                        "description": "Health status transition: degraded, warning, or healthy.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "specific_events": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Specific asset events that trigger the alert.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Asset-specific configuration (populated when policy_type = asset).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "automation": {
+                  "nested_type": {
+                    "attributes": {
+                      "all_schedules_and_sensors": {
+                        "type": "bool",
+                        "description": "True when the policy applies to all schedules and sensors.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "code_locations": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Code location names filter.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "include_schedules": {
+                        "type": "bool",
+                        "description": "Whether schedules are included.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "include_sensors": {
+                        "type": "bool",
+                        "description": "Whether sensors are included.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "min_consecutive_failures": {
+                        "type": "number",
+                        "description": "Minimum consecutive failures before alerting.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "schedules_and_sensors": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Specific schedule or sensor names.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Automation-specific configuration (populated when policy_type = automation).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "budget": {
+                  "nested_type": {
+                    "attributes": {
+                      "operator": {
+                        "type": "string",
+                        "description": "Comparison operator: greater_than or less_than.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "period_days": {
+                        "type": "number",
+                        "description": "Period in days over which to measure.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "threshold": {
+                        "type": "number",
+                        "description": "Budget threshold value.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Budget-specific configuration (populated when policy_type = budget).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "code_location": {
+                  "nested_type": {
+                    "attributes": {
+                      "all_locations": {
+                        "type": "bool",
+                        "description": "True when the policy applies to all code locations.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "location_name": {
+                        "type": "string",
+                        "description": "Specific code location name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Code location-specific configuration (populated when policy_type = code_location).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "deployment": {
+                  "type": "string",
+                  "description": "The deployment this alert policy belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A human-readable description of the alert policy.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether the alert policy is active.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "event_types": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Event types that trigger the alert.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier in the form `{deployment}/{name}`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "insight_metric": {
+                  "nested_type": {
+                    "attributes": {
+                      "asset_group": {
+                        "type": "string",
+                        "description": "Asset group name filter.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "asset_key": {
+                        "type": "string",
+                        "description": "Asset key filter (slash-delimited path).",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "job_name": {
+                        "type": "string",
+                        "description": "Job name filter.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "metric": {
+                        "type": "string",
+                        "description": "The metric being monitored.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "operator": {
+                        "type": "string",
+                        "description": "Comparison operator: greater_than or less_than.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "period_days": {
+                        "type": "number",
+                        "description": "Period in days over which to measure.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "threshold": {
+                        "type": "number",
+                        "description": "Metric threshold value.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Insight metric-specific configuration (populated when policy_type = insight_metric).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The alert policy name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "notification_service": {
+                  "nested_type": {
+                    "attributes": {
+                      "default_email_addresses": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Fallback email addresses for email_owners notifications.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "email_addresses": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Email addresses to notify.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "integration_key": {
+                        "type": "string",
+                        "description": "PagerDuty integration key.",
+                        "description_kind": "plain",
+                        "computed": true,
+                        "sensitive": true
+                      },
+                      "slack_channel_name": {
+                        "type": "string",
+                        "description": "Slack channel name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "slack_workspace_name": {
+                        "type": "string",
+                        "description": "Slack workspace name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Notification type: email, email_owners, slack, microsoft_teams, or pagerduty.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "description": "Microsoft Teams incoming webhook URL.",
+                        "description_kind": "plain",
+                        "computed": true,
+                        "sensitive": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The notification channel configured for this alert policy.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "policy_type": {
+                  "type": "string",
+                  "description": "The category of alert policy: asset, run, code_location, automation, budget, or insight_metric.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "run": {
+                  "nested_type": {
+                    "attributes": {
+                      "all_runs": {
+                        "type": "bool",
+                        "description": "True when the policy applies to all runs.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "code_locations": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Code location names filter.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "job_names": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Job names filter.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "on_failure": {
+                        "type": "bool",
+                        "description": "Alert on run failure.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "on_success": {
+                        "type": "bool",
+                        "description": "Alert on run success.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "on_timeout_hours": {
+                        "type": "number",
+                        "description": "Alert when a run exceeds this many hours.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "tags": {
+                        "type": "string",
+                        "description": "Run filter tag in 'key=value' format.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Run-specific configuration (populated when policy_type = run).",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All alert policies in the deployment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to list alert policies for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ alert policies in a deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_alert_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment the alert policy belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the alert policy.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the alert policy is active.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "event_types": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Event types that trigger the alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{deployment}/{name}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the alert policy to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "policy_type": {
+            "type": "string",
+            "description": "The category of alert policy: asset, run, code_location, automation, budget, or insight_metric.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "asset": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_assets": {
+                  "type": "bool",
+                  "description": "True when the policy applies to all assets.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "asset_key": {
+                  "type": "string",
+                  "description": "Specific asset key path.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "asset_selection": {
+                  "type": "string",
+                  "description": "Asset selection string (e.g. 'tag:my-tag').",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "health_status": {
+                  "type": "string",
+                  "description": "Health status transition: degraded, warning, or healthy.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "specific_events": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Specific asset events that trigger the alert.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Asset-specific configuration (populated when policy_type = asset).",
+              "description_kind": "plain"
+            }
+          },
+          "automation": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_schedules_and_sensors": {
+                  "type": "bool",
+                  "description": "True when the policy applies to all schedules and sensors.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "code_locations": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Code location names filter.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "include_schedules": {
+                  "type": "bool",
+                  "description": "Whether schedules are included.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "include_sensors": {
+                  "type": "bool",
+                  "description": "Whether sensors are included.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_consecutive_failures": {
+                  "type": "number",
+                  "description": "Minimum consecutive failures before alerting.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "schedules_and_sensors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Specific schedule or sensor names.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Automation-specific configuration (populated when policy_type = automation).",
+              "description_kind": "plain"
+            }
+          },
+          "budget": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "operator": {
+                  "type": "string",
+                  "description": "Comparison operator: greater_than or less_than.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "period_days": {
+                  "type": "number",
+                  "description": "Period in days over which to measure.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "threshold": {
+                  "type": "number",
+                  "description": "Budget threshold value.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Budget-specific configuration (populated when policy_type = budget).",
+              "description_kind": "plain"
+            }
+          },
+          "code_location": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_locations": {
+                  "type": "bool",
+                  "description": "True when the policy applies to all code locations.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "Specific code location name.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Code location-specific configuration (populated when policy_type = code_location).",
+              "description_kind": "plain"
+            }
+          },
+          "insight_metric": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "asset_group": {
+                  "type": "string",
+                  "description": "Asset group name filter.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "asset_key": {
+                  "type": "string",
+                  "description": "Asset key filter (slash-delimited path).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "job_name": {
+                  "type": "string",
+                  "description": "Job name filter.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metric": {
+                  "type": "string",
+                  "description": "The metric being monitored.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "Comparison operator: greater_than or less_than.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "period_days": {
+                  "type": "number",
+                  "description": "Period in days over which to measure.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "threshold": {
+                  "type": "number",
+                  "description": "Metric threshold value.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Insight metric-specific configuration (populated when policy_type = insight_metric).",
+              "description_kind": "plain"
+            }
+          },
+          "notification_service": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "default_email_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Fallback email addresses for email_owners notifications.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "email_addresses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Email addresses to notify.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "integration_key": {
+                  "type": "string",
+                  "description": "PagerDuty integration key.",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "slack_channel_name": {
+                  "type": "string",
+                  "description": "Slack channel name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slack_workspace_name": {
+                  "type": "string",
+                  "description": "Slack workspace name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Notification type: email, email_owners, slack, microsoft_teams, or pagerduty.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "webhook_url": {
+                  "type": "string",
+                  "description": "Microsoft Teams incoming webhook URL.",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                }
+              },
+              "description": "The notification channel configured for this alert policy.",
+              "description_kind": "plain"
+            }
+          },
+          "run": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "all_runs": {
+                  "type": "bool",
+                  "description": "True when the policy applies to all runs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "code_locations": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Code location names filter.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "job_names": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Job names filter.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "on_failure": {
+                  "type": "bool",
+                  "description": "Alert on run failure.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "on_success": {
+                  "type": "bool",
+                  "description": "Alert on run success.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "on_timeout_hours": {
+                  "type": "number",
+                  "description": "Alert when a run exceeds this many hours.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tags": {
+                  "type": "string",
+                  "description": "Run filter tag in 'key=value' format.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Run-specific configuration (populated when policy_type = run).",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Reads an existing Dagster+ alert policy from a deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_code_location": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_queue": {
+            "type": "string",
+            "description": "The agent queue used by this code location.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "attribute": {
+            "type": "string",
+            "description": "Python attribute containing the Definitions object.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "container_context": {
+            "type": "string",
+            "description": "JSON-encoded container context configuration for this code location. Supports keys such as `k8s`, `ecs`, and `docker`, each with platform-specific settings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment the code location belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "executable_path": {
+            "type": "string",
+            "description": "Path to the Python executable inside the container.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier in the form `{deployment}/{name}`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "The Docker image used by the code location.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the code location to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "The working directory inside the container.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "code_source": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "module_name": {
+                  "type": "string",
+                  "description": "Python module name containing the repository.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "package_name": {
+                  "type": "string",
+                  "description": "Python package name containing the repository.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "python_file": {
+                  "type": "string",
+                  "description": "Path to a Python file containing the repository.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Describes where Dagster finds the code.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Reads an existing Dagster+ code location from a deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_code_locations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "code_locations": {
+            "nested_type": {
+              "attributes": {
+                "agent_queue": {
+                  "type": "string",
+                  "description": "Agent queue that runs this code location.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "attribute": {
+                  "type": "string",
+                  "description": "Python attribute containing the Definitions object.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "code_source": {
+                  "nested_type": {
+                    "attributes": {
+                      "module_name": {
+                        "type": "string",
+                        "description": "Python module name containing the repository.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "package_name": {
+                        "type": "string",
+                        "description": "Python package name containing the repository.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "python_file": {
+                        "type": "string",
+                        "description": "Path to a Python file containing the repository.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Describes where Dagster finds the code.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "container_context": {
+                  "type": "string",
+                  "description": "JSON-encoded container context configuration for this code location. Supports keys such as `k8s`, `ecs`, and `docker`, each with platform-specific settings.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "deployment": {
+                  "type": "string",
+                  "description": "The deployment this code location belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "executable_path": {
+                  "type": "string",
+                  "description": "Path to the Python executable inside the container.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier in the form `{deployment}/{name}`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": "string",
+                  "description": "The Docker image used by the code location.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The code location name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "working_directory": {
+                  "type": "string",
+                  "description": "The working directory inside the container.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All code locations in the deployment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to list code locations for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ code locations in a deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_configuration_document": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "json": {
+            "type": "string",
+            "description": "The configuration document as a JSON string.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "yaml_body": {
+            "type": "string",
+            "description": "The configuration document as a YAML string.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Converts a YAML configuration document to JSON for use with the Dagster+ API.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_custom_metric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_timestamp": {
+            "type": "number",
+            "description": "Unix timestamp of when the custom metric was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the metric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The human-readable display name for the metric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The custom metric ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata_key": {
+            "type": "string",
+            "description": "The metadata key of the custom metric to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "update_timestamp": {
+            "type": "number",
+            "description": "Unix timestamp of when the custom metric was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Dagster+ custom metric by metadata key.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment_id": {
+            "type": "string",
+            "description": "The numeric deployment ID as a decimal string.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Deployment identifier (same as name).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the deployment to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the deployment (e.g. `ACTIVE`, `PENDING_DELETION`).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The deployment type: `SERVERLESS`, `HYBRID`, or `BRANCH`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Dagster+ deployment.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_deployments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployments": {
+            "nested_type": {
+              "attributes": {
+                "deployment_id": {
+                  "type": "string",
+                  "description": "The numeric deployment ID as a decimal string.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Deployment identifier (same as name).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The deployment name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The deployment status.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The deployment type: `SERVERLESS`, `HYBRID`, or `BRANCH`.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All deployments in the organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ deployments in the organization.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_review": {
+            "type": "string",
+            "description": "Account review status of the organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_account_name": {
+            "type": "string",
+            "description": "GitHub account or organization name of the active GitHub App installation. Empty when not installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_app_id": {
+            "type": "string",
+            "description": "GitHub App ID of the active installation. Empty when not installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_repos": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Repositories accessible via the GitHub App installation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_settings_url": {
+            "type": "string",
+            "description": "URL to GitHub App installation settings. Empty when not installed.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization name (used as the data source identifier).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The organization name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "public_id": {
+            "type": "string",
+            "description": "The organization's public UUID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slack_team_id": {
+            "type": "string",
+            "description": "Slack workspace team ID of the active Slack App installation. Empty when not installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slack_team_name": {
+            "type": "string",
+            "description": "Slack workspace name of the active Slack App installation. Empty when not installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The organization status: `ACTIVE`, `READ_ONLY`, `SUSPENDED`, or `PENDING_DELETION`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads metadata about the Dagster+ organization configured in the provider.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "The icon name for the role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The role ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The permissions granted by this role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_type": {
+            "type": "string",
+            "description": "The scope of the role: deployment or organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Dagster+ custom role by name.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "A human-readable description of the role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "The icon name for the role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The role ID assigned by Dagster+.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The role name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The permissions granted by this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "role_type": {
+                  "type": "string",
+                  "description": "The scope of the role: deployment or organization.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All custom roles in the organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ custom roles in the organization.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "all_branch_deployments_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to all branch deployments.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "full_deployment_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to the full deployment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The secret ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "local_deployment_scope": {
+            "type": "bool",
+            "description": "Whether the secret is available to local deployments.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "location_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Code location names the secret is scoped to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "secret_name": {
+            "type": "string",
+            "description": "The name of the secret to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secret_value": {
+            "type": "string",
+            "description": "The value of the secret.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "specific_branch_deployment_scope": {
+            "type": "string",
+            "description": "A specific branch deployment name the secret is scoped to.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Dagster+ environment secret by name.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_service_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The service user description.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The service user ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the service user to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Reads an existing Dagster+ service user by name.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The team ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Reads an existing Dagster+ team by name.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_teams": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "regex_filter": {
+            "type": "string",
+            "description": "Regex filter to select teams based on the team name. Regex matching is done using Go's regexp package.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "teams": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The team ID assigned by Dagster+.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The team name.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All teams in the organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ teams in the organization.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The user ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_scim_provisioned": {
+            "type": "bool",
+            "description": "Whether this user was provisioned through SCIM.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "picture": {
+            "type": "string",
+            "description": "URL to the user's profile picture.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The organization-level role: VIEWER, EDITOR, ADMIN, or OWNER.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Dagster+ organization member by email address.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_user_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The token ID assigned by Dagster+.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The label of the user token to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user whose tokens to search.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Reads an existing Dagster+ user token by label. The token value is not available via this data source \u2014 it is only accessible at creation time.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email_regex": {
+            "type": "string",
+            "description": "Regex filter to select users based on email address. Regex matching is done using Go's regexp package.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Static identifier for this data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email address of the user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The user ID assigned by Dagster+.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_scim_provisioned": {
+                  "type": "bool",
+                  "description": "Whether this user was provisioned through SCIM.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The display name of the user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "picture": {
+                  "type": "string",
+                  "description": "URL to the user's profile picture.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The organization-level role: VIEWER, EDITOR, ADMIN, or OWNER.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Users in the organization, optionally filtered by email_regex.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists all Dagster+ organization members.",
+        "description_kind": "plain"
+      }
+    },
+    "dagsterplus_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment": {
+            "type": "string",
+            "description": "The name of the deployment to query.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The Dagster version string.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the version of Dagster running in a deployment.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
