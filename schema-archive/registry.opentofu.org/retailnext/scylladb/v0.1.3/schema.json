@@ -1,0 +1,329 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "ca_cert": {
+          "type": "string",
+          "description": "PEM-encoded CA certificate content for TLS connections. Mutually exclusive with `ca_cert_file`. Can also be set via the `SCYLLADB_CA_CERT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "ca_cert_file": {
+          "type": "string",
+          "description": "Path to the CA certificate file for TLS connections. Mutually exclusive with `ca_cert`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "Hostname or IP address of the ScyllaDB instance with a port if necessary. e.g. localhost:9042",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "skip_host_verification": {
+          "type": "bool",
+          "description": "Skip TLS host verification. Default is `false`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "system_auth_keyspace": {
+          "type": "string",
+          "description": "The keyspace where ScyllaDB stores authentication and authorization information. Default is `system`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "block_types": {
+        "auth_login_userpass": {
+          "nesting_mode": "single",
+          "block": {
+            "attributes": {
+              "password": {
+                "type": "string",
+                "description": "Login with password. Can also be set via the SCYLLADB_PASSWORD environment variable.",
+                "description_kind": "plain",
+                "optional": true,
+                "sensitive": true
+              },
+              "username": {
+                "type": "string",
+                "description": "Login with username. Can also be set via the SCYLLADB_USERNAME environment variable.",
+                "description_kind": "plain",
+                "optional": true
+              }
+            },
+            "description": "Login to ScyllaDB using the userpass method",
+            "description_kind": "plain"
+          }
+        },
+        "auth_tls": {
+          "nesting_mode": "single",
+          "block": {
+            "attributes": {
+              "cert_file": {
+                "type": "string",
+                "description": "Path to the client certificate file for TLS connections",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "key_file": {
+                "type": "string",
+                "description": "Path to the client key file for TLS connections",
+                "description_kind": "plain",
+                "optional": true
+              }
+            },
+            "description": "Login to ScyllaDB using TLS",
+            "description_kind": "plain"
+          }
+        }
+      },
+      "description": "Configure access to ScyllaDB.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "scylladb_grant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the grant.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier of the resource (e.g., table name).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "The keyspace of the resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The recorded permission for the grant",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "privilege": {
+            "type": "string",
+            "description": "The privilege to grant.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "The type of resource (e.g., ALL KEYSPACES, KEYSPACE, TABLE).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "The role to which the privilege is granted.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a privilege grant on a ScyllaDB resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "scylladb_keyspace_grants": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The keyspace name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "The keyspace to manage grants for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "grant": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "privileges": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Privileges to grant (e.g. ALTER, SELECT, MODIFY).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "Role to receive the privileges.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Privileges to grant to a role on the keyspace.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Authoritatively manages all grants on a keyspace. Any existing grants not specified in `grant` blocks are revoked on apply.",
+        "description_kind": "markdown"
+      }
+    },
+    "scylladb_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "can_login": {
+            "type": "bool",
+            "description": "whether a user can login as a role",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The name of the role to look up.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_superuser": {
+            "type": "bool",
+            "description": "whether the role is a superuser",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "member_of": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of members of the role",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The name of the role",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a ScyllaDB role.",
+        "description_kind": "markdown"
+      }
+    },
+    "scylladb_table_grants": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The table identifier as `keyspace.table`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "The keyspace containing the table.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "table": {
+            "type": "string",
+            "description": "The table to manage grants for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "grant": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "privileges": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Privileges to grant (e.g. ALTER, SELECT, MODIFY).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "Role to receive the privileges.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Privileges to grant to a role on the table.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Authoritatively manages all grants on a table. Any existing grants not specified in `grant` blocks are revoked on apply.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "scylladb_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "can_login": {
+            "type": "bool",
+            "description": "whether a user can login as a role",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The name of the role to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "is_superuser": {
+            "type": "bool",
+            "description": "whether the role is a superuser",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "member_of": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of members of the role",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The name of the role",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
