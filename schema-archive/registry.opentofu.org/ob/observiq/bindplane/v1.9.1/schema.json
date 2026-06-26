@@ -1,0 +1,1130 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "The API used to connect to the Bindplane instance.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "The password used for authenticating to the Bindplane instance.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "remote_url": {
+          "type": "string",
+          "description": "The endpoint used to connect to the Bindplane instance.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_certificate": {
+          "type": "string",
+          "description": "File path to the x509 PEM client TLS certificate, required when the Bindplane instance is configured for mutual TLS.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_certificate_authority": {
+          "type": "string",
+          "description": "File path to the x509 PEM certificate authority file used for verifying the Bindplane instance's TLS certificate. Not required if your workstation already trusts the certificate authority through your operating system's trust store.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_private_key": {
+          "type": "string",
+          "description": "File path to the x509 PEM client private key, required when the Bindplane instance is configured for mutual TLS.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_skip_verify": {
+          "type": "bool",
+          "description": "Disables TLS certificate verification. Should only be used for testing.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "The username used for authenticating to the Bindplane instance.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "bindplane_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "extensions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of extensions names to attach to the configuration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key value pairs which will be added to the configuration as labels.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "match_labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Labels that Bindplane uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "measurement_interval": {
+            "type": "string",
+            "description": "The interval at which the agent will push throughput measurements to Bindplane. Valid values include 10s, 1m, and 15m. Relaxing the interval will reduce BindPlane's measurement processing overhead at the expense of granularity. Generally, configurations with thousands of agents can justify using an interval of 1m or 15m.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the configuration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform the configuration is for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "advanced": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "metrics": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "level": {
+                        "type": "string",
+                        "description": "The advanced metrics level for the configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port": {
+                        "type": "number",
+                        "description": "The advanced metrics port for the configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "destination": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the destination to attach.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "processors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of processor names to attach to the destination.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Destination name and list of processor names to attach to the configuration. This option can be configured one or many times.",
+              "description_kind": "plain"
+            }
+          },
+          "rollout_options": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of rollout to perform. Valid values are 'standard' and 'progressive'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "parameters": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the parameter.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "block_types": {
+                      "value": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "labels": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Labels for the parameter.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the stage.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "Value of the parameter, which is a list of stages.",
+                          "description_kind": "plain"
+                        },
+                        "min_items": 1
+                      }
+                    },
+                    "description": "List of parameters for the rollout options.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Options for configuring the rollout behavior of the configuration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "source": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the source to attach.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "processors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of processor names to attach to the source.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_configuration_v2": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "extensions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of extensions names to attach to the configuration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key value pairs which will be added to the configuration as labels.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "match_labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Labels that Bindplane uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "measurement_interval": {
+            "type": "string",
+            "description": "The interval at which the agent will push throughput measurements to Bindplane. Valid values include 10s, 1m, and 15m. Relaxing the interval will reduce Bindplane's measurement processing overhead at the expense of granularity. Generally, configurations with thousands of agents can justify using an interval of 1m or 15m.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the configuration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform the configuration is for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "advanced": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "metrics": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "level": {
+                        "type": "string",
+                        "description": "The advanced metrics level for the configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port": {
+                        "type": "number",
+                        "description": "The advanced metrics port for the configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "connector": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the connector to attach.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "route_id": {
+                  "type": "string",
+                  "description": "The ID to use for routing to this connector.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "route": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "components": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of component names to route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "route_id": {
+                        "type": "string",
+                        "description": "The unique identifier for the route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "telemetry_type": {
+                        "type": "string",
+                        "description": "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces'.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Route telemetry to specific components.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Connector to be attached to the configuration. This option can be configured one or many times.",
+              "description_kind": "plain"
+            }
+          },
+          "destination": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the destination to attach.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "processors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of processor names to attach to the destination.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "route_id": {
+                  "type": "string",
+                  "description": "The ID to use for routing to this destination.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Destination name and list of processor names to attach to the configuration. This option can be configured one or many times.",
+              "description_kind": "plain"
+            }
+          },
+          "processor_group": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "processors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of processor names to attach to the processor group.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "route_id": {
+                  "type": "string",
+                  "description": "The ID to use for routing to this processor group.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "route": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "components": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of component names to route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "route_id": {
+                        "type": "string",
+                        "description": "The unique identifier for the route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "telemetry_type": {
+                        "type": "string",
+                        "description": "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces'.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Route telemetry to specific components.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Group of processors that will receive and process telemetry from one or more routes.",
+              "description_kind": "plain"
+            }
+          },
+          "rollout_options": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of rollout to perform. Valid values are 'standard' and 'progressive'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "parameters": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the parameter.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "block_types": {
+                      "value": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "labels": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Labels for the parameter.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the stage.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "Value of the parameter, which is a list of stages.",
+                          "description_kind": "plain"
+                        },
+                        "min_items": 1
+                      }
+                    },
+                    "description": "List of parameters for the rollout options.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Options for configuring the rollout behavior of the configuration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "source": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the source to attach.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "processors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of processor names to attach to the source.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "route": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "components": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of component names to route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "route_id": {
+                        "type": "string",
+                        "description": "The unique identifier for the route.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "telemetry_type": {
+                        "type": "string",
+                        "description": "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces'.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Route telemetry to specific components.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_connector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the connector.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A JSON object with options used to configure the connector.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The connector type to use for connector creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_destination": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the destination.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A JSON object with options used to configure the destination.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The destination type to use for destination creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_extension": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the extension.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A JSON object with options used to configure the extension.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The extension type to use for extension creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_fleet": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_type": {
+            "type": "string",
+            "description": "The agent type (collector type) for agents in this fleet.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "configuration": {
+            "type": "string",
+            "description": "Name of the configuration assigned to the fleet.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "A user-friendly name for the fleet that can be changed anytime.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The resource name for the fleet. This is used internally and cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform for agents in this fleet.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_processor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the processor.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A JSON object with options used to configure the processor.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The processor type to use for processor creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_processor_bundle": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the processor bundle.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "Not implemented.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the processor bundle.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "processor": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the processor.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "The processors to use for the processor bundle.",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "bindplane_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A JSON object with options used to configure the source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rollout": {
+            "type": "bool",
+            "description": "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The destination type to use for source creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
