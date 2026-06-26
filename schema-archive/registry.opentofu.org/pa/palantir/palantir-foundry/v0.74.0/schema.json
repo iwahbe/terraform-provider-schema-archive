@@ -1,0 +1,1612 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "client_id": {
+          "type": "string",
+          "description": "The Client ID of a [Foundry OAuth client](https://www.palantir.com/docs/foundry/ontology-sdk/oauth-clients/). If no value is set here, the provider will look for the `PLTR_CLIENT_ID` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "client_secret": {
+          "type": "string",
+          "description": "The Client Secret of a [Foundry OAuth client](https://www.palantir.com/docs/foundry/ontology-sdk/oauth-clients/). If no value is set here, the provider will look for the `PLTR_CLIENT_SECRET` environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "delete_mode": {
+          "type": "string",
+          "description": "Controls the deletion behavior for filesystem resources. Accepted values are \"TRASH\" (default) and \"PERMANENTLY_DELETE\". When set to \"TRASH\", a destroy will only trash the resource. When set to \"PERMANENTLY_DELETE\", a destroy will permanently delete it. Defaults to \"TRASH\" if not set.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "deletions_disabled": {
+          "type": "bool",
+          "description": "Fully disable the deletion of resources as well as the removal of resources' associated roles, members, etc.. This puts the provider a sort of `safe-mode`, preventing the removal of existing infra which can be subject to change outside the scope of your IAC management. In this mode, drift between the actual external infrastructure state and terraform's state is accepted, and applied plans might not map 1:1 with reality. As such, this flag must be used with caution. When a deletion operation is initiated on an otherwise deletable object (currently space, group, or project) and this flag is set to true then we will not remove the remote resource but will still remove remove the resource from state. On non-deletable resources, this flag being set to true will allow said resources to be removed from state while keeping the remote resource intact.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "The base URL for the Foundry enrollment. Example: `https://example.palantirfoundry.com/`. If no value is set here, the provider will look for the `PLTR_HOSTNAME` environment variable. When running terraform as a build from inside the targeted Foundry enrollment, this may be omitted entirely and the provider will infer the correct host automatically.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Interact with Foundry.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "foundry_enrollment_role_assignments": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "enrollment_rid": {
+            "type": "string",
+            "description": "RID of the Enrollment.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enrollment_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role ID to set of Principal IDs for this Enrollment.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Enrollment's Role Assignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_folder": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "The ID of the user who created the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time at which the Folder was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Folder.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_folder_rid": {
+            "type": "string",
+            "description": "RID of the parent Folder. For resources, this should be the RID of a project or another folder. For datasources of projects or spaces, this may be a space RID.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The full path to the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "trash_status": {
+            "type": "string",
+            "description": "Current trash status of the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "The ID of the user who last updated the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_time": {
+            "type": "string",
+            "description": "The time at which the Folder was most recently updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Foundry Folder.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "A map of the Group's attributes. Attributes prefixed with \"multipass:\" are reserved for internal use by Foundry and are subject to change.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "authentication_provider_rid": {
+            "type": "string",
+            "description": "The RID of the Authentication Provider (required to preregister a group).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "The RID of the Enrollment (required to preregister a group).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organizations": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations whose members can see this Group. At least one Organization RID must be listed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "realm": {
+            "type": "string",
+            "description": "Realm of the Group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Foundry Group.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_group_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "string",
+            "description": "ID of the Group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the members (Users or Groups) of this Group.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Foundry Group's Membership.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "category_id": {
+            "type": "string",
+            "description": "The ID of a Marking Category. For user-created Categories, this will be a UUID. Markings associated with Organizations are placed in a category with ID \"Organization\". This field is immutable after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Marking.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Marking.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role to set of Principal IDs for the initial role assignments. Any changes to this field after Marking creation will not be applied; instead, use the marking_role_assignments resource to manage Role Assignments. The following Roles can be assigned to a Marking: \n - ADMINISTER: The user can add and remove members from the Marking, update Marking Role Assignments, and change Marking metadata.\n - DECLASSIFY: The user can remove the Marking from resources in the platform and stop the propagation of the Marking during a transform.\n - USE: The user can apply the Marking to resources in the platform.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Marking.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Marking.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_category": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "category_type": {
+            "type": "string",
+            "description": "The type of the Marking Category. Either CONJUNCTIVE or DISJUNCTIVE. CONJUNCTIVE (and) means a user must have access to all of markings from the category which are applied to a resource to access that resource. DISJUNCTIVE (or) means a user must have access to at least one marking from the category which are applied to a resource to access that resource. All user-created categories will be CONJUNCTIVE.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "The ID of the user who created this Marking Category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time at which this Marking Category was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Marking Category.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Marking Category. For user-created categories, this will be a UUID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_permissions": {
+            "nested_type": {
+              "attributes": {
+                "is_public": {
+                  "type": "bool",
+                  "description": "If true, all users who are members of at least one of the Organizations from organization_rids can view the Markings in the category. If false, only users who are explicitly granted the VIEW role can view the Markings in the category.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "organization_rids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The RIDs of the organizations that have access to this Marking Category.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "roles": {
+                  "type": [
+                    "map",
+                    [
+                      "set",
+                      "string"
+                    ]
+                  ],
+                  "description": "Map of Role to set of Principal IDs for initial role assignments. At least one role assignment with the ADMINISTER role must be provided. The following Roles can be assigned: ADMINISTER (can manage the category) or VIEW (can view markings in the category).",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The initial permissions to be applied when creating the Marking Category. Any changes to this field after Marking Category creation will not be applied.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "marking_type": {
+            "type": "string",
+            "description": "The type of markings in this category. Either CBAC (classification-based access control) or MANDATORY. All user-created categories will be MANDATORY.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Marking Category.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Marking Category.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "marking_id": {
+            "type": "string",
+            "description": "ID of the Marking.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "marking_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the members (Users or Groups) of this Marking.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Foundry Marking's Membership.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_role_assignments": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "marking_id": {
+            "type": "string",
+            "description": "ID of the Marking.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "marking_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role to set of Principal IDs for this Marking. The following Roles can be assigned to a Marking: \n - ADMINISTER: The user can add and remove members from the Marking, update Marking Role Assignments, and change Marking metadata.\n - DECLASSIFY: The user can remove the Marking from resources in the platform and stop the propagation of the Marking during a transform.\n - USE: The user can apply the Marking to resources in the platform.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Foundry Marking's Role Assignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the Organization.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "The RID of the Enrollment this Organization belongs to. This field required if the resource is created within Terraform, but not necessarily if created outside of Terraform and imported.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "host_name": {
+            "type": "string",
+            "description": "The primary host name of the Organization. This should be used when constructing URLs for users of this Organization.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "initial_administrators": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The initial set of principals to be assigned the Administrator Role when creating this Organization. Any changes to this field after Organization creation will not be applied; instead, use the organization_role_assignments resource to manage the applied Role Assignments.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "marking_id": {
+            "type": "string",
+            "description": "Marking ID of the Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Organization.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Foundry Organization.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization_guest_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "organization_guest_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the guest members (Users or Groups) of this Organization.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "organization_rid": {
+            "type": "string",
+            "description": "RID of the Organization.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Organization's Guest Members.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization_role_assignments": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "organization_rid": {
+            "type": "string",
+            "description": "RID of the Organization.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role ID to set of Principal IDs for this Organization.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Organization's Role Assignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the Project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "initial_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The initial list of Organizations to be applied when creating the Project. Any changes to this field after Project creation will not be applied; instead, use the project_organizations resource to manage Organizations.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "initial_principal_roles": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of Group IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of User IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The initial map of principal Role assignments to be applied when creating the Project. Keys are Role IDs, values are objects with groups and users sets. Any changes to this field after Project creation will not be applied; instead, use the project_resource_roles resource to manage Roles.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space_rid": {
+            "type": "string",
+            "description": "RID of the Space that this Project belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "trash_status": {
+            "type": "string",
+            "description": "Current trash status of the Project.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Foundry Project.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_markings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project_markings": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the Markings directly applied to this Project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Project's Markings.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_organizations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations directly applied to this Project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Project's Organizations.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_resource_roles": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "default_roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of Role IDs applied to everyone for this Project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "principal_roles": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of Group IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of User IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "Map of Role ID to groups and users for this Project. Only applies to roles assigned to specific users or groups (principalWithId).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Foundry Project's Resource Roles.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_role_set_id": {
+            "type": "string",
+            "description": "The ID of the default Role Set for this Space, which defines the set of roles that Projects in this Space must use. If not provided, the default Role Set for Projects will be used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "deletion_policy_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "By default, this Space will use a Last Out deletion policy, meaning that this Space and its projects will be deleted when the last Organization listed here is deleted.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Space.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Space.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "RID of the Enrollment that this Space belongs to. This field required if the resource is created within Terraform, but not if created outside of Terraform and imported.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "filesystem_id": {
+            "type": "string",
+            "description": "The ID of the Filesystem for this Space, which is where the contents of the Space are stored. If not provided, the default Filesystem for this Enrollment will be used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations that are provisioned access to this Space. In order to access this Space, a user must be a member of at least one of these Organizations.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the Space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "usage_account_rid": {
+            "type": "string",
+            "description": "The RID of the Usage Account for this Space. Resource usage for projects in this space will accrue to this Usage Account by default. If not provided, the default Usage Account for this Enrollment will be used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Foundry Space.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "foundry_current_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email at which to contact a User. Multiple users may have the same email address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "family_name": {
+            "type": "string",
+            "description": "The family name (last name) of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "given_name": {
+            "type": "string",
+            "description": "The given name of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization": {
+            "type": "string",
+            "description": "The RID of the user's primary Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "realm": {
+            "type": "string",
+            "description": "Realm of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The Foundry username of the User. This is unique within the realm.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading information about the current authenticated Foundry User.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_enrollment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "Name of the Enrollment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Enrollment.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry Enrollment.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_enrollment_role_assignments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enrollment_rid": {
+            "type": "string",
+            "description": "RID of the Enrollment. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enrollment_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role ID to set of Principal IDs for this Enrollment.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry EnrollmentRoleAssignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_folder": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "The ID of the user who created the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time at which the Folder was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_folder_rid": {
+            "type": "string",
+            "description": "RID of the parent Folder. For resources, this should be the RID of a project or another folder. For datasources of projects or spaces, this may be a space RID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The full path to the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Folder. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "trash_status": {
+            "type": "string",
+            "description": "Current trash status of the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "The ID of the user who last updated the Folder.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_time": {
+            "type": "string",
+            "description": "The time at which the Folder was most recently updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry Folder.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "A map of the Group's attributes. Attributes prefixed with \"multipass:\" are reserved for internal use by Foundry and are subject to change.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "authentication_provider_rid": {
+            "type": "string",
+            "description": "The RID of the Authentication Provider (required to preregister a group).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "The RID of the Enrollment (required to preregister a group).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Group. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organizations": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations whose members can see this Group. At least one Organization RID must be listed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "realm": {
+            "type": "string",
+            "description": "Realm of the Group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry Group.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_group_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "string",
+            "description": "ID of the Group. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the members (Users or Groups) of this Group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry GroupMembership.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category_id": {
+            "type": "string",
+            "description": "The ID of a Marking Category. For user-created Categories, this will be a UUID. Markings associated with Organizations are placed in a category with ID \"Organization\". This field is immutable after creation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Marking.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Marking. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "initial_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role to set of Principal IDs for the initial role assignments. Any changes to this field after Marking creation will not be applied; instead, use the marking_role_assignments resource to manage Role Assignments. The following Roles can be assigned to a Marking: \n - ADMINISTER: The user can add and remove members from the Marking, update Marking Role Assignments, and change Marking metadata.\n - DECLASSIFY: The user can remove the Marking from resources in the platform and stop the propagation of the Marking during a transform.\n - USE: The user can apply the Marking to resources in the platform.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Marking.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry Marking.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_category": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category_type": {
+            "type": "string",
+            "description": "The type of the Marking Category. Either CONJUNCTIVE or DISJUNCTIVE. CONJUNCTIVE (and) means a user must have access to all of markings from the category which are applied to a resource to access that resource. DISJUNCTIVE (or) means a user must have access to at least one marking from the category which are applied to a resource to access that resource. All user-created categories will be CONJUNCTIVE.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "The ID of the user who created this Marking Category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_time": {
+            "type": "string",
+            "description": "The time at which this Marking Category was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Marking Category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the Marking Category. For user-created categories, this will be a UUID. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "initial_permissions": {
+            "nested_type": {
+              "attributes": {
+                "is_public": {
+                  "type": "bool",
+                  "description": "If true, all users who are members of at least one of the Organizations from organization_rids can view the Markings in the category. If false, only users who are explicitly granted the VIEW role can view the Markings in the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "organization_rids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The RIDs of the organizations that have access to this Marking Category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "roles": {
+                  "type": [
+                    "map",
+                    [
+                      "set",
+                      "string"
+                    ]
+                  ],
+                  "description": "Map of Role to set of Principal IDs for initial role assignments. At least one role assignment with the ADMINISTER role must be provided. The following Roles can be assigned: ADMINISTER (can manage the category) or VIEW (can view markings in the category).",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The initial permissions to be applied when creating the Marking Category. Any changes to this field after Marking Category creation will not be applied.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "marking_type": {
+            "type": "string",
+            "description": "The type of markings in this category. Either CBAC (classification-based access control) or MANDATORY. All user-created categories will be MANDATORY.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Marking Category.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry MarkingCategory.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "marking_id": {
+            "type": "string",
+            "description": "ID of the Marking. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "marking_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the members (Users or Groups) of this Marking.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry MarkingMembership.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_marking_role_assignments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "marking_id": {
+            "type": "string",
+            "description": "ID of the Marking. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "marking_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role to set of Principal IDs for this Marking. The following Roles can be assigned to a Marking: \n - ADMINISTER: The user can add and remove members from the Marking, update Marking Role Assignments, and change Marking metadata.\n - DECLASSIFY: The user can remove the Marking from resources in the platform and stop the propagation of the Marking during a transform.\n - USE: The user can apply the Marking to resources in the platform.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry MarkingRoleAssignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "The RID of the Enrollment this Organization belongs to. This field required if the resource is created within Terraform, but not necessarily if created outside of Terraform and imported.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host_name": {
+            "type": "string",
+            "description": "The primary host name of the Organization. This should be used when constructing URLs for users of this Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_administrators": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The initial set of principals to be assigned the Administrator Role when creating this Organization. Any changes to this field after Organization creation will not be applied; instead, use the organization_role_assignments resource to manage the applied Role Assignments.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "marking_id": {
+            "type": "string",
+            "description": "Marking ID of the Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Organization. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry Organization.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization_guest_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "organization_guest_members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the guest members (Users or Groups) of this Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization_rid": {
+            "type": "string",
+            "description": "RID of the Organization. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry OrganizationGuestMembership.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_organization_role_assignments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "organization_rid": {
+            "type": "string",
+            "description": "RID of the Organization. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_role_assignments": {
+            "type": [
+              "map",
+              [
+                "set",
+                "string"
+              ]
+            ],
+            "description": "Map of Role ID to set of Principal IDs for this Organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry OrganizationRoleAssignments.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The initial list of Organizations to be applied when creating the Project. Any changes to this field after Project creation will not be applied; instead, use the project_organizations resource to manage Organizations.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_principal_roles": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of Group IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of User IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The initial map of principal Role assignments to be applied when creating the Project. Keys are Role IDs, values are objects with groups and users sets. Any changes to this field after Project creation will not be applied; instead, use the project_resource_roles resource to manage Roles.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Project. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "space_rid": {
+            "type": "string",
+            "description": "RID of the Space that this Project belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "trash_status": {
+            "type": "string",
+            "description": "Current trash status of the Project.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry Project.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_markings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project_markings": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the IDs of the Markings directly applied to this Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry ProjectMarkings.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_organizations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations directly applied to this Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry ProjectOrganizations.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_project_resource_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of Role IDs applied to everyone for this Project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "principal_roles": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of Group IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "users": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Set of User IDs assigned to this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "Map of Role ID to groups and users for this Project. Only applies to roles assigned to specific users or groups (principalWithId).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_rid": {
+            "type": "string",
+            "description": "RID of the Project. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading a Foundry ProjectResourceRoles.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_role_set_id": {
+            "type": "string",
+            "description": "The ID of the default Role Set for this Space, which defines the set of roles that Projects in this Space must use. If not provided, the default Role Set for Projects will be used.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deletion_policy_organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "By default, this Space will use a Last Out deletion policy, meaning that this Space and its projects will be deleted when the last Organization listed here is deleted.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the Space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the Space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enrollment_rid": {
+            "type": "string",
+            "description": "RID of the Enrollment that this Space belongs to. This field required if the resource is created within Terraform, but not if created outside of Terraform and imported.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "filesystem_id": {
+            "type": "string",
+            "description": "The ID of the Filesystem for this Space, which is where the contents of the Space are stored. If not provided, the default Filesystem for this Enrollment will be used.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organizations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the RIDs of the Organizations that are provisioned access to this Space. In order to access this Space, a user must be a member of at least one of these Organizations.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the Space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rid": {
+            "type": "string",
+            "description": "RID of the Space. (Required for data source lookup.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "usage_account_rid": {
+            "type": "string",
+            "description": "The RID of the Usage Account for this Space. Resource usage for projects in this space will accrue to this Usage Account by default. If not provided, the default Usage Account for this Enrollment will be used.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry Space.",
+        "description_kind": "plain"
+      }
+    },
+    "foundry_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email at which to contact a User. Multiple users may have the same email address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "family_name": {
+            "type": "string",
+            "description": "The family name (last name) of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "given_name": {
+            "type": "string",
+            "description": "The given name of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the User.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization": {
+            "type": "string",
+            "description": "The RID of the user's primary Organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "realm": {
+            "type": "string",
+            "description": "Realm of the User.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The Foundry username of the User. This is unique within the realm.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a Foundry User.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

@@ -1,0 +1,2910 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_token": {
+          "type": "string",
+          "description": "Access token for Guance Cloud API. May also be provided via GUANCE_ACCESS_TOKEN environment variable. Get an Key ID from [Guance Cloud](https://console.guance.com/workspace/apiManage) as access token.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "end_point": {
+          "type": "string",
+          "description": "EndPoint for Guance Cloud API. May also be provided via GUANCE_END_POINT environment variable. See [GitHub](https://github.com/GuanceCloud/terraform-provider-guance) for a list of available regions.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "region": {
+          "type": "string",
+          "description": "Region for Guance Cloud API. May also be provided via GUANCE_REGION environment variable. See [GitHub](https://github.com/GuanceCloud/terraform-provider-guance) for a list of available regions.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "# Terraform Provider: Guance\n\nThe Guance Provider provides resources to manage [Guance Cloud](https://en.guance.com/) resources.\n\nTo learn the basics of Terraform using this provider, follow the hands-on get started tutorials.\n\nInterested in the provider's latest features, or want to make sure you're up to date? Check out the changelog for version information and release notes.\n\n## Authenticating to Guance Cloud\n\nTerraform supports a number of different methods for authenticating to Guance Cloud:\n\n* [Workspace Key](https://console.guance.com/workspace/apiManage)\n\n## Usage\n\n```terraform\n# We strongly recommend using the required_providers block to set the\n# Guance Cloud Provider source being used\nterraform {\n  required_version = \">= 1.0\"\n\n  required_providers {\n    guance = {\n      source = \"GuanceCloud/guance\"\n    }\n  }\n}\n\n// We also recommend use secret environment variables to set the provider,\n// Such as GUANCE_ACCESS_TOKEN and GUANCE_REGION\nprovider \"guance\" {\n  # access_token = \"your access token, recommend store in environment variable\"\n  region = \"hangzhou\"\n  # end_point = \"https://openapi.guance.com\"\n}\n```\n\n## More Examples\n\n* [Example Source Code](https://github.com/GuanceCloud/terraform-provider-guance/tree/main/examples)\n\n## Monitor Module\n\nThe monitor-related Terraform resources are based on Guance Forethought OpenAPI checker endpoints.\n\nUse `guance_monitor` when you want to manage a monitor/checker with structured Terraform fields. Use `guance_monitor_json` when you want to import, replace, or manage a monitor from the checker JSON export format.\n\nAvailable monitor resources and data sources:\n\n* `guance_monitor` - manages monitor checker rules with structured fields.\n* `guance_monitor_json` - manages monitor checker rules with JSON import/export semantics.\n* `guance_monitor` data source - reads one existing monitor/checker by `uuid` or exact `name`.\n* `guance_monitors` data source - lists existing monitors/checkers by search and optional filters.\n\nNote: updating `guance_monitor.secret` from a non-empty value to an empty string currently depends on Forethought OpenAPI behavior. The current OpenAPI implementation accepts the request but keeps the old secret, so avoid using an empty secret to clear an existing value until the OpenAPI contract is adjusted.\n\n## Alert Module\n\nThe alert-related Terraform resources are based on Guance Forethought OpenAPI endpoints.\n\nTypical dependency flow:\n\n```hcl\nguance_notify_object\n  -> guance_alert_policy.alert_opt.alert_target.targets.to\n\nguance_alert_policy_notice_date\n  -> guance_alert_policy.alert_opt.alert_target.custom_date_uuids\n\nguance_alert_policy\n  -> guance_mute.mute_ranges.alert_policy_uuid\n```\n\nAvailable alert resources:\n\n* `guance_notify_object` - manages alert notification objects.\n* `guance_alert_policy_notice_date` - manages custom notice dates for alert policies.\n* `guance_alert_policy` - manages alert delivery, aggregation, silence, and notification targets.\n* `guance_mute` - manages mute rules for alert policies, checkers, tags, or custom ranges.\n\nEach alert resource also has a matching data source with the same Terraform type name. The data source supports lookup by either `uuid` or exact `name`, and fails if name lookup does not return exactly one object.\n\nSee the `guance_alert_policy` resource documentation for a full chain example that connects notification objects, custom notice dates, alert policies, and mute rules.\n\nNote: the Forethought UI has an alert policy enable/disable route, but it is not exported in the Forethought OpenAPI alert policy module. The Terraform resource manages the exported v2 alert policy fields.\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "guance_alert_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_opt": {
+            "nested_type": {
+              "attributes": {
+                "agg_cluster_fields": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Field list for smart aggregation, need to specify CLUSTER in aggFields to take effect, optional values \"df_title\": title, \"df_message\": content.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "agg_fields": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Aggregation field list, keep empty list [] means \"aggregation rule: all\", df_monitor_checker_id: monitor/smart inspection/SLO, df_dimension_tags: detection dimension, df_label: label, CLUSTER: smart aggregation, or when aggType=byCustom means custom aggregation field.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "agg_interval": {
+                  "type": "number",
+                  "description": "Alert aggregation interval, in seconds, 0 means no aggregation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "agg_labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Label value list when aggregating by label, need to specify df_label in aggFields to take effect.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "agg_send_first": {
+                  "type": "bool",
+                  "description": "When aggregating, whether the first alert is sent directly (added in 2025-09-03 iteration).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "agg_type": {
+                  "type": "string",
+                  "description": "Alert aggregation type.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "alert_target": {
+                  "nested_type": {
+                    "attributes": {
+                      "alert_info": {
+                        "nested_type": {
+                          "attributes": {
+                            "filter_string": {
+                              "type": "string",
+                              "description": "When alertType is member, use this field, filter condition original string.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "member_info": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "When alertType is member, use this field (team UUID member UUID).",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Configuration name.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "targets": {
+                              "nested_type": {
+                                "attributes": {
+                                  "df_source": {
+                                    "type": "string",
+                                    "description": "When status needs to be security monitoring status, this must be specified as security, default not passing indicates non-security monitoring status.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  },
+                                  "filter_string": {
+                                    "type": "string",
+                                    "description": "Filter condition original string, can replace tags, filterString use priority is greater than tags.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "description": "Status values for which alerts need to be sent (multiple statuses can be separated by commas, All means all).",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  },
+                                  "tags": {
+                                    "type": [
+                                      "map",
+                                      [
+                                        "list",
+                                        "string"
+                                      ]
+                                    ],
+                                    "description": "Filter conditions.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  },
+                                  "to": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Notification objects/members/teams.",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  },
+                                  "upgrade_targets": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "duration": {
+                                          "type": "number",
+                                          "description": "Duration, continuous generation of events at this level status triggers upgrade notification.",
+                                          "description_kind": "plain",
+                                          "optional": true
+                                        },
+                                        "to": {
+                                          "type": [
+                                            "list",
+                                            "string"
+                                          ],
+                                          "description": "Notification objects/members/teams.",
+                                          "description_kind": "plain",
+                                          "required": true
+                                        },
+                                        "to_way": {
+                                          "type": [
+                                            "list",
+                                            "string"
+                                          ],
+                                          "description": "When alertType is member type, only notification objects and fixed fields email, sms can be selected.",
+                                          "description_kind": "plain",
+                                          "optional": true
+                                        }
+                                      },
+                                      "nesting_mode": "list"
+                                    },
+                                    "description": "Upgrade notification for each alert configuration status.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Notification target configuration.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "When the alert policy is of member type, the notification related information configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "crontab": {
+                        "type": "string",
+                        "description": "When selecting repeated time period, start Crontab (Crontab syntax).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "crontab_duration": {
+                        "type": "number",
+                        "description": "Select repeated time, from Crontab start, duration (seconds).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "custom_date_uuids": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "When selecting custom time, custom notification date UUID list.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "custom_duration": {
+                        "type": "number",
+                        "description": "When selecting custom time period, from customStartTime custom start time, duration (seconds).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "custom_start_time": {
+                        "type": "string",
+                        "description": "When selecting custom time, daily start time, format: HH:mm:ss.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Configuration name.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "targets": {
+                        "nested_type": {
+                          "attributes": {
+                            "df_source": {
+                              "type": "string",
+                              "description": "When status needs to be security monitoring status, this must be specified as security, default not passing indicates non-security monitoring status.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "filter_string": {
+                              "type": "string",
+                              "description": "Filter condition original string, can replace tags, filterString use priority is greater than tags.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "Status values for which alerts need to be sent (multiple statuses can be separated by commas, All means all).",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "tags": {
+                              "type": [
+                                "map",
+                                [
+                                  "list",
+                                  "string"
+                                ]
+                              ],
+                              "description": "Filter conditions.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "to": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "Notification objects/members/teams.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "upgrade_targets": {
+                              "nested_type": {
+                                "attributes": {
+                                  "duration": {
+                                    "type": "number",
+                                    "description": "Duration, continuous generation of events at this level status triggers upgrade notification.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  },
+                                  "to": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Notification objects/members/teams.",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  },
+                                  "to_way": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "When alertType is member type, only notification objects and fixed fields email, sms can be selected.",
+                                    "description_kind": "plain",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Upgrade notification for each alert configuration status.",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Notification target configuration.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Trigger action, note the trigger time parameter processing.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "alert_type": {
+                  "type": "string",
+                  "description": "Alert policy notification type, level(status)/member(member).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ignore_ok": {
+                  "type": "bool",
+                  "description": "Advanced configuration, normal level only generates events, does not send notifications.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "silent_timeout": {
+                  "type": "number",
+                  "description": "Minimum alert interval, how long the same alert will not be sent repeatedly (i.e., alert silence duration), in seconds/s, 0/null means only send once alert (i.e., interval is infinitely long).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "silent_timeout_by_status": {
+                  "nested_type": {
+                    "attributes": {
+                      "silent_timeout": {
+                        "type": "number",
+                        "description": "Minimum alert interval, in seconds.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Status value for non-security monitoring types: fatal, critical, error, warning, nodata, info. For security monitoring types: security_critical, security_high, security_medium, security_low, security_info.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Level-specific minimum alert interval configuration.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "silent_timeout_by_status_enable": {
+                  "type": "bool",
+                  "description": "Whether to enable level-specific repeated alert configuration, default false, use silentTimeout configuration.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Alert settings.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "checker_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Monitor/smart monitor/smart inspection/slo uuid.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "desc": {
+            "type": "string",
+            "description": "The description of the alert policy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the alert policy.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Whether to open custom permission configuration.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Operation permission configuration, can configure roles, member uuids, team uuids.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "rule_timezone": {
+            "type": "string",
+            "description": "The timezone of the alert policy.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "security_rule_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Security monitoring (cspm, siem) uuids.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Alert Policy Resource\n\nThe `guance_alert_policy` resource manages Guance alert policies. Alert policies control alert aggregation, silence behavior, and notification targets.\n\n## Example Usage\n\n### Basic Alert Policy\n\n```hcl\nresource \"guance_alert_policy\" \"example\" {\n  name          = \"High CPU Alert\"\n  desc          = \"Alert when CPU usage exceeds threshold\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type     = \"status\"\n    agg_interval   = 60\n    agg_fields     = [\"df_monitor_checker_id\"]\n    silent_timeout = 300\n\n    alert_target = [{\n      name = \"Default notification\"\n\n      targets = [{\n        to     = [\"notify_xxx\"]\n        status = \"critical,error\"\n      }]\n    }]\n  }\n}\n```\n\n### Alert Policy with Escalation\n\n```hcl\nresource \"guance_alert_policy\" \"escalation_example\" {\n  name          = \"Database Alert\"\n  desc          = \"Alert on database connectivity issues\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type = \"status\"\n\n    alert_target = [{\n      name = \"Database Alert Target\"\n\n      targets = [{\n        to     = [\"notify_xxx\"]\n        status = \"critical\"\n\n        upgrade_targets = [{\n          to       = [\"notify_yyy\"]\n          duration = 300\n        }]\n      }]\n    }]\n  }\n}\n```\n\n### Alert Policy with Custom Notice Dates\n\n```hcl\nresource \"guance_alert_policy_notice_date\" \"holiday\" {\n  name                     = \"Holiday notice dates\"\n  skip_ref_check_on_delete = false\n\n  notice_dates = [\n    \"2026/01/01\",\n    \"2026/05/01\",\n  ]\n}\n\nresource \"guance_alert_policy\" \"custom_date_example\" {\n  name          = \"Holiday Alert\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type = \"status\"\n\n    alert_target = [{\n      name              = \"Holiday notification\"\n      custom_date_uuids = [guance_alert_policy_notice_date.holiday.uuid]\n      custom_start_time = \"09:30:00\"\n      custom_duration   = 3600\n\n      targets = [{\n        to     = [\"notify_xxx\"]\n        status = \"critical,error\"\n      }]\n    }]\n  }\n}\n```\n\n### Full Alert Chain\n\n```hcl\nresource \"guance_notify_object\" \"ops\" {\n  name                = \"Ops Webhook\"\n  type                = \"http\"\n  opt_set             = jsonencode({ url = \"https://example.com/alert\" })\n  open_permission_set = false\n}\n\nresource \"guance_alert_policy_notice_date\" \"holiday\" {\n  name                     = \"Holiday notice dates\"\n  skip_ref_check_on_delete = false\n\n  notice_dates = [\n    \"2026/01/01\",\n    \"2026/05/01\",\n  ]\n}\n\nresource \"guance_alert_policy\" \"ops\" {\n  name          = \"Ops Alert Policy\"\n  desc          = \"Route severe production alerts\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type                      = \"status\"\n    agg_type                        = \"byFields\"\n    agg_interval                    = 120\n    agg_fields                      = [\"df_monitor_checker_id\", \"df_label\"]\n    agg_labels                      = [\"service\"]\n    agg_send_first                  = true\n    ignore_ok                       = true\n    silent_timeout                  = 300\n    silent_timeout_by_status_enable = true\n\n    silent_timeout_by_status = [{\n      status         = \"critical,error\"\n      silent_timeout = 600\n    }]\n\n    alert_target = [{\n      name              = \"Business hours\"\n      custom_date_uuids = [guance_alert_policy_notice_date.holiday.uuid]\n      custom_start_time = \"09:00:00\"\n      custom_duration   = 28800\n\n      targets = [{\n        to            = [guance_notify_object.ops.uuid]\n        status        = \"critical,error\"\n        filter_string = \"`service` IN ['checkout']\"\n\n        upgrade_targets = [{\n          to       = [guance_notify_object.ops.uuid]\n          duration = 900\n        }]\n      }]\n    }]\n  }\n}\n\nresource \"guance_mute\" \"maintenance\" {\n  name        = \"Ops Alert Maintenance\"\n  type        = \"alertPolicy\"\n  timezone    = \"Asia/Shanghai\"\n  start_time  = \"2026/06/12 01:00:00\"\n  end_time    = \"2026/06/12 02:00:00\"\n\n  mute_ranges = [{\n    alert_policy_uuid = guance_alert_policy.ops.uuid\n  }]\n}\n```\n\n### Alert Policy by Member\n\n```hcl\ndata \"guance_members\" \"all\" {}\n\nresource \"guance_alert_policy\" \"member_example\" {\n  name          = \"Member Alert\"\n  desc          = \"Route alerts by member\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type     = \"member\"\n    agg_interval   = 60\n    silent_timeout = 300\n\n    alert_target = [{\n      name = \"Member notification\"\n\n      alert_info = [{\n        name        = \"Owner route\"\n        member_info = [data.guance_members.all.members[0].uuid]\n\n        targets = [{\n          to     = [\"notify_xxx\"]\n          status = \"critical,error,warning\"\n        }]\n      }]\n    }]\n  }\n}\n```\n\n## Argument Reference\n\n| Name | Type | Required | Default | Description |\n|------|------|----------|---------|-------------|\n| `name` | string | Yes | - | Alert policy name. |\n| `desc` | string | No | `null` | Alert policy description. |\n| `open_permission_set` | bool | No | `false` | Whether to enable custom operation permissions. |\n| `permission_set` | list(string) | No | `[]` | Role, member, or team UUIDs allowed to operate this policy. |\n| `checker_uuids` | list(string) | No | `null` | Monitor, smart monitor, smart inspection, or SLO UUIDs associated with this policy. |\n| `security_rule_uuids` | list(string) | No | `null` | Security rule UUIDs associated with this policy. |\n| `rule_timezone` | string | Yes | - | Timezone used by the alert policy, for example `Asia/Shanghai`. |\n| `alert_opt` | object | No | `null` | Alert delivery, aggregation, and silence settings. Use object assignment syntax: `alert_opt = { ... }`. |\n\n## `alert_opt` Object\n\n| Name | Type | Required | Description |\n|------|------|----------|-------------|\n| `agg_type` | string | No | Alert aggregation type: `byFields`, `byCluster`, `byAI`, or `byCustom`. |\n| `ignore_ok` | bool | No | Whether normal level only generates events and skips notifications. |\n| `alert_type` | string | No | Notification type: `status` or `member`. |\n| `silent_timeout` | number | No | Minimum repeated alert interval in seconds. |\n| `silent_timeout_by_status_enable` | bool | No | Whether to enable status-specific silence intervals. |\n| `silent_timeout_by_status` | list(object) | No | Status-specific silence interval list. |\n| `alert_target` | list(object) | No | Notification target groups. |\n| `agg_interval` | number | No | Alert aggregation interval in seconds. |\n| `agg_fields` | list(string) | No | Aggregation field list. |\n| `agg_labels` | list(string) | No | Aggregation labels. |\n| `agg_cluster_fields` | list(string) | No | Smart aggregation field list. |\n| `agg_send_first` | bool | No | Whether to send the first alert directly before aggregation. |\n\nFor `alert_type = \"status\"`, configure notification recipients under `alert_target.targets`.\nFor `alert_type = \"member\"`, configure member routing under `alert_target.alert_info`; each `alert_info.member_info` entry is a member UUID and its `targets` list defines recipients for that member route. In real OpenAPI validation, `agg_interval` is required for member mode.\n\nThe Forethought UI exposes alert policy enable/disable through `/alert_policy/set_disable`, but that route is not exported in the OpenAPI alert policy module used by this provider. Terraform currently manages create/read/update/delete and the exported v2 alert option fields.\n\n## Data Source\n\nThe `guance_alert_policy` data source reads an existing alert policy by `uuid` or exact `name`.\n\nLookup by name:\n\n```hcl\ndata \"guance_alert_policy\" \"example\" {\n  name = \"High CPU Alert\"\n}\n\noutput \"alert_policy_uuid\" {\n  value = data.guance_alert_policy.example.uuid\n}\n\noutput \"first_notify_object\" {\n  value = data.guance_alert_policy.example.alert_opt.alert_target[0].targets[0].to[0]\n}\n```\n\nLookup by UUID:\n\n```hcl\ndata \"guance_alert_policy\" \"example\" {\n  uuid = \"altpl_xxx\"\n}\n```\n\nName lookup must match exactly one alert policy. The data source exports:\n\n| Name | Type | Description |\n|------|------|-------------|\n| `uuid` | string | Alert policy UUID. |\n| `name` | string | Alert policy name. |\n| `desc` | string | Alert policy description. |\n| `open_permission_set` | bool | Whether custom operation permissions are enabled. |\n| `permission_set` | list(string) | Role, member, or team UUIDs allowed to operate this policy. |\n| `checker_uuids` | list(string) | Monitor, smart monitor, smart inspection, or SLO UUIDs associated with this policy. |\n| `security_rule_uuids` | list(string) | Security rule UUIDs associated with this policy. |\n| `rule_timezone` | string | Timezone used by the alert policy. |\n| `alert_opt` | object | Alert delivery, aggregation, silence, and target settings. |\n| `create_at` | number | Created timestamp in seconds. |\n| `update_at` | number | Updated timestamp in seconds. |\n| `workspace_uuid` | string | Workspace UUID. |\n\n## Import\n\n```bash\nterraform import guance_alert_policy.example altpl_xxx\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_alert_policy_notice_date": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the notice date.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "notice_dates": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Custom notice dates. Each date must use YYYY/MM/DD format.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "skip_ref_check_on_delete": {
+            "type": "bool",
+            "description": "Whether deletion bypasses backend reference checks. Defaults to true to preserve existing provider behavior; set false to let the backend reject deletion when this date is still referenced by an alert policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the notice date.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Alert Policy Notice Date Resource\n\nThe `guance_alert_policy_notice_date` resource manages custom notice dates for Guance alert policies. These dates can be referenced by `guance_alert_policy.alert_opt.alert_target.custom_date_uuids`.\n\n## Example Usage\n\n```hcl\nresource \"guance_alert_policy_notice_date\" \"example\" {\n  name                     = \"Holiday notice dates\"\n  skip_ref_check_on_delete = false\n\n  notice_dates = [\n    \"2026/01/01\",\n    \"2026/05/01\",\n  ]\n}\n```\n\n## Argument Reference\n\n| Name | Type | Required | Description |\n|------|------|----------|-------------|\n| `name` | string | Yes | The custom notice date name. The backend stores up to 64 characters. |\n| `notice_dates` | list(string) | Yes | Custom notice dates. Each value must use `YYYY/MM/DD` format. Up to 366 dates are allowed. |\n| `skip_ref_check_on_delete` | bool | No | Whether deletion bypasses backend reference checks. Defaults to `true` for compatibility. Set to `false` to let Guance reject deletion while the date is referenced by an alert policy. |\n\n## Attribute Reference\n\n| Name | Type | Description |\n|------|------|-------------|\n| `uuid` | string | The notice date UUID. |\n| `create_at` | number | Created timestamp in seconds. |\n| `update_at` | number | Updated timestamp in seconds. |\n| `workspace_uuid` | string | Workspace UUID. |\n\n## Data Source\n\nThe `guance_alert_policy_notice_date` data source reads an existing custom notice date by `uuid` or exact `name`.\n\nLookup by name:\n\n```hcl\ndata \"guance_alert_policy_notice_date\" \"holiday\" {\n  name = \"Holiday notice dates\"\n}\n\nresource \"guance_alert_policy\" \"example\" {\n  name          = \"Holiday Alert\"\n  rule_timezone = \"Asia/Shanghai\"\n\n  alert_opt = {\n    alert_type = \"status\"\n\n    alert_target = [{\n      custom_date_uuids = [data.guance_alert_policy_notice_date.holiday.uuid]\n\n      targets = [{\n        to     = [\"notify_xxx\"]\n        status = \"critical,error\"\n      }]\n    }]\n  }\n}\n```\n\nLookup by UUID:\n\n```hcl\ndata \"guance_alert_policy_notice_date\" \"holiday\" {\n  uuid = \"ndate_xxx\"\n}\n```\n\nName lookup must match exactly one notice date. The data source exports `uuid`, `name`, `notice_dates`, `create_at`, `update_at`, and `workspace_uuid`.\n\n## Import\n\n```bash\nterraform import guance_alert_policy_notice_date.example ndate_xxx\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_blacklist": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "string",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "desc": {
+            "type": "string",
+            "description": "The description of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "filters": {
+            "nested_type": {
+              "attributes": {
+                "condition": {
+                  "type": "string",
+                  "description": "The condition of the filter.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the filter.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "operation": {
+                  "type": "string",
+                  "description": "\n\t\tOperation, value must be one of: *in*, *not_in*, *match*, *not_match*, other value will be ignored.\n\t\t",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The values of the filter.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The filters of the resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The source list of the resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "update_at": {
+            "type": "string",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Black List\n\nGuance Cloud supports filtering data that meets the conditions by setting a blacklist.\n\nAfter configuring the blacklist, the data that meets the conditions will no longer be reported to the Guance Cloud\nworkspace, helping you save data storage costs.\n\n## Example Usage\n\n```terraform\nresource \"guance_blacklist\" \"demo\" {\n  name = \"blacklist-demo\"\n  type   = \"logging\"\n  sources = [\"mysql\", \"oracle\"]\n  desc = \"this is a demo\"\n\n  filters = [\n    {\n      name      = \"foo1\"\n      operation = \"in\"\n      condition = \"and\"\n      values    = [\"oac-*\"]\n    }\n  ]\n}\n\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "desc": {
+            "type": "string",
+            "description": "The description of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_public": {
+            "type": "number",
+            "description": "Whether the resource is public.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The permission set of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "read_permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The read permission set of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "specify_dashboard_uuid": {
+            "type": "string",
+            "description": "The specify dashboard uuid of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tag_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The tag names of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "template_info": {
+            "type": "string",
+            "description": "The template info of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "template_info_export": {
+            "type": "string",
+            "description": "The exported template info of resource.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Dashboard Resource\n\nThe `guance_dashboard` resource manages dashboards in Guance Cloud. Dashboards are visualizations that display metrics, logs, traces, and other observability data from your systems.\n\n## Example Usage\n\n```hcl\nresource \"guance_dashboard\" \"example\" {\n  name     = \"example-dashboard\"\n  desc     = \"An example dashboard created with Terraform\"\n  is_public = 0\n  \n  tag_names = [\n    \"example\",\n    \"terraform\"\n  ]\n  \n  template_info = jsonencode({\n    title = \"Example Dashboard\"\n    main = {\n      charts = [\n        {\n          name = \"Request Count\"\n          type = \"sequence\"\n          queries = [\n            {\n              checked = true\n              datasource = \"dataflux\"\n              qtype = \"dql\"\n              query = {\n                q = \"T::re(`.*`):(count(`trace_id`)) [::auto]\"\n              }\n            }\n          ]\n        }\n      ]\n    }\n  })\n}\n```\n\n## Argument Reference\n\n- `name` - (Required) The name of the dashboard.\n- `desc` - (Optional) The description of the dashboard.\n- `identifier` - (Optional) The identifier of the dashboard.\n- `tag_names` - (Optional) List of associated tag names.\n- `template_info` - (Optional) Dashboard template data in JSON format.\n- `specify_dashboard_uuid` - (Optional) Specified dashboard UUID.\n- `is_public` - (Optional) Whether the dashboard is public.\n- `permission_set` - (Optional) Custom operation permissions.\n- `read_permission_set` - (Optional) Custom read permissions.\n\n## Attribute Reference\n\n- `uuid` - The UUID of the dashboard.\n- `create_at` - The timestamp when the dashboard was created.\n- `update_at` - The timestamp when the dashboard was last updated.\n- `workspace_uuid` - The UUID of the workspace.\n- `template_info` - The dashboard template data in JSON format.\n- `template_info_export` - The exported dashboard template data in JSON format.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_membergroup": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Member uuid list",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of resource.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Member Group\n\nMember group is a collection of members in a workspace, and member groups can be authorized to access the resources in the workspace.\n\nMember group is an abstract concept, it can be a team, or a department, it can help us build a reasonable organizational\nstructure, optimize the management efficiency and user experience of the observability platform.\n\nRelationships:\n\n```mermaid\ngraph LR\n\nA[Workspace] --> B[Member]\nA --> C[MemberGroup]\n```\n\n## Example Usage\n\n```terraform\nvariable \"email\" {\n  type = string\n}\n\ndata \"guance_members\" \"demo\" {\n  search = var.email\n}\n\nresource \"guance_membergroup\" \"demo\" {\n  name          = \"oac-demo2\"\n  account_uuids = data.guance_members.demo.members[*].uuid\n}\n\noutput \"member\" {\n  value = data.guance_members.demo.members\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_policy_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Alert policy UUIDs.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_uuid": {
+            "type": "string",
+            "description": "Associated dashboard ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "extend": {
+            "type": "string",
+            "description": "Additional information (fields related to exception tracking and some fields used for frontend echo).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "json_script": {
+            "nested_type": {
+              "attributes": {
+                "at_accounts": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Account UUID list to be @ under normal detection.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "at_no_data_accounts": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Account UUID list to be @ under no data circumstances.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "channels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Channel UUID list.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "checker_opt": {
+                  "nested_type": {
+                    "attributes": {
+                      "info_event": {
+                        "type": "bool",
+                        "description": "Whether to generate info events during continuous normal operation.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "rules": {
+                        "nested_type": {
+                          "attributes": {
+                            "condition_logic": {
+                              "type": "string",
+                              "description": "Logic between conditions, and/or.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "conditions": {
+                              "nested_type": {
+                                "attributes": {
+                                  "alias": {
+                                    "type": "string",
+                                    "description": "Detection object alias, i.e., the above targets[#].alias.",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  },
+                                  "operands": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Operand array. (Operators like between, in need multiple operands).",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  },
+                                  "operator": {
+                                    "type": "string",
+                                    "description": "Operator, =, >, <, etc.",
+                                    "description_kind": "plain",
+                                    "required": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Conditions.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "When the condition is met, the status of the output event.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Trigger condition list.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Check condition settings.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "disable_check_end_time": {
+                  "type": "bool",
+                  "description": "Whether to disable end time limit.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "every": {
+                  "type": "string",
+                  "description": "Check frequency.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "group_by": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Trigger dimension.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "interval": {
+                  "type": "number",
+                  "description": "Query interval, i.e., the time range difference for one query.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Event content.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "recover_need_period_count": {
+                  "type": "number",
+                  "description": "Specify after how many check cycles an exception generates a recovery event.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "targets": {
+                  "nested_type": {
+                    "attributes": {
+                      "alias": {
+                        "type": "string",
+                        "description": "Alias.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "dql": {
+                        "type": "string",
+                        "description": "DQL query statement.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "qtype": {
+                        "type": "string",
+                        "description": "Query type.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Check targets.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Generated event title.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Check method type.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Rule configuration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "monitor_name": {
+            "type": "string",
+            "description": "The name of the monitor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "monitor_uuid": {
+            "type": "string",
+            "description": "The uuid of the monitor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Enable custom permission configuration, (default false: not enabled), after enabling, the operation permission of the rule is based on permissionSet.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Operation permission configuration, configurable (roles (except owners), member uuid, team uuid).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Unique identifier secret for the middle section of the Webhook address (generally take a random uuid to ensure uniqueness within the workspace).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "number",
+            "description": "Monitor status, 0: enabled, 2: disabled, default enabled.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tag names for filtering.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Monitor type, default trigger, trigger: normal monitor, smartMonitor: smart monitor.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Monitor Resource\n\nThe `guance_monitor` resource manages monitor checker rules in Guance Cloud.\n\n## Example Usage\n\n```terraform\nresource \"guance_monitor\" \"example\" {\n  type                = \"trigger\"\n  status              = 0\n  tags                = [\"example\", \"terraform\"]\n  secret              = \"secret_xxxxx\"\n  open_permission_set = false\n  permission_set      = []\n  alert_policy_uuids  = []\n\n  extend = jsonencode({\n    isNeedCreateIssue = false\n    issueLevelUUID    = \"\"\n    needRecoverIssue  = false\n  })\n\n  json_script = {\n    type                      = \"simpleCheck\"\n    title                     = \"SSH Service Exception\"\n    message                   = \">Content: Host SSH Status Failed\\n>Suggestion: Check Host SSH Service Status\"\n    every                     = \"1m\"\n    interval                  = 300\n    recover_need_period_count = 2\n    disable_check_end_time    = false\n    group_by                  = [\"host\"]\n\n    targets = [{\n      dql   = \"M::`ssh`:(count(`ssh_check`)) BY `host`\"\n      alias = \"Result\"\n      qtype = \"dql\"\n    }]\n\n    checker_opt = {\n      info_event = false\n\n      rules = [\n        {\n          condition_logic = \"and\"\n          status          = \"critical\"\n\n          conditions = [{\n            alias    = \"Result\"\n            operator = \">=\"\n            operands = [\"90\"]\n          }]\n        },\n        {\n          condition_logic = \"and\"\n          status          = \"error\"\n\n          conditions = [{\n            alias    = \"Result\"\n            operator = \">=\"\n            operands = [\"0\"]\n          }]\n        },\n      ]\n    }\n\n    channels            = []\n    at_accounts         = []\n    at_no_data_accounts = []\n  }\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_monitor_json": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "checker_json": {
+            "type": "string",
+            "description": "The checker json configuration for import.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "checker_json_export": {
+            "type": "string",
+            "description": "The exported checker json configuration of resource.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Monitor type, default trigger, trigger: normal monitor, smartMonitor: smart monitor.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Monitor Json Resource\n\nThe `guance_monitor_json` resource manages monitors in Guance Cloud using JSON import/export functionality. This resource allows you to import and export monitor configurations using the checker JSON format.\n\n## Example Usage\n\n```hcl\nresource \"guance_monitor_json\" \"example\" {\n  checker_json = jsonencode({\n    extend = {\n      funcName = \"\"\n      isNeedCreateIssue = false\n      issueLevelUUID = \"\"\n      needRecoverIssue = false\n      querylist = [\n        {\n          datasource = \"dataflux\"\n          qtype = \"dql\"\n          query = {\n            alias = \"\"\n            code = \"Result\"\n            dataSource = \"ssh\"\n            field = \"ssh_check\"\n            fieldFunc = \"count\"\n            fieldType = \"float\"\n            funcList = []\n            groupBy = [\"host\"]\n            groupByTime = \"\"\n            namespace = \"metric\"\n            q = \"M::`ssh`:(count(`ssh_check`)) BY `host`\"\n            type = \"simple\"\n          }\n          uuid = \"aada629a-672e-46f9-9503-8fd61065c382\"\n        }\n      ]\n      rules = [\n        {\n          conditionLogic = \"and\"\n          conditions = [\n            {\n              alias = \"Result\"\n              operands = [\"90\"]\n              operator = \">=\"\n            }\n          ]\n          status = \"critical\"\n        }\n      ]\n    }\n    is_disable = false\n    jsonScript = {\n      atAccounts = []\n      atNoDataAccounts = []\n      channels = []\n      checkerOpt = {\n        infoEvent = false\n        rules = [\n          {\n            conditionLogic = \"and\"\n            conditions = [\n              {\n                alias = \"Result\"\n                operands = [\"90\"]\n                operator = \">=\"\n              }\n            ]\n            status = \"critical\"\n          }\n        ]\n      }\n      disableCheckEndTime = false\n      every = \"1m\"\n      groupBy = [\"host\"]\n      interval = 300\n      message = \"message1\"\n      noDataMessage = \"\"\n      noDataTitle = \"\"\n      recoverNeedPeriodCount = 2\n      targets = [\n        {\n          alias = \"Result\"\n          dql = \"M::`ssh`:(count(`ssh_check`)) BY `host`\"\n          qtype = \"dql\"\n        }\n      ]\n      title = \"Host ${host} SSH error\"\n      type = \"simpleCheck\"\n    }\n    monitorName = \"default\"\n    secret = \"\"\n    tagInfo = []\n    type = \"trigger\"\n  })\n  \n  type = \"trigger\"\n}\n```\n\n## Argument Reference\n\n- `checker_json` - (Optional) The checker JSON configuration for import. This should be a single JSON object of monitor configuration.\n- `type` - (Optional) Monitor type. Valid values are `trigger` (normal monitor) or `smartMonitor` (smart monitor). Default is `trigger`.\n\n## Attribute Reference\n\n- `uuid` - The UUID of the resource.\n- `checker_json` - The checker JSON configuration.\n- `checker_json_export` - The exported checker JSON configuration containing the created monitors.\n- `create_at` - The timestamp when the resource was created.\n- `update_at` - The timestamp when the resource was last updated.\n- `workspace_uuid` - The UUID of the workspace.\n\n## Import\n\nYou can import a monitor json resource using its UUID:\n\n```sh\nterraform import guance_monitor_json.example <uuid>\n```\n\n## Notes\n\n- The `checker_json` field accepts a single JSON object of monitor configuration (not an array).\n- The `checker_json_export` field contains the actual monitor configurations after import, including the generated UUIDs.\n- When updating the resource, the Replace API is used to update the existing monitor.\n- The import operation uses the Guance Cloud checker import API endpoints.\n- You can export monitors from Guance Cloud and use the exported JSON as the `checker_json` input.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_mute": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "crontab_duration": {
+            "type": "number",
+            "description": "Repeated mute duration in seconds.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "declaration": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom declaration information.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the mute rule.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the mute rule is enabled. This manages API status 0/2 through the mute enable/disable endpoints.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "end_time": {
+            "type": "string",
+            "description": "One-time mute end time in YYYY/MM/DD HH:mm:ss.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "filter_string": {
+            "type": "string",
+            "description": "Event attribute filter expression. Takes precedence over tags.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mute_ranges": {
+            "nested_type": {
+              "attributes": {
+                "alert_policy_uuid": {
+                  "type": "string",
+                  "description": "Alert policy UUID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "checker_uuid": {
+                  "type": "string",
+                  "description": "Monitor/checker UUID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "monitor_uuid": {
+                  "type": "string",
+                  "description": "Monitor UUID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The display name of the muted resource.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "slo_uuid": {
+                  "type": "string",
+                  "description": "SLO UUID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tag_uuid": {
+                  "type": "string",
+                  "description": "Monitor tag UUID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The muted resource type returned by the API.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Mute ranges. Empty means all ranges for the selected type.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the mute rule.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "notify_message": {
+            "type": "string",
+            "description": "Notification message.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "notify_targets": {
+            "nested_type": {
+              "attributes": {
+                "to": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Notification target UUIDs.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Notification target type, such as mail or notifyObject.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Notification targets for mute notifications.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "notify_time_str": {
+            "type": "string",
+            "description": "Notification time in YYYY/MM/DD HH:mm:ss, empty for no scheduled notification.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repeat_crontab_set": {
+            "nested_type": {
+              "attributes": {
+                "day": {
+                  "type": "string",
+                  "description": "Day field.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "hour": {
+                  "type": "string",
+                  "description": "Hour field.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "min": {
+                  "type": "string",
+                  "description": "Minute field.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "month": {
+                  "type": "string",
+                  "description": "Month field.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "week": {
+                  "type": "string",
+                  "description": "Week field.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Repeated mute crontab settings.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repeat_expire_time": {
+            "type": "string",
+            "description": "Repeated mute expiration time in YYYY/MM/DD HH:mm:ss, or 0 for never expires.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repeat_time_set": {
+            "type": "number",
+            "description": "Whether to repeat the mute rule. 0 for one-time, 1 for repeated.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "start_time": {
+            "type": "string",
+            "description": "One-time mute start time in YYYY/MM/DD HH:mm:ss.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "number",
+            "description": "Mute rule status returned by the API.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "Event attribute filters. Prefix a key with '-' for negative matching.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Mute rule timezone.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Mute rule type.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the mute rule.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# guance_mute\n\nThe `guance_mute` resource manages Guance mute rules. Mute rules can silence monitors, alert policies, monitor tags, or custom resource ranges.\n\n## Example Usage\n\nMute an alert policy for a one-time window:\n\n```hcl\nresource \"guance_mute\" \"alert_policy\" {\n  name        = \"terraform-alert-policy-mute\"\n  description = \"Managed by Terraform\"\n  type        = \"alertPolicy\"\n  timezone    = \"Asia/Shanghai\"\n\n  mute_ranges = [{\n    name              = guance_alert_policy.example.name\n    alert_policy_uuid = guance_alert_policy.example.uuid\n  }]\n\n  repeat_time_set = 0\n  start_time      = \"2026/06/11 10:00:00\"\n  end_time        = \"2026/06/11 11:00:00\"\n\n  tags = {\n    host = [\"web001\"]\n  }\n}\n```\n\nRepeated mute:\n\n```hcl\nresource \"guance_mute\" \"weekly\" {\n  name     = \"terraform-weekly-mute\"\n  type     = \"alertPolicy\"\n  timezone = \"Asia/Shanghai\"\n\n  mute_ranges = [{\n    alert_policy_uuid = guance_alert_policy.example.uuid\n  }]\n\n  repeat_time_set = 1\n  repeat_crontab_set = {\n    min   = \"0\"\n    hour  = \"0\"\n    day   = \"*\"\n    month = \"*\"\n    week  = \"1,2\"\n  }\n  crontab_duration  = 18000\n  repeat_expire_time = \"0\"\n}\n```\n\nNotify before a mute starts:\n\n```hcl\nresource \"guance_mute\" \"with_notify\" {\n  name     = \"terraform-mute-with-notify\"\n  type     = \"alertPolicy\"\n  timezone = \"Asia/Shanghai\"\n\n  mute_ranges = [{\n    alert_policy_uuid = guance_alert_policy.example.uuid\n  }]\n\n  repeat_time_set = 0\n  start_time      = \"2026/06/11 10:00:00\"\n  end_time        = \"2026/06/11 11:00:00\"\n  notify_time_str = \"2026/06/11 09:50:00\"\n  notify_message  = \"Alert policy mute will start soon.\"\n\n  notify_targets = [{\n    type = \"notifyObject\"\n    to   = [guance_notify_object.example.uuid]\n  }]\n}\n```\n\n## Argument Reference\n\n* `name` - (Required) Mute rule name.\n* `type` - (Required) Mute rule type. Valid values are `checker`, `alertPolicy`, `tag`, and `custom`.\n* `mute_ranges` - (Required) Mute ranges. An empty list means all resources for the selected type.\n* `description` - (Optional) Mute rule description.\n* `tags` - (Optional) Event attribute filters. Prefix a key with `-` for negative matching.\n* `filter_string` - (Optional) Event attribute filter expression. This has higher priority than `tags`.\n* `notify_targets` - (Optional) Notification targets.\n* `notify_message` - (Optional) Notification message.\n* `notify_time_str` - (Optional) Notification time in `YYYY/MM/DD HH:mm:ss`.\n* `start_time` - (Optional) One-time mute start time in `YYYY/MM/DD HH:mm:ss`.\n* `end_time` - (Optional) One-time mute end time in `YYYY/MM/DD HH:mm:ss`.\n* `repeat_time_set` - (Optional) `0` for one-time mute, `1` for repeated mute. Defaults to `0`.\n* `repeat_crontab_set` - (Optional) Repeated mute crontab fields.\n* `crontab_duration` - (Optional) Repeated mute duration in seconds.\n* `repeat_expire_time` - (Optional) Repeated mute expiration time in `YYYY/MM/DD HH:mm:ss`, or `0` for never expires.\n* `timezone` - (Optional) Mute rule timezone. Defaults to `Asia/Shanghai`.\n* `declaration` - (Optional) Custom declaration information.\n* `enabled` - (Optional) Whether the mute rule is enabled. Defaults to `true`.\n\n### `mute_ranges`\n\n* `name` - (Optional) Display name of the muted resource.\n* `type` - (Optional) Resource type returned by the API.\n* `checker_uuid` - (Optional) Monitor/checker UUID.\n* `monitor_uuid` - (Optional) Monitor UUID.\n* `slo_uuid` - (Optional) SLO UUID.\n* `alert_policy_uuid` - (Optional) Alert policy UUID.\n* `tag_uuid` - (Optional) Monitor tag UUID.\n\n### `notify_targets`\n\n* `type` - (Required) Notification target type, such as `mail` or `notifyObject`.\n* `to` - (Required) Notification target UUIDs.\n\n## Attribute Reference\n\n* `uuid` - Mute rule UUID.\n* `status` - Mute rule status returned by the API. Status `0` maps to `enabled = true`; status `2` maps to `enabled = false`.\n* `create_at` - Creation timestamp in seconds.\n* `update_at` - Last update timestamp in seconds.\n* `workspace_uuid` - Workspace UUID.\n\n## Data Source\n\nThe `guance_mute` data source reads an existing mute rule by `uuid` or exact `name`.\n\nLookup by name:\n\n```hcl\ndata \"guance_mute\" \"example\" {\n  name = \"terraform-alert-policy-mute\"\n}\n\noutput \"muted_alert_policy_uuid\" {\n  value = data.guance_mute.example.mute_ranges[0].alert_policy_uuid\n}\n```\n\nLookup by UUID:\n\n```hcl\ndata \"guance_mute\" \"example\" {\n  uuid = \"mute_xxx\"\n}\n```\n\nName lookup must match exactly one mute rule. The data source exports all resource attributes as read-only values, including `mute_ranges`, `tags`, `filter_string`, `notify_targets`, `notify_message`, `notify_time_str`, `start_time`, `end_time`, `repeat_time_set`, `repeat_crontab_set`, `crontab_duration`, `repeat_expire_time`, `timezone`, `declaration`, `enabled`, `status`, `create_at`, `update_at`, and `workspace_uuid`.\n\n## Import\n\n```shell\nterraform import guance_mute.example mute_xxx\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_notify_object": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of notify object.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Whether to open permission set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "opt_set": {
+            "type": "string",
+            "description": "The option set of notify object in JSON format.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The permission set of resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of notify object.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Notify Object Resource\n\nThis resource manages notify objects in Guance Cloud. Notify objects are used to define how alerts are delivered, such as through DingTalk, WeChat, email, etc.\n\n## Example Usage\n\n```hcl\nresource \"guance_notify_object\" \"example\" {\n  type = \"dingTalkRobot\"\n  name = \"Example DingTalk Robot\"\n  opt_set = jsonencode({\n    webhook = \"https://oapi.dingtalk.com/robot/send?access_token=example\"\n    secret  = \"example_secret\"\n  })\n  open_permission_set = false\n  permission_set = [\"wsAdmin\"]\n}\n```\n\n## Argument Reference\n\nThe following arguments are supported:\n\n* `type` - (Required) The type of notify object. Valid values are:\n  * `dingTalkRobot`\n  * `HTTPRequest`\n  * `wechatRobot`\n  * `mailGroup`\n  * `feishuRobot`\n  * `sms`\n  * `vms`\n  * `simpleHTTPRequest`\n  * `slackIncomingWebhook`\n  * `teamsWorkflowWebhook`\n  * `googleChatWebhook`\n  * `telegramBot`\n\n* `name` - (Required) The name of the notify object.\n\n* `opt_set` - (Required) The configuration options for the notify object, encoded as a JSON string. The structure depends on the `type`:\n  * For `dingTalkRobot`: `{\"webhook\": \"string\", \"secret\": \"string\"}`\n  * For `HTTPRequest`: `{\"url\": \"string\"}`\n  * For `wechatRobot`: `{\"webhook\": \"string\"}`\n  * For `mailGroup`: `{\"to\": [\"string\"]}`\n  * For `feishuRobot`: `{\"webhook\": \"string\", \"secret\": \"string\"}`\n  * For `sms`: `{\"to\": [\"string\"]}`\n  * For `vms`: `{\"to\": [\"string\"]}`\n  * For `simpleHTTPRequest`: `{\"url\": \"string\"}`\n  * For `slackIncomingWebhook`: `{\"webhook\": \"string\"}`\n  * For `teamsWorkflowWebhook`: `{\"webhook\": \"string\"}`\n  * For `googleChatWebhook`: `{\"webhook\": \"string\"}`\n  * For `telegramBot`: `{\"token\": \"string\", \"chat_id\": \"string\", \"message_thread_id\": \"string\"}`\n\n* `open_permission_set` - (Optional) Whether to enable custom permission settings. Defaults to `false`.\n\n* `permission_set` - (Optional) The permission set for the notify object. Only applicable if `open_permission_set` is `true`. Can include roles (e.g., `wsAdmin`), member UUIDs, and team UUIDs.\n\n## Attribute Reference\n\nThe following attributes are exported:\n\n* `uuid` - The UUID of the notify object.\n* `workspace_uuid` - The UUID of the workspace containing the notify object.\n* `create_at` - The timestamp when the notify object was created.\n* `update_at` - The timestamp when the notify object was last updated.\n\n## Data Source\n\nThe `guance_notify_object` data source reads an existing notify object by `uuid` or exact `name`.\n\nLookup by name:\n\n```hcl\ndata \"guance_notify_object\" \"example\" {\n  name = \"Example DingTalk Robot\"\n}\n\noutput \"notify_object_uuid\" {\n  value = data.guance_notify_object.example.uuid\n}\n```\n\nLookup by UUID:\n\n```hcl\ndata \"guance_notify_object\" \"example\" {\n  uuid = \"notify_xxx\"\n}\n```\n\nName lookup must match exactly one notify object. The data source exports `uuid`, `type`, `name`, `opt_set`, `open_permission_set`, `permission_set`, `create_at`, `update_at`, and `workspace_uuid`.\n\n## Import\n\nNotify objects can be imported using their UUID:\n\n```bash\nterraform import guance_notify_object.example <notify_object_uuid>\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_pipeline": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "as_default": {
+            "type": "number",
+            "description": "Is Default Pipeline",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "category": {
+            "type": "string",
+            "description": "\n\t\tCategory, value must be one of: *logging*, *object*, *custom_object*, *network*, *tracing*, *rum*, *security*, *keyevent*, *metric*, *profiling*, *dialtesting*, *billing*, *keyevent*, other value will be ignored.\n\t\t",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Pipeline file content",
+            "description_kind": "plain",
+            "required": true
+          },
+          "create_at": {
+            "type": "string",
+            "description": "The creation time of the resource, in seconds as a timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_type": {
+            "type": "string",
+            "description": "The type of the data. Valid value: `line_protocol`, `json`, `message`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "enable_by_log_backup": {
+            "type": "number",
+            "description": "Enable pipeline processing (1=enable, 0=disable) for forwarded data.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "extend": {
+            "nested_type": {
+              "attributes": {
+                "app_id": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "logging_index": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "measurement": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_disabled": {
+            "type": "bool",
+            "description": "Is Disabled",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_force": {
+            "type": "bool",
+            "description": "Is Force Overwrite. If the field `as_default` is true, `is_force` will be set to be true automatically.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the pipeline.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "source": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Data source list",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "number",
+            "description": "The status of the pipeline. Valid value: `0`, `2`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "test_data": {
+            "type": "string",
+            "description": "Test data",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the pipeline.Valid value: `local`, `central`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "update_at": {
+            "type": "string",
+            "description": "The update time of the resource, in seconds as a timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The uuid of the pipeline.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The uuid of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Pipeline\n\nPipeline is a data processing language that Observability Cloud provides. Pipeline supports text parsing of different\nformats of log data.\n\nBy writing a pipeline script, you can customize the structure of the log and use the cut fields as attributes.\n\nBy cutting out the attribute fields, we can quickly filter the relevant logs and perform data association analysis to\nhelp us quickly locate and solve problems.\n\n## Example Usage\n\n```terraform\nresource \"guance_pipeline\" \"demo\" {\n  name     = \"oac-demo\"\n  category = \"logging\"\n  source = [\n    \"nginx\"\n  ]\n  as_default           = 1\n  is_force             = false\n  type                 = \"local\"\n  is_disabled          = false\n  enable_by_log_backup = 1\n  data_type            = \"json\"\n\n  content = <<EOF\n    add_pattern(\"date2\", \"%%{YEAR}[./]%%{MONTHNUM}[./]%%{MONTHDAY} %%{TIME}\")\n    \n    # access log\n    grok(_, \"%%{NOTSPACE:client_ip} %%{NOTSPACE:http_ident} %%{NOTSPACE:http_auth} \\\\[%%{HTTPDATE:time}\\\\] \\\"%%{DATA:http_method} %%{GREEDYDATA:http_url} HTTP/%%{NUMBER:http_version}\\\" %%{INT:status_code} %%{INT:bytes}\")\n    \n    # access log\n    add_pattern(\"access_common\", \"%%{NOTSPACE:client_ip} %%{NOTSPACE:http_ident} %%{NOTSPACE:http_auth} \\\\[%%{HTTPDATE:time}\\\\] \\\"%%{DATA:http_method} %%{GREEDYDATA:http_url} HTTP/%%{NUMBER:http_version}\\\" %%{INT:status_code} %%{INT:bytes}\")\n    grok(_, '%%{access_common} \"%%{NOTSPACE:referrer}\" \"%%{GREEDYDATA:agent}\"')\n    user_agent(agent)\n    \n    # error log\n    grok(_, \"%%{date2:time} \\\\[%%{LOGLEVEL:status}\\\\] %%{GREEDYDATA:msg}, client: %%{NOTSPACE:client_ip}, server: %%{NOTSPACE:server}, request: \\\"%%{DATA:http_method} %%{GREEDYDATA:http_url} HTTP/%%{NUMBER:http_version}\\\", (upstream: \\\"%%{GREEDYDATA:upstream}\\\", )?host: \\\"%%{NOTSPACE:ip_or_host}\\\"\")\n    grok(_, \"%%{date2:time} \\\\[%%{LOGLEVEL:status}\\\\] %%{GREEDYDATA:msg}, client: %%{NOTSPACE:client_ip}, server: %%{NOTSPACE:server}, request: \\\"%%{GREEDYDATA:http_method} %%{GREEDYDATA:http_url} HTTP/%%{NUMBER:http_version}\\\", host: \\\"%%{NOTSPACE:ip_or_host}\\\"\")\n    grok(_,\"%%{date2:time} \\\\[%%{LOGLEVEL:status}\\\\] %%{GREEDYDATA:msg}\")\n    \n    group_in(status, [\"warn\", \"notice\"], \"warning\")\n    group_in(status, [\"error\", \"crit\", \"alert\", \"emerg\"], \"error\")\n    \n    cast(status_code, \"int\")\n    cast(bytes, \"int\")\n    \n    group_between(status_code, [200,299], \"OK\", status)\n    group_between(status_code, [300,399], \"notice\", status)\n    group_between(status_code, [400,499], \"warning\", status)\n    group_between(status_code, [500,599], \"error\", status)\n    \n    \n    nullif(http_ident, \"-\")\n    nullif(http_auth, \"-\")\n    nullif(upstream, \"\")\n    default_time(time)\n    EOF\n\n  test_data = <<EOF\n    127.0.0.1 - - [24/Mar/2021:13:54:19 +0800] \"GET /basic_status HTTP/1.1\" 200 97 \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36\"\n    EOF\n\n  extend = {\n    \"app_id\"        = [\"test\", \"test1\"],\n    \"measurement\"   = [\"nginx_access_log\"],\n    \"logging_index\" = \"xxxx\"\n  }\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "desc": {
+            "type": "string",
+            "description": "The description of the role.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keys": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The permission keys.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the role.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "# Role\n\nGuance Cloud supports creating roles to manage the permissions of users. Role management provides users with an intuitive entry for permission management, supporting the flexible adjustment of the permission scope corresponding to different roles, creating new roles for users, and assigning permission scopes to roles to meet the permission needs of different users.\n\n## Example Usage\n\n```terraform\nresource \"guance_role\" \"role\" {\n  name = \"tf-test-role1\"\n  desc = \"test role\"\n  keys = [\"snapshot.delete\", \"workspace.readMember\"]\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "guance_alert_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_opt": {
+            "nested_type": {
+              "attributes": {
+                "agg_cluster_fields": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Field list for smart aggregation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agg_fields": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Aggregation field list.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agg_interval": {
+                  "type": "number",
+                  "description": "Alert aggregation interval, in seconds.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agg_labels": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Label value list when aggregating by label.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agg_send_first": {
+                  "type": "bool",
+                  "description": "Whether the first alert is sent directly when aggregating.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agg_type": {
+                  "type": "string",
+                  "description": "Alert aggregation type.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "alert_target": {
+                  "nested_type": {
+                    "attributes": {
+                      "alert_info": {
+                        "nested_type": {
+                          "attributes": {
+                            "filter_string": {
+                              "type": "string",
+                              "description": "Filter condition original string.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "member_info": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "Team or member UUID list.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Configuration name.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "targets": {
+                              "nested_type": {
+                                "attributes": {
+                                  "df_source": {
+                                    "type": "string",
+                                    "description": "Data source, such as security for security monitoring statuses.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "filter_string": {
+                                    "type": "string",
+                                    "description": "Filter condition original string.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "description": "Alert status values.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "tags": {
+                                    "type": [
+                                      "map",
+                                      [
+                                        "list",
+                                        "string"
+                                      ]
+                                    ],
+                                    "description": "Filter conditions.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "to": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Notification objects/members/teams.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "upgrade_targets": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "duration": {
+                                          "type": "number",
+                                          "description": "Upgrade duration in seconds.",
+                                          "description_kind": "plain",
+                                          "computed": true
+                                        },
+                                        "to": {
+                                          "type": [
+                                            "list",
+                                            "string"
+                                          ],
+                                          "description": "Notification objects/members/teams.",
+                                          "description_kind": "plain",
+                                          "computed": true
+                                        },
+                                        "to_way": {
+                                          "type": [
+                                            "list",
+                                            "string"
+                                          ],
+                                          "description": "Notification ways.",
+                                          "description_kind": "plain",
+                                          "computed": true
+                                        }
+                                      },
+                                      "nesting_mode": "list"
+                                    },
+                                    "description": "Upgrade notification target configuration.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Notification target configuration.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Member-type alert notification configuration.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "crontab": {
+                        "type": "string",
+                        "description": "Repeated time period start crontab.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "crontab_duration": {
+                        "type": "number",
+                        "description": "Repeated time duration in seconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "custom_date_uuids": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Custom notification date UUID list.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "custom_duration": {
+                        "type": "number",
+                        "description": "Custom time duration in seconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "custom_start_time": {
+                        "type": "string",
+                        "description": "Daily custom start time.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Configuration name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "targets": {
+                        "nested_type": {
+                          "attributes": {
+                            "df_source": {
+                              "type": "string",
+                              "description": "Data source, such as security for security monitoring statuses.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "filter_string": {
+                              "type": "string",
+                              "description": "Filter condition original string.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "Alert status values.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "tags": {
+                              "type": [
+                                "map",
+                                [
+                                  "list",
+                                  "string"
+                                ]
+                              ],
+                              "description": "Filter conditions.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "to": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "Notification objects/members/teams.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "upgrade_targets": {
+                              "nested_type": {
+                                "attributes": {
+                                  "duration": {
+                                    "type": "number",
+                                    "description": "Upgrade duration in seconds.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "to": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Notification objects/members/teams.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "to_way": {
+                                    "type": [
+                                      "list",
+                                      "string"
+                                    ],
+                                    "description": "Notification ways.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Upgrade notification target configuration.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Notification target configuration.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Trigger action configuration.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "alert_type": {
+                  "type": "string",
+                  "description": "Alert policy notification type, level(status)/member(member).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "ignore_ok": {
+                  "type": "bool",
+                  "description": "Advanced configuration, normal level only generates events, does not send notifications.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "silent_timeout": {
+                  "type": "number",
+                  "description": "Minimum alert interval in seconds.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "silent_timeout_by_status": {
+                  "nested_type": {
+                    "attributes": {
+                      "silent_timeout": {
+                        "type": "number",
+                        "description": "Minimum alert interval, in seconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Status value.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Level-specific minimum alert interval configuration.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "silent_timeout_by_status_enable": {
+                  "type": "bool",
+                  "description": "Whether level-specific repeated alert configuration is enabled.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Alert settings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "checker_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Monitor/smart monitor/smart inspection/slo UUIDs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "desc": {
+            "type": "string",
+            "description": "The description of the alert policy.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The exact name of the alert policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notify_object_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Filter alert policies by notification object UUIDs when looking up by name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Whether custom permission configuration is enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Operation permission configuration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rule_timezone": {
+            "type": "string",
+            "description": "The timezone of the alert policy.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_rule_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Security monitoring UUIDs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the alert policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The UUID of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `guance_alert_policy` data source reads an existing Guance alert policy by `uuid` or exact `name`.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_alert_policy_notice_date": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The exact name of the notice date.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notice_dates": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Custom notice dates.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the notice date.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The UUID of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `guance_alert_policy_notice_date` data source reads an existing custom notice date by `uuid` or exact `name`.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "create_at": {
+                  "type": "string",
+                  "description": "The unix timestamp in seconds of the member creation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "email": {
+                  "type": "string",
+                  "description": "Email",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "User name",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "roles": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the role.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "uuid": {
+                        "type": "string",
+                        "description": "The UUID of the role.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "\n\tRole, value must be one of: *owner*, *wsAdmin*, *general*, *readOnly*, other value will be ignored.\n\t",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The uuid of the member.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of the members.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search the member by email or name.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A workspace member is a user who has access to a workspace.\n\nGuance Cloud supports managing all members of the current workspace through member management, including setting role permissions, inviting members and setting permissions for members, configuring member groups, and setting SSO single sign-on.\n\nRelationships:\n\n```mermaid\ngraph LR\n    A[Workspace] --> B[Member]\n```\n\n## Example Usage\n\n```terraform\nvariable \"email\" {\n  type = string\n}\n\ndata \"guance_members\" \"demo\" {\n  search = var.email\n}\n\noutput \"member\" {\n  value = data.guance_members.demo.members\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_policy_uuids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Alert policy UUIDs attached to this monitor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_uuid": {
+            "type": "string",
+            "description": "Associated dashboard UUID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "extend": {
+            "type": "string",
+            "description": "Monitor extend payload as canonical JSON.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "json_script": {
+            "type": "string",
+            "description": "Monitor jsonScript payload as canonical JSON.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "monitor_name": {
+            "type": "string",
+            "description": "The monitor group name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "monitor_uuid": {
+            "type": "string",
+            "description": "The monitor group UUID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The exact monitor/checker name.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Whether custom operation permissions are enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Operation permission configuration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Monitor secret.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "number",
+            "description": "Monitor status, 0 enabled and 2 disabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Monitor tag names.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Monitor type.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the monitor/checker.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The UUID of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `guance_monitor` data source reads an existing Guance monitor/checker by `uuid` or exact `name`.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_monitors": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_policy_uuid": {
+            "type": "string",
+            "description": "Alert policy UUID filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "checker_uuid": {
+            "type": "string",
+            "description": "Comma-separated checker UUID filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dashboard_uuid": {
+            "type": "string",
+            "description": "Dashboard UUID filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "monitors": {
+            "nested_type": {
+              "attributes": {
+                "alert_policy_uuids": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Attached alert policy UUIDs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "dashboard_uuid": {
+                  "type": "string",
+                  "description": "Associated dashboard UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "monitor_name": {
+                  "type": "string",
+                  "description": "Monitor group name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "monitor_uuid": {
+                  "type": "string",
+                  "description": "Monitor group UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Monitor/checker name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "number",
+                  "description": "Monitor status.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Monitor tag names.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Monitor type, such as trigger or smartMonitor.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "Monitor/checker UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_uuid": {
+                  "type": "string",
+                  "description": "Workspace UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Matched monitors.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Monitor search keyword.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Monitor status filter, such as 0 or 2.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags_uuid": {
+            "type": "string",
+            "description": "Comma-separated monitor tag UUID filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Checker type filter, such as simpleCheck. Leave empty to list all monitor/checker types.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "The `guance_monitors` data source lists Guance monitors/checkers by search and optional filters.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_mute": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator": {
+            "type": "string",
+            "description": "Filter mute rules by creator when looking up by name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "crontab_duration": {
+            "type": "number",
+            "description": "Repeated mute duration in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "declaration": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom declaration information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the mute rule.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the mute rule is enabled. API status 0 maps to true, and status 2 maps to false.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "end_time": {
+            "type": "string",
+            "description": "One-time mute end time.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "filter_string": {
+            "type": "string",
+            "description": "Event attribute filter expression.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_enable": {
+            "type": "string",
+            "description": "Filter mute rules by enabled flag when looking up by name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mute_ranges": {
+            "nested_type": {
+              "attributes": {
+                "alert_policy_uuid": {
+                  "type": "string",
+                  "description": "Alert policy UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "checker_uuid": {
+                  "type": "string",
+                  "description": "Monitor/checker UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "monitor_uuid": {
+                  "type": "string",
+                  "description": "Monitor UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The display name of the muted resource.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slo_uuid": {
+                  "type": "string",
+                  "description": "SLO UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tag_uuid": {
+                  "type": "string",
+                  "description": "Monitor tag UUID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The muted resource type returned by the API.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Mute ranges.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The exact name of the mute rule.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notify_message": {
+            "type": "string",
+            "description": "Notification message.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "notify_targets": {
+            "nested_type": {
+              "attributes": {
+                "to": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Notification target UUIDs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Notification target type.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Notification targets for mute notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "notify_time_str": {
+            "type": "string",
+            "description": "Notification time.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repeat_crontab_set": {
+            "nested_type": {
+              "attributes": {
+                "day": {
+                  "type": "string",
+                  "description": "Day field.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "hour": {
+                  "type": "string",
+                  "description": "Hour field.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min": {
+                  "type": "string",
+                  "description": "Minute field.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "month": {
+                  "type": "string",
+                  "description": "Month field.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "week": {
+                  "type": "string",
+                  "description": "Week field.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Repeated mute crontab settings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repeat_expire_time": {
+            "type": "string",
+            "description": "Repeated mute expiration time.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repeat_time_set": {
+            "type": "number",
+            "description": "Whether the mute rule repeats.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "start_time": {
+            "type": "string",
+            "description": "One-time mute start time.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "number",
+            "description": "Mute rule status returned by the API.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "Event attribute filters.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Mute rule timezone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Mute rule type. When configured with name lookup, filters the mute list by type.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updator": {
+            "type": "string",
+            "description": "Filter mute rules by updator when looking up by name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the mute rule.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "work_status": {
+            "type": "string",
+            "description": "Filter mute rules by work status when looking up by name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The UUID of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `guance_mute` data source reads an existing Guance mute rule by `uuid` or exact `name`.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_notify_object": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource created at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The exact name of the notify object.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "open_permission_set": {
+            "type": "bool",
+            "description": "Whether custom permission configuration is enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "opt_set": {
+            "type": "string",
+            "description": "The option set of notify object in JSON format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permission_set": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Operation permission configuration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of notify object.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "update_at": {
+            "type": "number",
+            "description": "The timestamp seconds of the resource updated at.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the notify object.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_uuid": {
+            "type": "string",
+            "description": "The UUID of the workspace.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `guance_notify_object` data source reads an existing Guance alert notification object by `uuid` or exact `name`.",
+        "description_kind": "markdown"
+      }
+    },
+    "guance_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "is_support_custom_role": {
+            "type": "bool",
+            "description": "Filter the permission list that supports custom role.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "desc": {
+                  "type": "string",
+                  "description": "The description of the permission.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "disabled": {
+                  "type": "number",
+                  "description": "The disabled status of the permission.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_support_custom_role": {
+                  "type": "number",
+                  "description": "Whether support custom role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_support_general": {
+                  "type": "number",
+                  "description": "Whether support general.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_support_owner": {
+                  "type": "number",
+                  "description": "Whether support owner.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_support_read_only": {
+                  "type": "number",
+                  "description": "Whether support readonly.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_support_ws_admin": {
+                  "type": "number",
+                  "description": "Whether support WsAdmin.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The key of the permission.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the permission.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subs": {
+                  "nested_type": {
+                    "attributes": {
+                      "desc": {
+                        "type": "string",
+                        "description": "The description of the permission.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "disabled": {
+                        "type": "number",
+                        "description": "The disabled status of the permission.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "is_support_custom_role": {
+                        "type": "number",
+                        "description": "Whether support custom role.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "is_support_general": {
+                        "type": "number",
+                        "description": "Whether support general.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "is_support_owner": {
+                        "type": "number",
+                        "description": "Whether support owner.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "is_support_read_only": {
+                        "type": "number",
+                        "description": "Whether support readonly.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "is_support_ws_admin": {
+                        "type": "number",
+                        "description": "Whether support WsAdmin.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "The key of the permission.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the permission.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The list of the sub permissions.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of the permissions.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A role permission is defined to grant a user permission to perform a specific action on a specific resource.\n\nGuance Cloud supports a number of different role permissions, and you can create new roles for users and assign permission scopes to roles to meet the permission needs of your organization.\n\n\n## Example Usage\n\n```terraform\ndata \"guance_permissions\" \"demo\" {\n}\n\noutput \"permissions\" {\n  value = data.guance_permissions.demo\n}\n```",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
