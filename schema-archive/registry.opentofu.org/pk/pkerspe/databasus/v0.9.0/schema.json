@@ -1,0 +1,927 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "baseurl": {
+          "type": "string",
+          "description": "The REST API base URL from the Databasus instance e.g. https://youserver.local/api/v1",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "email": {
+          "type": "string",
+          "description": "The email (username) of the user to be used for executing requests against the Databasus REST API. Must be a user with admin Role.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "description": "The password of the user",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "verify_ssl": {
+          "type": "bool",
+          "description": "Whether to verify the TLS certificate of the Databasus instance. Should be set to false if using a self-signed certificate.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "A Provider to manage your Databasus (<https://databasus.com/>) configuration using Terraform.\n\nThis provider is still in an early stage and currently supports a reduced set of resources only.\n\nAdditional resources will be added over time, but in a demand driven way due to limited development capacity.\nIf you need a specific resource please open a feature request ticket in the github repository: <https://github.com/pkerspe/terraform-provider-databasus/issues>\n\nPlease note that this provider is not developed by the Databasus team and not supported by them, in fact not even encouraged to use an IaC approach for configuration since it is not in line with their goals for the tool. As such, provider support could break with any new release of Databasus.\n\nTo limit risk please make sure to match the Provider release version with the Databasus version you are using.\n\nProvider Support Map:\n\n| Provider Version | Tested Databasus Version          |\n|------------------|-----------------------------------|\n| v0.1.x - v0.6.x  | v3.32.2                           |\n| v0.7.x - v0.8.0  | v3.40.0                           |\n| v0.8.1 - v0.8.x  | v3.42.0                           |\n| v0.9.0 - v0.9.x  | v3.45.0 (use for 3.43 and above)  |\n\n## Getting Started\n\nTo configure a backup for a Database you need to configure at least 4 resources:\n\n1.) The workspace where the database and backup lives in\n\n2.) the storage where the backups are to be stored\n\n3.) the Database configuration itself of the database to be backed up\n\n4.) the Backup Configuration that links all the pieces together and defines the schedule for backup execution and retention settings\n\nHere is an example for a minimal setup using a local storage and a minimalist backup configuration mostly using the default values:\n\n````terraform\n# create workspace where all configuration lives in\nresource \"databasus_workspace\" \"example\" {\n  name = \"my-workspace\"\n}\n\n# create a simple local storage (storing files on the databasus host directly)\nresource \"databasus_storage_local\" \"example\" {\n  name         = \"my-local-storage\"\n  workspace_id = resource.databasus_workspace.example.id\n}\n\n# configuring the database to be backed up\nresource \"databasus_database_postgresql\" \"example\" {\n  name            = \"my-postgres-db\"\n  database        = \"test_db\"\n  host            = \"db\"\n  port            = 5432\n  ssl_mode        = \"disable\"\n  username        = \"admin\"\n  password        = \"admin\"\n  include_schemas = [\"public\"]\n  workspace_id    = resource.databasus_workspace.example.id\n}\n\n# creating the actual backup configuration with backup settings and linking the database and storage together\nresource \"databasus_backup_config\" \"example\" {\n  interval              = \"DAILY\"\n  time_of_day           = \"08:00\"\n  retention_policy_type = \"COUNT\"\n  retention_count       = 30\n  storage_id            = resource.databasus_storage_local.example.id\n  database_id           = resource.databasus_database_postgresql.example.id\n}\n````\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "databasus_backup_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cron_expression": {
+            "type": "string",
+            "description": "Only needed when interval is set to CRON. Cron format: minute hour day month weekday (UTC). Defaults to 0 0 * * * (Daily at Midnight UTC)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "The id of the database config to create the backup config for",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "day_of_month": {
+            "type": "number",
+            "description": "Only needed when interval is set to MONTHLY. The day of the month when to execute the backup. Defaults to 1",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Flag to enable and disable backups completely. Defaults to true",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "encryption": {
+            "type": "bool",
+            "description": "Flag to configure encryption of backups. If backup is encrypted, backup files in your storage (S3, local, etc.) cannot be used directly. You can restore backups through Databasus or download them unencrypted via the 'Download' button in the UI. Defaults to true",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "interval": {
+            "type": "string",
+            "description": "The schedule interval for the backup. Can be HOURLY, DAILY, WEEKLY, MONTHLY, CRON",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "max_failed_retry_count": {
+            "type": "number",
+            "description": "Flag to configure if and how many failed backups should be retried. Set to 0 to disable retries. Default to 0",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_count": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to COUNT. Number of last backups to keep. Defaults to 14",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_gfs_days": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to GFS. Number of Daily backups. Defaults to 14",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_gfs_hours": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to GFS. Number of Daily backups. Default to 24",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_gfs_months": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to GFS. Number of Monthly backups. Defaults to 12",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_gfs_weeks": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to GFS. Number of Weekly backups. Defaults to 4",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_gfs_years": {
+            "type": "number",
+            "description": "Only used if Retention Policy is set to GFS. Number of Yearly backups. Defaults to 3",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retention_policy_type": {
+            "type": "string",
+            "description": "Retention policy type to be used. Valid values are: TIME_PERIOD (time based backup policy, keeping backup of last periods defined in retention_time_period), COUNT (Keep only the specified number of most recent backups. Older backups beyond this count are automatically deleted, count is defined with retention_count), GFS (Grandfather-Father-Son rotation: keep the last N hourly, daily, weekly, monthly and yearly backups. This allows keeping backups over long periods of time within a reasonable storage space.)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "retention_time_period": {
+            "type": "string",
+            "description": "Only used if Retention Policy is set to TIME_PERIOD. How long to keep the backups. Backups older than this period are automatically deleted. Allowed values: DAY, WEEK, MONTH, 3_MONTH, 6_MONTH, YEAR, 2_YEARS, 3_YEARS. Defaults to MONTH",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "send_notifications_on_backup_failure": {
+            "type": "bool",
+            "description": "Flag to indicate if notifications should be send when a backup fails. Defaults to true",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "send_notifications_on_backup_success": {
+            "type": "bool",
+            "description": "Flag to indicate if notifications should be send when a backup completed successful. Defaults to false",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "storage_id": {
+            "type": "string",
+            "description": "The id of storage to use for the backups",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "time_of_day": {
+            "type": "string",
+            "description": "Only needed when interval is set to DAILY, WEEKLY, MONTHLY. The time of the day in 24 hour format when to perform the backup. Defaults to 00:00 UTC",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "weekday": {
+            "type": "number",
+            "description": "Only needed when interval is set to WEEKLY. The weekday when to execute the backup, Defaults to 1 for Monday",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Backup Configuration resource for define the backup job details like intervals and the target storage",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_database_mariadb": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "The name of the database to be backed up",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "exclude_events": {
+            "type": "bool",
+            "description": "Skip backing up database events. Enable this if the event scheduler is disabled on your MariaDB server. Defaults to true",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname of the database instance",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_https": {
+            "type": "bool",
+            "description": "Use HTTPS / TLS or not when connecting to the DB host",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name (in the Databasus UI) of the database configuration to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password for the DB role to use when creating backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port number of the MariaDB instance (e.g. 5432)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The DB username (role) to be used for creating the backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MariaDB Database resource to configure connection details to a database within MariDB instance.\n\nPlease note that the DB must be reachable and credentials must be valid, otherwise terraform will fail creating this resource, since Databasus performs a connection check during registration of the new database configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_database_mongodb": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth_database": {
+            "type": "string",
+            "description": "The auth database to use for authentication. E.g. admin",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cpu_count": {
+            "type": "number",
+            "description": "Number of CPU cores to use for backup and restore operations. Higher values may speed up operations but use more resources. Defaults to 1",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "database": {
+            "type": "string",
+            "description": "The name of the database to be backed up",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname of the database instance",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_direct_connection": {
+            "type": "bool",
+            "description": "Connect directly to a single server, skipping replica set discovery. Useful when the server is behind a load balancer, proxy or tunnel. Defaults to false",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_https": {
+            "type": "bool",
+            "description": "Use HTTPS / TLS or not when connecting to the DB host",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "is_srv": {
+            "type": "bool",
+            "description": "Enable for MongoDB Atlas SRV connections (mongodb+srv://). Port is not required for SRV connections. Defaults to false",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name (in the Databasus UI) of the database configuration to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password for the DB role to use when creating backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port number of the MongoDB instance (e.g. 27017)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The DB username (role) to be used for creating the backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MongoDB Database resource to configure connection details to a database within MariDB instance.\n\nPlease note that the DB must be reachable and credentials must be valid, otherwise terraform will fail creating this resource, since Databasus performs a connection check during registration of the new database configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_database_mysql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "The name of the database to be backed up",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname of the database instance",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_https": {
+            "type": "bool",
+            "description": "Use HTTPS / TLS or not when connecting to the DB host",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name (in the Databasus UI) of the database configuration to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password for the DB role to use when creating backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port number of the MySQL instance (e.g. 5432)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The DB username (role) to be used for creating the backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MySQL Database resource to configure connection details to a database within MariDB instance.\n\nPlease note that the DB must be reachable and credentials must be valid, otherwise terraform will fail creating this resource, since Databasus performs a connection check during registration of the new database configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_database_postgresql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "The name of the database to be backed up",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The hostname of the database instance",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "include_schemas": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Schema names to include in the Backup. Use empty list for all.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name (in the Databasus UI) of the database configuration to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password for the DB role to use when creating backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port number of the PostgreSQL instance (e.g. 5432)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ssl_client_cert": {
+            "type": "string",
+            "description": "Optional Client Certificate",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssl_client_key": {
+            "type": "string",
+            "description": "Optional Client Key",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssl_mode": {
+            "type": "string",
+            "description": "Configure the SSL mode when connecting to the DB host. Allowed values are: require, disable, verify_ca, verify-full",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ssl_root_cert": {
+            "type": "string",
+            "description": "Optional. When provided, the server certificate is verified against this CA (if ssl_mode is set to verify-ca / verify-full).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The DB username (role) to be used for creating the backups",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "PostgreSQL Database resource to configure connection details to a database within PostgreSQL instance.\n\nPlease note that the DB must be reachable and credentials must be valid, otherwise terraform will fail creating this resource, since Databasus performs a connection check during registration of the new database configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_health_check_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attempts_before_considered_down": {
+            "type": "number",
+            "description": "Number of failed health-check attempts before marking database as down. Defaults to 3",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "The Id of the database config this health-check configuration applies for",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "health_check_enabled": {
+            "type": "bool",
+            "description": "Enable or disable health-check monitoring for the referenced database",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "interval_minutes": {
+            "type": "number",
+            "description": "How often to check database health (in minutes). Defaults to 1",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "sent_notification_when_unavailable": {
+            "type": "bool",
+            "description": "Send notifications when database becomes unavailable. Defaults to false.\n\nNote: please make sure you have a notifier configured as well for the database if you set this to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "store_attempts_days": {
+            "type": "number",
+            "description": "How many days to store health check attempt history. Defaults to 7",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A resource to manage health-check settings for a configured database",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_notifier_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "body_template": {
+            "type": "string",
+            "description": "The template string for the request body to be sent to the webhook URL. Supported pLaceholders are '{{heading}}' and '{{message}}'.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "headers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of headers to send. Header name is the key and 'value' is the header value. NOTE: headers could contain sensitive values which, even though marked as sensitive, are stored unencrypted in the state file",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_save_error": {
+            "type": "string",
+            "description": "lastSaveError value generated by databasus (API description unclear)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the storage to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "webhook_method": {
+            "type": "string",
+            "description": "The HTTP method to use, in most cases POST",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "webhook_url": {
+            "type": "string",
+            "description": "The full URL to send the notification to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Webhook Notifier resource to create/manage notifiers that trigger a webhook / URL",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_storage_local": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_save_error": {
+            "type": "string",
+            "description": "lastSaveError value generated by databasus (API description unclear)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the storage to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Local Storage resource",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_storage_s3": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the Storage Configuration",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_save_error": {
+            "type": "string",
+            "description": "lastSaveError value generated by databasus (API description unclear)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the storage to be created",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "s3_access_key": {
+            "type": "string",
+            "description": "The S3 access key",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "s3_bucket": {
+            "type": "string",
+            "description": "The bucket name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "s3_endpoint": {
+            "type": "string",
+            "description": "Custom S3-compatible endpoint URL (optional, leave empty for AWS S3)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "s3_prefix": {
+            "type": "string",
+            "description": "Optional prefix for all object keys (e.g., 'backups/' or 'my_team/'). May not work with some S3-compatible storages. Cannot be changed after creation (otherwise backups will be lost)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "s3_region": {
+            "type": "string",
+            "description": "The S3 region string",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "s3_secret_key": {
+            "type": "string",
+            "description": "The S3 secret key",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "s3_storage_class": {
+            "type": "string",
+            "description": "S3 storage class for uploaded objects. Leave empty to use Standard storage class. Some providers offer cheaper classes like One Zone IA. Do not use Glacier/Deep Archive \u2014 files must be immediately accessible for restores",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "s3_use_virtual_hosted_style": {
+            "type": "bool",
+            "description": "Use virtual-hosted-style URLs (bucket.s3.region.amazonaws.com) instead of path-style (s3.region.amazonaws.com/bucket). May be required if you see COS errors",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "skip_tls_verify": {
+            "type": "bool",
+            "description": "Skip TLS certificate verification. Enable this if your S3-compatible storage uses a self-signed certificate. Warning: this reduces security",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "storage_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The id of the workspace the storage belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "S3 Storage resource",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_users_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_external_registrations": {
+            "type": "bool",
+            "description": "When enabled, new users can register accounts in Databasus. If disabled, new users can only register via invitation",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "allow_member_invitations": {
+            "type": "bool",
+            "description": "When enabled, existing members can invite new users to join Databasus. If not - only admins can invite users.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The Id of the settings (seems to be static over time)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_allowed_to_create_workspaces": {
+            "type": "bool",
+            "description": "When enabled, members (non-admin users) can create new workspaces. If not - only admins can create workspaces.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A resource to manage the global users settings from Databasus",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the workspace has been created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Id of the workspace",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the workspace to be created",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Workspace resource",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "databasus_all_workspaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "workspaces": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the workspace was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier of the workspace.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the workspace.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of all existing workspaces.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A data source to get a list of all configured Workspaces in Databasus",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_users_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_external_registrations": {
+            "type": "bool",
+            "description": "When enabled, new users can register accounts in Databasus. If disabled, new users can only register via invitation",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "allow_member_invitations": {
+            "type": "bool",
+            "description": "When enabled, existing members can invite new users to join Databasus. If not - only admins can invite users.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The Id of the settings (seems to be static over time)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_allowed_to_create_workspaces": {
+            "type": "bool",
+            "description": "When enabled, members (non-admin users) can create new workspaces. If not - only admins can create workspaces.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A data source to get the global users settings from Databasus",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when this workspace was created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The workspace Id to fetch details for",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the workspace",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A data source to get information about a configured Workspace in Databasus",
+        "description_kind": "markdown"
+      }
+    },
+    "databasus_workspace_by_name": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when this workspace was created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the workspace",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The workspace name to fetch details for",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A data source to get information about a configured Workspace in Databasus. The name (instead of the ID) is used to query the workspace in this Data Source. NOTE: this only fetches the first matching workspace for the given name.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

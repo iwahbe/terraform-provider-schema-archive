@@ -1,0 +1,3347 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "author_email": {
+          "type": "string",
+          "description": "The Author email used in commits, defaults to owner of github token",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "author_name": {
+          "type": "string",
+          "description": "The Author name used in commits, defaults to owner of github token",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "branch": {
+          "type": "string",
+          "description": "The git branch to use, defaults to main",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "git_provider": {
+          "type": "string",
+          "description": "Git provider, only accepted/supported value for now is github",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "github_access_token": {
+          "type": "string",
+          "description": "Github personal access token, if not set the environment variable `GITHUB_TOKEN` or the `Github Cli (gh)` command will be used to get a token",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "github_org": {
+          "type": "string",
+          "description": "Github organisation",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "github_repo": {
+          "type": "string",
+          "description": "Github repository",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "github_retry_limit": {
+          "type": "number",
+          "description": "How many times to retry updating files in github",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "block_types": {
+        "scope": {
+          "nesting_mode": "list",
+          "block": {
+            "attributes": {
+              "branch": {
+                "type": "string",
+                "description": "The git branch to use for this scope, defaults to provider branch setting",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "name": {
+                "type": "string",
+                "description": "Unique name of this scope, leave empty for default scope.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "path": {
+                "type": "string",
+                "description": "The git path to the folder containing the yaml files",
+                "description_kind": "markdown",
+                "required": true
+              }
+            },
+            "description_kind": "plain"
+          }
+        }
+      },
+      "description": "**Warning**: This provider is still a work-in-progress so use at your own risk\n\nThis provider allows you to modify your OctoDNS zone yaml files within a github repo,\nand can handle multiple zone directories within one git repo by defining multiple scopes\n\nFor github authentication you can use a personal access token (PAT) or use the [Github Cli](https://cli.github.com) to provide a token.\nIf you don't have `gh` in your $PATH, you can point to the executable using the GH_PATH environment variable.   \n*Example*: ```GH_PATH=/opt/homebrew/bin/gh terraform plan```\n\nnote: This provider can only manage records within existing zone files, it **cannot** manage/create zone files or alter the OctoDNS config.\n\nAlso this provider does not run OctoDNS after a modification, so you need your own automation for that like the OctoDNS github action",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "octodns_a_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_aaaa_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "AAAA record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_caa_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "CAA record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_cname_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "CNAME record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_dname_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "DNAME record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_loc_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "LOC record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_mx_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MX record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_naptr_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "NAPTR record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_ns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "NS record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_ptr_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "PTR record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_spf_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SPF record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_srv_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SRV record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_sshfp_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SSHFP record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_txt_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "TXT record resource",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_urlfwd_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. eq: <name>.example.com",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA/CNAME records)",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, leave empty for zone of server defaults",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record. eq: example.com",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "URLFWD record resource",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "octodns_a_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_aaaa_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "AAAA record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_caa_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "CAA record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_cname_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "CNAME record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_dname_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "DNAME record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_loc_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "LOC record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_mx_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MX record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_naptr_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "NAPTR record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_ns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "NS record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_ptr_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "PTR record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_spf_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SPF record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_srv_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SRV record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_sshfp_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "SSHFP record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_txt_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "TXT record data source",
+        "description_kind": "markdown"
+      }
+    },
+    "octodns_urlfwd_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "octodns": {
+            "nested_type": {
+              "attributes": {
+                "azuredns": {
+                  "nested_type": {
+                    "attributes": {
+                      "hc_interval": {
+                        "type": "number",
+                        "description": "Azure healthcheck interval",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_numfailures": {
+                        "type": "number",
+                        "description": "Azure healthcheck number of failures allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hc_timeout": {
+                        "type": "number",
+                        "description": "Azure healthcheck timeout",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Healthcheck configuration for [Azure provider](https://github.com/octodns/octodns-azure/?tab=readme-ov-file#healthchecks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cloudflare": {
+                  "nested_type": {
+                    "attributes": {
+                      "auto_ttl": {
+                        "type": "bool",
+                        "description": "Use cloudflare's auto-ttl *feature*, aka: set to 300",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "proxied": {
+                        "type": "bool",
+                        "description": "Should cloudflare proxy this record (only for A/AAAA records)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Meta config for [cloudflare provider](https://github.com/octodns/octodns-cloudflare/?tab=readme-ov-file#configuration)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Additional provider specific record meta config.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "TTL of the record, if not set the zone's or dns server setting is used",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Values of the record, should confirm to record type",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone of the record",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "URLFWD record data source",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
