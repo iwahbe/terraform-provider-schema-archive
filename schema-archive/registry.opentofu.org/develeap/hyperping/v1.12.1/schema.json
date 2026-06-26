@@ -1,0 +1,4019 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Hyperping API key (starts with `sk_`). Can also be set via `HYPERPING_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Hyperping API base URL. Defaults to `https://api.hyperping.io`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "mcp_url": {
+          "type": "string",
+          "description": "Hyperping MCP server URL. Defaults to `https://api.hyperping.io/v1/mcp`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The Hyperping provider allows you to manage Hyperping monitors, incidents, and maintenance windows.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "hyperping_healthcheck": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp in ISO 8601 format (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cron": {
+            "type": "string",
+            "description": "Cron expression defining the schedule (e.g., `0 0 * * *`). Mutually exclusive with `period_value`/`period_type`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "escalation_policy": {
+            "type": "string",
+            "description": "UUID of the escalation policy to link to this healthcheck.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "grace_period": {
+            "type": "number",
+            "description": "Calculated grace period in seconds (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "grace_period_type": {
+            "type": "string",
+            "description": "Unit for `grace_period_value`. Valid values: `seconds`, `minutes`, `hours`, `days`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "grace_period_value": {
+            "type": "number",
+            "description": "Numeric value for the grace period buffer before alerting. For example, set `grace_period_value = 5` with `grace_period_type = \"minutes\"` to allow a 5-minute window.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the healthcheck.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_down": {
+            "type": "bool",
+            "description": "Whether the healthcheck is currently in a failure state (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_paused": {
+            "type": "bool",
+            "description": "Whether the healthcheck is paused. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_ping": {
+            "type": "string",
+            "description": "Timestamp of the last ping received in ISO 8601 format (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the healthcheck.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "period": {
+            "type": "number",
+            "description": "Calculated period in seconds (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "period_type": {
+            "type": "string",
+            "description": "Unit for `period_value`. Valid values: `seconds`, `minutes`, `hours`, `days`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "period_value": {
+            "type": "number",
+            "description": "Numeric value for the expected interval. Mutually exclusive with `cron`/`tz`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ping_url": {
+            "type": "string",
+            "description": "The auto-generated ping URL. Your cron job pings this URL to prove it ran.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Timezone for the cron expression (e.g., `America/New_York`). Required when `cron` is set.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a Hyperping healthcheck for cron job monitoring (dead man's switch).",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_incident": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "affected_components": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of monitor UUIDs representing components affected by this incident. Displayed on the associated status pages.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "date": {
+            "type": "string",
+            "description": "The date of the incident in ISO 8601 format (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the incident.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_pages": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of status page UUIDs to display this incident on. Required.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The description text of the incident (English).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the incident (English).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of incident. Valid values: `outage`, `incident`. Defaults to `incident`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Hyperping incident for status page updates.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_incident_update": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "date": {
+            "type": "string",
+            "description": "The date of the update in ISO 8601 format. If not provided, the current time is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the update (format: incident_id/update_id).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "incident_id": {
+            "type": "string",
+            "description": "The UUID of the incident to add the update to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The text content of the update (English).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of update. Valid values: `investigating`, `identified`, `update`, `monitoring`, `resolved`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an update to a Hyperping incident. Use this to add status updates to an incident timeline.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_maintenance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "end_date": {
+            "type": "string",
+            "description": "The scheduled end time in ISO 8601 format (e.g., `2026-01-20T04:00:00.000Z`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the maintenance window.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitors": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of monitor UUIDs affected by this maintenance window.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The internal name of the maintenance window.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "notification_minutes": {
+            "type": "number",
+            "description": "Number of minutes before the maintenance to notify subscribers. Defaults to `60`. Only used when notification_option is `scheduled`. Must be at least 1.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "notification_option": {
+            "type": "string",
+            "description": "When to notify subscribers. Valid values: `none`, `scheduled`, `immediate`. Defaults to `none` (no notification).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "start_date": {
+            "type": "string",
+            "description": "The scheduled start time in ISO 8601 format (e.g., `2026-01-20T02:00:00.000Z`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status_pages": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of status page UUIDs to display this maintenance on.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The description text of the maintenance (English).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The public title of the maintenance window (English).",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a Hyperping maintenance window for scheduled downtime.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alerts_wait": {
+            "type": "number",
+            "description": "Minutes to wait before sending alerts after an outage is detected. Must be one of: `-1` (disabled), `0`, `1`, `2`, `3`, `5`, `10`, `30`, `60`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "check_frequency": {
+            "type": "number",
+            "description": "Check frequency in seconds. Valid values: `10`, `20`, `30`, `60`, `120`, `180`, `300`, `600`, `1800`, `3600`, `21600`, `43200`, `86400`. Defaults to `60`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dns_expected_answer": {
+            "type": "string",
+            "description": "Expected DNS answer to validate against. Only valid when protocol is `dns`. Monitor fails if the resolved value does not contain this string.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dns_nameserver": {
+            "type": "string",
+            "description": "Nameserver to query against (e.g., `8.8.8.8`). Only valid when protocol is `dns`. Leave empty to use default resolvers.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dns_record_type": {
+            "type": "string",
+            "description": "DNS record type to check. Only valid when protocol is `dns`. Valid values: `A`, `AAAA`, `CNAME`, `MX`, `NS`, `TXT`, `SOA`, `SRV`, `CAA`, `PTR`. Defaults to `A` (set by the API if omitted).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "escalation_policy": {
+            "type": "string",
+            "description": "UUID of the escalation policy to link to this monitor.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "escalation_policy_name": {
+            "type": "string",
+            "description": "Human-readable name of the assigned escalation policy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "expected_status_code": {
+            "type": "string",
+            "description": "Expected HTTP status code pattern. Use a specific code like `200`, a wildcard like `2xx` (200-299), or a range like `1xx-3xx` (100-399). Defaults to `2xx`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "follow_redirects": {
+            "type": "bool",
+            "description": "Whether to follow HTTP redirects. Only applies to `http` protocol monitors. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "http_method": {
+            "type": "string",
+            "description": "HTTP method to use. Only valid when protocol is `http`. Valid values: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`. Defaults to `GET`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the monitor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_down": {
+            "type": "bool",
+            "description": "Whether the monitor is currently reporting as down.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the monitor. Must be 1-255 characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the monitor is paused. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "port": {
+            "type": "number",
+            "description": "TCP port number (1-65535). Required when protocol is `port`. Examples: `443` (HTTPS), `5432` (PostgreSQL), `6379` (Redis).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "UUID of the Hyperping project this monitor belongs to.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "The protocol type. Valid values: `http`, `port`, `icmp`, `dns`. Defaults to `http`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of monitoring regions. Use the `hyperping_monitoring_locations` data source to discover available locations.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "request_body": {
+            "type": "string",
+            "description": "HTTP request body. Only valid when protocol is `http` and http_method is `POST`, `PUT`, or `PATCH`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "request_headers": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The header name. Must be a valid HTTP token (RFC 7230). Reserved headers that control HTTP framing or routing are not allowed: `Host`, `Transfer-Encoding`, `Content-Length`, `Connection`, `Upgrade`, `TE`, `Trailer`, `Expect`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The header value. Marked sensitive: masked in plan output and Terraform CLI display. Values are still stored in state, so credentials require a secure state backend.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Custom HTTP headers to send with the request. Only valid when protocol is `http`. `Authorization` and `Cookie` are allowed for probing endpoints behind authentication; because values may contain credentials, the `value` field is marked sensitive and is persisted to Terraform state. Use a secure state backend if you put secrets here.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "required_keyword": {
+            "type": "string",
+            "description": "A keyword that must appear in the HTTP response body for the check to pass. Only valid when protocol is `http`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssl_expiration": {
+            "type": "number",
+            "description": "Days until the SSL certificate expires.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current monitor status. Either `up` or `down`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL to monitor. For HTTP/ICMP/port protocols, must include scheme (e.g., `https://api.example.com/health`). For DNS protocol, use a bare domain (e.g., `example.com`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a Hyperping monitor for uptime monitoring.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_outage": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acknowledged_by": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The user who acknowledged this outage (read-only, null if not acknowledged).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the outage (error message or reason).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "detected_location": {
+            "type": "string",
+            "description": "The location that detected the outage (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "duration_ms": {
+            "type": "number",
+            "description": "Duration of the outage in milliseconds (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "end_date": {
+            "type": "string",
+            "description": "The end date of the outage in ISO 8601 format. Null if ongoing.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "escalation_policy_uuid": {
+            "type": "string",
+            "description": "UUID of the escalation policy to link to this outage. If provided, the policy will be triggered according to its step timing.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_resolved": {
+            "type": "bool",
+            "description": "Whether the outage is resolved (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitor": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The URL of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The monitor associated with this outage (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitor_uuid": {
+            "type": "string",
+            "description": "The UUID of the monitor this outage is associated with.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "outage_type": {
+            "type": "string",
+            "description": "The type of outage. Always `manual` for created outages (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity level of the outage.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "start_date": {
+            "type": "string",
+            "description": "The start date of the outage in ISO 8601 format.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status_code": {
+            "type": "number",
+            "description": "The HTTP status code that caused the outage. Must be a valid HTTP status (100-599).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary description of the outage.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a manual Hyperping outage. All user-settable fields are ForceNew since outages cannot be updated via the API.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_statuspage": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hosted_subdomain": {
+            "type": "string",
+            "description": "Hyperping-hosted subdomain (e.g., 'status' for status.hyperping.app). Optional when a custom `hostname` is set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "Custom domain for the status page (optional). If not provided, uses hosted subdomain.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Status page UUID (computed)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name for the status page",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for password-protected status pages. Set this along with `settings.authentication.password_protection = true` to require visitors to enter a password.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "sections": {
+            "nested_type": {
+              "attributes": {
+                "is_split": {
+                  "type": "bool",
+                  "description": "Split services in this section into separate rows",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Localized section name (language code -> text)",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "services": {
+                  "nested_type": {
+                    "attributes": {
+                      "description": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Localized service description (language code -> text). On write, only the default language value is sent as a plain string.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Service ID (computed)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "is_group": {
+                        "type": "bool",
+                        "description": "Whether this service is a group containing nested services",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "name": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Localized service name (language code -> text)",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "services": {
+                        "nested_type": {
+                          "attributes": {
+                            "description": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service description (language code -> text). **Note:** The Hyperping API does not currently persist descriptions on nested services inside groups. The value is accepted by Terraform but will not appear on the rendered status page. Use descriptions on top-level (non-group) services instead.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Service ID (computed)",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "is_group": {
+                              "type": "bool",
+                              "description": "Whether this nested service is a group",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "name": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service name (language code -> text)",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "show_response_times": {
+                              "type": "bool",
+                              "description": "Show response times",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "show_uptime": {
+                              "type": "bool",
+                              "description": "Show uptime percentage",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "uuid": {
+                              "type": "string",
+                              "description": "Monitor UUID to display",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Nested monitor services within this group. Required when is_group=true; must contain at least one entry. Ignored when is_group=false.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_response_times": {
+                        "type": "bool",
+                        "description": "Show response times",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_uptime": {
+                        "type": "bool",
+                        "description": "Show uptime percentage",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "uuid": {
+                        "type": "string",
+                        "description": "Monitor UUID to display. Required for non-group services (is_group=false). Omit for group header entries (is_group=true).",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Services/monitors in this section",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Status page sections containing monitors/services",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "settings": {
+            "nested_type": {
+              "attributes": {
+                "accent_color": {
+                  "type": "string",
+                  "description": "Accent color in hex format (default: #36b27e)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "authentication": {
+                  "nested_type": {
+                    "attributes": {
+                      "allowed_domains": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Allowed email domains for SSO",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "google_sso": {
+                        "type": "bool",
+                        "description": "Enable Google SSO",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "password_protection": {
+                        "type": "bool",
+                        "description": "Enable password protection",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "saml_sso": {
+                        "type": "bool",
+                        "description": "Enable SAML SSO",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sso_connection_uuid": {
+                        "type": "string",
+                        "description": "SSO connection UUID for SAML SSO integration",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Access control settings",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "auto_refresh": {
+                  "type": "bool",
+                  "description": "Enable auto-refresh of status page",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "banner_header": {
+                  "type": "bool",
+                  "description": "Show banner header",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "default_language": {
+                  "type": "string",
+                  "description": "Default language code",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Status page description. The API accepts a plain string on write; the read response wraps it in a localized map, from which the 'en' value (or default language) is used.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "favicon": {
+                  "type": "string",
+                  "description": "Favicon URL",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "font": {
+                  "type": "string",
+                  "description": "Font family (default: Inter)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "google_analytics": {
+                  "type": "string",
+                  "description": "Google Analytics tracking ID",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "hide_from_search_engines": {
+                  "type": "bool",
+                  "description": "Hide from search engines (noindex)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "hide_powered_by": {
+                  "type": "bool",
+                  "description": "Hide 'Powered by Hyperping' footer",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "languages": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Supported language codes (e.g., ['en', 'fr', 'de'])",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "logo": {
+                  "type": "string",
+                  "description": "Logo URL",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "logo_height": {
+                  "type": "string",
+                  "description": "Logo height (CSS value)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Internal name for settings",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "subscribe": {
+                  "nested_type": {
+                    "attributes": {
+                      "email": {
+                        "type": "bool",
+                        "description": "Allow email subscriptions",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Enable subscriptions",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "slack": {
+                        "type": "bool",
+                        "description": "Allow Slack subscriptions",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sms": {
+                        "type": "bool",
+                        "description": "Allow SMS subscriptions",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "teams": {
+                        "type": "bool",
+                        "description": "Allow Microsoft Teams subscriptions",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Subscription settings",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "theme": {
+                  "type": "string",
+                  "description": "Color theme: light, dark, or system (default: system)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "website": {
+                  "type": "string",
+                  "description": "Link to your main website",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Status page appearance and behavior settings",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Public URL of the status page (computed)",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Hyperping status page.\n\nStatus pages provide a public or private view of your service health, allowing you to communicate incidents and maintenance to your users.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_statuspage_subscriber": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp (computed)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address (required when type=email)",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Subscriber ID (computed)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "language": {
+            "type": "string",
+            "description": "Preferred language code (default: en)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number (required when type=sms)",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "statuspage_uuid": {
+            "type": "string",
+            "description": "UUID of the status page",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "teams_webhook_url": {
+            "type": "string",
+            "description": "Microsoft Teams webhook URL (required when type=teams)",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Subscriber type: email, sms, or teams (slack not supported via API)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Display value (computed)",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a subscriber for a Hyperping status page.\n\nSubscribers receive notifications about incidents and maintenance. Supported types: email, sms, teams. Note: Slack subscribers must be added via OAuth flow and cannot be managed via API.\n\nAll fields are immutable - any change will recreate the subscriber.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "hyperping_escalation_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of escalation policy UUIDs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policies": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "steps": {
+                  "nested_type": {
+                    "attributes": {
+                      "delay": {
+                        "type": "number",
+                        "description": "Delay in minutes before the step is triggered.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "target_id": {
+                        "type": "string",
+                        "description": "The ID of the escalation target.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "target_type": {
+                        "type": "string",
+                        "description": "The type of the escalation target (user, schedule, integration).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The escalation steps.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "team": {
+                  "type": "string",
+                  "description": "The team name this policy belongs to.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of escalation policies.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping escalation policies via MCP.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_escalation_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the policy.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the policy to look up.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "steps": {
+            "nested_type": {
+              "attributes": {
+                "delay": {
+                  "type": "number",
+                  "description": "Delay in minutes before the step is triggered.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "target_id": {
+                  "type": "string",
+                  "description": "The ID of the escalation target.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "target_type": {
+                  "type": "string",
+                  "description": "The type of the escalation target (user, schedule, integration).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The escalation steps.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "team": {
+            "type": "string",
+            "description": "The team name this policy belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Hyperping escalation policy by ID or name via MCP.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_healthcheck": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cron": {
+            "type": "string",
+            "description": "Cron expression defining the schedule.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "escalation_policy": {
+            "type": "string",
+            "description": "UUID of the escalation policy linked to this healthcheck.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "grace_period": {
+            "type": "number",
+            "description": "Calculated grace period in seconds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "grace_period_type": {
+            "type": "string",
+            "description": "Unit for grace_period_value (seconds, minutes, hours, days).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "grace_period_value": {
+            "type": "number",
+            "description": "Numeric value for the grace period buffer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the healthcheck to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "is_down": {
+            "type": "bool",
+            "description": "Whether the healthcheck is currently in a failure state.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_paused": {
+            "type": "bool",
+            "description": "Whether the healthcheck is paused.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_ping": {
+            "type": "string",
+            "description": "Timestamp of the last ping received in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the healthcheck.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "period": {
+            "type": "number",
+            "description": "Calculated period in seconds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "period_type": {
+            "type": "string",
+            "description": "Unit for period_value (seconds, minutes, hours, days).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "period_value": {
+            "type": "number",
+            "description": "Numeric value for the expected interval.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ping_url": {
+            "type": "string",
+            "description": "The auto-generated ping URL for this healthcheck.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Timezone for the cron expression.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to retrieve information about a specific Hyperping healthcheck by its ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_healthchecks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match healthcheck names",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Filter by status",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for healthchecks",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "healthchecks": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "cron": {
+                  "type": "string",
+                  "description": "Cron expression defining the schedule.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "escalation_policy": {
+                  "type": "string",
+                  "description": "UUID of the escalation policy linked to this healthcheck.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "grace_period": {
+                  "type": "number",
+                  "description": "Calculated grace period in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "grace_period_type": {
+                  "type": "string",
+                  "description": "Unit for grace_period_value.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "grace_period_value": {
+                  "type": "number",
+                  "description": "Numeric value for the grace period buffer.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the healthcheck.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_down": {
+                  "type": "bool",
+                  "description": "Whether the healthcheck is currently in a failure state.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_paused": {
+                  "type": "bool",
+                  "description": "Whether the healthcheck is paused.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_ping": {
+                  "type": "string",
+                  "description": "Timestamp of the last ping received in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the healthcheck.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "period": {
+                  "type": "number",
+                  "description": "Calculated period in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "period_type": {
+                  "type": "string",
+                  "description": "Unit for period_value.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "period_value": {
+                  "type": "number",
+                  "description": "Numeric value for the expected interval.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ping_url": {
+                  "type": "string",
+                  "description": "The auto-generated ping URL.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "timezone": {
+                  "type": "string",
+                  "description": "Timezone for the cron expression.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of healthchecks.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of healthcheck UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of healthchecks returned (after filtering).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping healthchecks.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_incident": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "affected_components": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of component UUIDs affected by this incident.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "date": {
+            "type": "string",
+            "description": "The date of the incident in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the incident to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status_pages": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of status page UUIDs this incident is displayed on.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The description text of the incident (English).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the incident (English).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of incident (`outage` or `incident`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updates": {
+            "nested_type": {
+              "attributes": {
+                "date": {
+                  "type": "string",
+                  "description": "The date of the update.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the update.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The text content of the update (English).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of update.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of updates for this incident.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to retrieve information about a specific Hyperping incident by its ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_incidents": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match incident titles",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "Filter by severity (minor, major, critical)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Filter by status (investigating, identified, monitoring, resolved)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for incidents",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of incident UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "incidents": {
+            "nested_type": {
+              "attributes": {
+                "affected_components": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of component UUIDs affected by this incident.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "date": {
+                  "type": "string",
+                  "description": "The date of the incident in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the incident.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status_pages": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of status page UUIDs this incident is displayed on.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The description text of the incident (English).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the incident (English).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of incident (`outage` or `incident`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "updates": {
+                  "nested_type": {
+                    "attributes": {
+                      "date": {
+                        "type": "string",
+                        "description": "The date of the update.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The unique identifier of the update.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "The text content of the update (English).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The type of update.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of updates for this incident.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of incidents.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of incidents returned (after filtering).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping incidents.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_integrations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of integration UUIDs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integrations": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "The time the integration was created.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether the integration is enabled.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the integration.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_test_at": {
+                  "type": "string",
+                  "description": "The last time the integration was tested.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the integration.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the integration (email, slack, webhook, pagerduty).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of integrations.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping integrations via MCP.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_maintenance_window": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "The email of the user who created this maintenance window.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "end_date": {
+            "type": "string",
+            "description": "The end date in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the maintenance window to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "monitors": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of monitor UUIDs affected by this maintenance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The internal name of the maintenance window.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "start_date": {
+            "type": "string",
+            "description": "The start date in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_pages": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of status page UUIDs this maintenance is displayed on.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The description text of the maintenance window (English).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "The timezone of the maintenance window.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The public title of the maintenance window (English).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to retrieve information about a specific Hyperping maintenance window by its ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_maintenance_windows": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match maintenance window titles",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Filter by status (scheduled, in_progress, completed)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for maintenance windows",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of maintenance window UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "maintenance_windows": {
+            "nested_type": {
+              "attributes": {
+                "created_by": {
+                  "type": "string",
+                  "description": "The email of the user who created this maintenance window.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "end_date": {
+                  "type": "string",
+                  "description": "The end date in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the maintenance window.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "monitors": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of monitor UUIDs affected by this maintenance.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The internal name of the maintenance window.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "start_date": {
+                  "type": "string",
+                  "description": "The start date in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status_pages": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of status page UUIDs this maintenance is displayed on.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The description text of the maintenance window (English).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "timezone": {
+                  "type": "string",
+                  "description": "The timezone of the maintenance window.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The public title of the maintenance window (English).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of maintenance windows.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of maintenance windows returned (after filtering).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping maintenance windows.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alerts_wait": {
+            "type": "number",
+            "description": "Minutes to wait before sending alerts after an outage is detected. One of: `-1` (disabled), `0`, `1`, `2`, `3`, `5`, `10`, `30`, `60`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "check_frequency": {
+            "type": "number",
+            "description": "Check frequency in seconds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dns_expected_answer": {
+            "type": "string",
+            "description": "Expected DNS answer to validate against.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dns_nameserver": {
+            "type": "string",
+            "description": "Nameserver used for DNS queries.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dns_record_type": {
+            "type": "string",
+            "description": "DNS record type for DNS-protocol monitors.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "escalation_policy": {
+            "type": "string",
+            "description": "UUID of the escalation policy linked to this monitor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "escalation_policy_name": {
+            "type": "string",
+            "description": "Human-readable name of the assigned escalation policy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "expected_status_code": {
+            "type": "string",
+            "description": "Expected HTTP status code or pattern (e.g., `200`, `2xx`, `1xx-3xx`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "follow_redirects": {
+            "type": "bool",
+            "description": "Whether the monitor follows HTTP redirects.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "http_method": {
+            "type": "string",
+            "description": "HTTP method used for checks (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the monitor to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "is_down": {
+            "type": "bool",
+            "description": "Whether the monitor is currently reporting as down.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the monitor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the monitor is paused.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Port number for port protocol monitors.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "UUID of the project this monitor belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "The protocol used for monitoring (http, port, icmp, dns).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of regions the monitor checks from.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "request_body": {
+            "type": "string",
+            "description": "Request body for POST/PUT/PATCH requests.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "request_headers": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Header name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Header value. Marked sensitive: masked in plan output and Terraform CLI display because monitor request headers commonly carry credentials (Authorization, Cookie).",
+                  "description_kind": "markdown",
+                  "computed": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Custom HTTP headers sent with requests.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "required_keyword": {
+            "type": "string",
+            "description": "Keyword that must appear in the response body.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ssl_expiration": {
+            "type": "number",
+            "description": "Days until the SSL certificate expires.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current monitor status. Either `up` or `down`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL being monitored.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to retrieve information about a specific Hyperping monitor by its ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitor_report": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "from": {
+            "type": "string",
+            "description": "Start date for the report period in ISO 8601 format. Optional.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the monitor to get the report for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the monitor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "outages": {
+            "nested_type": {
+              "attributes": {
+                "count": {
+                  "type": "number",
+                  "description": "Total number of outages.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "longest_outage": {
+                  "type": "number",
+                  "description": "Longest single outage in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "longest_outage_formatted": {
+                  "type": "string",
+                  "description": "Human-readable longest outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "total_downtime": {
+                  "type": "number",
+                  "description": "Total downtime in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "total_downtime_formatted": {
+                  "type": "string",
+                  "description": "Human-readable total downtime (e.g., '1hr 10min 31s').",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Outage statistics for the report period.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "The protocol of the monitor.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "sla": {
+            "type": "number",
+            "description": "The SLA percentage for the report period (e.g., 99.95).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "to": {
+            "type": "string",
+            "description": "End date for the report period in ISO 8601 format. Optional.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Fetches the SLA and outage report for a specific Hyperping monitor.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitor_reports": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "from": {
+            "type": "string",
+            "description": "Start of reporting period (ISO 8601). Defaults to 7 days ago.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "monitors": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The UUID of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mttr": {
+                  "type": "number",
+                  "description": "Mean time to recovery in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mttr_formatted": {
+                  "type": "string",
+                  "description": "Human-readable mean time to recovery (e.g. \"35min 16s\").",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "outage_count": {
+                  "type": "number",
+                  "description": "Total number of outages in the reporting period.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "sla": {
+                  "type": "number",
+                  "description": "Uptime percentage for the reporting period (e.g. 99.95).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "total_downtime": {
+                  "type": "number",
+                  "description": "Total downtime in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "total_downtime_formatted": {
+                  "type": "string",
+                  "description": "Human-readable total downtime (e.g. \"2min 0s\").",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of monitor reports.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "to": {
+            "type": "string",
+            "description": "End of reporting period (ISO 8601). Defaults to now.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Fetches SLA and outage reports for all Hyperping monitors.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitoring_locations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of region codes. Convenient for `for_each` patterns or as input to `hyperping_monitor.regions`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "locations": {
+            "nested_type": {
+              "attributes": {
+                "cloud_region": {
+                  "type": "string",
+                  "description": "Approximate DigitalOcean datacenter identifier (e.g., `lon1`, `nyc3`, `sgp1`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "continent": {
+                  "type": "string",
+                  "description": "Continent grouping (e.g., `Europe`, `Asia Pacific`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Region code (e.g., `london`). Use this value in `hyperping_monitor.regions`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the location (e.g., `London, UK`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of available monitoring locations with metadata.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Returns available monitoring locations (regions) for Hyperping monitors. This data source is static and does not require an API call. The region list reflects the current provider version.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_monitors": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match monitor names",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "paused": {
+                  "type": "bool",
+                  "description": "Filter by paused status",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "project_uuid": {
+                  "type": "string",
+                  "description": "Filter monitors by project UUID (exact match).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "Filter by protocol (http, https, tcp, icmp, udp)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Filter monitors by status. Must be `up` or `down`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for monitors",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of monitor UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitors": {
+            "nested_type": {
+              "attributes": {
+                "alerts_wait": {
+                  "type": "number",
+                  "description": "Minutes to wait before sending alerts after an outage is detected. One of: `-1` (disabled), `0`, `1`, `2`, `3`, `5`, `10`, `30`, `60`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "check_frequency": {
+                  "type": "number",
+                  "description": "Check frequency in seconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "dns_expected_answer": {
+                  "type": "string",
+                  "description": "Expected DNS answer to validate against.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "dns_nameserver": {
+                  "type": "string",
+                  "description": "Nameserver used for DNS queries.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "dns_record_type": {
+                  "type": "string",
+                  "description": "DNS record type for DNS-protocol monitors.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "escalation_policy": {
+                  "type": "string",
+                  "description": "UUID of the escalation policy linked to this monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "escalation_policy_name": {
+                  "type": "string",
+                  "description": "Human-readable name of the assigned escalation policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "expected_status_code": {
+                  "type": "string",
+                  "description": "Expected HTTP status code or pattern (e.g., `200`, `2xx`, `1xx-3xx`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "follow_redirects": {
+                  "type": "bool",
+                  "description": "Whether to follow HTTP redirects.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "http_method": {
+                  "type": "string",
+                  "description": "HTTP method used for the check (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_down": {
+                  "type": "bool",
+                  "description": "Whether the monitor is currently reporting as down.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "paused": {
+                  "type": "bool",
+                  "description": "Whether the monitor is paused.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Port number for port protocol monitors.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "project_uuid": {
+                  "type": "string",
+                  "description": "UUID of the project this monitor belongs to.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol used for monitoring (http, port, icmp, dns).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "regions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of regions the monitor checks from.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "request_body": {
+                  "type": "string",
+                  "description": "Request body for POST/PUT/PATCH requests.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "request_headers": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Header name.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Header value. Marked sensitive: masked in plan output and Terraform CLI display because monitor request headers commonly carry credentials (Authorization, Cookie).",
+                        "description_kind": "markdown",
+                        "computed": true,
+                        "sensitive": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Custom HTTP headers sent with the request.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "required_keyword": {
+                  "type": "string",
+                  "description": "Keyword that must appear in the response body.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ssl_expiration": {
+                  "type": "number",
+                  "description": "Days until the SSL certificate expires.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current monitor status. Either `up` or `down`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The URL being monitored.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of monitors.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of monitors returned (after filtering).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping monitors.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_on_call_schedule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "current_oncall": {
+            "type": "string",
+            "description": "The name of the person currently on-call.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the schedule.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the schedule to look up.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "next_oncall": {
+            "type": "string",
+            "description": "The name of the person next on-call.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "rotation_end": {
+            "type": "string",
+            "description": "End time of the current rotation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "rotation_start": {
+            "type": "string",
+            "description": "Start time of the current rotation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "team": {
+            "type": "string",
+            "description": "The team name this schedule belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Hyperping on-call schedule by ID or name via MCP.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_on_call_schedules": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of on-call schedule UUIDs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "schedules": {
+            "nested_type": {
+              "attributes": {
+                "current_oncall": {
+                  "type": "string",
+                  "description": "The name of the person currently on-call.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the schedule.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the schedule.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "next_oncall": {
+                  "type": "string",
+                  "description": "The name of the person next on-call.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "rotation_end": {
+                  "type": "string",
+                  "description": "End time of the current rotation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "rotation_start": {
+                  "type": "string",
+                  "description": "Start time of the current rotation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "team": {
+                  "type": "string",
+                  "description": "The team name this schedule belongs to.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of on-call schedules.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping on-call schedules via MCP.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_outage": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acknowledged_by": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The user who acknowledged this outage. Null if not acknowledged.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "detected_location": {
+            "type": "string",
+            "description": "The location that detected the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "duration_ms": {
+            "type": "number",
+            "description": "Duration of the outage in milliseconds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "end_date": {
+            "type": "string",
+            "description": "The end date of the outage in ISO 8601 format. Null if ongoing.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the outage to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "is_resolved": {
+            "type": "bool",
+            "description": "Whether the outage is resolved.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitor": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The URL of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the monitor.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The monitor associated with this outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "monitor_uuid": {
+            "type": "string",
+            "description": "The UUID of the monitor associated with this outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "outage_type": {
+            "type": "string",
+            "description": "The type of outage (e.g. `manual` or `automatic`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity level of the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "start_date": {
+            "type": "string",
+            "description": "The start date of the outage in ISO 8601 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status_code": {
+            "type": "number",
+            "description": "The HTTP status code that caused the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary description of the outage.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to retrieve information about a specific Hyperping outage by its ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_outages": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "monitor_uuid": {
+                  "type": "string",
+                  "description": "Filter by specific monitor UUID",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match outage monitor names",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for outages",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of outage UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "outages": {
+            "nested_type": {
+              "attributes": {
+                "acknowledged_by": {
+                  "nested_type": {
+                    "attributes": {
+                      "email": {
+                        "type": "string",
+                        "description": "The email of the user.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the user.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "uuid": {
+                        "type": "string",
+                        "description": "The UUID of the user.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The user who acknowledged this outage. Null if not acknowledged.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "detected_location": {
+                  "type": "string",
+                  "description": "The location that detected the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "duration_ms": {
+                  "type": "number",
+                  "description": "Duration of the outage in milliseconds.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "end_date": {
+                  "type": "string",
+                  "description": "The end date of the outage in ISO 8601 format. Null if ongoing.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier (UUID) of the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_resolved": {
+                  "type": "bool",
+                  "description": "Whether the outage is resolved.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "monitor": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the monitor.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "protocol": {
+                        "type": "string",
+                        "description": "The protocol of the monitor.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "The URL of the monitor.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "uuid": {
+                        "type": "string",
+                        "description": "The UUID of the monitor.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The monitor associated with this outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "monitor_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the monitor associated with this outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "outage_type": {
+                  "type": "string",
+                  "description": "The type of outage (e.g. `manual` or `automatic`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "severity": {
+                  "type": "string",
+                  "description": "Severity level of the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "start_date": {
+                  "type": "string",
+                  "description": "The start date of the outage in ISO 8601 format.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status_code": {
+                  "type": "number",
+                  "description": "The HTTP status code that caused the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Summary description of the outage.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of outages.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of outages returned (after filtering).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of all Hyperping outages.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_statuspage": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hosted_subdomain": {
+            "type": "string",
+            "description": "Hyperping-hosted subdomain",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "Custom domain for the status page",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Status page UUID to fetch",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the status page",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "sections": {
+            "nested_type": {
+              "attributes": {
+                "is_split": {
+                  "type": "bool",
+                  "description": "Services split into rows",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Localized section name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "services": {
+                  "nested_type": {
+                    "attributes": {
+                      "description": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Localized service description",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Service ID",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "is_group": {
+                        "type": "bool",
+                        "description": "Service is a group",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Localized service name",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "services": {
+                        "nested_type": {
+                          "attributes": {
+                            "description": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service description",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Service ID (computed)",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "is_group": {
+                              "type": "bool",
+                              "description": "Service is a group",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service name",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_response_times": {
+                              "type": "bool",
+                              "description": "Show response times",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_uptime": {
+                              "type": "bool",
+                              "description": "Show uptime",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "uuid": {
+                              "type": "string",
+                              "description": "Monitor UUID",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Nested monitor services within this group",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "show_response_times": {
+                        "type": "bool",
+                        "description": "Show response times",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "show_uptime": {
+                        "type": "bool",
+                        "description": "Show uptime",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "uuid": {
+                        "type": "string",
+                        "description": "Monitor UUID",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Services in section",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Status page sections",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "settings": {
+            "nested_type": {
+              "attributes": {
+                "accent_color": {
+                  "type": "string",
+                  "description": "Accent color (hex)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "authentication": {
+                  "nested_type": {
+                    "attributes": {
+                      "allowed_domains": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Allowed domains for SSO",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "google_sso": {
+                        "type": "bool",
+                        "description": "Google SSO enabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "password_protection": {
+                        "type": "bool",
+                        "description": "Password protection enabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "saml_sso": {
+                        "type": "bool",
+                        "description": "SAML SSO enabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "sso_connection_uuid": {
+                        "type": "string",
+                        "description": "SSO connection UUID",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Access control settings",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "auto_refresh": {
+                  "type": "bool",
+                  "description": "Auto-refresh enabled",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "banner_header": {
+                  "type": "bool",
+                  "description": "Banner header shown",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "default_language": {
+                  "type": "string",
+                  "description": "Default language code",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Status page description (extracted from the API's localized map).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "favicon": {
+                  "type": "string",
+                  "description": "Favicon URL",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "font": {
+                  "type": "string",
+                  "description": "Font family",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "google_analytics": {
+                  "type": "string",
+                  "description": "Google Analytics ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "hide_from_search_engines": {
+                  "type": "bool",
+                  "description": "Hide from search engines",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "hide_powered_by": {
+                  "type": "bool",
+                  "description": "Hide powered by footer",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "languages": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Supported language codes",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "logo": {
+                  "type": "string",
+                  "description": "Logo URL",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "logo_height": {
+                  "type": "string",
+                  "description": "Logo height",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Internal settings name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "subscribe": {
+                  "nested_type": {
+                    "attributes": {
+                      "email": {
+                        "type": "bool",
+                        "description": "Email subscriptions allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Subscriptions enabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "slack": {
+                        "type": "bool",
+                        "description": "Slack subscriptions allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "sms": {
+                        "type": "bool",
+                        "description": "SMS subscriptions allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "teams": {
+                        "type": "bool",
+                        "description": "Teams subscriptions allowed",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Subscription settings",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "theme": {
+                  "type": "string",
+                  "description": "Color theme",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "website": {
+                  "type": "string",
+                  "description": "Link to main website",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Status page appearance and behavior settings",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Public URL of the status page",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Hyperping status page by UUID.\n\nUse this data source to retrieve details about an existing status page, including its settings, sections, and services.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_statuspage_subscribers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "has_next_page": {
+            "type": "bool",
+            "description": "Whether there are more pages available",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of subscriber IDs (as strings). Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "page": {
+            "type": "number",
+            "description": "Page number (0-indexed) for pagination",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "statuspage_uuid": {
+            "type": "string",
+            "description": "UUID of the status page",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "subscribers": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "email": {
+                  "type": "string",
+                  "description": "Email address (for email subscribers)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Subscriber ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "phone": {
+                  "type": "string",
+                  "description": "Phone number (for SMS subscribers)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "slack_channel": {
+                  "type": "string",
+                  "description": "Slack channel (for Slack subscribers)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Subscriber type (email, sms, slack, teams)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Subscriber value (email address, phone number, etc.)",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of subscribers",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of subscribers",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Filter by subscriber type: all, email, sms, slack, teams",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Fetches subscribers for a Hyperping status page.\n\nThis data source supports pagination and filtering by subscriber type.",
+        "description_kind": "markdown"
+      }
+    },
+    "hyperping_statuspages": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "hostname": {
+                  "type": "string",
+                  "description": "Filter by custom hostname",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name_regex": {
+                  "type": "string",
+                  "description": "Regular expression to match status page names",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter criteria for status pages",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "has_next_page": {
+            "type": "bool",
+            "description": "Whether there are more pages available",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of status page UUIDs. Convenient for `for_each` patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "page": {
+            "type": "number",
+            "description": "Page number (0-indexed) for pagination. Defaults to 0.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search filter for name, hostname, or subdomain (server-side)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "statuspages": {
+            "nested_type": {
+              "attributes": {
+                "hosted_subdomain": {
+                  "type": "string",
+                  "description": "Hyperping subdomain",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "Custom domain",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Status page UUID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "sections": {
+                  "nested_type": {
+                    "attributes": {
+                      "is_split": {
+                        "type": "bool",
+                        "description": "Split services into separate rows",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Localized section name",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "services": {
+                        "nested_type": {
+                          "attributes": {
+                            "description": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service description",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Service ID",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "is_group": {
+                              "type": "bool",
+                              "description": "Whether this is a group",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "Localized service name",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "services": {
+                              "nested_type": {
+                                "attributes": {
+                                  "description": {
+                                    "type": [
+                                      "map",
+                                      "string"
+                                    ],
+                                    "description": "Localized service description",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "Service ID",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "is_group": {
+                                    "type": "bool",
+                                    "description": "Whether this is a group",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "name": {
+                                    "type": [
+                                      "map",
+                                      "string"
+                                    ],
+                                    "description": "Localized service name",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "show_response_times": {
+                                    "type": "bool",
+                                    "description": "Show response times",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "show_uptime": {
+                                    "type": "bool",
+                                    "description": "Show uptime percentage",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "uuid": {
+                                    "type": "string",
+                                    "description": "Monitor UUID",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Nested services within group",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_response_times": {
+                              "type": "bool",
+                              "description": "Show response times",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_uptime": {
+                              "type": "bool",
+                              "description": "Show uptime percentage",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "uuid": {
+                              "type": "string",
+                              "description": "Monitor UUID",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Services/monitors in this section",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Status page sections",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "settings": {
+                  "nested_type": {
+                    "attributes": {
+                      "accent_color": {
+                        "type": "string",
+                        "description": "Accent color (hex)",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "authentication": {
+                        "nested_type": {
+                          "attributes": {
+                            "allowed_domains": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "Allowed domains for SSO",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "google_sso": {
+                              "type": "bool",
+                              "description": "Google SSO enabled",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "password_protection": {
+                              "type": "bool",
+                              "description": "Password protection enabled",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "saml_sso": {
+                              "type": "bool",
+                              "description": "SAML SSO enabled",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "sso_connection_uuid": {
+                              "type": "string",
+                              "description": "SSO connection UUID",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Access control settings",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "auto_refresh": {
+                        "type": "bool",
+                        "description": "Auto-refresh enabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "banner_header": {
+                        "type": "bool",
+                        "description": "Banner header shown",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "default_language": {
+                        "type": "string",
+                        "description": "Default language code",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Status page description",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "favicon": {
+                        "type": "string",
+                        "description": "Favicon URL",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "font": {
+                        "type": "string",
+                        "description": "Font family",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "google_analytics": {
+                        "type": "string",
+                        "description": "Google Analytics ID",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hide_from_search_engines": {
+                        "type": "bool",
+                        "description": "Hide from search engines",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "hide_powered_by": {
+                        "type": "bool",
+                        "description": "Hide powered by footer",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "languages": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Supported language codes",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "logo": {
+                        "type": "string",
+                        "description": "Logo URL",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "logo_height": {
+                        "type": "string",
+                        "description": "Logo height",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Internal settings name",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "subscribe": {
+                        "nested_type": {
+                          "attributes": {
+                            "email": {
+                              "type": "bool",
+                              "description": "Email subscriptions allowed",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "enabled": {
+                              "type": "bool",
+                              "description": "Subscriptions enabled",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "slack": {
+                              "type": "bool",
+                              "description": "Slack subscriptions allowed",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "sms": {
+                              "type": "bool",
+                              "description": "SMS subscriptions allowed",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "teams": {
+                              "type": "bool",
+                              "description": "Teams subscriptions allowed",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Subscription settings",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "theme": {
+                        "type": "string",
+                        "description": "Color theme",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "website": {
+                        "type": "string",
+                        "description": "Link to main website",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Status page appearance and behavior settings",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Public URL",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of status pages",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of status pages matching filters",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of Hyperping status pages with optional filtering.\n\nThis data source supports pagination and search filtering by name, hostname, or subdomain.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
