@@ -1,0 +1,470 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "The address of the MySQL server to use. Most often a `hostname:port` pair, but may also be an absolute path to a Unix socket when the host OS is Unix-compatible. Can also be sourced from the `MYSQL_ENDPOINT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password for the given user, if that user has a password, can also be sourced from the `MYSQL_PASSWORD` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "proxy": {
+          "type": "string",
+          "description": "Proxy socks url, can also be sourced from `ALL_PROXY` or `all_proxy` environment variables.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Username to use to authenticate with the server, can also be sourced from the `MYSQL_USERNAME` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "[MySQL](https://www.mysql.com/) is a relational database server. The MySQL provider exposes resources used to manage the configuration of resources in a MySQL server.\n\nUse the navigation to the left to read about the available resources.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "mysql_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_character_set": {
+            "type": "string",
+            "description": "The default character set. Defaults to `utf8mb4`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_collation": {
+            "type": "string",
+            "description": "The default collation. Defaults to `utf8mb4_0900_ai_ci`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The database name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `mysql_database` resource creates and manages a database.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_default_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "The source host of the user. Defaults to `%`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user": {
+            "type": "string",
+            "description": "The name of the user",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "default_role": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The source host of the role. Defaults to `%`",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the role",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Set default roles",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "The `mysql_default_role` resource manages default roles for the user.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_global_variable": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Global variable name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Global variable value",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `mysql_global_variable` resource manages a global variable.\n\n~> **Note on MySQL: ** MySQL global variables art [not persistent](https://dev.mysql.com/doc/refman/8.0/en/set-variable.html).\n\n~> **Note about `destroy`: ** `destroy` will try setting `DEFAULT` value for the global variable. Unfortunately not every variable support this.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_grant_privilege": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "grant_option": {
+            "type": "bool",
+            "description": "If `true`, add `WITH GRANT OPTION`. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "on": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "database": {
+                  "type": "string",
+                  "description": "The database name to grant privileges.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "table": {
+                  "type": "string",
+                  "description": "The table name to grant privileges.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Set the target to grant privileges.",
+              "description_kind": "markdown"
+            }
+          },
+          "privilege": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "columns": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Column names.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "priv_type": {
+                  "type": "string",
+                  "description": "The privilege name.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Set privilege name and columns.",
+              "description_kind": "markdown"
+            }
+          },
+          "to": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The source host of the user or role. Defaults to `%`",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user or role",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Set the user or role to be granted privileges.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "The `mysql_grant_privilege` resource grants privileges to a user or a role. See MySQL Reference Manual [GRANT Statement](https://dev.mysql.com/doc/refman/8.0/en/grant.html) for more detauls.\n\nUse the [`mysql_grant_role`](./grant_role) resource to grant a role to a user.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_grant_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_option": {
+            "type": "bool",
+            "description": "If `true`, add `WITH ADMIN OPTION`. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "role": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The source host of the role. Defaults to `%`",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the role",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Sets roles to be granted to the user specified in the `to` block.",
+              "description_kind": "markdown"
+            }
+          },
+          "to": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The source host of the user or role. Defaults to `%`",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user or role",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Set the user or role to be granted roles.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "The `mysql_grant_role` resource grants a role to a user.See MySQL Reference Manual [GRANT Statement](https://dev.mysql.com/doc/refman/8.0/en/grant.html) for more detauls.\n\nUse the [`mysql_grant_privilege`](./grant_privilege) resource to grant privileges to a user or a role.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "The source host of the role. Defaults to `%`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "MySQL role",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "The source host of the user. Defaults to `%`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "lock": {
+            "type": "bool",
+            "description": "Lock account if set to `true`. Defaults to `false`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "auth_option": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auth_string": {
+                  "type": "string",
+                  "description": "Plain text password. Conflicts with `random_password`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "plugin": {
+                  "type": "string",
+                  "description": "An authentication plugin name. See MySQL Reference Manual [6.4.1 Authentication Plugins](https://dev.mysql.com/doc/refman/8.0/en/authentication-plugins.html) for more details. Conflicts with `auth_string`, `random_password` if set `AWSAuthenticationPlugin`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "random_password": {
+                  "type": "bool",
+                  "description": "Generate random password when create user. Display generated password after creating user. Conflicts with `auth_string`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Authentication configuration for the user",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "The `mysql_user` resource creates and manages a user on a MySQL server.\n\n~> **Note:** The password for the user is provided in plain text, and is obscured by an unsalted hash in the state [Read more about sensitive data in state](https://www.terraform.io/language/state/sensitive-data). Care is required when using this resource, to avoid disclosing the password.\n\n~> **Note about random password:** The generated random password will be shown in the log immediately after running `terraform apply`. Be sure to save the password, as there is no way to check it after that.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "mysql_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "The database name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "default_character_set": {
+            "type": "string",
+            "description": "The default character set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_collation": {
+            "type": "string",
+            "description": "The default collation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The `mysql_database` data source.",
+        "description_kind": "markdown"
+      }
+    },
+    "mysql_tables": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "The database name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Table name pattern. Show all tables if omitted.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tables": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Table names.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "The `mysql_tables` data source.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

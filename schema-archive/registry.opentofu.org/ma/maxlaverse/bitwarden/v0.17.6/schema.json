@@ -1,0 +1,1565 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_token": {
+          "type": "string",
+          "description": "Machine Account Access Token (env: `BWS_ACCESS_TOKEN`)).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_id": {
+          "type": "string",
+          "description": "Client ID (env: `BW_CLIENTID`)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_implementation": {
+          "type": "string",
+          "description": "Client implementation type. Valid values are \"embedded\" (use embedded client) or \"cli\" (use CLI binaries, default).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "client_secret": {
+          "type": "string",
+          "description": "Client Secret (env: `BW_CLIENTSECRET`). Do not commit this information in Git unless you know what you're doing. Prefer using a Terraform `variable {}` in order to inject this value from the environment.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "email": {
+          "type": "string",
+          "description": "Login Email of the Vault (env: `BW_EMAIL`).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "extra_ca_certs": {
+          "type": "string",
+          "description": "Extends the well known 'root' CAs (like VeriSign) with the extra certificates in file (env: `NODE_EXTRA_CA_CERTS`, doesn't work with embedded client).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "master_password": {
+          "type": "string",
+          "description": "Master password of the Vault (env: `BW_PASSWORD`). Do not commit this information in Git unless you know what you're doing. Prefer using a Terraform `variable {}` in order to inject this value from the environment.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "server": {
+          "type": "string",
+          "description": "Bitwarden Server URL (default: `https://vault.bitwarden.com`, env: `BW_URL` or `BWS_SERVER_URL`).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "session_key": {
+          "type": "string",
+          "description": "A Bitwarden Session Key (env: `BW_SESSION`)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "vault_path": {
+          "type": "string",
+          "description": "Alternative directory for storing the Vault locally (default: `.bitwarden/`, env: `BITWARDENCLI_APPDATA_DIR`; set to empty string to use CLI default).",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "block_types": {
+        "experimental": {
+          "nesting_mode": "set",
+          "block": {
+            "attributes": {
+              "disable_sync_after_write_verification": {
+                "type": "bool",
+                "description": "Skip verification of server-side modifications (like timestamp updates) after write operations - useful when the Bitwarden server makes minor, non-functional changes to objects.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "embedded_client": {
+                "type": "bool",
+                "description": "Use the embedded client instead of an external binary.",
+                "description_kind": "markdown",
+                "deprecated": true,
+                "optional": true
+              }
+            },
+            "description": "Enable experimental features.",
+            "description_kind": "markdown"
+          }
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "bitwarden_attachment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Content of the attachment",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file": {
+            "type": "string",
+            "description": "Path to the content of the attachment.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file_name": {
+            "type": "string",
+            "description": "File name. Required if specifying `content` in a resource.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "item_id": {
+            "type": "string",
+            "description": "Identifier of the item the attachment belongs to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "size": {
+            "type": "string",
+            "description": "Size in bytes",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "size_name": {
+            "type": "string",
+            "description": "Size as string",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "URL",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an item attachment.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_folder": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a folder.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_login": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attachments": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "file_name": "string",
+                  "id": "string",
+                  "size": "string",
+                  "size_name": "string",
+                  "url": "string"
+                }
+              ]
+            ],
+            "description": "List of item attachments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "favorite": {
+            "type": "bool",
+            "description": "Mark as a Favorite to have item appear at the top of your Vault in the UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Login password.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "totp": {
+            "type": "string",
+            "description": "Verification code.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Login username.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          }
+        },
+        "block_types": {
+          "field": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "boolean": {
+                  "type": "bool",
+                  "description": "Value of a boolean field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "hidden": {
+                  "type": "string",
+                  "description": "Value of a hidden text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "linked": {
+                  "type": "string",
+                  "description": "Value of a linked field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "Value of a text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Extra fields.",
+              "description_kind": "markdown"
+            }
+          },
+          "uri": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "match": {
+                  "type": "string",
+                  "description": "URI Match",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "URI Value",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "URI.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a login item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_secure_note": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attachments": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "file_name": "string",
+                  "id": "string",
+                  "size": "string",
+                  "size_name": "string",
+                  "url": "string"
+                }
+              ]
+            ],
+            "description": "List of item attachments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "favorite": {
+            "type": "bool",
+            "description": "Mark as a Favorite to have item appear at the top of your Vault in the UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "field": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "boolean": {
+                  "type": "bool",
+                  "description": "Value of a boolean field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "hidden": {
+                  "type": "string",
+                  "description": "Value of a hidden text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "linked": {
+                  "type": "string",
+                  "description": "Value of a linked field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "Value of a text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Extra fields.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a secure note item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "key_fingerprint": {
+            "type": "string",
+            "description": "Key fingerprint.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "Private key.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "Public key.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "field": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "boolean": {
+                  "type": "bool",
+                  "description": "Value of a boolean field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "hidden": {
+                  "type": "string",
+                  "description": "Value of a hidden text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "linked": {
+                  "type": "string",
+                  "description": "Value of a linked field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "text": {
+                  "type": "string",
+                  "description": "Value of a text field.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Extra fields.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages an SSH key item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_org_collection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "member": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "hide_passwords": {
+                  "type": "bool",
+                  "description": "[Experimental] Hide passwords.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "[Experimental] Unique Identifier (UUID) of the user or group member.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "manage": {
+                  "type": "bool",
+                  "description": "[Experimental] Can manage the collection.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description": "[Experimental] Read/Write permissions.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "[Experimental] Member (Users) of a collection.",
+              "description_kind": "markdown"
+            }
+          },
+          "member_group": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "hide_passwords": {
+                  "type": "bool",
+                  "description": "[Experimental] Hide passwords.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "[Experimental] Unique Identifier (UUID) of the user or group member.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "manage": {
+                  "type": "bool",
+                  "description": "[Experimental] Can manage the collection.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description": "[Experimental] Read/Write permissions.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "[Experimental] Member Groups of a collection.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages an organization collection.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Project.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "note": {
+            "type": "string",
+            "description": "Note.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Identifier of the project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Value.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a secret.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "bitwarden_attachment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Content of the attachment",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "item_id": {
+            "type": "string",
+            "description": "Identifier of the item the attachment belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get the content on an existing item's attachment.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_folder": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter_collection_id": {
+            "type": "string",
+            "description": "Filter search results by collection ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_organization_id": {
+            "type": "string",
+            "description": "Filter search results by organization ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information on an existing folder.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_login": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attachments": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "file_name": "string",
+                  "id": "string",
+                  "size": "string",
+                  "size_name": "string",
+                  "url": "string"
+                }
+              ]
+            ],
+            "description": "List of item attachments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "favorite": {
+            "type": "bool",
+            "description": "Mark as a Favorite to have item appear at the top of your Vault in the UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "field": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "boolean": "bool",
+                  "hidden": "string",
+                  "linked": "string",
+                  "name": "string",
+                  "text": "string"
+                }
+              ]
+            ],
+            "description": "Extra fields.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "filter_collection_id": {
+            "type": "string",
+            "description": "Filter search results by collection ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_folder_id": {
+            "type": "string",
+            "description": "Filter search results by folder ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_organization_id": {
+            "type": "string",
+            "description": "Filter search results by organization ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_url": {
+            "type": "string",
+            "description": "Filter search results by URL.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Login password.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "totp": {
+            "type": "string",
+            "description": "Verification code.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "uri": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "match": "string",
+                  "value": "string"
+                }
+              ]
+            ],
+            "description": "URI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Login username.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Use this data source to get information on an existing login item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_secure_note": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attachments": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "file_name": "string",
+                  "id": "string",
+                  "size": "string",
+                  "size_name": "string",
+                  "url": "string"
+                }
+              ]
+            ],
+            "description": "List of item attachments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "favorite": {
+            "type": "bool",
+            "description": "Mark as a Favorite to have item appear at the top of your Vault in the UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "field": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "boolean": "bool",
+                  "hidden": "string",
+                  "linked": "string",
+                  "name": "string",
+                  "text": "string"
+                }
+              ]
+            ],
+            "description": "Extra fields.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "filter_collection_id": {
+            "type": "string",
+            "description": "Filter search results by collection ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_folder_id": {
+            "type": "string",
+            "description": "Filter search results by folder ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_organization_id": {
+            "type": "string",
+            "description": "Filter search results by organization ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information on an existing secure note item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_item_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collection_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Identifier of the collections the item belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Date the item was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted_date": {
+            "type": "string",
+            "description": "Date the item was deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "field": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "boolean": "bool",
+                  "hidden": "string",
+                  "linked": "string",
+                  "name": "string",
+                  "text": "string"
+                }
+              ]
+            ],
+            "description": "Extra fields.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "filter_collection_id": {
+            "type": "string",
+            "description": "Filter search results by collection ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_folder_id": {
+            "type": "string",
+            "description": "Filter search results by folder ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_organization_id": {
+            "type": "string",
+            "description": "Filter search results by organization ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "folder_id": {
+            "type": "string",
+            "description": "Identifier of the folder.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "key_fingerprint": {
+            "type": "string",
+            "description": "Key fingerprint.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "Private key.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "Public key.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "reprompt": {
+            "type": "bool",
+            "description": "Require master password 're-prompt' when displaying secret in the UI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision_date": {
+            "type": "string",
+            "description": "Last time the item was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information on an existing SSH key item.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_org_collection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "member": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "hide_passwords": "bool",
+                  "id": "string",
+                  "manage": "bool",
+                  "read_only": "bool"
+                }
+              ]
+            ],
+            "description": "[Experimental] Member (Users) of a collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_group": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "hide_passwords": "bool",
+                  "id": "string",
+                  "manage": "bool",
+                  "read_only": "bool"
+                }
+              ]
+            ],
+            "description": "[Experimental] Member Groups of a collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information on an existing organization collection.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_org_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter_name": {
+            "type": "string",
+            "description": "Filter search results by name.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get information on an existing organization group.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_org_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "User email.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get information on an existing organization member.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Search items matching the search string.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information on an existing organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Use this data source to get information on an existing project.",
+        "description_kind": "markdown"
+      }
+    },
+    "bitwarden_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Name.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "note": {
+            "type": "string",
+            "description": "Note.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Identifier of the organization.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Identifier of the project.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Value.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Use this data source to get information on an existing secret.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

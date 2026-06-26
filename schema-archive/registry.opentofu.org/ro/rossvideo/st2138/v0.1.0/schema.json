@@ -1,0 +1,285 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "devices_dir": {
+          "type": "string",
+          "description": "Base directory containing per-device-type Dockerfiles (each under devices_dir/<device_type>). Defaults to ../devices relative to the working directory.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Service endpoint, e.g. host:port",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "executables_dir": {
+          "type": "string",
+          "description": "Alias for devices_dir: base directory containing per-device-type executables/Dockerfiles (each under <dir>/<device_type>).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "transport": {
+          "type": "string",
+          "description": "Transport type (e.g. grpc, http)",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "OpenTofu provider for Catena devices/services.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "st2138_command": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "command": {
+            "type": "string",
+            "description": "Command OID to execute.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Stable identifier for this command definition.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status_foid": {
+            "type": "string",
+            "description": "Optional parameter OID to poll for success.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status_success_comparator": {
+            "type": "string",
+            "description": "Comparator: eq, ne, gt, lt, ge, le.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status_success_value": {
+            "type": "string",
+            "description": "Expected value used by status_success_comparator.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "description": "Timeout in seconds. Defaults to 5.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "value": {
+            "type": "dynamic",
+            "description": "Optional command value payload.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Reusable command definition that can be referenced by st2138_device startup/shutdown command blocks.",
+        "description_kind": "plain"
+      }
+    },
+    "st2138_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "commands_out": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Commands for this slot from DeviceRequest.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "full_parameters_out": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "All parameters for this slot (including read-only) from DeviceRequest.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable device name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "override_param_values_on_update": {
+            "type": "bool",
+            "description": "When true, re-applies all parameters on update. When false (default), parameters are only applied on create.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parameters": {
+            "type": "dynamic",
+            "description": "Dynamic parameter set for this slot. Supports object or list-of-objects shapes such as [{\"counter\": 1, \"struct_example\": {...}}].",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parameters_out": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Writable parameters for this slot from DeviceRequest.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slot": {
+            "type": "number",
+            "description": "Device slot this resource manages.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status_value": {
+            "type": "string",
+            "description": "Most recent status value observed from command status polling when available.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "network": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "address": {
+                  "type": "string",
+                  "description": "Host/IP for the Catena endpoint.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Port for the Catena endpoint.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "tls": {
+                  "type": "bool",
+                  "description": "Reserved for TLS support.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "transport": {
+                  "type": "string",
+                  "description": "Transport type, defaults to grpc.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Network configuration for this slot.",
+              "description_kind": "plain"
+            }
+          },
+          "shutdown_commands": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "commands": {
+                  "type": "dynamic",
+                  "description": "List of st2138_command resources, command objects, or command OID strings.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Reusable command refs to run during Delete.",
+              "description_kind": "plain"
+            }
+          },
+          "startup_commands": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "commands": {
+                  "type": "dynamic",
+                  "description": "List of st2138_command resources, command objects, or command OID strings.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Reusable command refs to run after Create.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Catena device: sets parameters via gRPC on create and reads the device model.",
+        "description_kind": "plain"
+      }
+    },
+    "st2138_parameters": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Stable identifier for this parameter payload.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parameters": {
+            "type": "dynamic",
+            "description": "Parameter payload as an object or list of objects.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parameters_file": {
+            "type": "string",
+            "description": "Optional file path to a parameter payload.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Reusable parameter payload that can be referenced by device resources.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "st2138_device_params": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier composed of the endpoint and slot.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "params": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of fully-qualified OID (foid) to ParamType string, e.g. \"brightness\" = \"INT32\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slot": {
+            "type": "number",
+            "description": "Device slot number to query (default 0).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Reads the device model from a Catena device and returns a map of fully-qualified parameter OIDs to their type names (e.g. INT32, STRING, FLOAT32).",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
