@@ -1,0 +1,2753 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_url": {
+          "type": "string",
+          "description": "The API url of your Common Fate deployment.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "authz_url": {
+          "type": "string",
+          "description": "The base URL of the Common Fate authz service. If not provided, will default to the same URL as the api_url",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "oidc_client_id": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "oidc_client_secret": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "oidc_issuer": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "commonfate_access_workflow": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_duration_seconds": {
+            "type": "number",
+            "description": "The maximum allowable duration for the access workflow",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "activation_expiry": {
+            "type": "number",
+            "description": "The amount of time after access is approved to be activated before the request will be expired",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "approval_steps": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the approval step.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "when": {
+                  "type": "string",
+                  "description": "The Cedar when expression to evaluate a review for a match.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Define the requirements for grant approval, each step must be completed by a distict principal, steps can be completed in any order.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_duration_seconds": {
+            "type": "number",
+            "description": "The default duration of the access workflow",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "extension_conditions": {
+            "nested_type": {
+              "attributes": {
+                "extension_duration_seconds": {
+                  "type": "number",
+                  "description": "Specifies the duration for each extension. Defaults to the value of access_duration_seconds if not provided.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "maximum_number_of_extensions": {
+                  "type": "number",
+                  "description": "The maximum number of allowed extensions (set to 0 to disable extensions). If not set, it defaults to 0.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Configuration for extending access",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal approval workflow ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique name for the workflow so you know how to identify it.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "The priority that governs whether the policy will be used. If a different policy with a higher priority and the same role exists that one will be used over another.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "requested_to_activate_expiry": {
+            "type": "number",
+            "description": "The amount of time after a request is made and activated before the request will be expired",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "requested_to_approved_expiry": {
+            "type": "number",
+            "description": "The amount of time after a request is made and approved before the request will be expired",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "try_extend_after_seconds": {
+            "type": "number",
+            "description": "The amount of time after access is activated that extending access can be attempted. As a starting point we recommend setting this to half of the `access_duration_seconds`.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "validation": {
+            "nested_type": {
+              "attributes": {
+                "has_jira_ticket": {
+                  "type": "bool",
+                  "description": "Whether a jira ticket is required for this workflow",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "has_reason": {
+                  "type": "bool",
+                  "description": "Whether a reason is required for this workflow",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "reason_regex": {
+                  "nested_type": {
+                    "attributes": {
+                      "error_message": {
+                        "type": "string",
+                        "description": "The custom error message to show if the reason doesn't match the regex pattern.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "regex_pattern": {
+                        "type": "string",
+                        "description": "The regex pattern that the reason should match on.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Regex validation requirements for the reason",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Validation requirements to be set with this workflow",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Access Workflows are used to describe how long access should be applied. Created Workflows can be referenced in other resources created.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_auth0_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Auth0 application client ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for the Auth0 client secret",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The Auth0 tenant domain",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of what you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers an Auth0 integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_auth0_organization_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth0_organization_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "auth0_tenant_id": {
+            "type": "string",
+            "description": "The Auth0 tenant ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The Auth0 Role. You can use 'Member' here to denote the membership to an organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make Auth0 Organizations available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_auth0_organization_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth0_tenant_id": {
+            "type": "string",
+            "description": "The Auth0 Tenant ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match groups on, e.g: `resource.name like \"*production*\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match Auth0 Organizations with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_availability_spec": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The helpers Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "identity_domain": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The entity ID",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The entity type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The identity domain associated with the integration",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "role": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The entity ID",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The entity type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "target": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The entity ID",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The entity type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make resources available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_account_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_organization_id": {
+            "type": "string",
+            "description": "The AWS organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match accounts on, e.g: `resource.tag_keys contains \"production\" && resource in AWS::OrgUnit::\"example\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match AWS Accounts with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_eks_availability": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_eks_cluster_id": {
+            "type": "string",
+            "description": "The EKS target to make available. Should be an AWS::EKS::Cluster id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_eks_service_account_id": {
+            "type": "string",
+            "description": "The ID of the AWS EKS Service Account to make available. Should be an AWS::EKS::ServiceAccount id",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make a single AWS EKS resource available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_eks_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_organization_id": {
+            "type": "string",
+            "description": "The AWS Organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-eks`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match aws EKS on, e.g: `resource in AWS::Account::\"12345678912\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match AWS EKS with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_idc_account_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_permission_set_arn": {
+            "type": "string",
+            "description": "The AWS Permission Set to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make AWS accounts available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_idc_group_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_idc_group_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make AWS IAM Identity Center groups available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_idc_group_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_organization_id": {
+            "type": "string",
+            "description": "The AWS organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match accounts on, e.g: `resource.name == \"production-access\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match AWS IAM Identity Center groups with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_idc_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "audit_role_name": {
+            "type": "string",
+            "description": "The name of the role to assume in each AWS Account in order to read resources",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "provisioner_role_arn": {
+            "type": "string",
+            "description": "The ARN of the role to assume in order to provision access in AWS IAM Identity Center",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "reader_role_arn": {
+            "type": "string",
+            "description": "The ARN of the role to assume in order to read AWS IAM Identity Center data",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource_regions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The regions to read reasources from in each account",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "sso_access_portal_url": {
+            "type": "string",
+            "description": "The SSO access portal URL, e.g https://example.awsapps.com/start",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "sso_instance_arn": {
+            "type": "string",
+            "description": "The ARN of the IAM Identity Center SSO instance",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sso_region": {
+            "type": "string",
+            "description": "The AWS region that the SSO instance is hosted in",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers an AWS IAM Identity Center integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_rds_database_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_rds_database_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_rds_database_user_id": {
+            "type": "string",
+            "description": "The role to make available. Should be an AWS::RDS::DatabaseUser id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make AWS rds databases available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_rds_database_availability": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_rds_database_id": {
+            "type": "string",
+            "description": "The ID of the AWS RDS Database to make available. Should be an AWS::RDS::Database id",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_rds_database_user_id": {
+            "type": "string",
+            "description": "The role to make available. Should be an AWS::RDS::DatabaseUser id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make AWS rds databases available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_rds_database_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_organization_id": {
+            "type": "string",
+            "description": "The AWS Organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match aws rds databases on, e.g: `resource in AWS::Account::\"12345678912\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match AWS RDS databases with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_aws_resource_scanner": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter_for_account_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "If provided, only accounts matching the specified ID will be scanned",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The AWS integration ID to associate the resource scanner with",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "regions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The regions to read reasources from in each account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Resource types to scan for. If empty, Common Fate will attempt to scan for all supported resource types. Resource types should adhere to the Cedar format, for example 'AWS::S3::Bucket'.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "The name of the role to assume in each AWS Account in order to read resources. Defaults to 'common-fate-audit' if not provided.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Registers an AWS Resource Scanner",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_datastax_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_secret_path": {
+            "type": "string",
+            "description": "Path to secret for the DataStax API Key",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a DataStax integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_datastax_organization_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "datastax_organization_id": {
+            "type": "string",
+            "description": "The DataStax Organization ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datastax_organization_selector_id": {
+            "type": "string",
+            "description": "The DataStax Organization selector ID. Should be the ID of a 'commonfate_datastax_organization_selector' Terraform resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "The ID of the DataStax role to make available for access.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make DataStax roles available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_datastax_organization_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "datastax_organization_id": {
+            "type": "string",
+            "description": "The DataStax organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A Selector to match a DataStax organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_ecs_proxy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "The AWS account the proxy is installed in.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_region": {
+            "type": "string",
+            "description": "The AWS region the proxy will be installed to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_cluster_name": {
+            "type": "string",
+            "description": "The ECS cluster name of the proxy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_cluster_reader_role_arn": {
+            "type": "string",
+            "description": "The ECS cluster reader role ARN of the proxy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_cluster_security_group_id": {
+            "type": "string",
+            "description": "The ECS cluster security group ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_cluster_task_container_name": {
+            "type": "string",
+            "description": "The name of the ECS cluster task container for the proxy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_cluster_task_role_name": {
+            "type": "string",
+            "description": "The ECS cluster task role ARN.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ecs_task_definition_family": {
+            "type": "string",
+            "description": "The ECS task definition family of the proxy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the proxy. Eg: prod-us-west-2",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a proxy with Common Fate..",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_eks_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_eks_selector_id": {
+            "type": "string",
+            "description": "The EKS target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_eks_service_account_id": {
+            "type": "string",
+            "description": "The ID of the AWS EKS Service Account to make available. Should be an AWS::EKS::ServiceAccount id",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_identity_store_id": {
+            "type": "string",
+            "description": "The IAM Identity Center identity store ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make AWS EKS resources available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_entra_group_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "entra_group_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "The Entra Tenant ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make Entra Groups available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_entra_group_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "The Entra Tenant ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match groups on, e.g: `resource.name like \"*production*\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match Entra Groups with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_entra_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Microsoft Entra application Client ID",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "client_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for the Microsoft Entra Client Secret",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "The Microsoft Entra Tenant ID",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Registers a Microsoft Entra integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_bigquery_dataset_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_bigquery_dataset_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role": {
+            "type": "string",
+            "description": "The GCP role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the projects",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP BigQuery Datasets available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_bigquery_dataset_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match resources on, e.g: `resource.tag_keys contains \"production\" && resource in GCP::Folder::\"folders/342982723\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match GCP BigQuery Datasets with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_bigquery_table_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_bigquery_table_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role": {
+            "type": "string",
+            "description": "The GCP role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the projects",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP BigQuery tables available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_bigquery_table_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match resources on, e.g: `resource.tag_keys contains \"production\" && resource in GCP::Folder::\"folders/342982723\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match GCP BigQuery Tables with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_folder_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_folder_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role": {
+            "type": "string",
+            "description": "The GCP role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the folders",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP folders available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_folder_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match folders on, e.g: `resource.tag_keys contains \"production\" && resource in GCP::Folder::\"folders/342982723\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match GCP folders with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The Google Workspace Customer ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "provisioner_service_account_credentials_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Service account credentials",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "provisioner_workload_identity_config": {
+            "type": "string",
+            "description": "GCP Workload Identity Config as a JSON string. If you don't know where to find this, check out our documentation [here](https://enterprise.docs.commonfate.io/deploy)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "reader_service_account_credentials_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Service account credentials",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "reader_workload_identity_config": {
+            "type": "string",
+            "description": "GCP Workload Identity Config as a JSON string. If you don't know where to find this, check out our documentation [here](https://enterprise.docs.commonfate.io/deploy)",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Registers an integration with Google Cloud",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_organization_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role": {
+            "type": "string",
+            "description": "The GCP role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the projects",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP Organization roles available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_organization_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID. This should look something like 'organizations/123456789'",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-org`",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A Selector to match a GCP organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_project_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_project_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role": {
+            "type": "string",
+            "description": "The GCP role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the projects",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP projects available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_project_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match projects on, e.g: `resource.tag_keys contains \"production\" && resource in GCP::Folder::\"folders/342982723\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match GCP projects with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_role_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_organization_id": {
+            "type": "string",
+            "description": "The GCP organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The GCP role group resource ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "role_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of GCP role IDs to include in the role group",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Defines GCP role group resource",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_role_group_folder_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_folder_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role_group_id": {
+            "type": "string",
+            "description": "The ID of the GCP role group to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the folders",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP folders available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_gcp_role_group_project_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gcp_project_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "gcp_role_group_id": {
+            "type": "string",
+            "description": "The ID of the GCP role group to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "google_workspace_customer_id": {
+            "type": "string",
+            "description": "The ID of the Google Workspace customer associated with the projects",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make GCP projects available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_jira_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Jira application Client ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Client Secret",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a Jira integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_okta_group_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "okta_group_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Okta Organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make Okta Groups available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_okta_group_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Okta Organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match groups on, e.g: `resource.name like \"*production*\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match Okta Groups with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_okta_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_secret_path": {
+            "type": "string",
+            "description": "Path to secret for the Okta API Key",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Okta Organization ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a Okta integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_opsgenie_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_secret_path": {
+            "type": "string",
+            "description": "Path to secret for API Key",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the OpsGenie account you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers an OpsGenie integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_pagerduty_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The PagerDuty application Client ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Client Secret",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a PagerDuty integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_policyset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate policy ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The Cedar policy to define permissions as policies in your Common Fate instance.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Creates a Cedar PolicySet used to authorize access decisions in Common Fate.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_proxy_eks_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "The AWS account id the database is in",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cluster_access_role_name": {
+            "type": "string",
+            "description": "The name of the access role used by the proxy to access the eks cluster.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cluster_name": {
+            "type": "string",
+            "description": "The name of the cluster.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal resource",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique name for the resource",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "proxy_id": {
+            "type": "string",
+            "description": "The ID of the proxy in the same account as the database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The region the database is in",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a EKS Cluster with a Common Fate Proxy.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_proxy_eks_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal resource identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A display name for the service account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account_name": {
+            "type": "string",
+            "description": "The name of the service account in the cluster",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a EKS Service Account with a Common Fate Proxy.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_proxy_rds_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "The AWS account id the database is in",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "database": {
+            "type": "string",
+            "description": "The name of the database",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "The endpoint of the database",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "engine": {
+            "type": "string",
+            "description": "A SQL engine of the RDS database",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal resource",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "instance_id": {
+            "type": "string",
+            "description": "The name of the parent instance id that the database will be connected to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique name for the resource",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "proxy_id": {
+            "type": "string",
+            "description": "The ID of the proxy in the same account as the database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The region the database is in",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "default_local_port": {
+                  "type": "number",
+                  "description": "The default local port to use for the user when running `granted rds proxy`",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "Override default endpoint behaviour by specifying a endpoint on a per user basis.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name for the user",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password_secrets_manager_arn": {
+                  "type": "string",
+                  "description": "The secrets manager arn for the RDS database password",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The user name for the user",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of users that exist in the database",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a RDS database with a Common Fate Proxy.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_s3_log_destination": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "batch_duration_in_minutes": {
+            "type": "number",
+            "description": "Specifies the frequency to write batches of events to the S3 bucket in minutes. Must be 5 or greater.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "bucket_name": {
+            "type": "string",
+            "description": "The S3 bucket name to send logs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "compression": {
+            "type": "string",
+            "description": "An optional compression algorithm to use when writing events. If provided, must be one of ['gzip'].",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter_for_actions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Optionally filters the logs to be sent to the bucket. For example ['grant.cancelled', 'grant.revoked'] will only write audit log events to the S3 bucket for Grants being cancelled or revoked.\n\nAvailable actions that you can filter on include:\n\n- grant.requested\n- grant.approved\n- grant.activated\n- grant.provisioned\n- grant.provisioning_attempted\n- grant.extended\n- grant.deprovisioned\n- grant.cancelled\n- grant.revoked\n- grant.provisioning_error\n- grant.deprovisioning_error\n",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "key_template": {
+            "type": "string",
+            "description": "The template to use when writing events to the bucket. If not provided, will default to '{{`{{ .Year }}`}}/{{`{{ .Month }}`}}/{{`{{ .Day }}`}}/{{`{{ .Hour }}`}}_{{`{{ .Minute }}`}}_{{`{{ .Second }}`}}_{{`{{ .ID }}`}}'.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "maximum_batch_size": {
+            "type": "number",
+            "description": "Specifies the maximum batch size to use when writing files. Defaults to 5000 if unspecified. Increasing this may impact the memory usage of your Common Fate deployment.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name for the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_arn": {
+            "type": "string",
+            "description": "The role to assume when writing logs to the S3 bucket.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers an Amazon S3 log destination.\n\nEvents are written in batches to the bucket in [JSONL format](https://jsonlines.org/) at a frequency specified by 'batch_duration_in_minutes'.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "belonging_to": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The entity ID",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The entity type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The overall parent that the selected resources must be a descendent of",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-data-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "The type of resource that the selector will query for",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression to use to match resources. For example: `resource in AWS::OrgUnit::\"ou-123\"` or `resource.tag_keys contains \"prod\"",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Access Selectors select resources matching a criteria specified in the 'when' parameter. Resources matching this criteria can be made available for Access Workflows.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_slack_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "disable_interactivity_handlers": {
+            "type": "bool",
+            "description": "Disables all webhook handlers for the Slack integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal approval workflow ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The ID for the integration set up to slack.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "notify_expiry_in_seconds": {
+            "type": "number",
+            "description": "The duration before access expiration at which Slack will notify the user about the upcoming expiration.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "send_direct_message_to_approvers": {
+            "type": "bool",
+            "description": "If Slack is connected, it will send notifications to the requesting user. Cannot be used in conjunction with 'slack_channel_id'",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "slack_channel_id": {
+            "type": "string",
+            "description": "If Slack is connected, it will send notifications to this slack channel. Must be the ID of the channel and not the name. See below on how to find this ID.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "slack_workspace_id": {
+            "type": "string",
+            "description": "The Slack Workspace ID. In Slack URLs, such as `https://app.slack.com/client/TXXXXXXX/CXXXXXXX` it is the string beginning with T.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_web_console_for_approval_action": {
+            "type": "bool",
+            "description": "Optionally, configure the access request review buttons to be links to the web console, rather than performing the action in Slack.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Links a Slack message being send to a particular channel or workspace based on actions made against a workflow.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_slack_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Slack application Client ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Client Secret",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the organization you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "signing_secret_secret_path": {
+            "type": "string",
+            "description": "Path to secret for Signing Secret",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a Slack integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_snowflake_account_availability": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snowflake_account_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Snowflake::Account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "snowflake_account_role": {
+            "type": "string",
+            "description": "The Snowflake Account Role to make available. Should be a Snowflake::AccountRole",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make a single Snowflake Account available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_snowflake_database_availabilities": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_priority": {
+            "type": "number",
+            "description": "The priority that governs which role will be suggested to use in the web app when requesting access. The availability spec with the highest priority will have its role suggested first in the UI",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snowflake_database_role": {
+            "type": "string",
+            "description": "The Snowflake Database Role to make available",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "snowflake_database_selector_id": {
+            "type": "string",
+            "description": "The target to make available. Should be a Selector entity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The Access Workflow ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A specifier to make Snowflake Databases available for selection under a particular Access Workflow",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_snowflake_database_selector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the selector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the selector. Call this something memorable and relevant to the resources being selected. For example: `prod-database-eng`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snowflake_account_id": {
+            "type": "string",
+            "description": "The Snowflake Account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "when": {
+            "type": "string",
+            "description": "A Cedar expression with the criteria to match resources on, e.g: `resource.tag_keys contains \"production\"`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Selector to match Snowflake Databases with a criteria based on the 'when' field.",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_snowflake_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The Snowflake Account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration: use a short label which is descriptive of the Snowflake instance you're connecting to",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password_secret_path": {
+            "type": "string",
+            "description": "Path to secret for the password Snowflake Admin account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The region that the Snowflake instance is hosted in(e.g ap-southeast-2)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the Snowflake Admin account",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a Snowflake integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_webhook_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter_for_actions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Filter for event actions to send to the webhook",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "headers": {
+            "nested_type": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description": "The HTTP header key",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The HTTP header value",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "HTTP headers to use when sending the webhook event",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Common Fate ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name for the integration",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "send_audit_log_events": {
+            "type": "bool",
+            "description": "Set to true to dispatch Audit Log events to the webhook.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "send_authorization_events": {
+            "type": "bool",
+            "description": "Set to true to dispatch authorization events to the webhook",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL to dispatch webhook events to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Registers a webhook integration",
+        "description_kind": "markdown"
+      }
+    },
+    "commonfate_webhook_provisioner": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "capabilities": {
+            "nested_type": {
+              "attributes": {
+                "belonging_to": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "The entity ID",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The entity type",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "role_type": {
+                  "type": "string",
+                  "description": "The type of target such as `GCP::Project` or `AWS::Account`",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "target_type": {
+                  "type": "string",
+                  "description": "The type of target such as `GCP::Project` or `AWS::Account`",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The resources and integrations that this provisioner supports.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The webhook URL.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Registers a provisioner with a webhook URL to provision access.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "commonfate_ecs_proxy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "The AWS account the proxy is installed in.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "aws_region": {
+            "type": "string",
+            "description": "The AWS region the proxy is installed to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_cluster_name": {
+            "type": "string",
+            "description": "The ECS cluster name of the proxy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_cluster_reader_role_arn": {
+            "type": "string",
+            "description": "The ECS cluster reader role ARN of the proxy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_cluster_security_group_id": {
+            "type": "string",
+            "description": "The ECS cluster security group ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_cluster_task_container_name": {
+            "type": "string",
+            "description": "The name of the ECS cluster task container for the proxy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_cluster_task_role_name": {
+            "type": "string",
+            "description": "The ECS cluster task role ARN.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ecs_task_definition_family": {
+            "type": "string",
+            "description": "The ECS task definition family of the proxy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the proxy. Eg: prod-us-west-2",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": ".",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

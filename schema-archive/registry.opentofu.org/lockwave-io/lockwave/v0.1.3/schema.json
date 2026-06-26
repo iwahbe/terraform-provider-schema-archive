@@ -1,0 +1,960 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "Sanctum Bearer token for authenticating with the Lockwave API. Can also be set via the LOCKWAVE_API_TOKEN environment variable.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "Base URL of the Lockwave API. Defaults to https://lockwave.io. Can also be set via the LOCKWAVE_API_URL environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "team_id": {
+          "type": "string",
+          "description": "UUID of the Lockwave team that all resources belong to. Can also be set via the LOCKWAVE_TEAM_ID environment variable.",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description": "The Lockwave provider manages SSH key lifecycle via the Lockwave SaaS API.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "lockwave_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the assignment was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by_id": {
+            "type": "string",
+            "description": "The UUID of the actor that created this assignment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by_type": {
+            "type": "string",
+            "description": "The type of the actor that created this assignment (e.g. user, team).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable description for the assignment.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Optional ISO 8601 expiry timestamp for the assignment.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "host_user_id": {
+            "type": "string",
+            "description": "UUID of the host user to assign the key to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the assignment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssh_key_id": {
+            "type": "string",
+            "description": "UUID of the SSH key to assign.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Lockwave assignment that grants an SSH key access to an OS user on a host.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_audit_log_stream": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "nested_type": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "(s3) AWS access key ID with write access to the bucket.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "bucket": {
+                  "type": "string",
+                  "description": "(s3) Name of the S3 bucket to write audit logs to.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "prefix": {
+                  "type": "string",
+                  "description": "(s3) Optional key prefix for objects written to the bucket.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "(s3) AWS region where the bucket resides (e.g. us-east-1).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "secret": {
+                  "type": "string",
+                  "description": "(webhook) Optional HMAC secret used to sign payloads.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "(s3) AWS secret access key corresponding to access_key_id.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "(webhook) HTTPS URL to deliver audit log payloads to.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Type-specific configuration for the audit log stream. Provide only the fields relevant to the chosen type.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the stream was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the audit log stream.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_active": {
+            "type": "bool",
+            "description": "Whether the audit log stream is currently active.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Stream destination type. Must be \"webhook\" or \"s3\". Immutable after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the last update.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Lockwave audit log stream that forwards audit events to an external destination (webhook or S3).",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arch": {
+            "type": "string",
+            "description": "CPU architecture. One of: x86_64, aarch64, amd64, arm64.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the host was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "credential": {
+            "type": "string",
+            "description": "One-time daemon credential returned only on host creation. Store this securely.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "daemon_version": {
+            "type": "string",
+            "description": "Version of the Lockwave daemon running on this host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name for the host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "host_users": {
+            "nested_type": {
+              "attributes": {
+                "authorized_keys_path": {
+                  "type": "string",
+                  "description": "Path to the authorized_keys file.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "ISO 8601 creation timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "exclusive_keys": {
+                  "type": "bool",
+                  "description": "Whether only Lockwave-managed keys are written.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "UUID of the host user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "os_user": {
+                  "type": "string",
+                  "description": "OS username.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "OS users registered on this host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "DNS name or IP address of the host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_seen_at": {
+            "type": "string",
+            "description": "Timestamp of the last daemon sync.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "os": {
+            "type": "string",
+            "description": "Operating system of the host. One of: linux, darwin, freebsd.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current sync status of the host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of string tags attached to the host.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Lockwave host. Creating a host also provisions a one-time daemon credential stored in the `credential` attribute.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_host_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "authorized_keys_path": {
+            "type": "string",
+            "description": "Absolute path to the authorized_keys file. Defaults to the standard location for the OS user.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the host user was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "exclusive_keys": {
+            "type": "bool",
+            "description": "When true, only Lockwave-managed keys are written to authorized_keys \u2014 all unmanaged keys are removed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "host_id": {
+            "type": "string",
+            "description": "UUID of the parent host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the host user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "os_user": {
+            "type": "string",
+            "description": "OS username (e.g. ubuntu, ec2-user, deploy).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages an OS user record on a Lockwave host. These records define which authorized_keys files the daemon manages.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_notification_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "nested_type": {
+              "attributes": {
+                "recipients": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of recipient email addresses (email channels only).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "webhook_url": {
+                  "type": "string",
+                  "description": "Incoming webhook URL (slack channels only).",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Type-specific configuration block. Populate only the fields relevant to the chosen type.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the notification channel was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the notification channel.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_active": {
+            "type": "bool",
+            "description": "Whether the notification channel is currently active.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the notification channel.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Channel type. One of: slack, email. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the last update.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Lockwave notification channel. Supported types are \"slack\" and \"email\".",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "blocked_indefinite": {
+            "type": "bool",
+            "description": "Whether the key is blocked indefinitely.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "blocked_until": {
+            "type": "string",
+            "description": "ISO 8601 timestamp until which the key is blocked, or null.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment embedded in the public key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the key was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fingerprint_sha256": {
+            "type": "string",
+            "description": "SHA-256 fingerprint of the public key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the SSH key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_bits": {
+            "type": "number",
+            "description": "RSA key size. One of: 3072, 4096. Only relevant when key_type=rsa.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_type": {
+            "type": "string",
+            "description": "Key algorithm. One of: ed25519, rsa. Required when mode=generate.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Creation mode. One of: generate, import. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the SSH key.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "Private key returned only on creation when mode=generate. Store this securely; it is never returned again.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "OpenSSH public key. Required when mode=import. Computed when mode=generate.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Source of the SSH key (e.g. generated, imported).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of string tags attached to the SSH key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Lockwave SSH key. Keys can be server-generated (mode=generate) or imported (mode=import).",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_webhook_endpoint": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of when the endpoint was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description for the webhook endpoint.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "disabled_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the endpoint was automatically disabled, or null.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "events": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of event types to subscribe to (e.g. host.synced, ssh_key.created).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "failure_count": {
+            "type": "number",
+            "description": "Cumulative delivery failure count.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the webhook endpoint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_active": {
+            "type": "bool",
+            "description": "Whether the webhook endpoint is currently active.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the last update.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "HTTPS URL to deliver webhook payloads to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Lockwave webhook endpoint that receives event notifications.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "lockwave_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arch": {
+            "type": "string",
+            "description": "CPU architecture.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "daemon_version": {
+            "type": "string",
+            "description": "Daemon version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host_users": {
+            "nested_type": {
+              "attributes": {
+                "authorized_keys_path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "os_user": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "OS users on this host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "DNS name or IP address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "last_seen_at": {
+            "type": "string",
+            "description": "Last daemon sync timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "os": {
+            "type": "string",
+            "description": "Operating system.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current sync status.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Lockwave host by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_hosts": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hosts": {
+            "nested_type": {
+              "attributes": {
+                "arch": {
+                  "type": "string",
+                  "description": "CPU architecture.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "daemon_version": {
+                  "type": "string",
+                  "description": "Daemon version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Display name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "host_users": {
+                  "nested_type": {
+                    "attributes": {
+                      "authorized_keys_path": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "os_user": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "OS users on this host.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "DNS name or IP address.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "UUID of the host.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_seen_at": {
+                  "type": "string",
+                  "description": "Last sync timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "os": {
+                  "type": "string",
+                  "description": "Operating system.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Sync status.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of hosts.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches all Lockwave hosts for the current team.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "blocked_indefinite": {
+            "type": "bool",
+            "description": "Whether the key is blocked indefinitely.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "blocked_until": {
+            "type": "string",
+            "description": "Blocked-until timestamp, or null.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Key comment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fingerprint_sha256": {
+            "type": "string",
+            "description": "SHA-256 fingerprint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the SSH key.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "key_bits": {
+            "type": "number",
+            "description": "RSA key size (null for ed25519).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_type": {
+            "type": "string",
+            "description": "Key algorithm (ed25519 or rsa).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the key.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Lockwave SSH key by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_ssh_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "keys": {
+            "nested_type": {
+              "attributes": {
+                "blocked_indefinite": {
+                  "type": "bool",
+                  "description": "Blocked indefinitely.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "blocked_until": {
+                  "type": "string",
+                  "description": "Blocked until.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "comment": {
+                  "type": "string",
+                  "description": "Comment.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "fingerprint_sha256": {
+                  "type": "string",
+                  "description": "SHA-256 fingerprint.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "UUID of the key.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key_bits": {
+                  "type": "number",
+                  "description": "RSA key bits.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key_type": {
+                  "type": "string",
+                  "description": "Algorithm.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of SSH keys.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches all Lockwave SSH keys for the current team.",
+        "description_kind": "plain"
+      }
+    },
+    "lockwave_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the team.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Team name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "personal_team": {
+            "type": "bool",
+            "description": "Whether this is a personal (single-user) team.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches the Lockwave team identified by the provider's team_id.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
