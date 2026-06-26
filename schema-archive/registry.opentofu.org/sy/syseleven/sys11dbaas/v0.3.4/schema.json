@@ -1,0 +1,689 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "API key or service account token to use for authentication to the DBaaS API. If omitted, the `SYS11DBAAS_API_KEY` environment variable is used.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "organization": {
+          "type": "string",
+          "description": "ID of your organization. If omitted, the `SYS11DBAAS_ORGANIZATION` environment variable is used.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "project": {
+          "type": "string",
+          "description": "ID of your project. If omitted, the `SYS11DBAAS_PROJECT` environment variable is used.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the DBaaS API. If omitted, the `SYS11DBAAS_URL` environment variable is used. Otherwise fallbacks to https://dbaas.apis.syseleven.de",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "wait_for_creation": {
+          "type": "bool",
+          "description": "Whether to wait for the service to be created. If omitted, the `SYS11DBAAS_WAIT_FOR_CREATION` environment variable is used. Defaults to true",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "sys11dbaas_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_config": {
+            "nested_type": {
+              "attributes": {
+                "hostname": {
+                  "type": "string",
+                  "description": "DNS name of the database in the format uuid.postgresql.syseleven.services.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "instances": {
+                  "type": "number",
+                  "description": "Node count of the database cluster.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "ip_address": {
+                  "type": "string",
+                  "description": "Public IP address of the database. It will be 'Pending' if no address has been assigned yet.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "Password for the admin user.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "recovery": {
+                  "nested_type": {
+                    "attributes": {
+                      "exclusive": {
+                        "type": "bool",
+                        "description": "Set to true, when the given target should be excluded.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "source": {
+                        "type": "string",
+                        "description": "UUID of the source database.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_lsn": {
+                        "type": "string",
+                        "description": "LSN of the write-ahead log location up to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_name": {
+                        "type": "string",
+                        "description": "Named restore point (created with pg_create_restore_point()) to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_time": {
+                        "type": "string",
+                        "description": "Time stamp up to which recovery will proceed, expressed in RFC 3339 format. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_xid": {
+                        "type": "string",
+                        "description": "Transaction ID up to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "scheduled_backups": {
+                  "nested_type": {
+                    "attributes": {
+                      "retention": {
+                        "type": "number",
+                        "description": "Duration in days for which backups should be stored.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "schedule": {
+                        "nested_type": {
+                          "attributes": {
+                            "hour": {
+                              "type": "number",
+                              "description": "Hour when the full backup should start. If this value is omitted, a random hour between 1am and 5am will be generated.",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "minute": {
+                              "type": "number",
+                              "description": "Minute when the full backup should start. If this value is omitted, a random minute will be generated.",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Schedules for the backup policy.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Scheduled backups policy for the database.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the database. Currently only supports 'postgresql'.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Minor version of PostgreSQL.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Date when the database was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Initial creator of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Fulltext description of the database.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_modified_at": {
+            "type": "string",
+            "description": "Date when the database was last modified.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_modified_by": {
+            "type": "string",
+            "description": "User who last changed the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "phase": {
+            "type": "string",
+            "description": "Detailed status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "resource_status": {
+            "type": "string",
+            "description": "Sync status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_config": {
+            "nested_type": {
+              "attributes": {
+                "disksize": {
+                  "type": "number",
+                  "description": "Disksize in GB.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "flavor": {
+                  "type": "string",
+                  "description": "VM flavor to use.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "maintenance_window": {
+                  "nested_type": {
+                    "attributes": {
+                      "day_of_week": {
+                        "type": "number",
+                        "description": "Day of week as a cron time (0=Sun, 1=Mon, ..., 6=Sat). If omitted, a random day will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "start_hour": {
+                        "type": "number",
+                        "description": "Hour when the maintenance window starts. If omitted, a random hour between 20 and 4 will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "start_minute": {
+                        "type": "number",
+                        "description": "Minute when the maintenance window starts. If omitted, a random minute will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Maintenance window. This will be a time window for updates and maintenance. If omitted, a random window will be generated.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Region for the database.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "remote_ips": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of IP addresses, that should be allowed to connect to the database.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the service you want to create (default `database`)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Overall status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "sys11dbaas_database_v2": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_config": {
+            "nested_type": {
+              "attributes": {
+                "instances": {
+                  "type": "number",
+                  "description": "Node count of the database cluster.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "Password for the admin user.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                },
+                "private_networking": {
+                  "nested_type": {
+                    "attributes": {
+                      "allowed_cidrs": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of IP addresses, that should be allowed to connect to the database via private networking.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Set to true, when private networking should be enabled.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "hostname": {
+                        "type": "string",
+                        "description": "DNS name of the database in the format uuid.postgresql-private.syseleven.services.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "ip_address": {
+                        "type": "string",
+                        "description": "Private IP address of the database. It will be 'pending' if no address has been assigned yet.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "shared_network_id": {
+                        "type": "string",
+                        "description": "Openstack ID of the shared network.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "shared_subnet_cidr": {
+                        "type": "string",
+                        "description": "The subnet cidr for the shared network. Make sure this does not collide with other subnets you already use in your project.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "shared_subnet_id": {
+                        "type": "string",
+                        "description": "Openstack ID of the shared subnet.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "public_networking": {
+                  "nested_type": {
+                    "attributes": {
+                      "allowed_cidrs": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of IP addresses, that should be allowed to connect to the database via public networking.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Set to true, when public networking should be enabled.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "hostname": {
+                        "type": "string",
+                        "description": "DNS name of the database in the format uuid.postgresql.syseleven.services.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "ip_address": {
+                        "type": "string",
+                        "description": "Public IP address of the database. It will be 'pending' if no address has been assigned yet.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "recovery": {
+                  "nested_type": {
+                    "attributes": {
+                      "exclusive": {
+                        "type": "bool",
+                        "description": "Set to true, when the given target should be excluded.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "source": {
+                        "type": "string",
+                        "description": "UUID of the source database.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_lsn": {
+                        "type": "string",
+                        "description": "LSN of the write-ahead log location up to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_name": {
+                        "type": "string",
+                        "description": "Named restore point (created with pg_create_restore_point()) to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_time": {
+                        "type": "string",
+                        "description": "Time stamp up to which recovery will proceed, expressed in RFC 3339 format. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "target_xid": {
+                        "type": "string",
+                        "description": "Transaction ID up to which recovery will proceed. target_* parameters are mutually exclusive.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "scheduled_backups": {
+                  "nested_type": {
+                    "attributes": {
+                      "retention": {
+                        "type": "number",
+                        "description": "Duration in days for which backups should be stored.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "schedule": {
+                        "nested_type": {
+                          "attributes": {
+                            "hour": {
+                              "type": "number",
+                              "description": "Hour when the full backup should start. If this value is omitted, a random hour between 1am and 5am will be generated.",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "minute": {
+                              "type": "number",
+                              "description": "Minute when the full backup should start. If this value is omitted, a random minute will be generated.",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Schedules for the backup policy.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Scheduled backups policy for the database.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the database. Currently only supports 'postgresql'.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Minor version of PostgreSQL.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Date when the database was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Initial creator of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Fulltext description of the database.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_modified_at": {
+            "type": "string",
+            "description": "Date when the database was last modified.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_modified_by": {
+            "type": "string",
+            "description": "User who last changed the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "phase": {
+            "type": "string",
+            "description": "Detailed status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "resource_status": {
+            "type": "string",
+            "description": "Sync status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_config": {
+            "nested_type": {
+              "attributes": {
+                "disksize": {
+                  "type": "number",
+                  "description": "Disksize in GB.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "flavor": {
+                  "type": "string",
+                  "description": "VM flavor to use.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "maintenance_window": {
+                  "nested_type": {
+                    "attributes": {
+                      "day_of_week": {
+                        "type": "number",
+                        "description": "Day of week as a cron time (0=Sun, 1=Mon, ..., 6=Sat). If omitted, a random day will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "start_hour": {
+                        "type": "number",
+                        "description": "Hour when the maintenance window starts. If omitted, a random hour between 20 and 4 will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "start_minute": {
+                        "type": "number",
+                        "description": "Minute when the maintenance window starts. If omitted, a random minute will be used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Maintenance window. This will be a time window for updates and maintenance. If omitted, a random window will be generated.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Region for the database.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the service you want to create (default `database`)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Overall status of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of the database.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
