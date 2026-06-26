@@ -71,7 +71,7 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float,
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
             "-v", f"{work}:/work", "-w", "/work",
             "--entrypoint", "/bin/sh", IMAGE,
-            "-c", "tofu init -input=false -no-color && tofu providers schema -json > schema.json",
+            "-c", "tofu init -input=false -no-color && tofu providers schema -json -no-color > schema.json",
         ]
         out_path, err_path = os.path.join(work, "dump-stdout"), os.path.join(work, "dump-stderr")
         timed_out = False

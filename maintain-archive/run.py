@@ -140,10 +140,18 @@ class Signals:
     def __handle(self, signum, frame):
         self.count += 1
         if self.count == 1:
-            print("\nfinishing current dump; press Ctrl-C again to abort now", file=sys.stderr)
+            self.__notice("finishing current dump; press Ctrl-C again to abort now")
         elif self.container is not None:
-            print("\naborting current dump", file=sys.stderr)
+            self.__notice("aborting current dump")
             subprocess.run(["docker", "kill", self.container], capture_output=True)
+
+    def __notice(self, text: str):
+        "Print a message two lines below the in-progress line, then restore the cursor so it can finish."
+        if sys.stderr.isatty():
+            sys.stderr.write("\x1b7\x1b[2B\r\x1b[2K" + text + "\x1b8")
+        else:
+            sys.stderr.write("\n" + text + "\n")
+        sys.stderr.flush()
 
     def stop_requested(self) -> bool:
         return self.count >= 1
