@@ -1,0 +1,289 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "buildkit_url": {
+          "type": "string",
+          "description": "URL for a running buildkit daemon.",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "block_types": {
+        "registry_auth": {
+          "nesting_mode": "set",
+          "block": {
+            "attributes": {
+              "password": {
+                "type": "string",
+                "description": "The password for authenticating to the registry as `username`.",
+                "description_kind": "plain",
+                "required": true,
+                "sensitive": true
+              },
+              "registry_url": {
+                "type": "string",
+                "description": "The base url of the registry you want to support communicating with.",
+                "description_kind": "plain",
+                "required": true
+              },
+              "username": {
+                "type": "string",
+                "description": "The username you want to use to authenticate to the registry.",
+                "description_kind": "plain",
+                "required": true
+              }
+            },
+            "description_kind": "plain"
+          }
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "buildkit_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "args": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arguments that should be made available to the image being built by Buildkit. Used to set values for ARG commands in the Dockerfile.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "context": {
+            "type": "string",
+            "description": "Path to the directory that should be used as the docker context.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "dockerfile": {
+            "type": "string",
+            "description": "Path to the Dockerfile. For now this is expected to live somewhere within the context dir already.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "forward_ssh_agent_socket": {
+            "type": "bool",
+            "description": "Should the host running Terraform make their ssh agent socket available to the image being built by Buildkit?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image_digest": {
+            "type": "string",
+            "description": "The sha256 digest of the docker image. This is the canonical content addressable hash for a docker image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Labels that should be added to the metadata f the image being built by Buildkit. Equivalent to LABEL commands in the Dockerfile.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "platforms": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Target platforms / architectures that should be supported by the image being built by Buildkit.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secrets": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of secrets in key => value form that will be made accessible to the image being built by Buildkit.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "secrets_base64": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of secrets in key => base64_encoded_value form that will be made accessible to the image being built by Buildkit.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of strings that will cause a change to the counter when any of the values change.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "publish_target": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "digest_url": {
+                  "type": "string",
+                  "description": "The tag you want to publish this particular build as.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the repository within the registry you want to publish to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "registry_url": {
+                  "type": "string",
+                  "description": "The base url of the registry you want to publish to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "tag": {
+                  "type": "string",
+                  "description": "The tag you want to publish this particular build as.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "tag_url": {
+                  "type": "string",
+                  "description": "The tag you want to publish this particular build as.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Describes a coordinate where you want to publish the image after building.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "A docker image built with buildkit and published to target registries.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "buildkit_directory": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "context": {
+            "type": "string",
+            "description": "Path to the directory that should be used as the docker context.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "hash": {
+            "type": "string",
+            "description": "The hash of the directory, excluding any .dockerignore files.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "buildkit_images": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "images": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "digest_url": "string",
+                  "labels": [
+                    "map",
+                    "string"
+                  ],
+                  "name": "string",
+                  "platform": "string",
+                  "tag": "string",
+                  "tag_url": "string"
+                }
+              ]
+            ],
+            "description": "The image results of your query.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Required label keys / values to filter the returned images by.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "most_recent_only": {
+            "type": "bool",
+            "description": "Should all images be returned that match the criteria or only the most recent which matches?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "registry_url": {
+            "type": "string",
+            "description": "The registry url you want to search.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repository_name": {
+            "type": "string",
+            "description": "The repository name you want to search.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "supported_platforms": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Required platforms that must be supported by the returned images.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tag_pattern": {
+            "type": "string",
+            "description": "A regex pattern you want to filter tags by.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

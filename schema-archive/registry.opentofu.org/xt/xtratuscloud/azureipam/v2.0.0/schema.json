@@ -1,0 +1,1734 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_url": {
+          "type": "string",
+          "description": "The root url of the APIM REST API solution to be used, without the /api url suffix. Must be also assigned at AZUREIPAM_API_URL environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "skip_cert_verification": {
+          "type": "bool",
+          "description": "Specifies it the certificate chain validation must be skipped calling the API endpoint. Default to false.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The bearer token to be used when authenticating to the API. Must be also assigned at AZUREIPAM_TOKEN environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Terraform provider to manage reservations in Azure IPAM solution through REST API.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "azureipam_block": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "The IP range to configure to the block, in cidr notation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the block.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where the block must be created. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The block resource allows you to create a IPAM block in a specific Space.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_block_network": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block where the external must be associated. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Azure Resource ID of the virtual network to associate.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Azure virtual network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "prefixes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resource_group": {
+            "type": "string",
+            "description": "Name of the resource group where the `vnet` is deployed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where the external must be associated. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "Id of the Azure subscription where the `vnet` is deployed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Id of the Azure tenant where the `vnet` is deployed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The block_network resource allow to associate an existing azure network to the target block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_external": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block where the external must be associated. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The IP range to configure to the external network, in cidr notation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Text that describes the external network.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the external network.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where the external must be associated. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The external resource allows you to associate an external network to the target space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_reservation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Block where the reservation have been created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "blocks": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List with the names of blocks in the specified space in which the reservation is to be create. The list is evaluated in the order provider. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The assigned and reserved range, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Email or identification of user that created the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_on": {
+            "type": "string",
+            "description": "The date and time that the reservacion was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description text that describe the reservation, that will be added as an additional tag.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the generated reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reverse_search": {
+            "type": "bool",
+            "description": "New networks will be created as close to the end of the block as possible?. Defaults to `false`. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "settled_by": {
+            "type": "string",
+            "description": "Email or identification of user that settled the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settled_on": {
+            "type": "string",
+            "description": "The date and time that the reservacion was settled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "size": {
+            "type": "number",
+            "description": "Integer value to indicate the subnet mask bits, which defines the size of the vnet to reserve (example 24 for a /24 subnet). Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "smallest_cidr": {
+            "type": "bool",
+            "description": "New networks will be created using the smallest possible available block? (e.g. it will not break up large CIDR blocks when possible).Defaults to `false`. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the existing space in the IPAM application. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Auto-generated tags for the reservation. Particular relevance the 'X-IPAM-RES-ID' tag, since it must be included in the vnet creation in order that the IPAM solution automatically considers the reservation as completed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The reservation resource allows you to create a IPAM reservation in the specific space and list of blocks.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_reservation_cidr": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "List with the names of blocks in the specified space in which the reservation is to be create. The list is evaluated in the order provider. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The assigned and reserved range, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Email or identification of user that created the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_on": {
+            "type": "string",
+            "description": "The date and time that the reservacion was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description text that describe the reservation, that will be added as an additional tag.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the generated reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settled_by": {
+            "type": "string",
+            "description": "Email or identification of user that settled the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settled_on": {
+            "type": "string",
+            "description": "The date and time that the reservacion was settled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the existing space in the IPAM application. Changing this forces a new resource to be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "specific_cidr": {
+            "type": "string",
+            "description": "The specific CIDR to reserve, in cidr notation. At least one of size or specific_cidr attribute must be specified. Not allowed if more than one block is specified.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Auto-generated tags for the reservation. Particular relevance the 'X-IPAM-RES-ID' tag, since it must be included in the vnet creation in order that the IPAM solution automatically considers the reservation as completed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The reservation resource allows you to create a IPAM reservation in the specific space and block with a fixed cidr.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description text that describe the space.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the space.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The space resource allows you to create a IPAM space.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "azureipam_block": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "append_utilization": {
+            "type": "bool",
+            "description": "Indicates if utilization information for each network must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The IPV4 range assigned to this block, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expand": {
+            "type": "bool",
+            "description": "Indicates if network references to full network objects must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "externals": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The IPV4 range reserved for the external network, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Text that describes the external network.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the external network.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `external networks` included in this `block`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the block.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reservations": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The IPv4 range assigned to this reservation, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_by": {
+                  "type": "string",
+                  "description": "Email or identification of user that created the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_on": {
+                  "type": "string",
+                  "description": "The date and time that the reservacion was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Text that describes the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settled_by": {
+                  "type": "string",
+                  "description": "Email or identification of user that have settled the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settled_on": {
+                  "type": "string",
+                  "description": "The date and time when the reservation was settled.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `reservations` included in this `block`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "size": {
+            "type": "number",
+            "description": "Total IP's allowed in the `block` by its size.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the `space` for which to read the related `blocks`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "used": {
+            "type": "number",
+            "description": "Assigned IP's in the `block`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vnets": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Resourece Id of the virtual network.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the virtual network.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "prefixes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "resource_group": {
+                  "type": "string",
+                  "description": "Name of the resource group where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Total IP's allowed in the `vnet` by its size.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subnets": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the subnet.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "prefix": {
+                        "type": "string",
+                        "description": "The IPV4 prefix assigned to this block, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "size": {
+                        "type": "number",
+                        "description": "Total IP's allowed in the `subnet` by its size.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "used": {
+                        "type": "number",
+                        "description": "Assigned IP's in the `subnet`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `subnets` included in this `vnet`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subscription_id": {
+                  "type": "string",
+                  "description": "Id of the Azure subscription where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "Id of the Azure tenant where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "used": {
+                  "type": "number",
+                  "description": "Assigned IP's in the `vnet`.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `vnet` included in this `block`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The block data source allows you to retrieve one specific block by space and name with their related information.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_block_networks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block where to search the associated block networks.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "networks": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Azure Resource ID of the virtual network already associated.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the Azure virtual network.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "prefixes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "resource_group": {
+                  "type": "string",
+                  "description": "Name of the resource group where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subscription_id": {
+                  "type": "string",
+                  "description": "Id of the Azure subscription where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "Id of the Azure tenant where the `vnet` is deployed.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `vnet` included in this `block`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where to search the associated block networks.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The block networks data source allows you to retrieve information of the azure virtual networks actively associated to the specified space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_block_networks_availables": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block where to search for networks availables.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of of the Azure virtual networs resource Ids that can be associated to the block.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where to search for networks availables.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The block network availables data source allows you to retrieve information of the azure virtual networks availables to be associated with a space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_blocks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "append_utilization": {
+            "type": "bool",
+            "description": "Indicates if utilization information for each network must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "blocks": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The IPV4 range assigned to this block, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "externals": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "The IPV4 range reserved for the external network, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Text that describes the external network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the external network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `external networks` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the block.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "reservations": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "The IPv4 range assigned to this reservation, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "created_by": {
+                        "type": "string",
+                        "description": "Email or identification of user that created the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "created_on": {
+                        "type": "string",
+                        "description": "The date and time that the reservacion was created.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Text that describes the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The unique identifier of the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "settled_by": {
+                        "type": "string",
+                        "description": "Email or identification of user that have settled the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "settled_on": {
+                        "type": "string",
+                        "description": "The date and time when the reservation was settled.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `reservations` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Total IP's allowed in the `block` by its size.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "used": {
+                  "type": "number",
+                  "description": "Assigned IP's in the `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vnets": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "Resourece Id of the virtual network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the virtual network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "prefixes": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "resource_group": {
+                        "type": "string",
+                        "description": "Name of the resource group where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "size": {
+                        "type": "number",
+                        "description": "Total IP's allowed in the `vnet` by its size.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "subnets": {
+                        "nested_type": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the subnet.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "prefix": {
+                              "type": "string",
+                              "description": "The IPV4 prefix assigned to this block, in cidr notation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "size": {
+                              "type": "number",
+                              "description": "Total IP's allowed in the `subnet` by its size.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "used": {
+                              "type": "number",
+                              "description": "Assigned IP's in the `subnet`.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List containing the `subnets` included in this `vnet`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "subscription_id": {
+                        "type": "string",
+                        "description": "Id of the Azure subscription where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "tenant_id": {
+                        "type": "string",
+                        "description": "Id of the Azure tenant where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "used": {
+                        "type": "number",
+                        "description": "Assigned IP's in the `vnet`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `vnet` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `blocks` included in the specified `space`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expand": {
+            "type": "bool",
+            "description": "Indicates if network references to full network objects must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the `space` for which to read the related `blocks`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The blocks data source allows you to retrieve information about all blocks in the specified space, and their related information.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_external": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block of the external network to search.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The IP range configured in the external network, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Text that describes the external network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the external network to search.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space of the external network to search.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The externals data source allows you to retrieve information about one specific external network associated with a space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_externals": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the block for which to search the associated `externals`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "externals": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The IP range configured in the external network, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Text that describes the external network.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the external network.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `externals` found.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space for which to search the associated `externals`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The externals data source allows you to retrieve information about all external networks associated with a space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_reservation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the  block where the reservation is allocated.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The assigned and reserved range, in cidr notation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Email or identification of user that created the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_on": {
+            "type": "string",
+            "description": "The date and time that the reservacion was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description text that describe the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the reservation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settled_by": {
+            "type": "string",
+            "description": "Email or identification of user that have settled the reservation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settled_on": {
+            "type": "string",
+            "description": "The date and time when the reservation was settled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the space where the reservation is allocated.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Auto-generated tags for the reservation. Particular relevance the 'X-IPAM-RES-ID' tag, since it must be included in the vnet creation in order that the IPAM solution automatically considers the reservation as completed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The reservation data source allows you to retrieve a specific reservation by id in the specified space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_reservations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block": {
+            "type": "string",
+            "description": "Name of the existing block, related to the specified space.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "include_settled": {
+            "type": "bool",
+            "description": "Settled reservations must be also included? Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "reservations": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The assigned and reserved range, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_by": {
+                  "type": "string",
+                  "description": "Email or identification of user that created the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_on": {
+                  "type": "string",
+                  "description": "The date and time that the reservacion was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description text that describe the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settled_by": {
+                  "type": "string",
+                  "description": "Email or identification of user that have settled the reservation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settled_on": {
+                  "type": "string",
+                  "description": "The date and time when the reservation was settled.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tags": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Auto-generated tags for the reservation. Particular relevance the 'X-IPAM-RES-ID' tag, since it must be included in the vnet creation in order that the IPAM solution automatically considers the reservation as completed.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `reservations` found for the specified attributes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "Name of the existing space in the IPAM application.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The reservations data source allows you to retrieve information about all existing reservations in the specified space and block.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "append_utilization": {
+            "type": "bool",
+            "description": "Indicates if utilization information for each network must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "blocks": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "The IPV4 range assigned to this block, in cidr notation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "externals": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "The IPV4 range reserved for the external network, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Text that describes the external network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the external network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `external networks` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the block.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "reservations": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "The IPv4 range assigned to this reservation, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "created_by": {
+                        "type": "string",
+                        "description": "Email or identification of user that created the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "created_on": {
+                        "type": "string",
+                        "description": "The date and time that the reservacion was created.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Text that describes the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The unique identifier of the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "settled_by": {
+                        "type": "string",
+                        "description": "Email or identification of user that have settled the reservation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "settled_on": {
+                        "type": "string",
+                        "description": "The date and time when the reservation was settled.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `reservations` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Total IP's allowed in the `block` by its size.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "used": {
+                  "type": "number",
+                  "description": "Assigned IP's in the `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vnets": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "Resourece Id of the virtual network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the virtual network.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "prefixes": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "resource_group": {
+                        "type": "string",
+                        "description": "Name of the resource group where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "size": {
+                        "type": "number",
+                        "description": "Total IP's allowed in the `vnet` by its size.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "subnets": {
+                        "nested_type": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the subnet.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "prefix": {
+                              "type": "string",
+                              "description": "The IPV4 prefix assigned to this block, in cidr notation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "size": {
+                              "type": "number",
+                              "description": "Total IP's allowed in the `subnet` by its size.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "used": {
+                              "type": "number",
+                              "description": "Assigned IP's in the `subnet`.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List containing the `subnets` included in this `vnet`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "subscription_id": {
+                        "type": "string",
+                        "description": "Id of the Azure subscription where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "tenant_id": {
+                        "type": "string",
+                        "description": "Id of the Azure tenant where the `vnet` is deployed.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "used": {
+                        "type": "number",
+                        "description": "Assigned IP's in the `vnet`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `vnet` included in this `block`.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `blocks` included in this `space`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Text that describes the space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expand": {
+            "type": "bool",
+            "description": "Indicates if network references to full network objects must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the space.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "size": {
+            "type": "number",
+            "description": "Total IP's allowed in the `space` by its size.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "used": {
+            "type": "number",
+            "description": "Assigned IP's in the `space`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The spaces data source allows you to retrieve one specific space by name with their related information.",
+        "description_kind": "plain"
+      }
+    },
+    "azureipam_spaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "append_utilization": {
+            "type": "bool",
+            "description": "Indicates if utilization information for each network must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "expand": {
+            "type": "bool",
+            "description": "Indicates if network references to full network objects must be included.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "spaces": {
+            "nested_type": {
+              "attributes": {
+                "blocks": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "The IPV4 range assigned to this block, in cidr notation.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "externals": {
+                        "nested_type": {
+                          "attributes": {
+                            "cidr": {
+                              "type": "string",
+                              "description": "The IPV4 range reserved for the external network, in cidr notation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "Text that describes the external network.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the external network.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List containing the `external networks` included in this `block`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the block.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "reservations": {
+                        "nested_type": {
+                          "attributes": {
+                            "cidr": {
+                              "type": "string",
+                              "description": "The IPv4 range assigned to this reservation, in cidr notation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "created_by": {
+                              "type": "string",
+                              "description": "Email or identification of user that created the reservation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "created_on": {
+                              "type": "string",
+                              "description": "The date and time that the reservacion was created.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "Text that describes the reservation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "The unique identifier of the reservation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "settled_by": {
+                              "type": "string",
+                              "description": "Email or identification of user that have settled the reservation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "settled_on": {
+                              "type": "string",
+                              "description": "The date and time when the reservation was settled.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "Status of the reservation, a 'wait' status indicates that is waiting for the related vnet creation",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List containing the `reservations` included in this `block`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "size": {
+                        "type": "number",
+                        "description": "Total IP's allowed in the `block` by its size.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "used": {
+                        "type": "number",
+                        "description": "Assigned IP's in the `block`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "vnets": {
+                        "nested_type": {
+                          "attributes": {
+                            "id": {
+                              "type": "string",
+                              "description": "Resourece Id of the virtual network.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the virtual network.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "prefixes": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "The list of IPV4 prefixes assigned to this vnet, in cidr notation.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "resource_group": {
+                              "type": "string",
+                              "description": "Name of the resource group where the `vnet` is deployed.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "size": {
+                              "type": "number",
+                              "description": "Total IP's allowed in the `vnet` by its size.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "subnets": {
+                              "nested_type": {
+                                "attributes": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Name of the subnet.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "prefix": {
+                                    "type": "string",
+                                    "description": "The IPV4 prefix assigned to this block, in cidr notation.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "size": {
+                                    "type": "number",
+                                    "description": "Total IP's allowed in the `subnet` by its size.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "used": {
+                                    "type": "number",
+                                    "description": "Assigned IP's in the `subnet`.",
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "List containing the `subnets` included in this `vnet`.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "subscription_id": {
+                              "type": "string",
+                              "description": "Id of the Azure subscription where the `vnet` is deployed.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "tenant_id": {
+                              "type": "string",
+                              "description": "Id of the Azure tenant where the `vnet` is deployed.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "used": {
+                              "type": "number",
+                              "description": "Assigned IP's in the `vnet`.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List containing the `vnet` included in this `block`.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List containing the `blocks` included in this `space`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Text that describes the space.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the space.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Total IP's allowed in the `space` by its size.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "used": {
+                  "type": "number",
+                  "description": "Assigned IP's in the `space`.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List containing the `spaces` found.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "The spaces data source allows you to retrieve information about all spaces and all the related information.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

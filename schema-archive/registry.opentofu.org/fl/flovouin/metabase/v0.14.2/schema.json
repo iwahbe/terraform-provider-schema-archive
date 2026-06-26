@@ -1,0 +1,764 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "The API key to use to authenticate. This can be used instead of a user name and password.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "The URL to the Metabase API.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "description": "The password to use to authenticate.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "The user name (or email address) to use to authenticate.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The Metabase provider allows managing both metadata (collections, permissions groups) and actual visualizations (cards/questions and dashboards).\n\nWhile most Terraform resources fully define the Metabase objects using attributes, the most complex ones (cards and dashboards) must be defined using JSON (and possibly templates).",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "metabase_card": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the card.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "json": {
+            "type": "string",
+            "description": "The full card definition as a JSON string.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Metabase card (question).\n\nBecause the content of a card is complex and can vary a lot between cards, the full schema is not defined in Terraform, and a JSON string should be used instead. You can use templatefile or jsonencode to make the experience smoother.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_collection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A description for the collection.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "A unique string identifier for the collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The collection ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "A path-like location, useful when this is a sub-collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The collection name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_id": {
+            "type": "number",
+            "description": "The ID of the parent collection, if any.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug for the collection, used in URLs.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Metabase collection.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_collection_graph": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ignored_groups": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "The list of group IDs that should be ignored when reading and updating permissions. By default, this contains the Administrators group (`[2]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "collection": {
+                  "type": "string",
+                  "description": "The ID of the collection to which the permission applies.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "group": {
+                  "type": "number",
+                  "description": "The ID of the group to which the permission applies.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "permission": {
+                  "type": "string",
+                  "description": "The level of permission (`read` or `write`).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A list of permissions for a given group and collection. A (group, collection) pair should appear only once in the list.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision number for the graph.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "The graph of permissions between permissions groups and collections.\n\nMetabase exposes a single resource to define all permissions related to collections. This means a single collection graph resource should be defined in the entire Terraform configuration.\n\nThe collection graph cannot be created or deleted. Trying to create it will result in an error. It should be imported instead. Trying to delete the resource will succeed with no impact on Metabase (it is a no-op).\n\nPermissions for the Administrators group cannot be changed. To avoid issues during the update, all permissions for the Administrators group are ignored by default. This behavior can be changed using the ignored groups attribute.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_content_translation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dictionary": {
+            "type": "string",
+            "description": "The CSV content of the translation dictionary. Must have columns: Locale Code (locale code), String (text to translate), Translation (translated text). Example: `Locale Code,String,Translation\\npt-BR,Examples,Exemplos\\nen,Dashboard,Dashboard`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the translation set.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Metabase content translation dictionary. This resource manages the translation dictionary for Metabase Enterprise Edition.\n\n## \u26a0\ufe0f Important Warning\n\n**Deleting this resource will erase all translation dictionaries on the Metabase instance.** When you destroy this resource, it uploads an empty dictionary to Metabase, effectively removing all translations. Make sure to backup your translation data before destroying this resource if you need to preserve the translations.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cache_ttl": {
+            "type": "number",
+            "description": "The cache TTL.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cards_json": {
+            "type": "string",
+            "description": "The list of cards in the dashboard, as a JSON string.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "collection_id": {
+            "type": "number",
+            "description": "The ID of the collection in which the dashboard is placed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "collection_position": {
+            "type": "number",
+            "description": "The position of the dashboard in the collection.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the dashboard.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the dashboard.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A user-displayable name for the dashboard.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parameters_json": {
+            "type": "string",
+            "description": "A list of parameters for the dashboard, that the user can tweak, as a JSON string.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tabs_json": {
+            "type": "string",
+            "description": "The list of tabs in the dashboard, as a JSON string. Each tab should have an `id` (positive integer, unique within the dashboard) and a `name`. Cards can reference tabs using `dashboard_tab_id` with the same ID.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A Metabase dashboard.\n\nAlthough a dashboard object is even more complex than a card (question), basic properties are exposed as Terraform attributes. The more complex ones, parameters and cards, are exposed a raw JSON strings. Similarly to cards, templatefile and jsonencode can be used to make the definition more readable.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bigquery_details": {
+            "nested_type": {
+              "attributes": {
+                "dataset_filters_patterns": {
+                  "type": "string",
+                  "description": "The pattern used by the `dataset-filters-type`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "dataset_filters_type": {
+                  "type": "string",
+                  "description": "The behavior of how BigQuery datasets should be selected. Can be `inclusion`, `exclusion`, or `all`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "The ID of the GCP project containing the BigQuery datasets.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "service_account_key": {
+                  "type": "string",
+                  "description": "The content of the service account key file.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Connection details when setting up a BigQuery database.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "custom_details": {
+            "nested_type": {
+              "attributes": {
+                "details_json": {
+                  "type": "string",
+                  "description": "The details for the database, as a JSON string. `jsonencode` can be used for clarity.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "engine": {
+                  "type": "string",
+                  "description": "The name of the engine, as defined by Metabase.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "redacted_attributes": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The list of `details_json` attributes that are sent back redacted by Metabase.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Connection details when setting up a database which is not supported by this provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID for the database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The user-displayable name for the database.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A database Metabase can connect to. Currently only BigQuery has a dedicated attribute, but any engine can be set up using the custom_details attribute.\n\nThe configuration of this resource requires passing sensitive credentials to the Metabase API. Those credentials will also be stored in the Terraform state. Ensure those values are not checked into a repository nor are being displayed during Terraform operations.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_permissions_graph": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "advanced_permissions": {
+            "type": "bool",
+            "description": "Whether advanced permissions should be set even when not explicitly specified.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ignored_groups": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "The list of group IDs that should be ignored when reading and updating permissions. By default, this contains the Administrators group (`[2]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "create_queries": {
+                  "type": "string",
+                  "description": "The permission definition for creating queries.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "data_model": {
+                  "nested_type": {
+                    "attributes": {
+                      "schemas": {
+                        "type": "string",
+                        "description": "The permission to access data through the Metabase interface",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The permission definition for accessing the data model.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "database": {
+                  "type": "number",
+                  "description": "The ID of the database to which the permission applies.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "details": {
+                  "type": "string",
+                  "description": "The permission definition for accessing details.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "download": {
+                  "nested_type": {
+                    "attributes": {
+                      "schemas": {
+                        "type": "string",
+                        "description": "The permission to access data through the Metabase interface",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The permission definition for downloading data.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "group": {
+                  "type": "number",
+                  "description": "The ID of the group to which the permission applies.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "view_data": {
+                  "type": "string",
+                  "description": "The permission definition for data access.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A list of permissions for a given group and database. A (group, database) pair should appear only once in the list.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision number for the graph.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "The graph of permissions between permissions groups and databases.\n\nMetabase exposes a single resource to define all permissions related to databases. This means a single permissions graph resource should be defined in the entire Terraform configuration. However this is not the same as the collection graph, and the two can be combined to grant permissions.\n\nThe permissions graph cannot be created or deleted. Trying to create it will result in an error. It should be imported instead. Trying to delete the resource will succeed with no impact on Metabase (it is a no-op).\n\nPermissions for the Administrators group cannot be changed. To avoid issues during the update, all permissions for the Administrators group are ignored by default. This behavior can be changed using the ignored groups attribute.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_permissions_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the permissions group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A user-displayable name for the group.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Metabase permissions group.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "db_id": {
+            "type": "number",
+            "description": "The ID of the parent database. If specified, it is used to find the existing table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The name displayed in the interface for the table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "The type of table. If specified, it is used to find the existing table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "fields": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "A map where keys are field (column) names and values are their Metabase ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "forced_field_types": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map where keys are field (column) names and values are Metabase semantic types. Not all fields have to be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the table. If specified, the `db_id`, `name`, `entity_type`, and `schema` should not be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the table. If specified, it is used to find the existing table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "schema": {
+            "type": "string",
+            "description": "The database schema in which the table is located. For BigQuery, this is the dataset name. If specified, it is used to find the existing table.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "An existing Metabase table, part of a parent database.\n\nThis resource never creates or deletes tables, as they are managed by Metabase itself. However the table and its fields can be updated.\n\nInstead of being created, the table will be looked up based on its id or a combination of (db_id, name, entity_type, and/or schema). The unspecified attributes will be filled with the values from Metabase's response.\n\nLike its data source counterpart, this resource exposes the ID of the fields (columns) in the table.\n\nThe display name and the description of the table can be set. If not specified, the remote values are available instead.\n\nFinally, this resource may define the semantic type for all or a subset of the fields (columns) using the forced_field_types attribute. Only the fields in the map will be updated, all other fields are left as is.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "metabase_collection_graph": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ignored_groups": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "The list of group IDs that should be ignored when reading permissions. By default, this contains the Administrators group (`[2]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "collection": {
+                  "type": "string",
+                  "description": "The ID of the collection to which the permission applies.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "group": {
+                  "type": "number",
+                  "description": "The ID of the group to which the permission applies.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "permission": {
+                  "type": "string",
+                  "description": "The level of permission (`read` or `write`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A list of permissions for a given group and collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision number for the graph.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A data source for reading the current Metabase collection permissions graph.\n\nThis data source is useful when managing permissions across multiple Terraform workspaces or when you want to read the current state of permissions without modifying them.\n\nUnlike the resource, this data source only reads the permissions graph and does not make any changes to Metabase.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the database. If specified, the `name` should not be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the database. If specified, the `id` should not be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A Metabase database.\n\nThis data source can be useful to find the Metabase ID of a database based on the database name.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_permissions_graph": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ignored_groups": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "The list of group IDs that should be ignored when reading permissions. By default, this contains the Administrators group (`[2]`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "create_queries": {
+                  "type": "string",
+                  "description": "The permission definition for creating queries.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "data_model": {
+                  "nested_type": {
+                    "attributes": {
+                      "schemas": {
+                        "type": "string",
+                        "description": "The permission to access data through the Metabase interface.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The permission definition for accessing the data model.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "database": {
+                  "type": "number",
+                  "description": "The ID of the database to which the permission applies.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "details": {
+                  "type": "string",
+                  "description": "The permission definition for accessing details.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "download": {
+                  "nested_type": {
+                    "attributes": {
+                      "schemas": {
+                        "type": "string",
+                        "description": "The permission to access data through the Metabase interface.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The permission definition for downloading data.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "group": {
+                  "type": "number",
+                  "description": "The ID of the group to which the permission applies.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "view_data": {
+                  "type": "string",
+                  "description": "The permission definition for data access.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A list of permissions for a given group and database.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision number for the graph.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A data source for reading the current Metabase permissions graph.\n\nThis data source is useful when managing permissions across multiple Terraform workspaces or when you want to read the current state of permissions without modifying them.\n\nUnlike the resource, this data source only reads the permissions graph and does not make any changes to Metabase.",
+        "description_kind": "markdown"
+      }
+    },
+    "metabase_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "db_id": {
+            "type": "number",
+            "description": "The ID of the parent database.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the table.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The name displayed in the interface for the table.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "The type of table.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fields": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "A map where keys are field (column) names and values are their Metabase ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the table. If specified, the `db_id`, `name`, `entity_type`, and `schema` should not be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the table.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "schema": {
+            "type": "string",
+            "description": "The database schema in which the table is located. For BigQuery, this is the dataset name.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A Metabase table, part of a parent database.\n\nThis data source can be useful to find the Metabase ID of a table based on the table name. Table IDs are required when creating cards (questions) and other resources.\n\nMetabase also assigns an ID to each field (column) in the table. Those are also useful to define dashboard filters for example.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
