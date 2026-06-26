@@ -1,0 +1,321 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "default_cluster": {
+          "type": "string",
+          "description": "Default cluster, if provided will be used when no cluster is provided",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "Clickhouse server url",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Clickhouse user password with admin privileges",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "port": {
+          "type": "number",
+          "description": "Clickhouse server native protocol port (TCP)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "secure": {
+          "type": "bool",
+          "description": "Clickhouse secure connection",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Clickhouse username with admin privileges",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "clickhouse_db": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster": {
+            "type": "string",
+            "description": "Cluster name, not mandatory but should be provided if creating a db in a clustered server",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment about the database",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "data_path": {
+            "type": "string",
+            "description": "Database internal path",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "engine": {
+            "type": "string",
+            "description": "Database engine",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metadata_path": {
+            "type": "string",
+            "description": "Database internal metadata path",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Database name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Database UUID",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Resource to handle clickhouse databases.",
+        "description_kind": "markdown"
+      }
+    },
+    "clickhouse_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database": {
+            "type": "string",
+            "description": "Database where to grant permissions to the user. You can apply privileges to all databases by using '*'",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "privileges": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Granted privileges to the role. Privileges will be granted at DB level",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Resource to manage Clickhouse roles",
+        "description_kind": "markdown"
+      }
+    },
+    "clickhouse_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster": {
+            "type": "string",
+            "description": "Cluster Name, it is required for Replicated or Distributed tables and forbidden in other case",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Database comment, it will be codified in a json along with come metadata information (like cluster name in case of clustering)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "database": {
+            "type": "string",
+            "description": "DB Name where the table will bellow",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "engine": {
+            "type": "string",
+            "description": "Table engine type (Supported types so far: Distributed, ReplicatedReplacingMergeTree, ReplacingMergeTree)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "engine_params": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Engine params in case the engine type requires them",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Table Name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "order_by": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Order by columns to use as sorting key",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "column": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Column Name",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Column Type",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Column",
+              "description_kind": "markdown"
+            }
+          },
+          "partition_by": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "by": {
+                  "type": "string",
+                  "description": "Column to use as part of the partition key",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "partition_function": {
+                  "type": "string",
+                  "description": "Partition function, could be empty or one of following: toYYYYMM, toYYYYMMDD or toYYYYMMDDhhmmss",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Partition Key to split data",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Resource to manage tables",
+        "description_kind": "markdown"
+      }
+    },
+    "clickhouse_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "User role",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Resource to manage Clickhouse users",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "clickhouse_dbs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dbs": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "comment": "string",
+                  "data_path": "string",
+                  "engine": "string",
+                  "metadata_path": "string",
+                  "name": "string",
+                  "uuid": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Datasource to retrieve all databases set in clickhouse instance",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
