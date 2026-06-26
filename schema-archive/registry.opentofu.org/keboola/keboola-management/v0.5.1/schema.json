@@ -1,0 +1,846 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "hostname_suffix": {
+          "type": "string",
+          "description": "The hostname suffix for the Keboola Domain e.g `keboola.com`. The provider will construct the full URL as `https://connection.{hostname_suffix}`. Can also be set via KBC_HOSTNAME_SUFFIX environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The Management API token used for authentication. This is a sensitive value and should be handled securely. Can also be set via KBC_MANAGE_TOKEN environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "The Keboola Management provider allows Terraform to manage Keboola resources through the [Management API](https://keboolamanagementapi.docs.apiary.io/).",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "keboola-management_backend": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backend": {
+            "type": "string",
+            "description": "Backend type (e.g., bigquery, snowflake, redshift, synapse, exasol, teradata).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database": {
+            "type": "string",
+            "description": "Database (required for Synapse and Teradata).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Backend host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Backend ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "Associated AWS account owner.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for backend.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Backend region.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "use_dynamic_backends": {
+            "type": "bool",
+            "description": "Enable dynamic backends (only for supported backends, e.g., Snowflake).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "use_synapse_managed_identity": {
+            "type": "string",
+            "description": "Use Synapse Managed Identity (optional for Synapse).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for backend.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "warehouse": {
+            "type": "string",
+            "description": "Warehouse (required for Snowflake).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Keboola storage backend (except BigQuery).",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_backend_bigquery": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "folder_id": {
+            "type": "string",
+            "description": "GCP folder ID where the service account is created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Backend ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "GCP account owner.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "BigQuery region.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "credentials": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auth_provider_x509_cert_url": {
+                  "type": "string",
+                  "description": "Auth provider x509 cert URL.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "auth_uri": {
+                  "type": "string",
+                  "description": "Auth URI.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_email": {
+                  "type": "string",
+                  "description": "Client email.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Client ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_x509_cert_url": {
+                  "type": "string",
+                  "description": "Client x509 cert URL.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "private_key": {
+                  "type": "string",
+                  "description": "Private key.",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "private_key_id": {
+                  "type": "string",
+                  "description": "Private key ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "GCP project ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "token_uri": {
+                  "type": "string",
+                  "description": "Token URI.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Credential type.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Service account credentials for BigQuery backend.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Registers and updates a BigQuery backend. Only Create and Update are supported. Read and Delete are not supported by the API.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_backend_snowflake": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "edition": {
+            "type": "string",
+            "description": "Snowflake edition.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Snowflake host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Backend ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_enabled": {
+            "type": "bool",
+            "description": "Whether the backend is enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "Snowflake account owner.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Snowflake region.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "security_integration_key": {
+            "type": "string",
+            "description": "Security integration key returned by the API on create.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sql_template": {
+            "type": "string",
+            "description": "SQL template returned by the API on create.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "technical_owner": {
+            "type": "string",
+            "description": "Technical owner of the backend.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "technical_owner_contact_emails": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Contact emails for the technical owner.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "use_dynamic_backends": {
+            "type": "bool",
+            "description": "Enable dynamic backends.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "use_network_policies": {
+            "type": "bool",
+            "description": "Enable network policies.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "use_sso": {
+            "type": "bool",
+            "description": "Enable SSO.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_public_key": {
+            "type": "string",
+            "description": "RSA public key for the Snowflake user. Use this to configure the Snowflake user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Snowflake username.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "warehouse": {
+            "type": "string",
+            "description": "Snowflake warehouse name.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Registers a Snowflake storage backend with RSA certificate authentication via the Keboola Management API. This is a create-only resource \u2014 Read, Update, and Delete require a super admin token and are not supported with the technical user token used for provisioning.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_backend_snowflake_activate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backend_id": {
+            "type": "string",
+            "description": "ID of the Snowflake backend to activate.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Same as backend_id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_enabled": {
+            "type": "bool",
+            "description": "Whether the backend is enabled after activation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Activates a Snowflake storage backend after the Snowflake user has been configured with the public key. Only Create is supported.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_file_storage_azure_blob": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_key": {
+            "type": "string",
+            "description": "Azure storage account key.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "account_name": {
+            "type": "string",
+            "description": "Azure storage account name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "container_name": {
+            "type": "string",
+            "description": "Azure Blob container name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Storage ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "Associated Azure account owner.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages Azure Blob Storage file storage. Only Create and Read are supported.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_file_storage_gcs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "files_bucket": {
+            "type": "string",
+            "description": "GCS bucket name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Storage ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "Associated GCP account owner.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "GCP region.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "gcs_credentials": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auth_provider_x509_cert_url": {
+                  "type": "string",
+                  "description": "Auth provider x509 cert URL.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "auth_uri": {
+                  "type": "string",
+                  "description": "Auth URI.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_email": {
+                  "type": "string",
+                  "description": "Client email.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Client ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "client_x509_cert_url": {
+                  "type": "string",
+                  "description": "Client x509 cert URL.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "private_key": {
+                  "type": "string",
+                  "description": "Private key.",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "private_key_id": {
+                  "type": "string",
+                  "description": "Private key ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "GCP project ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "token_uri": {
+                  "type": "string",
+                  "description": "Token URI.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Credential type.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Service account credentials for GCS storage.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages GCP Cloud Storage file storage. Only Create and Read are supported.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_file_storage_s3": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_key": {
+            "type": "string",
+            "description": "AWS access key.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "aws_secret": {
+            "type": "string",
+            "description": "AWS secret key.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "files_bucket": {
+            "type": "string",
+            "description": "S3 bucket name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Storage ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "Associated AWS account owner.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "AWS region.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages AWS S3 file storage. Only Create and Read are supported.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_maintainer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_connection_exasol_id": {
+            "type": "string",
+            "description": "Default Exasol Connection ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_connection_redshift_id": {
+            "type": "string",
+            "description": "Default Redshift Connection ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_connection_snowflake_id": {
+            "type": "string",
+            "description": "Default Snowflake Connection ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_connection_synapse_id": {
+            "type": "string",
+            "description": "Default Synapse Connection ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_connection_teradata_id": {
+            "type": "string",
+            "description": "Default Teradata Connection ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_file_storage_id": {
+            "type": "string",
+            "description": "Default File Storage ID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Maintainer ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Maintainer name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zendesk_url": {
+            "type": "string",
+            "description": "Zendesk URL.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Keboola maintainer.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "activity_center_project_id": {
+            "type": "string",
+            "description": "Set ActivityCenter ProjectId. Only maintainer members and superadmins can change this.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "allow_auto_join": {
+            "type": "string",
+            "description": "Set whether superAdmins need approval to join the organization's projects (default true).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "crm_id": {
+            "type": "string",
+            "description": "Set CRM ID. Only maintainer members and superadmins can change this.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "maintainer_id": {
+            "type": "string",
+            "description": "Assign the organization to another maintainer.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mfa_required": {
+            "type": "string",
+            "description": "Toggle whether all members of or organization and its projects must have enabled multi-factor authentication (default false).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization name.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Keboola organization.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_retention_time_in_days": {
+            "type": "string",
+            "description": "Data retention in days for Time Travel.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_backend": {
+            "type": "string",
+            "description": "Project default backend: snowflake or redshift; default is snowflake.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Project ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "ID of the organization to which the project belongs.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Project type: one of production, poc, demo; default is production.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Keboola project.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_project_feature": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "feature": {
+            "type": "string",
+            "description": "Feature to add to the project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique ID for this resource (project_id:feature).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Adds a feature to a Keboola project.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_project_invitation": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "expiration_seconds": {
+            "type": "number",
+            "description": "After how many seconds the invitation and membership of a user will expire.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Project invitation ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the project to which the invitation is sent.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for inviting user.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role": {
+            "type": "string",
+            "description": "Role to assign to the invited user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the invitation (e.g., 'pending', 'accepted', 'expired').",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Keboola project invitation.",
+        "description_kind": "plain"
+      }
+    },
+    "keboola-management_project_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket_permissions": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of bucket permissions, e.g., {\"in.c\": \"main: read\"}.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "can_manage_buckets": {
+            "type": "bool",
+            "description": "Token has full permissions on tabular storage.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "can_purge_trash": {
+            "type": "bool",
+            "description": "Allows permanently removing deleted configurations.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "can_read_all_file_uploads": {
+            "type": "bool",
+            "description": "Token has full permissions to files staging.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "component_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of component IDs to grant access for component configurations.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Token description.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "expires_in": {
+            "type": "number",
+            "description": "Token lifetime in seconds.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Token ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the Keboola project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Token value.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a Keboola project storage token. The token is a one-time secret and cannot be read after creation.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "description": "The idgen provider offers flexible, human-friendly identifier generation for Terraform.",
+      "description_kind": "plain"
+    }
+  },
+  "data_source_schemas": {
+    "idgen_nanoid": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alphabet": {
+            "type": "string",
+            "description": "The alphabet to use for ID generation. Can be 'alphanumeric' (a-zA-Z0-9), 'numeric' (0-9), 'readable' (excludes 0/O, 1/l/I) or a custom string of characters.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group_size": {
+            "type": "number",
+            "description": "Number of characters per group, separated by dashes. If not set, no grouping is applied.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The generated NanoID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "length": {
+            "type": "number",
+            "description": "The length of the generated ID. Defaults to 21.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "seed": {
+            "type": "string",
+            "description": "Optional seed for deterministic ID generation. Behavior:\n\n- **Integer** - parsed and used as random seed\n- **Text string** - hashed deterministically and used as random seed\n- **Omitted** - cryptographically random (different each apply)\n\n**WARNING:** Seeded IDs are deterministic and should not be used for security tokens or secrets.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Generates a NanoID identifier.\n\n**Security Notice:** When using `seed`, IDs become deterministic and predictable. Never use seeded IDs for security tokens, passwords, or cryptographic purposes.",
+        "description_kind": "markdown"
+      }
+    },
+    "idgen_proquint": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_size": {
+            "type": "number",
+            "description": "Number of characters per group, separated by dashes. If not set, no grouping is applied.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The generated Proquint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "length": {
+            "type": "number",
+            "description": "The length of the generated ID in characters.\n\nCommon values: `11` (2 words, e.g., `lusab-babad`), `17` (3 words), `23` (4 words).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "seed": {
+            "type": "string",
+            "description": "Optional seed for deterministic random generation. Accepts any string value:\n\n- **Text string** (e.g., `my-app-seed-42`) - hashed deterministically and used as random seed\n- **Integer string** (e.g., `12345`) - parsed and used as random seed\n- **Omitted** - uses cryptographically secure random generation (different each apply)\n\n**Note:** For canonical encoding of IPv4 addresses or uint32/uint64 integers, use `idgen_proquint_canonical` instead.\n\n**WARNING:** Seeded IDs are deterministic and should not be used for security tokens or secrets.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Generates a random Proquint identifier with configurable length.\n\nThis data source generates proquint-formatted IDs with random content. For canonical encoding of IPv4 addresses or uint32 integers, use `idgen_proquint_canonical` instead.\n\n**Security Notice:** When using `seed`, IDs become deterministic and predictable. Never use seeded IDs for security tokens, passwords, or cryptographic purposes.",
+        "description_kind": "markdown"
+      }
+    },
+    "idgen_proquint_canonical": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The generated canonical Proquint identifier. Length varies by input:\n\n- 11 characters for 32-bit values (IPv4, uint32)\n- 23 characters for 64-bit values (uint64)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "seed": {
+            "type": "string",
+            "description": "The seed value to encode as a proquint. Accepts:\n\n- **IPv4 address** (e.g., `127.0.0.1`)~>11 chars\n- **Hexadecimal string** (e.g., `0x7f000001` or `7f000001`)~>11 or 23 chars\n- **uint32 integer** (0-4294967295)~>11 chars\n- **uint64 integer** (4294967296-18446744073709551615)~>23 chars\n\n**Note:** IPv6 addresses are not supported directly. The canonical encoding follows the original specification which focuses on 32-bit values. To encode IPv6 (128-bit), convert it to its integer representation first.\n\nExamples:\n- `127.0.0.1`~>`lusab-babad` (11 chars)\n- `0x7f000001`~>`lusab-babad` (11 chars, hex format)\n- `2130706433`~>`lusab-babad` (11 chars, decimal)\n- `0xffffffff`~>`zuzuz-zuzuz` (11 chars, max uint32)\n- `0x7fffffffffffffff`~>`luzuz-zuzuz-zuzuz-zuzuz` (23 chars, max int64)",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Generates a canonical Proquint identifier from an IPv4 address or unsigned integer.\n\nThis data source implements the canonical proquint encoding as described in the [original specification](https://arxiv.org/html/0901.4016). It directly encodes the provided value as a proquint.\n\n**Output Length:**\n\n- **32-bit values** (IPv4, uint32 0-4294967295): 11 characters (2 proquint words)\n- **64-bit values** (uint64 4294967296+): 23 characters (4 proquint words)\n\n**Limitations:**\n\n- **IPv6 not supported**: The original proquint specification focuses on 32-bit values. IPv6 addresses (128-bit) must be manually converted to their integer representation before encoding.\n\n**Use Cases:**\n\n- Convert IP addresses to memorable identifiers\n- Encode integer values as human-readable proquints\n- Generate deterministic identifiers from numeric data\n\n**Security Notice:** Canonical proquints are deterministic encodings of the input value. They should not be used for security tokens or secrets.",
+        "description_kind": "markdown"
+      }
+    },
+    "idgen_random_word": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The generated RandomWord.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "seed": {
+            "type": "string",
+            "description": "Optional seed for deterministic word selection. The same seed always produces the same word.\n\n- **Numeric strings** (e.g., `\"1\"`, `\"2\"`, `\"3\"`) - Used directly as the index selector, producing words in sequential alphabetical order\n- **Non-numeric strings** (e.g., `\"sha256:2d711...\"`, `\"sha256:a1fce...\"`) - Hashed to produce a distributed index selector for more varied word selection\n- **Omitted** - Generates a random word that changes on each Terraform apply\n\n**WARNING:** Seeded identifiers are predictable and should never be used for passwords, tokens, or any security-sensitive values.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "wordlist": {
+            "type": "string",
+            "description": "Optional custom word list to select words from. Provide a comma-separated string of words (e.g., `apple,banana,cherry,date`). If omitted, the default five-letter word list is used.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Generates a random word identifier\n\n**Important:** The bundled word list contains only 20 five-letter words, providing limited randomness. This list is intentionally small and serves merely as an example. It will not be maintained or expanded for the reasons described in the [word list philosophy](https://github.com/iilei/terraform-provider-idgen/tree/master/internal/data/five_letter_words.txt). For more control, provide your own custom `wordlist` with sufficient entropy for your needs.",
+        "description_kind": "markdown"
+      }
+    },
+    "idgen_templated": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The generated templated ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nanoid": {
+            "nested_type": {
+              "attributes": {
+                "alphabet": {
+                  "type": "string",
+                  "description": "Alphabet preset (`alphanumeric`, `numeric`, `readable`) or custom alphabet string. Default: `alphanumeric`",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "group_size": {
+                  "type": "number",
+                  "description": "Number of characters per group separated by dashes",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "length": {
+                  "type": "number",
+                  "description": "Length of the generated NanoID (default: 21)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "seed": {
+                  "type": "string",
+                  "description": "Seed for deterministic generation",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "NanoID component configuration. See [nanoid](./nanoid) for more details.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "proquint": {
+            "nested_type": {
+              "attributes": {
+                "group_size": {
+                  "type": "number",
+                  "description": "Number of characters per group separated by dashes",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "length": {
+                  "type": "number",
+                  "description": "Length of the generated Proquint (default: 11)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "seed": {
+                  "type": "string",
+                  "description": "Seed for deterministic generation",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Proquint component configuration. See [proquint](./proquint) for more details.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "proquint_canonical": {
+            "nested_type": {
+              "attributes": {
+                "group_size": {
+                  "type": "number",
+                  "description": "Number of characters per group separated by dashes",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "seed": {
+                  "type": "string",
+                  "description": "Seed value (IPv4 address, hex string, or integer) for canonical encoding",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Canonical Proquint component (encodes IPv4 addresses or integers). See [proquint_canonical](./proquint_canonical) for more details.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "random_word": {
+            "nested_type": {
+              "attributes": {
+                "seed": {
+                  "type": "string",
+                  "description": "Seed for deterministic word selection",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "wordlist": {
+                  "type": "string",
+                  "description": "Comma-separated custom word list (uses default 5-letter word list if omitted). See [random_word](./random_word) for more details about the word list limitations.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Random word component configuration. See [random_word](./random_word) for more details.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "template": {
+            "type": "string",
+            "description": "Go template string with `.proquint`, `.proquint_canonical`, `.nanoid`, and `.random_word` variables",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Generates a templated identifier combining multiple ID types.\n\nUse Go template syntax with `.proquint`, `.proquint_canonical`, `.nanoid`, and `.random_word` variables. Example: `{{ .proquint }}-{{ .nanoid }}`\n\n## Template Functions\n\nThe template supports pipe-chainable string manipulation functions:\n\n### Case Conversion\n\n**`upper`** - Convert to uppercase\n```hcl\n# Input: \"vivid\" | Output: \"VIVID\"\ntemplate = \"{{ .random_word | upper }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`lower`** - Convert to lowercase\n```hcl\n# Input: \"VIVID\" | Output: \"vivid\"\ntemplate = \"{{ .random_word | upper | lower }}\"\nrandom_word = { seed = \"17\" }\n```\n\n### String Manipulation\n\n**`replace`** - Replace all occurrences\n```hcl\n# Input: \"vivid\" | Output: \"timid\"\ntemplate = \"{{ .random_word | replace \\\"viv\\\" \\\"tim\\\" }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`prepend`** - Add prefix to string\n```hcl\n# Input: \"vivid\" | Output: \"prefix-vivid\"\ntemplate = \"{{ .random_word | prepend \\\"prefix-\\\" }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`append`** - Add suffix to string\n```hcl\n# Input: \"vivid\" | Output: \"vivid-suffix\"\ntemplate = \"{{ .random_word | append \\\"-suffix\\\" }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`substr`** - Extract substring (start, length)\n```hcl\n# Input: \"vivid\" | Output: \"ivi\"\ntemplate = \"{{ .random_word | substr 1 3 }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`trim`** - Remove leading/trailing whitespace\n```hcl\n# Input: \"vivid\" | Output: \"vivid\"\ntemplate = \"{{ .random_word | trim }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`trimPrefix`** - Remove prefix\n```hcl\n# Input: \"vivid\" | Output: \"id\"\ntemplate = \"{{ .random_word | trimPrefix \\\"viv\\\" }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`trimSuffix`** - Remove suffix\n```hcl\n# Input: \"vivid\" | Output: \"viv\"\ntemplate = \"{{ .random_word | trimSuffix \\\"id\\\" }}\"\nrandom_word = { seed = \"17\" }\n```\n\n### Repetition & Reversal\n\n**`repeat`** - Repeat string N times\n```hcl\n# Input: \"vivid\" | Output: \"vividvividvivid\"\ntemplate = \"{{ .random_word | repeat 3 }}\"\nrandom_word = { seed = \"17\" }\n```\n\n**`reverse`** - Reverse string\n```hcl\n# Input: \"vivid\" | Output: \"diviv\"\ntemplate = \"{{ .random_word | reverse }}\"\nrandom_word = { seed = \"17\" }\n```\n\n### More Examples\n\n```hcl\n# yields: 0q-LUSAB_BABAD\ndata \"idgen_templated\" \"example1\" {\n  template = \"0q-{{ .proquint_canonical | upper | replace \\\"-\\\" \\\"_\\\" }}\"\n  proquint_canonical = { seed = \"127.0.0.1\" }\n}\n\n# yields: snowy-vibub-vamiz\ndata \"idgen_templated\" \"example2\" {\n  template = \"{{ .random_word }}-{{ .proquint }}\"\n  random_word = { seed = \"a5e57e8a-9a7c-4efd-9fdd-0fcdc7630e3a\" }\n  proquint = { seed = \"a5e57e8a-9a7c-4efd-9fdd-0fcdc7630e3a\" }\n}\n\n# yields: BwG-95b\ndata \"idgen_templated\" \"example3\" {\n  template = \"{{ .nanoid }}\"\n  nanoid = { length = 21, seed = \"72da0233-3b03-4410-854f-3b96e868e15a\", alphabet = \"readable\", length = 7, group_size = 3 }\n}\n\n```\n\n",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
