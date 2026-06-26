@@ -31,6 +31,9 @@ BACKOFF_BASE = 30
 BACKOFF_CAP = 1800
 MAX_CONSECUTIVE_RETRIES = 10
 
+RESULT_COLUMN = 72
+SYMBOLS = {"done": "✅", "retry": "🕐", "failure": "☠️"}
+
 
 class Status(str, Enum):
     pending = "pending"
@@ -189,6 +192,21 @@ def write_outputs(provider: Provider, version: Version, result: dump.DumpResult)
         f.write("\n")
 
 
+class ProgressLine:
+    "Emits one stderr line per dump: `Archiving <addr>....<symbol>`, a dot per tick, result right-aligned."
+
+    def __init__(self, text: str):
+        self.width = len(text)
+        print(text, end="", file=sys.stderr, flush=True)
+
+    def tick(self):
+        print(".", end="", file=sys.stderr, flush=True)
+        self.width += 1
+
+    def finish(self, symbol: str):
+        print(" " * max(1, RESULT_COLUMN - self.width) + symbol, file=sys.stderr, flush=True)
+
+
 def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[int], signals: Signals):
     queue = build_queue(archive)
     if not queue:
@@ -205,14 +223,18 @@ def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[i
             break
         name = container_name(provider, version)
         signals.container = name
+        line = ProgressLine(f"Archiving {provider.registry}/{provider.org}/{provider.name}@{version.version}")
         result = dump.dump(
             ProviderVersion(provider.registry, provider.org, provider.name, version.version),
             name,
             per_dump_timeout(deadline),
+            line.tick,
         )
         signals.container = None
         if signals.aborted():
+            print(file=sys.stderr)
             break
+        line.finish(SYMBOLS[result.status])
         write_outputs(provider, version, result)
         version.status = Status(result.status)
         if version.status == Status.done:
