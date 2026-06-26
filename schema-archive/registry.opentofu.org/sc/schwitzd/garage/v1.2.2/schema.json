@@ -1,0 +1,336 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "host": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "scheme": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "garage_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bytes": {
+            "type": "number",
+            "description": "Total bytes used by objects in the bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "global_alias": {
+            "type": "string",
+            "description": "Creates a global alias for the bucket. A global alias is unique cluster-wide (e.g. `my-bucket`). You can add or remove additional aliases later using the `garage_bucket_alias` resource.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "global_aliases": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of all global aliases currently bound to the bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "objects": {
+            "type": "number",
+            "description": "Number of objects stored in the bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "unfinished_uploads": {
+            "type": "number",
+            "description": "Number of unfinished uploads currently tracked for the bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "website_access_enabled": {
+            "type": "bool",
+            "description": "Enable static website hosting for the bucket. Defaults to `false`. When enabled, `website_config_index_document` is required.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "website_config_error_document": {
+            "type": "string",
+            "description": "Name of the error document (e.g. `404.html`). Optional, used when website hosting is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "website_config_index_document": {
+            "type": "string",
+            "description": "Name of the index document (e.g. `index.html`). Required if `website_access_enabled` is `true`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "local_alias": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "The access key ID that this local alias is bound to.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "alias": {
+                  "type": "string",
+                  "description": "Local alias name. Acts as a shortcut for the bucket but only in the context of the given access key.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Creates a local alias bound to a specific access key at bucket creation time. Only one block is allowed here.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "quotas": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "max_objects": {
+                  "type": "number",
+                  "description": "Maximum number of objects allowed in this bucket. `0` means unlimited.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "max_size": {
+                  "type": "number",
+                  "description": "Maximum total size in bytes allowed for this bucket. `0` means unlimited.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Optional storage quotas for this bucket. If omitted or set to zero, the bucket has no limits.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "This resource manages Garage buckets (global alias optional; create-time local alias optional).",
+        "description_kind": "plain"
+      }
+    },
+    "garage_bucket_alias": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key_id": {
+            "type": "string",
+            "description": "Access key ID to which the local alias is bound. Required when `local_alias` is specified.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bucket_id": {
+            "type": "string",
+            "description": "ID of the target bucket (UUID). This must be the bucket\u2019s unique identifier, not another alias.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "global_alias": {
+            "type": "string",
+            "description": "Cluster-wide alias name. Global aliases are unique across the cluster and can be used by any access key. Conflicts with `local_alias` and `access_key_id`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Alias type, either `global` or `local`. Computed from the request.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "local_alias": {
+            "type": "string",
+            "description": "Local alias name. Local aliases are only valid for the access key given in `access_key_id`. Requires `access_key_id`. Conflicts with `global_alias`.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Garage bucket alias. An alias is an alternate name for a bucket, either global (cluster-wide) or local (scoped to an access key).",
+        "description_kind": "plain"
+      }
+    },
+    "garage_bucket_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key_id": {
+            "type": "string",
+            "description": "Access key ID that should receive the permissions.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "bucket_id": {
+            "type": "string",
+            "description": "ID of the target bucket (UUID).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_name": {
+            "type": "string",
+            "description": "Human-friendly name of the access key, if available.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "bool",
+            "description": "Grant owner permissions on the bucket (full administrative control).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "read": {
+            "type": "bool",
+            "description": "Allow the key to read objects from the bucket.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "write": {
+            "type": "bool",
+            "description": "Allow the key to write (create/update/delete) objects in the bucket.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manage permissions granted to an access key on a Garage bucket.",
+        "description_kind": "plain"
+      }
+    },
+    "garage_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key_id": {
+            "type": "string",
+            "description": "Unique identifier of the access key, used in API requests and alias binding.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created": {
+            "type": "string",
+            "description": "Timestamp (RFC3339) when the key was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "effective_permissions": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "admin": "bool",
+                  "read": "bool",
+                  "write": "bool"
+                }
+              ]
+            ],
+            "description": "The effective permissions currently active for the key (read/write/admin).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expiration": {
+            "type": "string",
+            "description": "Optional expiration timestamp in RFC3339 format (e.g. `2025-09-26T12:00:00Z`). After this time the key becomes invalid.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "expired": {
+            "type": "bool",
+            "description": "True if the key is expired according to its `expiration` setting.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-friendly label for the access key. Does not affect permissions or behavior.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret_access_key": {
+            "type": "string",
+            "description": "Secret token associated with the key. Only visible at creation time \u2014 it will not be returned again.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "block_types": {
+          "permissions": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "admin": {
+                  "type": "bool",
+                  "description": "Allow administrative access (bucket/key management).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "bool",
+                  "description": "Allow read access to buckets and objects.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "write": {
+                  "type": "bool",
+                  "description": "Allow write access (create/update/delete objects).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Access permissions for the key. Only one block is allowed.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Manage a Garage access key.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
