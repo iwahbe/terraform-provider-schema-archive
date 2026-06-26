@@ -1,0 +1,5221 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "hostname": {
+          "type": "string",
+          "description": "The Scalr hostname to connect to. Defaults to `scalr.io`. Can be overridden by setting the `SCALR_HOSTNAME` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The token used to authenticate with Scalr. Can be overridden by setting the `SCALR_TOKEN` environment variable. See [Scalr provider configuration](https://docs.scalr.io/docs/scalr) for information on generating a token.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "scalr_access_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description": "The access policy is a built-in read-only policy that cannot be updated or deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of the role IDs.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "scope": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The scope ID, `acc-<RANDOM STRING>` for account, `env-<RANDOM STRING>` for environment, `ws-<RANDOM STRING>` for workspace.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The scope identity type, is one of `account`, `environment`, or `workspace`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Defines the scope where access policy is applied.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "subject": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The subject ID, `user-<RANDOM STRING>` for user, `team-<RANDOM STRING>` for team, `sa-<RANDOM STRING>` for service account.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The subject type, is one of `user`, `team`, or `service_account`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Defines the subject of the access policy.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Manages the Scalr IAM access policies. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_account_allowed_ips": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "allowed_ips": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of allowed IPs or CIDRs.\n\n  **Warning**: if you don't specify the current IP address, you may lose access to the account. To restore it the account owner has to raise a [support ticket](https://support.scalr.com).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource. Equals to the ID of the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages the list of allowed IPs for an account in Scalr. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_agent_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "api_gateway_url": {
+            "type": "string",
+            "description": "HTTP(s) destination URL for pool webhook.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of the environment identifiers that the agent pool is shared to. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the agent pool.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "vcs_enabled": {
+            "type": "bool",
+            "description": "Indicates whether the VCS support is enabled for agents in the pool.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "header": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the header.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "sensitive": {
+                  "type": "bool",
+                  "description": "Whether the header value is a secret.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value of the header.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Additional headers to set in the agent pool webhook request.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manage the state of agent pools in Scalr. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_agent_pool_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_pool_id": {
+            "type": "string",
+            "description": "ID of the agent pool.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the token.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of the agent pool.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manage the state of agent pool's tokens in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_assume_service_account_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the Assume Service Account Policy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "maximum_session_duration": {
+            "type": "number",
+            "description": "The maximum session duration in seconds for the assumed role.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Assume Service Account Policy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "provider_id": {
+            "type": "string",
+            "description": "The ID of the Workload Identity Provider associated with this policy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The ID of the Service Account to which this policy is attached.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "claim_condition": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "claim": {
+                  "type": "string",
+                  "description": "The claim to match.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "The operation to perform to evaluate the claim's value against the specified condition. Supported values: \"eq\": checks if the claim value is equal to the specified value; \"contains\": checks if the claim value contains the specified value as a substring; \"startswith\": checks if the claim value starts with the specified value; \"endswith\": checks if the claim value ends with the specified value; \"like\": checks whether the claim value matches a specified pattern using shell-style wildcards (* any string, ? any char, [seq] any in seq, [!seq] any not in seq).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value to match for the claim.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "A set of claim conditions for the policy.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages an Assume Service Account Policy in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_checkov_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cli_args": {
+            "type": "string",
+            "description": "CLI parameters to be passed to checkov command.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environments this integration is linked to. Use `[\"*\"]` to allow in all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "external_checks_enabled": {
+            "type": "bool",
+            "description": "Indicates whether external checks should be enabled. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Checkov integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "ID of VCS provider in the format `vcs-<RANDOM STRING>`. Required if `external_checks_enabled` is `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the Checkov integration to use.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "vcs_repo": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "Branch of a repository the Checkov custom checks are associated with.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "identifier": {
+                  "type": "string",
+                  "description": "A reference to your VCS repository. For GitHub, GitHub Enterprise and GitLab the format is `<org>/<repo>`. For Azure DevOps Services the format is `<org>/<project>/<repo>`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "The sub-directory of the VCS repository where Checkov checks are stored. If omitted or specified as an empty string, this defaults to the repository's root.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "Settings for the Checkov integration's VCS repository. Required if `external_checks_enabled` is `true`.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages the state of Checkov integrations in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_drift_detection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "check_period": {
+            "type": "string",
+            "description": "Check period for drift detection: daily or weekly.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "run_mode": {
+            "type": "string",
+            "description": "Run mode for drift detection: `refresh-only` (default) or `plan`. ",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "workspace_filters": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "environment_types": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Workspace environment types to include in drift detection. Allowed values: `production`, `staging`, `testing`, `development`, `unmapped`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name_patterns": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Workspace name patterns to include in drift detection. Supports `*` wildcard (e.g., `prod-*`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tags": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Workspace tag to include in drift detection. A workspace matches if it has at least one of the specified tags.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Filters for workspaces to be included in drift detection. Only one type of filter can be specified: `name_patterns`, `environment_types` or `tags`.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages the state of Drift Detection Scheduler in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_provider_configurations": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of IDs of provider configurations, used in the environment workspaces by default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_workspace_agent_pool_id": {
+            "type": "string",
+            "description": "Default agent pool that will be set for the entire environment. It will be used by a workspace if no other pool is explicitly linked.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "federated_environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that are allowed to access this environment. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mask_sensitive_output": {
+            "type": "bool",
+            "description": "Enable masking of the sensitive console output. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the environment.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of the environment policy-groups IDs, in the format `pgrp-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "remote_backend": {
+            "type": "bool",
+            "description": "If Scalr exports the remote backend configuration and state storage for your infrastructure management. Disabling this feature will also prevent the ability to perform state locking, which ensures that concurrent operations do not conflict. Additionally, it will disable the capability to initiate CLI-driven runs through Scalr.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "remote_backend_overridable": {
+            "type": "bool",
+            "description": "Indicates if the remote backend configuration can be overridden on the workspace level.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "storage_profile_id": {
+            "type": "string",
+            "description": "The storage profile for this environment. If not set, the account's default storage profile will be used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the environment.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the state of environments in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_environment_hook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "events": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of events that trigger the hook execution. Valid values include: `pre-init`, `pre-plan`, `post-plan`, `pre-apply`, `post-apply`. Use `[\"*\"]` to select all events.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "hook_id": {
+            "type": "string",
+            "description": "ID of the hook, in the format `hook-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages the link between a hook and an environment in Scalr. This allows you to attach hooks to specific environments for execution during the Terraform workflow.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_event_bridge_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "AWS account ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "event_source_arn": {
+            "type": "string",
+            "description": "ARN of the event source.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "event_source_name": {
+            "type": "string",
+            "description": "Event source name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the EventBridge integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "AWS region.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage the state of EventBridge integrations in Scalr. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_federated_environments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of an environment that federates access to other environments.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "federated_environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that are allowed to access environment that federates access. Use `*` to allow all environments.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the list of federated environments of an environment in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_hook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the hook.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the hook.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "interpreter": {
+            "type": "string",
+            "description": "The interpreter to execute the hook script, such as 'bash', 'python3', etc.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the hook.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scriptfile_path": {
+            "type": "string",
+            "description": "Path to the script file in the repository.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "ID of the VCS provider in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "vcs_repo": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "Repository branch name.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "identifier": {
+                  "type": "string",
+                  "description": "The identifier of a VCS repository in the format `:org/:repo`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Source configuration of a VCS repository.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a hook in Scalr. Hooks allow you to execute custom scripts at different stages of the Terraform workflow.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_iam_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A verbose description of the team.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "identity_provider_id": {
+            "type": "string",
+            "description": "An identifier of the login identity provider, in the format `idp-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name of the team.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of the user identifiers to add to the team. This attribute should not be used when the account's identity provider is not of type `scalr`, as team membership is managed externally in these cases.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the Scalr IAM teams: performs create, update and destroy actions.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_integration_infracost": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "API key for the Infracost integration.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environments this integration is linked to. Use `[\"*\"]` to allow in all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Infracost integration.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the state of Infracost integration in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_module": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the account in the format `acc-<RANDOM STRING>`. If it is not specified the module will be registered globally and available across the whole installation. **Deprecated:** Use `namespace_id` instead.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The identifier of an environment in the format `env-<RANDOM STRING>`. If it is not specified the module will be registered at the account level and available across all environments within the account specified in `account_id` attribute. **Deprecated:** Use `namespace_id` instead.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "module_provider": {
+            "type": "string",
+            "description": "Module provider name, e.g `aws`, `azurerm`, `google`, etc.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the module, e.g. `rds`, `compute`, `kubernetes-engine`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "namespace_id": {
+            "type": "string",
+            "description": "The identifier of a module namespace in the format `modns-<RANDOM STRING>`. If specified, the module will be registered in this namespace. Conflicts with `environment_id`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of a remote module in the private registry, e.g `env-xxxx/aws/vpc`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "A system status of the Module.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "The identifier of a VCS provider in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "vcs_repo": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "identifier": {
+                  "type": "string",
+                  "description": "The identifier of a VCS repository in the format `:org/:repo` (`:org/:project/:name` is used for Azure DevOps). It refers to an organization and a repository name in a VCS provider.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "The path to the root module folder. It is expected to have the format `<path>/terraform-<provider_name>-<module_name>`, where `<path>` stands for any folder within the repository inclusively a repository root.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tag_prefix": {
+                  "type": "string",
+                  "description": "Registry ignores tags which do not match specified prefix, e.g. `aws/`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Source configuration of a VCS repository.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Manages the state of a module in the Private Modules Registry. Create and destroy operations are available only.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_module_namespace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of environment IDs associated with the module namespace.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_shared": {
+            "type": "bool",
+            "description": "Whether the module namespace is shared.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the module namespace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of team IDs that own the module namespace.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages the state of module namespaces in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_policy_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "common_functions_folder": {
+            "type": "string",
+            "description": "An absolute path from the repository root to the folder that contains common rego functions.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of the environments the policy group is linked to. Use `[\"*\"]` to enforce in all environments. To manage a linkage use either this attribute or the `scalr_policy_group_linkage` resource.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "error_message": {
+            "type": "string",
+            "description": "A detailed error if Scalr failed to process the policy group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of a policy group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "opa_version": {
+            "type": "string",
+            "description": "The version of Open Policy Agent to run policies against. If omitted, the system default version is assigned.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "policies": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "enabled": "bool",
+                  "enforced_level": "string",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "A list of the OPA policies the group verifies each run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "A system status of the Policy group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "The identifier of a VCS provider, in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "vcs_repo": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "The branch of a repository the policy group is associated with. If omitted, the repository default branch will be used.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "identifier": {
+                  "type": "string",
+                  "description": "The reference to the VCS repository in the format `:org/:repo`, this refers to the organization and repository in your VCS provider.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "The subdirectory of the VCS repository where OPA policies are stored. If omitted or submitted as an empty string, this defaults to the repository's root.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "The VCS meta-data to create the policy from.",
+              "description_kind": "markdown"
+            },
+            "min_items": 1,
+            "max_items": 1
+          }
+        },
+        "description": "Manage the state of policy groups in Scalr. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_policy_group_linkage": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the policy group linkage. It is a combination of the policy group and environment IDs in the format `pgrp-xxxxxxxxxxxxxxx/env-yyyyyyyyyyyyyyy`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policy_group_id": {
+            "type": "string",
+            "description": "ID of the policy group, in the format `pgrp-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage policy group to environment linking in Scalr. Create, update and destroy.\n\n-> **Note** To manage a linkage use either this resource or the `environments` attribute of the [`scalr_policy_group`](provider_resource_scalr_policy_group) resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_provider_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The account that owns the object, specified as an ID.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "apply_only": {
+            "type": "bool",
+            "description": "When enabled, the provider configuration will be used only during the apply phase of the run. Currently supported for AWS provider configuration only. This option can be set only at creation time.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that the provider configuration is shared to. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "export_shell_variables": {
+            "type": "bool",
+            "description": "Export provider variables into the run environment. This option is available for built-in (Scalr, AWS, AzureRM, Google) providers only.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Scalr provider configuration. This field is unique for the account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The teams, the provider configuration belongs to.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the provider configuration.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "aws": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_key": {
+                  "type": "string",
+                  "description": "AWS access key. This option is required with `access_keys` credentials type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "account_type": {
+                  "type": "string",
+                  "description": "The type of AWS account, available options: `regular`, `gov-cloud`, `cn-cloud`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "audience": {
+                  "type": "string",
+                  "description": "The value of the `aud` claim for the identity token. This option is required with `oidc` credentials type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "credentials_source": {
+                  "type": "string",
+                  "description": "The source of AWS service credentials when using `role_delegation` credentials type with `aws_service` trusted entity type. Available options: `Ec2InstanceMetadata`, `EcsContainer`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "credentials_type": {
+                  "type": "string",
+                  "description": "The type of AWS credentials, available options: `access_keys`, `role_delegation`, `oidc`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "External identifier to use when assuming the role. This option is required with `role_delegation` credentials type and `aws_account` trusted entity type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "Amazon Resource Name (ARN) of the IAM Role to assume. This option is required with the `role_delegation` and `oidc` credentials type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "secret_key": {
+                  "type": "string",
+                  "description": "AWS secret key. This option is required with `access_keys` credentials type.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "trusted_entity_type": {
+                  "type": "string",
+                  "description": "Trusted entity type, available options: `aws_account`, `aws_service`. This option is required with `role_delegation` credentials type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "default_tags": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "strategy": {
+                        "type": "string",
+                        "description": "On duplicate key behaviour for default tags. Available options:\n  - `skip`: the existing tags will not be changed\n  - `update`: the existing tags will be replaced with the new one",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "tags": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Default tags to be applied to all resources created by this provider configuration.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "AWS default tags settings.",
+                    "description_kind": "markdown"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Settings for the aws provider configuration. Exactly one of the following attributes must be set: `scalr`, `aws`, `google`, `azurerm`, `custom`.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "azurerm": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "The value of the `aud` claim for the identity token. This option is required with `oidc` authentication type.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "auth_type": {
+                  "type": "string",
+                  "description": "Authentication type, either `client-secrets` (default) or `oidc`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "The Client ID that should be used.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "client_secret": {
+                  "type": "string",
+                  "description": "The Client Secret that should be used, required when `auth_type` is `client-secrets`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "subscription_id": {
+                  "type": "string",
+                  "description": "The Subscription ID that should be used. If skipped, it must be set as a shell variable in the workspace or as a part of the source configuration.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "The Tenant ID that should be used.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Settings for the azurerm provider configuration. Exactly one of the following attributes must be set: `scalr`, `aws`, `google`, `azurerm`, `custom`.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "custom": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "provider_name": {
+                  "type": "string",
+                  "description": "The name of a Terraform provider.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "argument": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "description": {
+                        "type": "string",
+                        "description": "The description of the provider configuration argument.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "hcl": {
+                        "type": "bool",
+                        "description": "Set (true/false) to configure as HCL. When true, the value is treated as a string from which an arbitrary HCL type (list, map, etc.) will be extracted. Default `false`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the provider configuration argument.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "sensitive": {
+                        "type": "bool",
+                        "description": "Set (true/false) to configure as sensitive. Default `false`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "The value of the provider configuration argument.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "The provider configuration argument. Multiple instances are allowed per block.",
+                    "description_kind": "markdown"
+                  },
+                  "min_items": 1
+                }
+              },
+              "description": "Settings for the provider configuration that does not have scalr support as a built-in provider. Exactly one of the following attributes must be set: `scalr`, `aws`, `google`, `azurerm`, `custom`.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "google": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "auth_type": {
+                  "type": "string",
+                  "description": "Authentication type, either `service-account-key` (default) or `oidc`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "credentials": {
+                  "type": "string",
+                  "description": "Service account key file in JSON format, required when `auth_type` is `service-account-key`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "project": {
+                  "type": "string",
+                  "description": "The default project ID to manage resources in. If another project ID is specified on a resource, it will take precedence.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "service_account_email": {
+                  "type": "string",
+                  "description": "The service account email used to authenticate to GCP, required when `auth_type` is `oidc`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "use_default_project": {
+                  "type": "bool",
+                  "description": "If the project a credential is created in will be used by default.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "workload_provider_name": {
+                  "type": "string",
+                  "description": "The canonical name of the workload identity provider, required when `auth_type` is `oidc`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "default_labels": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "labels": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Default labels to be applied to all resources created by this provider configuration.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "strategy": {
+                        "type": "string",
+                        "description": "On duplicate key behaviour for default labels. Available options:\n  - `skip`: the existing labels will not be changed\n  - `update`: the existing labels will be replaced with the new one",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "Google default labels settings.",
+                    "description_kind": "markdown"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Settings for the google provider configuration. Exactly one of the following attributes must be set: `scalr`, `aws`, `google`, `azurerm`, `custom`.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "scalr": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "hostname": {
+                  "type": "string",
+                  "description": "The Scalr hostname which should be used.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "token": {
+                  "type": "string",
+                  "description": "The Scalr token which should be used.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Settings for the Scalr provider configuration. Exactly one of the following attributes must be set: `scalr`, `aws`, `google`, `azurerm`, `custom`.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "A provider configuration helps organizations manage provider secrets in a centralized way. It natively supports the management of the major providers like Scalr, AWS, AzureRM, and Google Cloud Platform, but also allows registering any custom provider. Please have a look at the basic usage examples for each provider type.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_provider_configuration_default": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the provider configuration default. It is a combination of the environment and provider configuration IDs in the format `env-xxxxxxxx/pcfg-xxxxxxxx`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "provider_configuration_id": {
+            "type": "string",
+            "description": "ID of the provider configuration, in the format `pcfg-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage defaults of provider configurations for environments in Scalr. Create and destroy.\n\n-> **Note** To make the provider configuration default, it must be shared with the specified environment. See the definition of the resource [`scalr_provider_configuration`](provider_resource_scalr_provider_configuration) and attribute `environments` to learn more.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_role": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Verbose description of the role.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description": "Boolean indicates if the role can be edited. System roles are maintained by Scalr and cannot be changed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Array of permission names.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage the Scalr IAM roles. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_run_schedule_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron expression for scheduled runs. Time should be in UTC.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "schedule_mode": {
+            "type": "string",
+            "description": "Mode of the scheduled run (\"apply\", \"destroy\", \"refresh\").",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr workspace, in the format `ws-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the state of run schedule rules in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_run_trigger": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "downstream_id": {
+            "type": "string",
+            "description": "The identifier of the workspace in which new runs will be triggered.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upstream_id": {
+            "type": "string",
+            "description": "The identifier of the upstream workspace.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Run triggers are a way to chain workspaces together. The use case for this is that you might have one or more upstream workspaces that need to automatically kick off a downstream workspace based on a successful run in the upstream workspace. To set a trigger, go to the downstream workspace and set the upstream workspace(s). Now, whenever the upstream workspace has a successful run, the downstream workspace will automatically start a run.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the service account.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The email of the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the service account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The teams, the service account belongs to.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the service account. Valid values are `Active` and `Inactive`. Defaults to `Active`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the state of service accounts in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_service_account_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the token.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "expires_in": {
+            "type": "number",
+            "description": "Number of minutes until the token expires.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the token.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "ID of the service account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of the service account.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manage the state of service account's tokens in Scalr. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_slack_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Slack channel ID the event will be sent to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environments where events should be triggered.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "events": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Terraform run events you would like to receive a Slack notifications for. Supported values are `run_approval_required`, `run_success`, `run_errored`, `drift_detected`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Slack integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "run_mode": {
+            "type": "string",
+            "description": "What type of runs should be reported, available options: `all`, `apply`, `dry`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workspaces": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of workspaces where events should be triggered. Workspaces should be in provided environments. If no workspace is given for a specified environment, events will trigger in all of its workspaces.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manage the state of Slack integrations in Scalr. Create, update and destroy.\n\n-> **Note** Slack workspace should be connected to Scalr account before using this resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The account ID to which the SSH key belongs.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The environments where the SSH key can be used. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the SSH key. Must be unique within an account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "The private key for the SSH key.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "A resource to manage Scalr SSH keys with options for sharing and environment linkage.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_storage_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The resource creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default": {
+            "type": "bool",
+            "description": "The default storage profile.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "error_message": {
+            "type": "string",
+            "description": "The last error description, when these settings doesn't work properly.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the storage profile.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The resource last update timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "aws_s3": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "The value of the `aud` claim for the identity token.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "bucket_name": {
+                  "type": "string",
+                  "description": "AWS S3 Storage bucket name. Bucket must already exist.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "AWS S3 bucket region.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "Amazon Resource Name (ARN) of the IAM Role to assume.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Settings for the AWS S3 storage profile.",
+              "description_kind": "markdown"
+            }
+          },
+          "azurerm": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "Azure audience for authentication.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Azure client ID for authentication.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "container_name": {
+                  "type": "string",
+                  "description": "Azure storage container name.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "storage_account": {
+                  "type": "string",
+                  "description": "Azure storage account name.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "Azure tenant ID for authentication.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Settings for the AzureRM storage profile.",
+              "description_kind": "markdown"
+            }
+          },
+          "google": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "credentials": {
+                  "type": "string",
+                  "description": "Service Account JSON key. Required IAM roles: `Storage Admin` assigned on a `google-storage-bucket` bucket. See: [use IAM with bucket](https://cloud.google.com/storage/docs/access-control/using-iam-permissions#bucket-iam).",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "encryption_key": {
+                  "type": "string",
+                  "description": "Customer supplied encryption key. Must be exactly 32 bytes, encoded into base64.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "project": {
+                  "type": "string",
+                  "description": "Google Cloud project ID.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "storage_bucket": {
+                  "type": "string",
+                  "description": "Google Storage bucket name. Bucket must already exist.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Settings for the Google storage profile.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages the state of storage profiles in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the tag.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the state of tags in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_var_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account this variable set belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the variable set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environment IDs that this variable set is shared to. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the variable set.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of team IDs this variable set belongs to.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "UTC timestamp of the last update to this variable set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by_email": {
+            "type": "string",
+            "description": "Email of the user who last updated this variable set.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages the state of variable sets in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_variable": {
+      "version": 3,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "Indicates if this is a Terraform or shell variable. Allowed values are `terraform` or `shell`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Variable verbose description, defaults to empty string.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment that owns the variable, specified as an ID, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "final": {
+            "type": "bool",
+            "description": "Set (true/false) to configure as final. Indicates whether the variable can be overridden on a lower scope down the Scalr organizational model. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "force": {
+            "type": "bool",
+            "description": "Set (true/false) to configure as force. Allows creating final variables on higher scope, even if the same variable exists on lower scope (lower is to be deleted). Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hcl": {
+            "type": "bool",
+            "description": "Set (true/false) to configure the variable as a string of HCL code. Has no effect for `category = \"shell\"` variables. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the variable.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "readable_value": {
+            "type": "string",
+            "description": "A non-sensitive read-only copy of a variable value. Will be null if the variable is sensitive.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sensitive": {
+            "type": "bool",
+            "description": "Set (true/false) to configure as sensitive. Sensitive variable values are not visible after being set. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date/time the variable was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that updated the variable last time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by_email": {
+            "type": "string",
+            "description": "Email of the user who updated the variable last time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Variable value.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "value_wo": {
+            "type": "string",
+            "description": "Write-only variable value. Use instead of `value` when working with ephemeral values. Not stored in state. Requires `value_wo_version` to trigger updates.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "value_wo_version": {
+            "type": "number",
+            "description": "Version number for `value_wo`. Change this number to apply the current `value_wo` during an update.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "var_set_id": {
+            "type": "string",
+            "description": "ID of the variable set this variable belongs to, in the format `varset-<RANDOM STRING>`. Cannot be used together with `workspace_id` or `environment_id`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The workspace that owns the variable, specified as an ID, in the format `ws-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the state of variables in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_vcs_provider": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "agent_pool_id": {
+            "type": "string",
+            "description": "The id of the agent pool to connect Scalr to self-hosted VCS provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "comments_enabled": {
+            "type": "bool",
+            "description": "Enable comments on pull requests for the VCS provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "draft_pr_runs_enabled": {
+            "type": "bool",
+            "description": "Enable draft PR runs for the VCS provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that the VCS provider is shared to. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the vcs provider.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pr_merge_comments_enabled": {
+            "type": "bool",
+            "description": "Enable comments after pull request merges for the VCS provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The personal access token for the provider.\n  * GitHub token can be generated by url https://github.com/settings/tokens/new?description=example-vcs-resouce&scopes=repo\n  * Gitlab token can be generated by url https://gitlab.com/-/profile/personal_access_tokens?name=example-vcs-resouce&scopes=api,read_user,read_registry",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "url": {
+            "type": "string",
+            "description": "This field is required for self-hosted vcs providers.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "This field is required for `bitbucket_enterprise` provider type.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "vcs_type": {
+            "type": "string",
+            "description": "The vcs provider type is one of `github`, `github_enterprise`, `gitlab`, `gitlab_enterprise`, `bitbucket_enterprise`. The other providers are not currently supported in the resource.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage the Scalr VCS provider. Create, update and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_webhook": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Set (true/false) to enable/disable the webhook.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that the webhook is shared to. Use `[\"*\"]` to share with all environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "events": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of event IDs.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_triggered_at": {
+            "type": "string",
+            "description": "Date/time when webhook was last triggered.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_attempts": {
+            "type": "number",
+            "description": "Max delivery attempts of the payload.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the webhook.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "Secret key to sign the webhook payload.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Endpoint timeout (in seconds).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Endpoint URL. Required if `endpoint_id` is not set.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "header": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the header.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value of the header.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Additional headers to set in the webhook request.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manage the state of webhooks in Scalr. Creates, updates and destroy.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workload_identity_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_audiences": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of allowed audiences for the workload identity provider. Must contain at least 1 and at most 10 elements.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workload identity provider.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the workload identity provider.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the state of workload identity providers in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspace": {
+      "version": 4,
+      "block": {
+        "attributes": {
+          "agent_pool_id": {
+            "type": "string",
+            "description": "The identifier of an agent pool in the format `apool-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_apply": {
+            "type": "bool",
+            "description": "Set (true/false) to configure if `terraform apply` should automatically run when `terraform plan` ends without error. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_queue_runs": {
+            "type": "string",
+            "description": "Indicates if runs have to be queued automatically when a new configuration version is uploaded. Supported values are `skip_first`, `always`, `never`, `on_create_only`:\n  * `skip_first` - after the very first configuration version is uploaded into the workspace the run will not be triggered. But the following configurations will do. This is the default behavior.\n  * `always` - runs will be triggered automatically on every upload of the configuration version.\n  * `never` - configuration versions are uploaded into the workspace, but runs will not be triggered.\n  * `on_create_only` - single run will be triggered only when the workspace is created and the first configuration version is uploaded. Subsequent configurations will not trigger runs.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection_enabled": {
+            "type": "bool",
+            "description": "Indicates if the workspace has the protection from an accidental state lost. If enabled and the workspace has resource, the deletion will not be allowed. Default `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "execution_mode": {
+            "type": "string",
+            "description": "Which execution mode to use. Valid values are `remote` and `local`. When set to `local`, the workspace will be used for state storage only. Defaults to `remote`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "force_latest_run": {
+            "type": "bool",
+            "description": "Set (true/false) to configure if latest new run will be automatically raised in priority. Default `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "has_resources": {
+            "type": "bool",
+            "description": "The presence of active terraform resources in the current state version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "iac_platform": {
+            "type": "string",
+            "description": "The IaC platform to use for this workspace. Valid values are `terraform` and `opentofu`. Defaults to `terraform`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "module_version_id": {
+            "type": "string",
+            "description": "The identifier of a module version in the format `modver-<RANDOM STRING>`. This attribute conflicts with `vcs_provider_id` and `vcs_repo` attributes.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "operations": {
+            "type": "bool",
+            "description": "Set (true/false) to configure workspace remote execution. When `false` workspace is only used to store state. Defaults to `true`.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "remote_backend": {
+            "type": "bool",
+            "description": "Manages if Scalr exports the remote backend configuration and state storage for your infrastructure management. Disabling this feature will also prevent the ability to perform state locking, which ensures that concurrent operations do not conflict. Additionally, it will disable the capability to initiate CLI-driven runs through Scalr.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "remote_state_consumers": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of workspace identifiers that are allowed to access the state of this workspace. Use `[\"*\"]` to share the state with all the workspaces within the environment (default).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "run_operation_timeout": {
+            "type": "number",
+            "description": "The number of minutes run operation can be executed before termination.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_key_id": {
+            "type": "string",
+            "description": "The identifier of the SSH key to use for the workspace.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the workspace.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "The version of Terraform to use for this workspace. Defaults to the latest available version.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Scalr Workspace environment, available options: `production`, `staging`, `testing`, `development`, `unmapped`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "var_files": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of paths to the `.tfvars` file(s) to be used as part of the workspace configuration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "ID of VCS provider - required if vcs-repo present and vice versa, in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "A relative path that Terraform will be run in. Defaults to the root of the repository `\"\"`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "hooks": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "post_apply": {
+                  "type": "string",
+                  "description": "Action that will be called after apply phase.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "post_plan": {
+                  "type": "string",
+                  "description": "Action that will be called after plan phase.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "pre_apply": {
+                  "type": "string",
+                  "description": "Action that will be called before apply phase.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "pre_init": {
+                  "type": "string",
+                  "description": "Action that will be called before the init phase.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "pre_plan": {
+                  "type": "string",
+                  "description": "Action that will be called before the plan phase.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "Settings for the workspaces custom hooks.",
+              "description_kind": "markdown"
+            }
+          },
+          "provider_configuration": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "The alias of provider configuration.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The identifier of provider configuration.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Provider configurations used in workspace runs.",
+              "description_kind": "markdown"
+            }
+          },
+          "terragrunt": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "include_external_dependencies": {
+                  "type": "bool",
+                  "description": "Indicates whether the workspace includes external dependencies.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "use_run_all": {
+                  "type": "bool",
+                  "description": "Indicates whether the workspace uses `terragrunt run-all`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "The version of Terragrunt the workspace performs runs on.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Settings for the workspace's Terragrunt configuration.",
+              "description_kind": "markdown"
+            }
+          },
+          "vcs_repo": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "The repository branch where Terraform will be run from. If omitted, the repository default branch will be used. Conflicts with `version_constraint`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "dry_runs_enabled": {
+                  "type": "bool",
+                  "description": "Set (true/false) to configure the VCS driven dry runs should run when pull request to configuration versions branch created. Default `true`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "identifier": {
+                  "type": "string",
+                  "description": "A reference to your VCS repository in the format `:org/:repo`, it refers to the organization and repository in your VCS provider.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "ingress_submodules": {
+                  "type": "bool",
+                  "description": "Designates whether to clone git submodules of the VCS repository.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "The repository subdirectory that Terraform will execute from. If omitted or submitted as an empty string, this defaults to the repository's root.",
+                  "description_kind": "markdown",
+                  "deprecated": true,
+                  "optional": true,
+                  "computed": true
+                },
+                "trigger_patterns": {
+                  "type": "string",
+                  "description": "The gitignore-style patterns for files, whose changes will trigger a run for the workspace using this binding when the CV is created. Conflicts with `trigger_prefixes`. If `trigger_prefixes` and `trigger_patterns` are omitted, any change in `path` will trigger a new run.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "trigger_prefixes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of paths (relative to `path`), whose changes will trigger a run for the workspace using this binding when the CV is created. Conflicts with `trigger_patterns`. If `trigger_prefixes` and `trigger_patterns` are omitted, any change in `path` will trigger a new run.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "version_constraint": {
+                  "type": "string",
+                  "description": "Terraform-like version constraint used to trigger a run for matching Git tags. Conflicts with `branch`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Settings for the workspace's VCS repository.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages the state of workspaces in Scalr.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspace_run_schedule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "apply_schedule": {
+            "type": "string",
+            "description": "Cron expression for when apply run should be created.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "destroy_schedule": {
+            "type": "string",
+            "description": "Cron expression for when destroy run should be created.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource. Equals to the ID of the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "ID of the workspace, in the format `ws-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Allows workspace admins to automate the configuration of recurring runs for a workspace.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspace_var_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource, in the format `<workspace_id>/<var_set_id>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "var_set_id": {
+            "type": "string",
+            "description": "ID of the variable set.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "ID of the workspace.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the link between a variable set and a workspace in Scalr.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "scalr_access_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The access policy ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of the role IDs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scope": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "type": "string"
+                }
+              ]
+            ],
+            "description": "Defines the scope where access policy is applied.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subject": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "type": "string"
+                }
+              ]
+            ],
+            "description": "Defines the subject of the access policy.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "This data source is used to retrieve details of a single access policy by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_agent_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "An identifier of the Scalr account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "api_gateway_url": {
+            "type": "string",
+            "description": "HTTP(s) destination URL for pool webhook.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "An identifier of the Scalr environment.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of the environment identifiers that the agent pool is shared to, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "header": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "sensitive": "bool",
+                  "value": "string"
+                }
+              ]
+            ],
+            "description": "Additional headers to set in the pool webhook request.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the agent pool.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A name of the agent pool.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "vcs_enabled": {
+            "type": "bool",
+            "description": "Indicates whether the VCS support is enabled for agents in the pool.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of IDs of linked workspaces.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of an agent pool.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_assume_service_account_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "When the policy was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by_email": {
+            "type": "string",
+            "description": "Email of the user who created the policy.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "maximum_session_duration": {
+            "type": "number",
+            "description": "Maximum session duration in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the policy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "provider_id": {
+            "type": "string",
+            "description": "The ID of the workload identity provider.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The ID of the service account this policy belongs to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "claim_conditions": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "claim": {
+                  "type": "string",
+                  "description": "The claim to match against.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "The operator to use for matching ('eq', 'contains', 'startswith', 'like', or 'endswith').",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value to match against.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Conditions that must be met for the policy to be assumed.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Retrieves information about a Scalr Assume Service Account Policy.",
+        "description_kind": "plain"
+      }
+    },
+    "scalr_current_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The identifier of the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of current account when using Scalr remote backend.\n\nNo arguments are required. The data source returns details of the current account based on the `SCALR_ACCOUNT_ID` environment variable that is automatically exported in the Scalr remote backend.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_current_run": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the run, in the format `run-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_destroy": {
+            "type": "bool",
+            "description": "Boolean indicates if this is a \"destroy\" run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_dry": {
+            "type": "bool",
+            "description": "Boolean indicates if this is a dry run, i.e. triggered by a Pull Request (PR). No apply phase if this is true.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing how the run was triggered.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the run (VCS, API, Manual).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "workspace_name": {
+            "type": "string",
+            "description": "Workspace name.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "vcs": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "branch": {
+                  "type": "string",
+                  "description": "The linked VCS repo branch.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "commit": {
+                  "type": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "author": [
+                          "list",
+                          [
+                            "object",
+                            {
+                              "username": "string"
+                            }
+                          ]
+                        ],
+                        "message": "string",
+                        "sha": "string"
+                      }
+                    ]
+                  ],
+                  "description": "Details of the last commit to the linked VCS repo.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "repository_id": {
+                  "type": "string",
+                  "description": "ID of the VCS repo in the format `:org/:repo`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "description": "Contains details of the VCS configuration if the workspace is linked to a VCS repo.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Allows you to get information about the current Terraform run when using a Scalr remote backend workspace, including VCS (Git) metadata.\n\nNo arguments are required. The data source returns details of the current run based on the `SCALR_RUN_ID` shell variable that is automatically exported in the Scalr remoted backend.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_provider_configurations": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of IDs of provider configurations, used in the environment workspaces by default.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_workspace_agent_pool_id": {
+            "type": "string",
+            "description": "Default agent pool that will be set for the entire environment. It will be used by a workspace if no other pool is explicitly linked.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "federated_environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that are allowed to access this environment, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The environment ID, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mask_sensitive_output": {
+            "type": "bool",
+            "description": "Enable masking of the sensitive console output.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the environment.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "policy_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of the environment policy-groups IDs, in the format `pgrp-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "remote_backend": {
+            "type": "bool",
+            "description": "If Scalr exports the remote backend configuration and state storage for your infrastructure management. Disabling this feature will also prevent the ability to perform state locking, which ensures that concurrent operations do not conflict. Additionally, it will disable the capability to initiate CLI-driven runs through Scalr.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "remote_backend_overridable": {
+            "type": "bool",
+            "description": "Indicates if the remote backend configuration can be overridden on the workspace level.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of an environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "storage_profile_id": {
+            "type": "string",
+            "description": "The storage profile for this environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tag_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the environment.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about environment.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_environments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of this data source.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment IDs, in the format [`env-xxxxxxxxxxx`, `env-yyyyyyyyy`].",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The query used in a Scalr environment name filter.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the environment.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves a list of environment ids by name or tags.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_event_bridge_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "AWS account ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "event_source_arn": {
+            "type": "string",
+            "description": "ARN of the event source.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "event_source_name": {
+            "type": "string",
+            "description": "Event source name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the EventBridge integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the EventBridge integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "AWS region.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "This data source is used to retrieve details of a single EventBridge integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_hook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the hook.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the hook in the format `hook-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "interpreter": {
+            "type": "string",
+            "description": "The interpreter to execute the hook script, such as 'bash', 'python3', etc.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the hook.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "scriptfile_path": {
+            "type": "string",
+            "description": "Path to the script file in the repository.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "ID of the VCS provider in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_repo": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "branch": "string",
+                  "identifier": "string"
+                }
+              ]
+            ],
+            "description": "Settings for the repository where the hook script is stored.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a hook.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_iam_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A verbose description of the team.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the team.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "identity_provider_id": {
+            "type": "string",
+            "description": "An identifier of an identity provider team is linked to, in the format `idp-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of the user identifiers that belong to the team.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a Scalr team.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_iam_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "An email of a user.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "full_name": {
+            "type": "string",
+            "description": "A full name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "An identifier of a user.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "identity_providers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of the identity providers the user belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "A system status of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "teams": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of the team identifiers the user belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "A username of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a Scalr user.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_integration_infracost": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environments this integration is linked to, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the Infracost integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Infracost integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about Infracost integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_module_namespace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of environment IDs associated with the module namespace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The module namespace ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_shared": {
+            "type": "bool",
+            "description": "Whether the module namespace is shared.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "modules": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of module IDs in the module namespace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the module namespace.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of team IDs that own the module namespace.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a single module namespace.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_module_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The identifier of \u0430 module version. Example: `modver-xxxx`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The module source.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version. If omitted, the latest module version is selected",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves the module version data by module source and semantic version.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_module_versions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The identifier of \u0430 module. Example: `mod-xxxx`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of a module.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "versions": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "status": "string",
+                  "version": "string"
+                }
+              ]
+            ],
+            "description": "The list of semantic versions.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a list of module versions by module source or module id.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_outputs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "The name of the environment the workspace belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "nonsensitive_values": {
+            "type": "dynamic",
+            "description": "A map of non-sensitive workspace output values.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "values": {
+            "type": "dynamic",
+            "description": "A map of all workspace output values.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "workspace": {
+            "type": "string",
+            "description": "The name of the workspace.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves the outputs of a Scalr workspace.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_policy_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "common_functions_folder": {
+            "type": "string",
+            "description": "An absolute path from the repository root to the folder that contains common rego functions.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of the environments the policy group is linked to, or `[\"*\"]` if enforced in all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "error_message": {
+            "type": "string",
+            "description": "An error details if Scalr failed to process the policy group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of a policy group.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of a policy group.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "opa_version": {
+            "type": "string",
+            "description": "The version of the Open Policy Agent that the policy group is using.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policies": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "enabled": "bool",
+                  "enforced_level": "string",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "A list of the OPA policies the policy group verifies each run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "A system status of the policy group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "The VCS provider identifier for the repository where the policy group resides. In the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_repo": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "branch": "string",
+                  "identifier": "string",
+                  "path": "string"
+                }
+              ]
+            ],
+            "description": "Contains VCS-related meta-data for the policy group.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a policy group.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_provider_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "apply_only": {
+            "type": "bool",
+            "description": "Whether the provider configuration is used only during the apply phase of the run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of environment identifiers that the provider configuration is shared to, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The provider configuration ID, in the format `pcfg-xxxxxxxxxxx`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of a Scalr provider configuration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owners": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The teams, the provider configuration belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "provider_name": {
+            "type": "string",
+            "description": "The name of a Terraform provider.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves information about a single provider configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_provider_configurations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of provider configuration IDs, in the format [`pcfg-xxxxxxxxxxx`, `pcfg-yyyyyyyyy`].",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The query used in a Scalr provider configuration name filter.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "provider_name": {
+            "type": "string",
+            "description": "The name of a Terraform provider.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the provider configuration.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves a list of provider configuration ids by name or type.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Verbose description of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the role.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description": "Boolean indicates if the role can be edited.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the role.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Array of permission names.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "This data source is used to retrieve details of a single role.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The email of the service account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the service account in the format `sa-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "owners": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The teams, the service account belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the service account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a service account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of environment IDs where the SSH key is available, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the SSH key.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the SSH key.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves details of a specific SSH key by ID or name.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_storage_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The resource creation timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default": {
+            "type": "bool",
+            "description": "The default storage profile.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "error_message": {
+            "type": "string",
+            "description": "The last error description, when these settings doesn't work properly.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the storage profile.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The resource last update timestamp.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "aws_s3": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "The value of the `aud` claim for the identity token.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "bucket_name": {
+                  "type": "string",
+                  "description": "AWS S3 Storage bucket name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "AWS S3 bucket region.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role_arn": {
+                  "type": "string",
+                  "description": "Amazon Resource Name (ARN) of the IAM Role to assume.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "description": "Settings for the AWS S3 storage profile.",
+              "description_kind": "markdown"
+            }
+          },
+          "azurerm": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "Azure audience for authentication.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Azure client ID for authentication.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "container_name": {
+                  "type": "string",
+                  "description": "Azure storage container name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "storage_account": {
+                  "type": "string",
+                  "description": "Azure storage account name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "Azure tenant ID for authentication.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "description": "Settings for the AzureRM storage profile.",
+              "description_kind": "markdown"
+            }
+          },
+          "google": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "credentials": {
+                  "type": "string",
+                  "description": "Service Account JSON key.",
+                  "description_kind": "markdown",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "encryption_key": {
+                  "type": "string",
+                  "description": "Customer supplied encryption key.",
+                  "description_kind": "markdown",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "project": {
+                  "type": "string",
+                  "description": "Google Cloud project ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "storage_bucket": {
+                  "type": "string",
+                  "description": "Google Storage bucket name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "description": "Settings for the Google storage profile.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Retrieves information about storage profile.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the Scalr account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the tag in the format `tag-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the tag.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a tag.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_var_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account this variable set belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the variable set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of environment IDs that this variable set is shared to. `[\"*\"]` means shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the variable set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the variable set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owners": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of team IDs this variable set belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "UTC timestamp of the last update to this variable set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by_email": {
+            "type": "string",
+            "description": "Email of the user who last updated this variable set.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about variable set.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_variable": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "The category of a Scalr variable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Variable verbose description, defaults to empty string.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr environment, in the format `env-<RANDOM STRING>`. Used to shrink the scope of the variable in case the variable name exists in multiple environments.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "final": {
+            "type": "bool",
+            "description": "If the variable is configured as final. Indicates whether the variable can be overridden on a lower scope down the Scalr organizational model.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hcl": {
+            "type": "bool",
+            "description": "If the variable is configured as a string of HCL code.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of a Scalr variable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The name of a Scalr variable.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "sensitive": {
+            "type": "bool",
+            "description": "If the variable is configured as sensitive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date/time the variable was updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that updated the variable last time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_by_email": {
+            "type": "string",
+            "description": "Email of the user who updated the variable last time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Variable value.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr workspace, in the format `ws-<RANDOM STRING>`. Used to shrink the scope of the variable in case the variable name exists on multiple workspaces.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a variable.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_variables": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "The category of a Scalr variable.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environment_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of identifiers of the Scalr environments, in the format `env-<RANDOM STRING>`. Used to shrink the variable's scope in case the variable name exists in multiple environments.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keys": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of keys to be used in the query used in a Scalr variable name filter.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "variables": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "account_id": "string",
+                  "category": "string",
+                  "description": "string",
+                  "environment_id": "string",
+                  "final": "bool",
+                  "hcl": "bool",
+                  "id": "string",
+                  "key": "string",
+                  "sensitive": "bool",
+                  "updated_at": "string",
+                  "updated_by": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "email": "string",
+                        "full_name": "string",
+                        "username": "string"
+                      }
+                    ]
+                  ],
+                  "updated_by_email": "string",
+                  "value": "string",
+                  "workspace_id": "string"
+                }
+              ]
+            ],
+            "description": "The list of Scalr variables with all attributes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "workspace_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A list of identifiers of the Scalr workspace, in the format `ws-<RANDOM STRING>`. Used to shrink the variable's scope in case the variable name exists on multiple workspaces.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves the list of variables by the given filters.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_vcs_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The identifier of the Scalr account.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "agent_pool_id": {
+            "type": "string",
+            "description": "The ID of the agent pool to connect Scalr to self-hosted VCS provider, in the format `apool-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "comments_enabled": {
+            "type": "bool",
+            "description": "Indicates whether commenting on pull requests is enabled for this VCS provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "draft_pr_runs_enabled": {
+            "type": "bool",
+            "description": "Indicates whether the draft pull-request runs are enabled for this VCS provider.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of the environment the VCS provider has to be linked to, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of the identifiers of the environments the VCS provider is linked to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the VCS provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the VCS provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "pr_merge_comments_enabled": {
+            "type": "bool",
+            "description": "Indicates whether comments after pull request merges are enabled for this VCS provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL to the VCS provider installation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_type": {
+            "type": "string",
+            "description": "The type of the VCS provider. For example, `github`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about VCS provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Boolean indicates if the webhook is enabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environments": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of environment identifiers that the webhook is shared to, or `[\"*\"]` if shared with all environments.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "events": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of event IDs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "header": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "value": "string"
+                }
+              ]
+            ],
+            "description": "Additional headers to set in the webhook request.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The webhook ID, in the format `wh-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_triggered_at": {
+            "type": "string",
+            "description": "Date/time when webhook was last triggered.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_attempts": {
+            "type": "number",
+            "description": "Max delivery attempts of the payload.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the webhook.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "Secret key to sign the webhook payload.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Endpoint timeout (in seconds).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Endpoint URL.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a webhook.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workload_identity_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_audiences": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of allowed audiences for the workload identity provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "assume_service_account_policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of assume service account policy IDs associated with the workload identity provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the workload identity provider was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by_email": {
+            "type": "string",
+            "description": "The email of the user who created the workload identity provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The workload identity provider ID.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the workload identity provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the workload identity provider.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the workload identity provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a single workload identity provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_pool_id": {
+            "type": "string",
+            "description": "The identifier of an agent pool in the format `apool-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auto_apply": {
+            "type": "bool",
+            "description": "Boolean indicates if `terraform apply` will be automatically run when `terraform plan` ends without error.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auto_queue_runs": {
+            "type": "string",
+            "description": "Indicates if runs have to be queued automatically when a new configuration version is uploaded. Supported values are `skip_first`, `always`, `never`, `on_create_only`:\n  * `skip_first` - after the very first configuration version is uploaded into the workspace the run will not be triggered. But the following configurations will do. This is the default behavior.\n  * `always` - runs will be triggered automatically on every upload of the configuration version.\n  * `never` - configuration versions are uploaded into the workspace, but runs will not be triggered.\n  * `on_create_only` - single run will be triggered only when the workspace is created and the first configuration version is uploaded. Subsequent configurations will not trigger runs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "full_name": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Details of the user that created the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection_enabled": {
+            "type": "bool",
+            "description": "Boolean, indicates if the workspace has the protection from an accidental state lost. If enabled and the workspace has resource, the deletion will not be allowed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "execution_mode": {
+            "type": "string",
+            "description": "Execution mode of the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "force_latest_run": {
+            "type": "bool",
+            "description": "Boolean indicates if latest new run will be automatically raised in priority.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "has_resources": {
+            "type": "bool",
+            "description": "The presence of active terraform resources in the current state version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hooks": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "post_apply": "string",
+                  "post_plan": "string",
+                  "pre_apply": "string",
+                  "pre_init": "string",
+                  "pre_plan": "string"
+                }
+              ]
+            ],
+            "description": "List of custom hooks in a workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "iac_platform": {
+            "type": "string",
+            "description": "The IaC platform used for this workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the workspace.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "module_version_id": {
+            "type": "string",
+            "description": "The identifier of a module version in the format `modver-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "operations": {
+            "type": "bool",
+            "description": "Boolean indicates if the workspace is being used for remote execution.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "remote_backend": {
+            "type": "bool",
+            "description": "Manages if Scalr exports the remote backend configuration and state storage for your infrastructure management. Disabling this feature will also prevent the ability to perform state locking, which ensures that concurrent operations do not conflict. Additionally, it will disable the capability to initiate CLI-driven runs through Scalr.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tag_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "The version of Terraform used for this workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "terragrunt": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "include_external_dependencies": "bool",
+                  "use_run_all": "bool",
+                  "version": "string"
+                }
+              ]
+            ],
+            "description": "List of terragrunt configurations in a workspace if set.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Scalr Workspace environment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_provider_id": {
+            "type": "string",
+            "description": "The identifier of a VCS provider in the format `vcs-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "vcs_repo": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "dry_runs_enabled": "bool",
+                  "identifier": "string",
+                  "ingress_submodules": "bool",
+                  "path": "string"
+                }
+              ]
+            ],
+            "description": "If a workspace is linked to a VCS repository this block shows the details, otherwise `{}`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "A relative path that Terraform will execute within.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the details of a single workspace.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspace_ids": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of workspace names and their opaque IDs, in the format `id/name`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of names to search for. If a name does not exist, it will not throw an error, it will just not exist in the returned output. Use `[\"*\"]` to select all workspaces.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves a map of workspace IDs based on the names provided. Wildcards are accepted.",
+        "description_kind": "markdown"
+      }
+    },
+    "scalr_workspaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "ID of the account, in the format `acc-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "ID of the environment, in the format `env-<RANDOM STRING>`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of workspace IDs, in the format [`ws-xxxxxxxxxxx`, `ws-yyyyyyyyy`].",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The query used in a Scalr workspace name filter.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tag IDs associated with the workspace.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves a list of workspace ids by name or tags.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
