@@ -1,0 +1,5561 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_endpoint": {
+          "type": "string",
+          "description": "env0 API endpoint. This can also be set via the ENV0_API_ENDPOINT environment variable, and is usually used for testing purposes.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_key": {
+          "type": "string",
+          "description": "env0 API key. This field can be removed from the provider block; instead of the field, you can set the value via the ENV0_API_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_secret": {
+          "type": "string",
+          "description": "env0 API secret. This field can be removed from the provider block; instead of the field, you can set the value via the ENV0_API_SECRET environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "organization_id": {
+          "type": "string",
+          "description": "when the API key is associated with multiple organizations, this field is required. If an API key has one organization, this field is ignored. This can also be set via the ENV0_ORGANIZATION_ID environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "env0_agent_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_key": {
+            "type": "string",
+            "description": "the agent key identifier. Deprecated: use id instead",
+            "description_kind": "plain",
+            "deprecated": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "the agent pool description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the agent pool name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "logs": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "the AWS account id for self-hosted logs",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "the external id for self-hosted logs",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "the AWS region for self-hosted logs",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "self-hosted logs configuration (dynamo self-hosted)",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_agent_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "id of the agent",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "assign an agent to a project (multiple self-hosted agents). More details here: https://docs.env0.com/docs/multiple-self-hosted-agents",
+        "description_kind": "plain"
+      }
+    },
+    "env0_agent_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_id": {
+            "type": "string",
+            "description": "the agent pool id this secret belongs to",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "the secret description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "the secret value. Only available on creation. Note: stored in Terraform state",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_api_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_id": {
+            "type": "string",
+            "description": "the api key id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "api_key_secret": {
+            "type": "string",
+            "description": "the api key secret. This attribute is not computed for imported resources. Note that this will be written to the state file. To omit the secret: set 'omit_api_key_secret' to 'true'",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the api key name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "omit_api_key_secret": {
+            "type": "bool",
+            "description": "if set to 'true' will omit the api_key_secret from the state. This would mean that the api_key_secret cannot be used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "organization_role": {
+            "type": "string",
+            "description": "the api key type. 'Admin', 'User' or a custom role id. Defaults to 'Admin'. For more details check https://docs.env0.com/docs/api-keys",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "project_permissions": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "project_id": {
+                  "type": "string",
+                  "description": "The project ID to assign permissions to",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "project_role": {
+                  "type": "string",
+                  "description": "The role for this project. Must be one of: Planner, Viewer, Deployer, Admin",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Project-specific permissions. Only valid when organization_role is 'User' or a custom role id",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_approval_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the bitbucket client key used for integration",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "the env0 application installation id on the relevant github repository",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "gitlab_project_id": {
+            "type": "number",
+            "description": "the project id of the relevant repository (deprecated)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the approval policy",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this approval policy integrates with azure dev ops repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "true if this approval policy uses bitbucket server repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "true if this approval policy uses github enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab": {
+            "type": "bool",
+            "description": "true if this approval policy integrates with gitlab repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "true if this approval policy uses gitlab enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the approval policy",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "terraform / terragrunt file folder inside source code. Should be the full path including the .yaml/.yml file",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "repository url for the approval policy source code",
+            "description_kind": "plain",
+            "required": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "source code revision (branch / tag) to use",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "the git token id to be used",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "the VCS connection id to be used",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_approval_policy_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "blueprint_id": {
+            "type": "string",
+            "description": "the id of the approval policy",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the type of the scope. Valid values: PROJECT or BLUEPRINT. Default value: PROJECT",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "the id of the scope (E.g. project id or template id)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_cloud_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "the AWS account id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "bucket_name": {
+            "type": "string",
+            "description": "the CloudTrail bucket name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "health": {
+            "type": "bool",
+            "description": "an indicator if the configuration is valid",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the cloud configuration for insights",
+            "description_kind": "plain",
+            "required": true
+          },
+          "prefix": {
+            "type": "string",
+            "description": "an optional bucket prefix (folder)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of AWS regions",
+            "description_kind": "plain",
+            "required": true
+          },
+          "should_prefix_under_logs_folder": {
+            "type": "bool",
+            "description": "If 'true' than the prefix will be under 'AWSLogs' folder (default: false)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "configure an AWS cloud account (Cloud Compass)",
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arn": {
+            "type": "string",
+            "description": "the aws role arn",
+            "description_kind": "plain",
+            "required": true
+          },
+          "duration": {
+            "type": "number",
+            "description": "the session duration in seconds. If set must be one of the following: 3600 (1h), 7200 (2h), 14400 (4h), 18000 (5h default), 28800 (8h), 43200 (12h)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key_id": {
+            "type": "string",
+            "description": "the aws access key id",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "the aws role arn",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "duration": {
+            "type": "number",
+            "description": "the session duration in seconds for AWS_ASSUMED_ROLE_FOR_DEPLOYMENT. If set must be one of the following: 3600 (1h), 7200 (2h), 14400 (4h), 18000 (5h default), 28800 (8h), 43200 (12h)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret_access_key": {
+            "type": "string",
+            "description": "the aws access key secret. In case your organization is self-hosted, please use a secret reference in the shape of ${ssm:<secret-id>}",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_eks_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_name": {
+            "type": "string",
+            "description": "eks cluster name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cluster_region": {
+            "type": "string",
+            "description": "the AWS region of the eks cluster",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "duration": {
+            "type": "number",
+            "description": "the session duration in seconds. If set must be one of the following: 3600 (1h), 7200 (2h), 14400 (4h), 18000 (5h default), 28800 (8h), 43200 (12h)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the oidc credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role_arn": {
+            "type": "string",
+            "description": "the aws role arn",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_aks_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_name": {
+            "type": "string",
+            "description": "aks cluster name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_group": {
+            "type": "string",
+            "description": "the resource group of the aks",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_cloud_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "the Azure client ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "health": {
+            "type": "bool",
+            "description": "an indicator if the configuration is valid",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "log_analytics_workspace_id": {
+            "type": "string",
+            "description": "the Azure Log Analytics Workspace ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the cloud configuration for insights",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "the Azure tenant ID",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "configure an Azure cloud account (Cloud Compass)",
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "the azure client id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "the azure client secret",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "the azure subscription id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "the azure tenant id",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "the azure client id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "the azure client secret. In case your organization is self-hosted, please use a secret reference in the shape of ${azure:<secret-name>@<vault-name>}",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "the azure subscription id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "the azure tenant id",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "the azure client id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the oidc credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "the azure subscription id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "the azure tenant id",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_cloud_credentials_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential_id": {
+            "type": "string",
+            "description": "id of cloud credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_configuration_variable": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "a description of the variables",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enum": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "limit possible values to values from this list",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "create the variable under this environment, not globally. Make sure to 'ignore changes' on environment.configuration to prevent drifts",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "format": {
+            "type": "string",
+            "description": "specifies the format of the configuration value ('HCL' or 'JSON'). If none is specified, 'JSON' and 'HCL' values will be considered to be a 'string' (text) type",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_read_only": {
+            "type": "bool",
+            "description": "the value of this variable cannot be edited by lower scopes",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_required": {
+            "type": "bool",
+            "description": "the value of this variable must be set by lower scopes",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_sensitive": {
+            "type": "bool",
+            "description": "is the variable sensitive, defaults to false",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name to give the configuration variable",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "create the variable under this project, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "regex": {
+            "type": "string",
+            "description": "the value of this variable must match provided regular expression (enforced only in env0 UI)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "soft_delete": {
+            "type": "bool",
+            "description": "soft delete the configuration variable, once removed from the configuration it won't be deleted from env0",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sub_environment_alias": {
+            "type": "string",
+            "description": "create the variable for sub templates of a workflow. Requires template_id to be set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "create the variable under this template, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "default 'environment'. set to 'terraform' to create a terraform variable",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "value": {
+            "type": "string",
+            "description": "value for the configuration variable",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          }
+        },
+        "description": "Note: do not use with an environment resource that has it's configuration variables defined in it's 'configuration' field (see env0_environment_resource -> configuration)",
+        "description_kind": "plain"
+      }
+    },
+    "env0_cost_credentials_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential_id": {
+            "type": "string",
+            "description": "id of cost credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_flow": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the bitbucket client key used for integration",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "the env0 application installation id on the relevant github repository",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "gitlab_project_id": {
+            "type": "number",
+            "description": "the project id of the relevant repository (deprecated)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the custom flow",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this custom flow integrates with azure dev ops repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "true if this custom flow uses bitbucket server repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "true if this custom flow uses github enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab": {
+            "type": "bool",
+            "description": "true if this custom flow integrates with gitlab repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "true if this custom flow uses gitlab enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the custom flow",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "terraform / terragrunt file folder inside source code. Should be the full path including the .yaml/.yml file",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "repository url for the custom flow source code",
+            "description_kind": "plain",
+            "required": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "source code revision (branch / tag) to use",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "the git token id to be used",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "the VCS connection id to be used",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_flow_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the type of the scope. Valid values: PROJECT. Default value: PROJECT",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "the id of the scope (E.g. project id)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "the id of the custom flow",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_default_role": {
+            "type": "bool",
+            "description": "Defaults to 'false'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the custom role",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of permissions assigned to the role. The allowed values are available within the 'permissions' attribute at this URL: https://docs.envzero.com/api-reference/roles/create-a-role#create-a-role",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "approve_plan_automatically": {
+            "type": "bool",
+            "description": "should deployments require manual approvals",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "auto_deploy_by_custom_glob": {
+            "type": "string",
+            "description": "redeploy on file filter pattern.\nWhen used 'auto_deploy_on_path_changes_only' must be configured to true and 'deploy_on_push' or 'run_plan_on_pull_requests' must be configured to true.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "auto_deploy_on_path_changes_only": {
+            "type": "bool",
+            "description": "redeploy only on path changes only",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deploy_on_push": {
+            "type": "bool",
+            "description": "should run terraform deploy on push events.\nIf true must specify one of the following - 'github_installation_id' if using GitHub, 'gitlab_project_id' and 'token_id' if using GitLab, or 'bitbucket_client_key' if using BitBucket.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deployment_id": {
+            "type": "string",
+            "description": "id of the last deployment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "drift_detection_cron": {
+            "type": "string",
+            "description": "cron expression for scheduled drift detection of the environment (cannot be used with resource_drift_detection resource)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_destroy": {
+            "type": "bool",
+            "description": "Destroy safeguard. Must be enabled before delete/destroy",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the environment's id",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_inactive": {
+            "type": "bool",
+            "description": "If 'true', it marks the environment as inactive. It can be re-activated by setting it to 'false' or removing this field. Note: it's not allowed to create an inactive environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_remote_apply_enabled": {
+            "type": "bool",
+            "description": "enables remote apply when set to true (defaults to false). Can only be enabled when is_remote_backend and approve_plan_automatically are enabled",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_remote_backend": {
+            "type": "bool",
+            "description": "should use remote backend",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "k8s_namespace": {
+            "type": "string",
+            "description": "kubernetes (or helm) namespace to be used. If modified deletes current environment and creates a new one",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the environment's name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "output": {
+            "type": "string",
+            "description": "the deployment log output. Returns a json string. It can be either a map of key-value, or an array of (in case of Terragrunt run-all) of moduleName and a map of key-value. Note: if the deployment is still in progress returns 'null'",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "prevent_auto_deploy": {
+            "type": "bool",
+            "description": "use this flag to prevent auto deploy on environment creation",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "project id of the environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "removal_strategy": {
+            "type": "string",
+            "description": "by default when removing an environment, it gets destroyed. Setting this value to 'mark_as_archived' will force the environment to be archived instead of tying to destroy it ('Mark as inactive' in the UI)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "the revision the environment is to be run against. Please note that changing this attribute will require environment redeploy",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "run_plan_on_pull_requests": {
+            "type": "bool",
+            "description": "should run terraform plan on pull requests creations.\nIf true must specify one of the following - 'github_installation_id' if using GitHub, 'gitlab_project_id' and 'token_id' if using GitLab, or 'bitbucket_client_key' if using BitBucket.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "the template id the environment is to be created from.\nImportant note: the template must first be assigned to the same project as the environment (project_id). Use 'env0_template_project_assignment' to assign the template to the project. In addition, be sure to leverage 'depends_on' if applicable. Please note that changing this attribute will require environment redeploy",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terragrunt_working_directory": {
+            "type": "string",
+            "description": "The working directory path to be used by a Terragrunt template. If left empty '/' is used. Note: modifying this field destroys the current environment and creates a new one",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ttl": {
+            "type": "string",
+            "description": "the date the environment should be destroyed at (iso format). omitting this attribute will result in infinite ttl.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "variable_sets": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of IDs of variable sets to assign to this environment. Note: must not be used with 'env0_variable_set_assignment'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vcs_commands_alias": {
+            "type": "string",
+            "description": "set an alias for this environment in favor of running VCS commands using PR comments against it. Additional details: https://docs.env0.com/docs/plan-and-apply-from-pr-comments",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vcs_pr_comments_enabled": {
+            "type": "bool",
+            "description": "set to 'true' to enable running VCS PR plan/apply commands using PR comments. This can be set to 'true' (enabled) without setting alias in 'vcs_commands_alias'. Additional details: https://docs.env0.com/docs/plan-and-apply-from-pr-comments#configuration",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wait_for_destroy": {
+            "type": "bool",
+            "description": "(Important note: this option is experimental, please report any issues found). During destroy, waits for the environment status to be 'INACTIVE'. Times out after 30 minutes.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workspace": {
+            "type": "string",
+            "description": "the terraform workspace name of the environment",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "configuration": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "description for the variable",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_read_only": {
+                  "type": "bool",
+                  "description": "is the variable read only",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_required": {
+                  "type": "bool",
+                  "description": "is the variable required",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "is_sensitive": {
+                  "type": "bool",
+                  "description": "should the variable value be hidden",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "variable name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "regex": {
+                  "type": "string",
+                  "description": "the value of this variable must match provided regular expression (enforced only in env0 UI)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schema_enum": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "a list of possible variable values",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schema_format": {
+                  "type": "string",
+                  "description": "the variable format",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schema_type": {
+                  "type": "string",
+                  "description": "the type the variable",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "variable type (allowed values are: terraform, environment)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "variable value",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "terraform and environment variables for the environment. Note: do not use with 'env0_configuration_variable' resource",
+              "description_kind": "plain"
+            }
+          },
+          "sub_environment_configuration": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "sub environment alias name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "approve_plan_automatically": {
+                  "type": "bool",
+                  "description": "when 'true' (default) plans are approved automatically, otherwise ('false') deployment require manual approval",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "the id of the sub environment",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "revision": {
+                  "type": "string",
+                  "description": "sub environment revision",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "workspace": {
+                  "type": "string",
+                  "description": "sub environment workspace (overrides the configuration in the yml file)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "configuration": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "description": {
+                        "type": "string",
+                        "description": "description for the variable",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "is_read_only": {
+                        "type": "bool",
+                        "description": "is the variable read only",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "is_required": {
+                        "type": "bool",
+                        "description": "is the variable required",
+                        "description_kind": "plain",
+                        "deprecated": true,
+                        "optional": true
+                      },
+                      "is_sensitive": {
+                        "type": "bool",
+                        "description": "should the variable value be hidden",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "variable name",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "regex": {
+                        "type": "string",
+                        "description": "the value of this variable must match provided regular expression (enforced only in env0 UI)",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "schema_enum": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "a list of possible variable values",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "schema_format": {
+                        "type": "string",
+                        "description": "the variable format",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "schema_type": {
+                        "type": "string",
+                        "description": "the type the variable",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "variable type (allowed values are: terraform, environment)",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "variable value",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "sub environment configuration variables. Note: do not use with 'env0_configuration_variable' resource",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "the subenvironments for a workflow environment. Template type must be 'workflow'. Must match the configuration as defined in 'env0.workflow.yml'",
+              "description_kind": "plain"
+            }
+          },
+          "without_template_settings": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "ansible_version": {
+                  "type": "string",
+                  "description": "the ansible version to use (required when the template type is 'ansible'). Supported versions are 3.0.0 and above",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "bitbucket_client_key": {
+                  "type": "string",
+                  "description": "the bitbucket client key used for integration",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "description for the template",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "file_name": {
+                  "type": "string",
+                  "description": "the cloudformation file name. Required if the template type is cloudformation",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "github_installation_id": {
+                  "type": "number",
+                  "description": "the env0 application installation id on the relevant github repository",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "gitlab_project_id": {
+                  "type": "number",
+                  "description": "the project id of the relevant repository (deprecated)",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "helm_chart_name": {
+                  "type": "string",
+                  "description": "the helm chart name. Required if is_helm_repository is set to 'true'",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "id of the template",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_azure_devops": {
+                  "type": "bool",
+                  "description": "true if this template integrates with azure dev ops",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_bitbucket_server": {
+                  "type": "bool",
+                  "description": "true if this template uses bitbucket server repository",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_github_enterprise": {
+                  "type": "bool",
+                  "description": "true if this template uses github enterprise repository",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_gitlab": {
+                  "type": "bool",
+                  "description": "set to 'true' if the repository is Gitlab",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_gitlab_enterprise": {
+                  "type": "bool",
+                  "description": "true if this template uses gitlab enterprise repository",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_helm_repository": {
+                  "type": "bool",
+                  "description": "true if this template integrates with a helm repository",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_terragrunt_run_all": {
+                  "type": "bool",
+                  "description": "true if this template should execute run-all commands on multiple modules (check https://terragrunt.gruntwork.io/docs/features/execute-terraform-commands-on-multiple-modules-at-once/#the-run-all-command for additional details). Can only be true with 'terragrunt' template type and terragrunt version 0.28.1 and above",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "opentofu_version": {
+                  "type": "string",
+                  "description": "the Opentofu version to use (example: 1.6.2). Setting to 'RESOLVE_FROM_CODE' extracts the version from the Opentofu code during runtime. Setting to `latest`, the version used will be the most recent one available for Opentofu.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "terraform / terragrunt file folder inside source code",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "repository": {
+                  "type": "string",
+                  "description": "git repository url for the template source code",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "retries_on_deploy": {
+                  "type": "number",
+                  "description": "number of times to retry when deploying an environment based on this template",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "retries_on_destroy": {
+                  "type": "number",
+                  "description": "number of times to retry when destroying an environment based on this template",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "retry_on_deploy_only_when_matches_regex": {
+                  "type": "string",
+                  "description": "if specified, will only retry (on deploy) if error matches specified regex",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "retry_on_destroy_only_when_matches_regex": {
+                  "type": "string",
+                  "description": "if specified, will only retry (on destroy) if error matches specified regex",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "revision": {
+                  "type": "string",
+                  "description": "source code revision (branch / tag) to use",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ssh_keys": {
+                  "type": [
+                    "list",
+                    [
+                      "map",
+                      "string"
+                    ]
+                  ],
+                  "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "terraform_version": {
+                  "type": "string",
+                  "description": "the Terraform version to use (example: 0.15.1). Setting to `RESOLVE_FROM_TERRAFORM_CODE` defaults to the version of `terraform.required_version` during run-time (resolve from terraform code). Setting to `latest`, the version used will be the most recent one available for Terraform.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "terragrunt_tf_binary": {
+                  "type": "string",
+                  "description": "the binary to use if the template type is 'terragrunt'. Valid values 'opentofu' and 'terraform'. Defaults to 'opentofu'",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "terragrunt_version": {
+                  "type": "string",
+                  "description": "the Terragrunt version to use (example: 0.36.5)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "token_id": {
+                  "type": "string",
+                  "description": "the git token id to be used",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "token_name": {
+                  "type": "string",
+                  "description": "token name for Gitlab",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "template type (allowed values: terraform, terragrunt, pulumi, k8s, workflow, cloudformation, helm, opentofu, ansible)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "vcs_connection_id": {
+                  "type": "string",
+                  "description": "the VCS connection id to be used",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "settings for creating an environment without a template",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment_discovery_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_deploy_by_custom_glob": {
+            "type": "string",
+            "description": "If specified, deploy/plan on changes matching the given pattern (glob). Otherwise, deploy on template folder changes only",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "bitbucket client",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "create_new_environments_from_pull_requests": {
+            "type": "bool",
+            "description": "create new environments from pull requests (default: false)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment_placement": {
+            "type": "string",
+            "description": "the environment placement strategy with the project.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "github repository id",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "gitlab_project_id": {
+            "type": "number",
+            "description": "gitlab project id (deprecated)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "glob_pattern": {
+            "type": "string",
+            "description": "the environments glob pattern. Any match to this pattern will result in an Environment creation and plan",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "set to true if azure devops is used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "set to true if Bitbucket Server is used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "set to true if GitHub Enterprise is used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "set to true if GitLab Enterprise is used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_terragrunt_run_all": {
+            "type": "bool",
+            "description": "If set to 'true', execute terragrunt commands with 'run all' (default: false)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "opentofu_version": {
+            "type": "string",
+            "description": "the Opentofu version to use (example: 1.6.1). Setting to `latest`, the version used will be the most recent one available for OpenTofu.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the project id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "the repository to run discovery on",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repository_regex": {
+            "type": "string",
+            "description": "Regex to match repositories for environment discovery by file. The pattern is matched against the repository path in the format '<owner>/<repo>'. Use '|' to match multiple patterns (e.g. 'org1/.*|org2/web-.*' to match all repos in org1 and repos starting with 'web-' in org2). Cannot be used with 'repository' or 'glob_pattern'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retries_on_deploy": {
+            "type": "number",
+            "description": "number of times to retry when deploy fails (between 1 and 3)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retries_on_destroy": {
+            "type": "number",
+            "description": "number of times to retry when destroy fails (between 1 and 3)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retry_on_deploy_only_when_matches_regex": {
+            "type": "string",
+            "description": "retry (on deploy) if error matches the specified regex",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retry_on_destroy_only_when_matches_regex": {
+            "type": "string",
+            "description": "retry (on destroy) if error matches the specified regex",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "root_path": {
+            "type": "string",
+            "description": "start files Glob matching from this folder only",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_key_id": {
+            "type": "string",
+            "description": "The ssh key id that will be available during deployment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_key_name": {
+            "type": "string",
+            "description": "The ssh key name that will be available during deployment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "the Terraform version to use (example: 1.7.4). Setting to `RESOLVE_FROM_TERRAFORM_CODE` defaults to the version of `terraform.required_version` during run-time (resolve from terraform code). Setting to `latest`, the version used will be the most recent one available for Terraform.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terragrunt_tf_binary": {
+            "type": "string",
+            "description": "The binary to use with Terragrunt. Valid values: 'opentofu' and 'terraform' (default: 'opentofu')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terragrunt_version": {
+            "type": "string",
+            "description": "the Terragrunt version to use (example: 0.52.0)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "a token id to be used with 'gitlab' or 'azure_devops'",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the infrastructure type use. Valid values: 'opentofu', 'terraform', 'terragrunt', 'workflow' (default: 'opentofu')",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "the VCS connection id to be used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "workspace_naming": {
+            "type": "string",
+            "description": "the Workspace namimg strategy.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "See https://docs.env0.com/docs/environment-discovery for additional details",
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment_drift_detection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_drift_remediation": {
+            "type": "string",
+            "description": "Auto drift remediation strategy (DISABLED, CODE_TO_CLOUD, CLOUD_TO_CODE, SMART_REMEDIATION). Defaults to DISABLED",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cron": {
+            "type": "string",
+            "description": "Cron expression for scheduled drift detection of the environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment's id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "note: instead of using this resource, setting drift detection can be configured directly through the environment resource",
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment_output_configuration_variable": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "a description of the variable",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_read_only": {
+            "type": "bool",
+            "description": "set to 'true' if the value of this variable cannot be edited in lower scopes (applicable only to 'PROJECT' scope)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_required": {
+            "type": "bool",
+            "description": "set to 'true' if the value of this variable is required in lower scopes",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the variable",
+            "description_kind": "plain",
+            "required": true
+          },
+          "output_environment_id": {
+            "type": "string",
+            "description": "the environment id of the output",
+            "description_kind": "plain",
+            "required": true
+          },
+          "output_name": {
+            "type": "string",
+            "description": "the name of the output value",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the type of resource to assign to. Valid values: 'PROJECT', 'ENVIRONMENT', 'WORKFLOW', and 'DEPLOYMENT'. Default value: 'ENVIRONMENT'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "the id of the of the resource to assign to (E.g. the environment id)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "defaults to 'environment'. Set to 'terraform' to create a terraform output variable",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "for additional details check: https://docs.env0.com/docs/environment-outputs",
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment_scheduling": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deploy_cron": {
+            "type": "string",
+            "description": "Cron expression for scheduled deploy of the environment. Destroy and Deploy cron expressions must not be the same.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "destroy_cron": {
+            "type": "string",
+            "description": "Cron expression for scheduled destroy of the environment. Destroy and Deploy cron expressions must not be the same.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment's id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment_state_access": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accessible_from_entire_organization": {
+            "type": "bool",
+            "description": "when this parameter is 'false', allowed_project_ids should be provided. Defaults to 'false'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "allowed_project_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of allowed project_ids. Used when 'accessible_from_entire_organization' is 'false'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "id of the environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_cloud_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential_configuration_file_content": {
+            "type": "string",
+            "description": "the GCP credential configuration file content (JSON)",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "gcp_project_id": {
+            "type": "string",
+            "description": "the GCP project ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "health": {
+            "type": "bool",
+            "description": "an indicator if the configuration is valid",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the cloud configuration for insights",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "configure a GCP cloud account (Cloud Compass)",
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "the GCP service account key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "table_id": {
+            "type": "string",
+            "description": "the full BigQuery table id of the exported billing data",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "env0_project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the gcp project id",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "service_account_key": {
+            "type": "string",
+            "description": "the gcp service account key. In case your organization is self-hosted, please use a secret reference in the shape of ${gcp:<secret-id>}",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_gke_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_name": {
+            "type": "string",
+            "description": "gke cluster name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "compute_region": {
+            "type": "string",
+            "description": "the GCP gke compute region",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential_configuration_file_content": {
+            "type": "string",
+            "description": "the JSON content of the JWT configuration file",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the oidc credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_git_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the git token name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "the git token value",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gpg_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "the gpg public key block",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_id": {
+            "type": "string",
+            "description": "the gpg key id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the gpg key name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_kubeconfig_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "kube_config": {
+            "type": "string",
+            "description": "A valid kubeconfig file content",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the credentials",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_module": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the client key used for integration with Bitbucket",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "description of the module",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "the env0 application installation id on the relevant Github repository",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this module integrates with azure dev ops",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "true if this module integrates with Bitbucket Server",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "true if this module integrates with GitHub Enterprise",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab": {
+            "type": "bool",
+            "description": "true if this module integrates with GitLab",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "true if this module integrates with GitLab Enterprise",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "module_name": {
+            "type": "string",
+            "description": "name of the module (Match pattern: ^[0-9A-Za-z](?:[0-9A-Za-z-_]{0,62}[0-9A-Za-z])?$)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "module_provider": {
+            "type": "string",
+            "description": "the provider name in the module source (Match pattern: ^[0-9a-z]{0,64}$)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "module_test_enabled": {
+            "type": "bool",
+            "description": "set to 'true' to enable module test (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "opentofu_version": {
+            "type": "string",
+            "description": "the opentofu version to use, Can only be set if 'module_test_enabled' is enabled",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "the folder in the repository to create the module from",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "the repository containing the module files",
+            "description_kind": "plain",
+            "required": true
+          },
+          "run_tests_on_pull_request": {
+            "type": "bool",
+            "description": "set to 'true' to run tests on pull request (defaults to 'false'). Can only be enabled if 'module_test_enabled' is enabled",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tag_prefix": {
+            "type": "string",
+            "description": "a tag prefix for the module",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "the git token id to be used",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "token_name": {
+            "type": "string",
+            "description": "the token name used for integration with GitLab",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "the VCS connection id to be used",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_notification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the notification",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "'Slack', 'Teams', 'Email' or 'Webhook'",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "URL for Slack, Teams or Webhooks endpoint. Coma separated list of email addresses for email endpoint, you can use `$ENVIRONMENT_CREATOR$`, and `$DEPLOYER$` to resolve emails dynamically.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "webhook_secret": {
+            "type": "string",
+            "description": "the webhook secret to use for signing the webhook payload",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_notification_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "event_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of notification events (allowed values: environmentDeployStarted, environmentDestroyStarted, deploySucceeded, destroySucceeded, deployFailed, destroyFailed, deploymentWaitingForUser, deploymentCancelled, environmentDeployResumed, environmentDestroyResumed, environmentMarkedForAutoDestroy, driftDetected, driftUndetected, driftFailed, budgetExceeded)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notification_endpoint_id": {
+            "type": "string",
+            "description": "id of the notification endpoint",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_oci_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fingerprint": {
+            "type": "string",
+            "description": "OCI API key fingerprint",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the oci credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "OCI API private key",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "OCI region",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenancy_ocid": {
+            "type": "string",
+            "description": "OCI tenancy OCID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_ocid": {
+            "type": "string",
+            "description": "OCI user OCID",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_organization_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_mergeable_bypass_for_pr_apply": {
+            "type": "bool",
+            "description": "set to 'true' to allow bypassing the PR mergeability check for env0/Apply status checks on GitHub (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_ttl": {
+            "type": "string",
+            "description": "the default environment time-to-live allowed on deploy time. Format is <number>-<M/w/d/h> (Examples: 12-h, 3-d, 1-w, 1-M). Omit for infinite ttl. must be equal or shorter than max_ttl",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "do_not_consider_merge_commits_for_pr_plans": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "do_not_report_skipped_status_checks": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enable_oidc": {
+            "type": "bool",
+            "description": "set to 'true' to enable OIDC token (JWT) availability during env0 deployments (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enforce_pr_commenter_permissions": {
+            "type": "bool",
+            "description": "set to 'true' to enforce PR commenter permissions during env0 deployments (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "max_ttl": {
+            "type": "string",
+            "description": "the maximum environment time-to-live allowed on deploy time. Format is <number>-<M/w/d/h> (Examples: 12-h, 3-d, 1-w, 1-M). Omit for infinite ttl. must be equal or longer than default_ttl",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "description of the project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_destroy": {
+            "type": "bool",
+            "description": "Destroy the project even when environments exist",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name to give the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_project_id": {
+            "type": "string",
+            "description": "If set, the project becomes a 'sub-project' of the parent project. See https://docs.env0.com/docs/sub-projects",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "tags for the project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wait": {
+            "type": "bool",
+            "description": "Wait for all environments to be destroyed before destroying this project (up to 10 minutes)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project_budget": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "amount": {
+            "type": "number",
+            "description": "amount of the project budget",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "thresholds": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "list of notification thresholds",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timeframe": {
+            "type": "string",
+            "description": "budget timeframe (valid values: WEEKLY, MONTHLY, QUARTERLY, YEARLY)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_drift_remediation": {
+            "type": "string",
+            "description": "Auto drift remediation strategy (DISABLED, CODE_TO_CLOUD, CLOUD_TO_CODE, SMART_REMEDIATION). Defaults to DISABLED",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "continuous_deployment_default": {
+            "type": "bool",
+            "description": "Redeploy on every push to the git branch default value",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_ttl": {
+            "type": "string",
+            "description": "the default environment time-to-live allowed on deploy time. Format is <number>-<M/w/d/h> (Examples: 12-h, 3-d, 1-w, 1-M). Default value is 'inherit' which inherits the organization policy. must be equal or shorter than max_ttl",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disable_destroy_environments": {
+            "type": "bool",
+            "description": "Disallow destroying environment in the project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "drift_detection_cron": {
+            "type": "string",
+            "description": "default cron expression for new environments",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_remote_backend": {
+            "type": "bool",
+            "description": "if 'true' all environments created in this project will be forced to use env0 remote backend. Default is 'false'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the policy",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "include_cost_estimation": {
+            "type": "bool",
+            "description": "Enable cost estimation for the project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "max_ttl": {
+            "type": "string",
+            "description": "the maximum environment time-to-live allowed on deploy time. Format is <number>-<M/w/d/h> (Examples: 12-h, 3-d, 1-w, 1-M). Default value is 'inherit' which inherits the organization policy. must be equal or longer than default_ttl",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "number_of_environments": {
+            "type": "number",
+            "description": "Max number of environments a single user can have in this project.\nOmitting removes the restriction.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "number_of_environments_total": {
+            "type": "number",
+            "description": "Max number of environments in this project.\nOmitting removes the restriction.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "outputs_as_inputs_enabled": {
+            "type": "bool",
+            "description": "if 'true' enables 'environment outputs'. Default is 'false'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "requires_approval_default": {
+            "type": "bool",
+            "description": "Requires approval default value when creating a new environment in the project",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "run_pull_request_plan_default": {
+            "type": "bool",
+            "description": "Run Terraform Plan on Pull Requests for new environments targeting their branch default value",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "skip_apply_when_plan_is_empty": {
+            "type": "bool",
+            "description": "Skip apply when plan has no changes",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "skip_redundant_deployments": {
+            "type": "bool",
+            "description": "Automatically skip queued deployments when a newer deployment is triggered",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "updated by",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vcs_pr_comments_enabled_default": {
+            "type": "bool",
+            "description": "if 'true' all environments created in this project will be created with an 'enabled' running VCS PR plan/apply commands using PR comments. Default is 'false'",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "description of the provider",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "type of the provider (Match pattern: ^[0-9a-zA-Z](?:[0-9a-zA-Z-]{0,30}[0-9a-zA-Z])?$). Your provider\u2019s type is essentially it\u2019s name, and should match your provider\u2019s files. For example, if your binaries look like terraform-provider-aws_1.1.1_linux_amd64.zip, than your provider\u2019s type should be aws.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name to give the ssh key",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "value is a private key in PEM format (first line usually looks like -----BEGIN OPENSSH PRIVATE KEY-----)",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description for the team",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_team_environment_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "id of the environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "id of the assigned custom role. The following built-in roles can be passed as well: `Viewer`, `Planner`, `Deployer`, `Admin`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "id of the team",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_team_organization_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "id of the assigned custom role. The following built-in roles can be passed as well: `User`, `Admin`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "id of the team",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "assigns an organization role to a team",
+        "description_kind": "plain"
+      }
+    },
+    "env0_team_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "id of the assigned custom role",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "the assigned built-in role (Admin, Planner, Viewer, Deployer)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "id of the team",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ansible_version": {
+            "type": "string",
+            "description": "the ansible version to use (required when the template type is 'ansible'). Supported versions are 3.0.0 and above",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the bitbucket client key used for integration",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "description for the template",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "file_name": {
+            "type": "string",
+            "description": "the cloudformation file name. Required if the template type is cloudformation",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "the env0 application installation id on the relevant github repository",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "gitlab_project_id": {
+            "type": "number",
+            "description": "the project id of the relevant repository (deprecated)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "helm_chart_name": {
+            "type": "string",
+            "description": "the helm chart name. Required if is_helm_repository is set to 'true'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the template",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this template integrates with azure dev ops",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "true if this template uses bitbucket server repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "true if this template uses github enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab": {
+            "type": "bool",
+            "description": "set to 'true' if the repository is Gitlab",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "true if this template uses gitlab enterprise repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_helm_repository": {
+            "type": "bool",
+            "description": "true if this template integrates with a helm repository",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_terragrunt_run_all": {
+            "type": "bool",
+            "description": "true if this template should execute run-all commands on multiple modules (check https://terragrunt.gruntwork.io/docs/features/execute-terraform-commands-on-multiple-modules-at-once/#the-run-all-command for additional details). Can only be true with 'terragrunt' template type and terragrunt version 0.28.1 and above",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name to give the template",
+            "description_kind": "plain",
+            "required": true
+          },
+          "opentofu_version": {
+            "type": "string",
+            "description": "the Opentofu version to use (example: 1.6.2). Setting to 'RESOLVE_FROM_CODE' extracts the version from the Opentofu code during runtime. Setting to `latest`, the version used will be the most recent one available for Opentofu.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "terraform / terragrunt file folder inside source code",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "git repository url for the template source code",
+            "description_kind": "plain",
+            "required": true
+          },
+          "retries_on_deploy": {
+            "type": "number",
+            "description": "number of times to retry when deploying an environment based on this template",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retries_on_destroy": {
+            "type": "number",
+            "description": "number of times to retry when destroying an environment based on this template",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retry_on_deploy_only_when_matches_regex": {
+            "type": "string",
+            "description": "if specified, will only retry (on deploy) if error matches specified regex",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "retry_on_destroy_only_when_matches_regex": {
+            "type": "string",
+            "description": "if specified, will only retry (on destroy) if error matches specified regex",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "source code revision (branch / tag) to use",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "the Terraform version to use (example: 0.15.1). Setting to `RESOLVE_FROM_TERRAFORM_CODE` defaults to the version of `terraform.required_version` during run-time (resolve from terraform code). Setting to `latest`, the version used will be the most recent one available for Terraform.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terragrunt_tf_binary": {
+            "type": "string",
+            "description": "the binary to use if the template type is 'terragrunt'. Valid values 'opentofu' and 'terraform'. Defaults to 'opentofu'",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "terragrunt_version": {
+            "type": "string",
+            "description": "the Terragrunt version to use (example: 0.36.5)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "the git token id to be used",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "token_name": {
+            "type": "string",
+            "description": "token name for Gitlab",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "template type (allowed values: terraform, terragrunt, pulumi, k8s, workflow, cloudformation, helm, opentofu, ansible)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "the VCS connection id to be used",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_template_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "id of the template",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_user_environment_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "id of the environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "id of the assigned role",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "id of the user",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_user_organization_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "id of the custom role",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "the assigned built-in roles (User or Admin)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "id of the user",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "note: if removed the user role will be reset to 'Organization User'",
+        "description_kind": "plain"
+      }
+    },
+    "env0_user_project_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role_id": {
+            "type": "string",
+            "description": "id of the assigned custom role",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "the assigned role (Admin, Planner, Viewer, Deployer)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "id of the user. Note: can also be an id of a \"User\" API key",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_user_team_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "id of the team",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "id of the user. Note: can also be an id of a \"User\" API key",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_variable_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "the description of the variable set",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the variable set",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the scope of the variable set: 'organization', or 'project' (defaults to 'organization')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "the scope id (e.g. project id). Note: not required for organization scope.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "variable": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "dropdown_values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "a list of variable values for 'dropdown' format",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "format": {
+                  "type": "string",
+                  "description": "the value format: 'text' (free text), 'dropdown' (dropdown list), 'hcl', 'json'. Note: 'hcl' and 'json' can only be used in terraform variables.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "is_sensitive": {
+                  "type": "bool",
+                  "description": "is the value sensitive (defaults to 'false'). Note: 'dropdown' value format cannot be sensitive.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "variable name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "variable type: terraform or environment (defaults to 'environment')",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "variable value for 'hcl', 'json', or 'text' format",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "terraform or environment variable",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_variable_set_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the resource(scope) type to assign to. Valid values: 'template', 'environment', 'module', 'organization', 'project', 'deployment'",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scope_id": {
+            "type": "string",
+            "description": "the resource(scope)id (e.g. template id)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "set_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of variable sets",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "note: avoid assigning to environments using 'variable_sets' (see environment schema).",
+        "description_kind": "plain"
+      }
+    },
+    "env0_vault_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "the vault address, including port",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "jwt_auth_backend_path": {
+            "type": "string",
+            "description": "path to the new authentication method",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name for the oidc credentials",
+            "description_kind": "plain",
+            "required": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "an optional vault namespace",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the env0 project id to associate the credentials with",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "the vault role name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description": "the vault version to use",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_vcs_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name of the VCS connection",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the VCS type (BitBucketServer, GitLabEnterprise, or GitHubEnterprise)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the VCS server. This can either be a 'VCS URL' (e.g.: https://github.com) or 'Repository URL' (E.g.: https://github.com/env0/myrepo)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vcs_agent_key": {
+            "type": "string",
+            "description": "VCS agent key. Use a custom agent key or 'ENV0_DEFAULT' to use the default env0 agent",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_workflow_trigger": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "downstream_environment_id": {
+            "type": "string",
+            "description": "environment to trigger",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "id of the source environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "cannot be used with env0_workflow_triggers",
+        "description_kind": "plain"
+      }
+    },
+    "env0_workflow_triggers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "downstream_environment_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "environments to trigger",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "id of the source environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "cannot be used with env0_workflow_trigger",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "env0_agent_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_key": {
+            "type": "string",
+            "description": "the agent key identifier. Deprecated: use id instead",
+            "description_kind": "plain",
+            "deprecated": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "the agent pool description",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the id of the agent pool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "logs": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "account_id": "string",
+                  "external_id": "string",
+                  "region": "string"
+                }
+              ]
+            ],
+            "description": "self-hosted logs configuration (dynamo self-hosted)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the agent pool",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_agent_values": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_key": {
+            "type": "string",
+            "description": "the agent key",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "values": {
+            "type": "string",
+            "description": "Self hosted agent helm values. The values can be passed to a helm release resource (https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain",
+        "deprecated": true
+      }
+    },
+    "env0_agents": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agents": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "agent_key": "string"
+                }
+              ]
+            ],
+            "description": "list of organization agents",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain",
+        "deprecated": true
+      }
+    },
+    "env0_api_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_id": {
+            "type": "string",
+            "description": "the api key id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the id of the api key",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the api key",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_eks_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of aws_eks credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of aws_eks credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_aws_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the aws_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the aws_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_aks_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of azure_aks credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of azure_aks credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_azure_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the azure_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the azure_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_cloud_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential_type": {
+            "type": "string",
+            "description": "the type of cloud credential to filter by (allowed values: AWS_ASSUMED_ROLE, AWS_ASSUMED_ROLE_FOR_DEPLOYMENT, AWS_ACCESS_KEYS_FOR_DEPLOYMENT, GCP_CREDENTIALS, GCP_SERVICE_ACCOUNT_FOR_DEPLOYMENT, AZURE_CREDENTIALS, AZURE_SERVICE_PRINCIPAL_FOR_DEPLOYMENT)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of all cloud credentials (by name), optionally filtered by credential_type",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_configuration_variable": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deployment_log_id": {
+            "type": "string",
+            "description": "search for the variable under this deployment log, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "a description of the variable",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enum": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "possible values of this variable",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "search for the variable under this environment, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "format": {
+            "type": "string",
+            "description": "specifies the format of the configuration value (HCL/JSON)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the configuration variable",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_read_only": {
+            "type": "bool",
+            "description": "specifies if the value of this variable cannot be edited by lower scopes",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_required": {
+            "type": "bool",
+            "description": "specifies if the value of this variable must be set by lower scopes",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_sensitive": {
+            "type": "bool",
+            "description": "is the variable defined as sensitive",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the configuration variable",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "search for the variable under this project, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "regex": {
+            "type": "string",
+            "description": "specifies a regular expression to validate variable value (enforced only in env0 UI)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "scope of the variable",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sub_environment_alias": {
+            "type": "string",
+            "description": "search for the variable for sub templates of a workflow. Requires template_id as well",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "search for the variable under this template, not globally",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "'terraform' or 'environment'. If specified as an argument, limits searching by variable name only to variables of this type.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "value": {
+            "type": "string",
+            "description": "value stored in the variable",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_flow": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the custom flow",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the custom flow",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the custom role",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the custom role",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_custom_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of all custom roles (by name)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "approve_plan_automatically": {
+            "type": "bool",
+            "description": "the default require approval of the environment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auto_deploy_on_path_changes_only": {
+            "type": "bool",
+            "description": "does continuous deployment on file changes in path enable",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "Bitbucket client key",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deploy_on_push": {
+            "type": "bool",
+            "description": "does continuous deployment is enabled",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deployment_id": {
+            "type": "string",
+            "description": "the id of the latest deployment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "exclude_archived": {
+            "type": "bool",
+            "description": "set to 'true' to exclude archived environments when getting an environment by name",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "Github installation id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the environment's id",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name of the environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "output": {
+            "type": "string",
+            "description": "the deployment log output. Returns a json string. It can be either a map of key-value, or an array of (in case of Terragrunt run-all) of moduleName and a map of key-value. Note: if the deployment is still in progress returns 'null'",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "project id of the environment",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "the last deployed revision",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "run_plan_on_pull_requests": {
+            "type": "bool",
+            "description": "does pr plan enable",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "the status of the environment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sub_environment_configuration": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "alias": "string",
+                  "id": "string"
+                }
+              ]
+            ],
+            "description": "the sub environments of the workflow environment. (Empty for non workflow environments)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "the template id the environment is to be created from",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "The token id used for repo integrations (Used by Gitlab or Azure DevOps)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_environments": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environments": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "name": "string",
+                  "project_id": "string"
+                }
+              ]
+            ],
+            "description": "A list of environments",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "include_archived_environments": {
+            "type": "bool",
+            "description": "set to 'true' to include archived environments (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "organization id to list all environments in the organization",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "project id to filter environments by",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_gke_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of gcp_gke credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of gcp_gke credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gcp_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the gcp_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the gcp_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_git_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the git token",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the git token",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_github_installation_id": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "github_installation_id": {
+            "type": "number",
+            "description": "the github installation id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "the name of the repository",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "returns the github installation id of a git hub repositroy",
+        "description_kind": "plain",
+        "deprecated": true
+      }
+    },
+    "env0_google_cost_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_gpg_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "the gpg public key block",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the id of the api key",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "key_id": {
+            "type": "string",
+            "description": "the gpg key id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the api key",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_ip_ranges": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ipv4": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of env0 ipv4 CIDR addresses. This list can be used to whitelist inconming env0 traffic (E.g.: https://docs.env0.com/docs/templates#on-premises-git-servers-support)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_kubeconfig_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of kubeconfig credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of kubeconfig credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_module": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the client key used for integration with Bitbucket",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "the env0 application installation id on the relevant github repository",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the module",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this module integrates with azure dev ops",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "module_name": {
+            "type": "string",
+            "description": "the name of the module",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "module_provider": {
+            "type": "string",
+            "description": "the provider name in the module source",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "template source code repository url",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "the token id used for integration with GitLab",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "token_name": {
+            "type": "string",
+            "description": "the token name used for integration with GitLab",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_module_testing_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the module testing project id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the module testing project id",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to get the project_id for agent_project_assignment and cloud_credentials_project_assignment",
+        "description_kind": "plain"
+      }
+    },
+    "env0_notification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "textual description of the entity who created the notification",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the id of the notification",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the notification",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the type of the notification",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "the target url of the notification",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_notifications": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of all notifications (by name)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_oci_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "textual description of the entity who created the organization",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_self_hosted": {
+            "type": "bool",
+            "description": "is the organization self hosted",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the organization",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "oidc_sub": {
+            "type": "string",
+            "description": "the jwt oidc sub",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "role of the authenticated user (through api key) in the organization",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_by": {
+            "type": "string",
+            "description": "textual description of the entity who created the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "textual description of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hierarchy": {
+            "type": "string",
+            "description": "the hierarchy of the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the project",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_project_id": {
+            "type": "string",
+            "description": "the id of the parent project. Can be used as a filter when there are multiple subprojects with the same name under different parent projects",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_project_name": {
+            "type": "string",
+            "description": "the name of the parent project. Can be used as a filter when there are multiple subprojects with the same name under different parent projects",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_project_path": {
+            "type": "string",
+            "description": "a path of ancestors projects divided by the prefix '|'. Can be used as a filter when there are multiple subprojects with the same name under different parent projects. For example: 'App|Dev|us-east-1' will search for a project with the hierarchy 'App -> Dev -> us-east-1' ('us-east-1' being the parent)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role": {
+            "type": "string",
+            "description": "role of the authenticated user (through api key) in the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "tags of the project",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project_cloud_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "a list of cloud credentials (ids) associated with the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the project id for listing the cloud credentials",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_project_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_drift_remediation": {
+            "type": "string",
+            "description": "Auto drift remediation strategy (DISABLED, CODE_TO_CLOUD, CLOUD_TO_CODE, SMART_REMEDIATION)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "continuous_deployment_default": {
+            "type": "bool",
+            "description": "Redeploy on every push to the git branch default value",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "default_ttl": {
+            "type": "string",
+            "description": "the default environment time-to-live allowed on deploy time",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disable_destroy_environments": {
+            "type": "bool",
+            "description": "Disallow destroying environment in the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "force_remote_backend": {
+            "type": "bool",
+            "description": "force env0 remote backend",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the policy",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "include_cost_estimation": {
+            "type": "bool",
+            "description": "Enable cost estimation for the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_ttl": {
+            "type": "string",
+            "description": "the maximum environment time-to-live allowed on deploy time",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "number_of_environments": {
+            "type": "number",
+            "description": "Max number of environments a single user can have in this project, 0 indicates no limit",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "number_of_environments_total": {
+            "type": "number",
+            "description": "Max number of environments in this project, 0 indicates no limit",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "id of the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "requires_approval_default": {
+            "type": "bool",
+            "description": "Requires approval default value when creating a new environment in the project",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "run_pull_request_plan_default": {
+            "type": "bool",
+            "description": "Run Terraform Plan on Pull Requests for new environments targeting their branch default value",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "skip_apply_when_plan_is_empty": {
+            "type": "bool",
+            "description": "Skip apply when plan has no changes",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "skip_redundant_deployments": {
+            "type": "bool",
+            "description": "Automatically skip queued deployments when a newer deployment is triggered",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "updated by",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_projects": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "include_archived_projects": {
+            "type": "bool",
+            "description": "set to 'true' to include archived projects (defaults to 'false')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "projects": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "hierarchy": "string",
+                  "id": "string",
+                  "is_archived": "bool",
+                  "name": "string",
+                  "parent_project_id": "string",
+                  "tags": [
+                    "list",
+                    "string"
+                  ]
+                }
+              ]
+            ],
+            "description": "list of projects",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "the description of the provider",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the provider",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the type/name of the provider",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_source_code_variables": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "extracts source code terraform variables from the VCS configuration of this template",
+            "description_kind": "plain",
+            "required": true
+          },
+          "variables": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "description": "string",
+                  "format": "string",
+                  "name": "string",
+                  "value": "string"
+                }
+              ]
+            ],
+            "description": "a list of terraform variables extracted from the source code",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "id of the ssh key",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the ssh key",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Textual description of the team",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the team",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_teams": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "type": "string",
+            "description": "add an optional regex filter, only names matching the filter will be added to 'names'. Note: The regex filter is Golang flavor",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of all teams (by name)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Note: this data source is cached, once fetched it will not be updated until the next plan/apply",
+        "description_kind": "plain"
+      }
+    },
+    "env0_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitbucket_client_key": {
+            "type": "string",
+            "description": "the bitbucket client key used for integration",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "description for the template",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_installation_id": {
+            "type": "number",
+            "description": "The env0 application installation id on the relevant github repository",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the template",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_azure_devops": {
+            "type": "bool",
+            "description": "true if this template integrates with azure dev ops",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_bitbucket_server": {
+            "type": "bool",
+            "description": "true if this template uses bitbucket server repository",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_github_enterprise": {
+            "type": "bool",
+            "description": "true if this template uses github enterprise repository",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_gitlab_enterprise": {
+            "type": "bool",
+            "description": "Does this template use gitlab enterprise repository?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the template",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "terraform / terrgrunt folder inside source code repository",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "which projects may access this template (id of project)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "template source code repository url",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "retries_on_deploy": {
+            "type": "number",
+            "description": "number of times to retry when deploying an environment based on this template",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "retries_on_destroy": {
+            "type": "number",
+            "description": "number of times to retry when destroying an environment based on this template",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "retry_on_deploy_only_when_matches_regex": {
+            "type": "string",
+            "description": "if specified, will only retry (on deploy) if error matches specified regex",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "retry_on_destroy_only_when_matches_regex": {
+            "type": "string",
+            "description": "if specified, will only retry (on destroy) if error matches specified regex",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "source code revision (branch / tag) to use",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssh_keys": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "an array of references to 'data_ssh_key' to use when accessing git over ssh",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "terraform_version": {
+            "type": "string",
+            "description": "terraform version to use",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "terragrunt_version": {
+            "type": "string",
+            "description": "terragrunt version to use",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "The token id used for private git repos or for integration with GitLab",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token_name": {
+            "type": "string",
+            "description": "the token name used for integration with GitLab",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the template type",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vcs_connection_id": {
+            "type": "string",
+            "description": "The VCS connection id",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_templates": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "list of all templates (by name)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "the email of the user",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "id of the user",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_variable_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id variable set",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the variable set",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "the id of the 'PROJECT' scope. Is not required for 'ORGANIZATION' scope",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "the scope of the variable set. Valid values: 'ORGANIZATION', or 'PROJECT'",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_vault_oidc_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "the id of the vault_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the vault_oidc oidc credentials",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "env0_vcs_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_scope": {
+            "type": "string",
+            "description": "the access scope of the VCS connection. The format depends on the VCS type: 'Organization:<org-name>' or 'User:<username>' for GitHub, 'Workspace:<workspace-slug>' for Bitbucket, '<username>' or '<token-name>' for GitLab, '<display-name>' for Azure DevOps, or 'url:<base-url>' for self-hosted VCS",
+            "description_kind": "plain",
+            "required": true
+          },
+          "connection_type": {
+            "type": "string",
+            "description": "the connection type. Valid values: 'DeploymentPipeline' or 'CodeWrite'",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "the id of the VCS connection",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "the name of the VCS connection",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "the VCS type (e.g. GitHub, GitLab, BitBucket, AzureDevOps, GitHubEnterprise, GitLabEnterprise, BitBucketServer)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "the URL of the VCS server (for self-hosted VCS connections)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vcs_agent_key": {
+            "type": "string",
+            "description": "the VCS agent key (only applicable to self-hosted VCS connections)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Returns a VCS connection by access scope and connection type. The access_scope value can be found in the env0 UI under Organization Settings > VCS.",
+        "description_kind": "plain"
+      }
+    },
+    "env0_workflow_triggers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "downstream_environment_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "environments to trigger",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "id of the source environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

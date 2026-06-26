@@ -1,0 +1,407 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_key": {
+          "type": "string",
+          "description": "Access key for the object storage service. Can also be configured with `OBJSTO_ACCESS_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "S3 endpoint of the object storage service. Can also be configured with `OBJSTO_ENDPOINT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "region": {
+          "type": "string",
+          "description": "Region of the object storage service. Can also be configured with `OBJSTO_REGION` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "secret_key": {
+          "type": "string",
+          "description": "Secret key for the object storage service. Can also be configured with `OBJSTO_SECRET_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "The `objsto` provider is used to manage S3 compatible object storage services such as [UpCloud Managed Object Storage](https://upcloud.com/products/object-storage). The provider manages the resources using the S3 API of the target object storage service.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "objsto_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arn": {
+            "type": "string",
+            "description": "The ARN of the bucket. Can be used when referencing the bucket in policy documents.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A bucket resource that represents a bucket in an object storage service.",
+        "description_kind": "markdown"
+      }
+    },
+    "objsto_bucket_cors_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket for which to configure the CORS.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "cors_rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "allowed_headers": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The headers to include in `Access-Control-Request-Headers` header.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "allowed_methods": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The allowed HTTP methods for this rule.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "allowed_origins": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The allowed origins for this rule.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "expose_headers": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The headers to include in the `Access-Control-Expose-Headers` header.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The identifier of the rule.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "max_age_seconds": {
+                  "type": "number",
+                  "description": "The cache time in seconds.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "A CORS rule to apply to the bucket.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "A bucket CORS configuration resource. Note that there can only be one CORS configuration per bucket.",
+        "description_kind": "markdown"
+      }
+    },
+    "objsto_bucket_lifecycle_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket for which to configure the lifecycle policy.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The identifier of the rule.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The status of the rule.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "expiration": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "date": {
+                        "type": "string",
+                        "description": "The date of the expiration.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "days": {
+                        "type": "number",
+                        "description": "The number of days until expiration.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "expired_object_delete_marker": {
+                        "type": "bool",
+                        "description": "Whether to remove expired object delete markers.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "The expiration of the object.",
+                    "description_kind": "markdown"
+                  }
+                },
+                "filter": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "object_size_larger_than": {
+                        "type": "number",
+                        "description": "The minimum object size in bytes.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "object_size_less_than": {
+                        "type": "number",
+                        "description": "The maximum object size in bytes.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "prefix": {
+                        "type": "string",
+                        "description": "The prefix of the object key.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "tag": {
+                        "nested_type": {
+                          "attributes": {
+                            "key": {
+                              "type": "string",
+                              "description": "The key of the tag.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "The value of the tag.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The tag of the object.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "and": {
+                        "nesting_mode": "single",
+                        "block": {
+                          "attributes": {
+                            "object_size_larger_than": {
+                              "type": "number",
+                              "description": "The minimum object size in bytes.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "object_size_less_than": {
+                              "type": "number",
+                              "description": "The maximum object size in bytes.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "prefix": {
+                              "type": "string",
+                              "description": "The prefix of the object key.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "tags": {
+                              "type": [
+                                "map",
+                                "string"
+                              ],
+                              "description": "The tags of the object.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "description": "A logical AND filter.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description": "A filter to select object that the rule applies to.",
+                    "description_kind": "markdown"
+                  }
+                },
+                "noncurrent_version_expiration": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "newer_noncurrent_versions": {
+                        "type": "number",
+                        "description": "The number of newer noncurrent versions.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "noncurrent_days": {
+                        "type": "number",
+                        "description": "The number of days until expiration of the noncurrent versions.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "description": "The expiration of the noncurrent versions of the object.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle rules to apply to the bucket.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "A bucket lifecycle configuration resource. Note that there can only be one lifecycle configuration per bucket.",
+        "description_kind": "markdown"
+      }
+    },
+    "objsto_bucket_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy": {
+            "type": "string",
+            "description": "The policy to attach to the bucket.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A bucket policy resource that represents a bucket policy in an object storage service.",
+        "description_kind": "markdown"
+      }
+    },
+    "objsto_bucket_versioning": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket for which to configure versioning.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "versioning_configuration": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "status": {
+                  "type": "string",
+                  "description": "The versioning status of the bucket.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "A versioning configuration to apply to the bucket.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "A bucket versioning resource. Note that there can only be one versioning configuration per bucket. Deleting this resource will set versioning to suspended.",
+        "description_kind": "markdown"
+      }
+    },
+    "objsto_object": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "The name of the bucket where to store the object.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the object.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the object. The id is in `{bucket}/{key}` format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key of the object.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the object.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version_id": {
+            "type": "string",
+            "description": "The version ID of the object. This is only set if the bucket has versioning enabled.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A object resource that represents an object stored in a bucket.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
