@@ -1,0 +1,887 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "branch": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "request_timeout": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "anaml_entity": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_column": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entities": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Entities from which this composite entity is derived",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "required_type": {
+            "type": "string",
+            "description": "The data type the entity is encoded as. If set, tables' entity columns must be of this type. One of string, integer, long, or binary",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "# Entities\n\nAn Entity is an item in the business domain. Common examples of Entities are:\n\n- Customers\n- Accounts\n- Products\n- Orders\n\nAnything that has a unique identifier and would be useful to report or predict on could be an Entity.\n\nIn a relational database, the identifiers for Entities will often be used for primary keys.\n\nTables need to specify one or more columns with entity identifiers in order to be used for Feature definitions.\n\nFeatures will be generated for a specific Entity. This means the aggregation will be grouped by each Entity identitifer.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_entity_mapping": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "from": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mapping": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "to": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "one_to_many": {
+            "nesting_mode": "list",
+            "block": {
+              "description": "The mapping feature produces an array of keys which are related.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          },
+          "one_to_one": {
+            "nesting_mode": "list",
+            "block": {
+              "description": "The mapping feature produce a single key (or null), which is related.",
+              "description_kind": "markdown"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "# Entity Mappings\n\nAn Entity Mapping is a relationship between one or more Entities so that features can\nautomatically be aggregated at different levels without defining the Feature multiple times.\n\nEach Entity Mapping specifies:\n\n- From Entity - The Entity that the Feature is initially defined on\n- To Entity - The Entity that can be converted to\n- Mapping Feature - A Feature that is defined on the *from* Entity and has a value of the *to* Entity.\n\nFor example, given a customer and account Entities where each customer has multiple accounts\nyou could define an Entity Mapping from Account to Customer:\n\n- From Entity = Account\n- To Entity = Customer\n- Mapping Feature = Last Customer Id for each Account Id\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_entity_population": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity": {
+            "type": "string",
+            "description": "The type of entity this population describes",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "expression": {
+            "type": "string",
+            "description": "The SQL expression which generates the entity population.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tables upon which this entity population is created",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "# Entity Populations\n\nAn Entity Population allows for the specification of entities and dates to run feature generation for.\nThis is used for feature \"time travel\", as well as generating data for a reduced set of entities.\n\nAn entity population is specified from a table or set of tables using SQL. The entity population must\nreturn a two column dataset, the first of which is named for the selected entity's output column; and\nthe second of which is named \"date\".\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_feature": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation": {
+            "type": "string",
+            "description": "The aggregation to perform.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "days": {
+            "type": "number",
+            "description": "The event window description for the number of days to aggregate over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity": {
+            "type": "string",
+            "description": "The Entity to map a row feature over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_restrictions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of entity Id's that the feature is restricted to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter": {
+            "type": "string",
+            "description": "An SQL column expression to filter with.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hours": {
+            "type": "number",
+            "description": "The event window description for the number of days to aggregate over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "months": {
+            "type": "number",
+            "description": "The event window description for the number of months to aggregate over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "over": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of Features this row feature depends on",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "post_aggregation": {
+            "type": "string",
+            "description": "An SQL expression to apply to the result of the feature aggregation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "rows": {
+            "type": "number",
+            "description": "The event window description for the number of rows (events) to aggregate over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "select": {
+            "type": "string",
+            "description": "An SQL expression for the column to aggregate.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "table": {
+            "type": "string",
+            "description": "A reference to a Table ID the feature is derived from.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "template": {
+            "type": "string",
+            "description": "The feature template this feature is derived from.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "# Features\n\nA Feature is a time specific observation of the input data. Features define how data\nis transformed into information that is useful for analytics or machine learning. At\na more concrete level, a Feature defines how data from tables is selected or aggregated\ninto a useful output. Each Feature selects data from a single source table but can use\none or more columns from that table. Each Feature is generated for a single entity.\n\nThere are two types of Features:\n- Event Features\n- Row Features\n\n\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_feature_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "features": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Features to include in the feature set",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "# Feature Sets\n\nA Feature Set is collection of features that are generated at the same time. A Feature Set would usually comprise of:\n\n* the Features required to train and score a machine learning model; or\n* the Features required in a report or dashboard\n\nFeature Sets are often re-used over multiple Feature Stores to generate historical, daily or online outputs.\n\nEach Feature Set is specific to an Entity. Once the Entity is selected, the list of Features\navailable to be chosen is restricted to Features for that Entity.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_feature_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "days": {
+            "type": "number",
+            "description": "An event window",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity_restrictions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of entity Id's that the feature is restricted to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "filter": {
+            "type": "string",
+            "description": "An SQL column expression to filter with",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hours": {
+            "type": "number",
+            "description": "An event window",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "months": {
+            "type": "number",
+            "description": "The event window description for the number of months to aggregate over.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "over": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of Features this row feature depends on",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "post_aggregation": {
+            "type": "string",
+            "description": "An SQL expression to apply to the result of the feature aggregation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "rows": {
+            "type": "number",
+            "description": "An event window",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "select": {
+            "type": "string",
+            "description": "An SQL expression for the column to aggregate",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "table": {
+            "type": "string",
+            "description": "A reference to a Table ID the feature is derived from",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "# Feature Templates\n\nFeature Templates allow for faster creation and update of set of similar Features.\n\nFeature Templates allow a user to quickly pre-fill a Feature creation form with\nuseful information. Changes made to a Feature Template will propagate\nto any Feature created using the Feature Template.\n\nHowever, if a particular field has been modified from the Feature Template's default,\nthen that field will not be changed when the Feature Template is updated.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "entity_mapping": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "expression": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "extra_features": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tables upon which this view is created",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Labels to attach to the object",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tables upon which this view is created",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attribute": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Attributes (key value pairs) to attach to the object",
+              "description_kind": "markdown"
+            }
+          },
+          "event": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "entities": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "timestamp_column": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "timezone": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "event_store": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "entity": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "store": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "topic": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "source": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "folder": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "source": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "table_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "topic": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "# Tables\n\nA Table represents a source of data for feature generation. A Table can be one of three types:\n\n- External Table\n- View Table\n- Pivot Table\n\n### External Tables\n\nAn External Table is the representation of a source table. Therefore you have to specify the\nunderlying data sources that the table is stored in.\n\n### View Tables\n\nA View Table is a pre-defined query over one or more other Root Tables or View Tables.\nThey function in the same way as views in relational databases. They can be used to transform\nor join tables using arbitary SQL.\n\n**When to use View Tables and when to use Features?**\n\nIn general, features should be used wherever possible to transform or aggregate columns as required.\nThis allows for better documentation, re-use and collaboration of features as well as allowing\nfor better optimise generation runs.\n\nView Tables are mainly useful for joining data on keys other than entity id's such as reference data lookups.\n\n\n### Pivot Tables\n\nPivot Tables allow features to be re-keyed to different entities.\n\nThis can be very useful, as often in business applications one may have different levels of entity; for example,\nplans and customers. Data may be organised and keyed by plan, and some attributes and campaigns may target plans;\nbut also, plans are owned by customers, and when doing analysis on customers, knowing information about their\nplans is crucial.\n\nPivot tables help to solve this issue by allowing features which are written for plans to be repurposed at the\ncustomer level.\n\nWhen construcing a pivot table, one needs to specify an entity mapping, which shows how to go from plans to\ncustomers (this uses a feature query which outputs the customer for a particular plan), and the plan level\nfeatures which are to be aggregated to the customer.\n\nUsually, the features one writes on a pivot table are simple aggregations, such as number of plans (count) or\naverage of some column with some filtering. Day and Row windows are not required.\n\n\n### Event Store Tables\n\n\n\n\n## Timestamp and Entities\n\nTo be used in feature generation a Table must have one or more [Entities](/entities) and a timestamp associated\nwith it. These are needed to be able to join correctly between tables during the feature generation:\n\n* **Timestamp** - Specifiy the name of the column which contains the timestamp that the row of data was created at.\n* **Entities** - For each Entity within the Table, specify the name of the column that contains the id's and the\nentity type.\n\nNote that tables without an Entity and timestamp are still useful for use in View Tables. These are often things\nsuch as reference data tables used for lookups.\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "anaml_entity": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "anaml_entity_population": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "anaml_feature": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The Feature's name",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A single Feature",
+        "description_kind": "markdown"
+      }
+    },
+    "anaml_feature_set": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "anaml_feature_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "anaml_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

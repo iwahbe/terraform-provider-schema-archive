@@ -1,0 +1,1028 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "organization": {
+          "type": "string",
+          "description": "The SonarCloud organization to manage the resources for. This value must be set in the `SONARCLOUD_ORGANIZATION` environment variable if left empty.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The token of a user with admin permissions in the organization. This value must be set in the `SONARCLOUD_TOKEN` environment variable if left empty.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "sonarcloud_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key of the project. **Warning**: must be globally unique.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project. **Warning:** forces project recreation when changed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "visibility": {
+            "type": "string",
+            "description": "The visibility of the project. Use `private` to only share it with your organization. Use `public` if the project should be visible to everyone. Defaults to the organization's default visibility. **Note:** private projects are only available when you have a SonarCloud subscription.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "This resource manages a project.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_project_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the link.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name the link.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project to add the link to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The url of the link.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource represents a project link.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_project_main_branch": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project main branch.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource manages a project main branch.\n\nNote that certain operations, such as the deletion of a project's main branch configuration, may\nnot be permitted by the SonarCloud web API, or may require admin permissions.\n\t\t",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_quality_gate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "conditions": {
+            "nested_type": {
+              "attributes": {
+                "error": {
+                  "type": "string",
+                  "description": "The value on which the condition errors.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Index/ID of the Condition.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metric": {
+                  "type": "string",
+                  "description": "The metric on which the condition is based.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "op": {
+                  "type": "string",
+                  "description": "Operation on which the metric is evaluated must be either: LT, GT.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The conditions of this quality gate. Please query https://sonarcloud.io/api/metrics/search for an up-to-date list of conditions.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "gate_id": {
+            "type": "number",
+            "description": "Id computed by SonarCloud servers",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Implicit Terraform ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_built_in": {
+            "type": "bool",
+            "description": "Defines whether the quality gate is built in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Defines whether the quality gate is the default gate for an organization. **WARNING**: Must be assigned to one quality gate per organization at all times.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Quality Gate.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource manages a Quality Gate",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_quality_gate_selection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gate_id": {
+            "type": "string",
+            "description": "The ID of the quality gate that is selected for the project(s).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The implicit ID of the resource",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_keys": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The Keys of the projects which have been selected on the referenced quality gate",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource selects a quality gate for one or more projects",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default": {
+            "type": "bool",
+            "description": "Whether the group is the default group or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description for the user group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "members_count": {
+            "type": "number",
+            "description": "The number of members this group has.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource manages a user group.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group": {
+            "type": "string",
+            "description": "The name of the group to which the user should be added.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "login": {
+            "type": "string",
+            "description": "The login of the user that should be added to the group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource manages a single member of a user group.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the user group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The implicit ID of the resource",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user group to set the permissions for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of permissions to grant. Available global permissions: [`admin`, `profileadmin`, `gateadmin`, `scan`, `provisioning`]. Available project permissions: ['admin`, `scan`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `user`].",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project to restrict the permissions to.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "This resource manages the permissions of a user group for the whole organization or a specific project.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar": {
+            "type": "string",
+            "description": "The avatar ID of the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The implicit ID of the resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "login": {
+            "type": "string",
+            "description": "The login of the user to set the permissions for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permissions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of permissions to grant. Available global permissions: [`admin`, `profileadmin`, `gateadmin`, `scan`, `provisioning`]. Available project permissions: ['admin`, `scan`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `user`].",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project to restrict the permissions to.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "This resource manages the permissions of a user for the whole organization or a specific project.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "login": {
+            "type": "string",
+            "description": "The login of the user to which the token should be added. This should be the same user as configured in the provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the token.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The value of the generated token.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "This resource manages the tokens for a user.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the webhook, this is equal to its key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the webhook.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the webhook.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The key of the project to add the webhook to. If empty, the webhook will be added to the organization.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "If provided, secret will be used as the key to generate the HMAC hex (lowercase) digest value in the 'X-Sonar-Webhook-HMAC-SHA256' header.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The url of the webhook.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource represents a project or organization webhook.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "sonarcloud_project_links": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "links": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the link.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name the link.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the link.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The url of the link.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The links of this project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "This datasource retrieves the list of links for the given project.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_projects": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "projects": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the project. Equals to the project name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The key of the project.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the project.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "visibility": {
+                  "type": "string",
+                  "description": "The visibility of the project.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The projects of this organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves a list of projects for the configured organization.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_quality_gate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "conditions": {
+            "nested_type": {
+              "attributes": {
+                "error": {
+                  "type": "string",
+                  "description": "The value on which the condition errors.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "ID of the Condition.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metric": {
+                  "type": "string",
+                  "description": "The metric on which the condition is based. Must be one of: https://docs.sonarqube.org/latest/user-guide/metric-definitions/",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "op": {
+                  "type": "string",
+                  "description": "Operation on which the metric is evaluated must be either: LT, GT",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The conditions of this quality gate.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "gate_id": {
+            "type": "number",
+            "description": "Id created by SonarCloud",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Id for Terraform backend",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_built_in": {
+            "type": "bool",
+            "description": "Is this Quality gate built in?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Is this the default Quality gate for this project?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Quality Gate",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This Data Source retrieves a single Quality Gate for the configured Organization.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_quality_gates": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The index of the Quality Gate",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "quality_gates": {
+            "nested_type": {
+              "attributes": {
+                "conditions": {
+                  "nested_type": {
+                    "attributes": {
+                      "error": {
+                        "type": "string",
+                        "description": "The value on which the condition errors.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "number",
+                        "description": "ID of the Condition.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "metric": {
+                        "type": "string",
+                        "description": "The metric on which the condition is based. Must be one of: https://docs.sonarqube.org/latest/user-guide/metric-definitions/",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "op": {
+                        "type": "string",
+                        "description": "Operation on which the metric is evaluated must be either: LT, GT",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The conditions of this quality gate.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "gate_id": {
+                  "type": "number",
+                  "description": "Id created by SonarCloud",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Id for Terraform backend",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_built_in": {
+                  "type": "bool",
+                  "description": "Is this Quality gate built in?",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_default": {
+                  "type": "bool",
+                  "description": "Is this the default Quality gate for this project?",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the Quality Gate",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A quality gate",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves all Quality Gates for the configured organization.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default": {
+            "type": "bool",
+            "description": "Whether new members are added to this user group per default or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the user group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the user group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "members_count": {
+            "type": "number",
+            "description": "The number of members in this user group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This data source retrieves a single user group.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group": {
+            "type": "string",
+            "description": "The name of the group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "login": {
+                  "type": "string",
+                  "description": "The login of this user",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this user",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The users of the group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves a list of users for the given group.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_group_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "The description of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The permissions of this user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The groups and their permissions.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The implicit ID of the data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project to read the user group permissions for.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "This data source retrieves all the user groups and their permissions.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "default": {
+                  "type": "bool",
+                  "description": "Whether new members are added to this user group per default or not.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "members_count": {
+                  "type": "number",
+                  "description": "The number of members in this user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user group.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The groups of this organization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves a list of user groups for the configured organization.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_user_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The implicit ID of the data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_key": {
+            "type": "string",
+            "description": "The key of the project to read the user permissions for.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "avatar": {
+                  "type": "string",
+                  "description": "The avatar ID of the user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "login": {
+                  "type": "string",
+                  "description": "The login of the user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the user.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The permissions of the user.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The users and their permissions.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves all the users of an organization and their permissions.",
+        "description_kind": "plain"
+      }
+    },
+    "sonarcloud_webhooks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The key of the project. If empty, the webhooks of the organization are returned.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "webhooks": {
+            "nested_type": {
+              "attributes": {
+                "key": {
+                  "type": "string",
+                  "description": "The key of the webhook.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name the webhook.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "secret": {
+                  "type": "string",
+                  "description": "The secret of the webhook. Used as the key to generate the HMAC hex (lowercase) digest value in the 'X-Sonar-Webhook-HMAC-SHA256' header.",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The url of the webhook.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The webhooks of this project or organization.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This datasource retrieves the list of webhooks for a project or the organization.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
