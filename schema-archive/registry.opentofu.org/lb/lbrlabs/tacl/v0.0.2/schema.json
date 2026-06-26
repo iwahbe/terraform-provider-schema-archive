@@ -1,0 +1,854 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "TACL server URL (e.g. http://localhost:8080).",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description": "Provider for TACL (Tailscale ACL).",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "tacl_acl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "The ACL action, e.g. 'accept' or 'deny'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "dst": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of destination CIDRs/tags. Possibly with :port.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "TACL's stable UUID for this ACL entry.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "proto": {
+            "type": "string",
+            "description": "Optional protocol, e.g. 'tcp'.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "src": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of source CIDRs, tags, or hostnames.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single ACL entry by stable ID in TACL\u2019s /acls.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_auto_approvers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "exit_node": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "ExitNode => slice of strings to auto-approve as exit nodes.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always 'autoapprovers' once created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "routes": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "Map of route => list of strings (auto-approve users).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages the single ACLAutoApprovers object at /autoapprovers.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_derpmap": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Always 'derpmap' once created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "omit_default_regions": {
+            "type": "bool",
+            "description": "If true, Tailscale's default DERP regions are omitted.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "nodes": {
+                  "nested_type": {
+                    "attributes": {
+                      "host_name": {
+                        "type": "string",
+                        "description": "Hostname, e.g. 'sea-derp1.lbrlabs.com'.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "ipv4": {
+                        "type": "string",
+                        "description": "IPv4 address.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "ipv6": {
+                        "type": "string",
+                        "description": "IPv6 address.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Node name, e.g. 'sea-lbr1'.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "region_id": {
+                        "type": "number",
+                        "description": "Region ID the node belongs to.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of DERP nodes in this region.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "region_code": {
+                  "type": "string",
+                  "description": "Short region code, e.g. 'sea-lbr'.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "region_id": {
+                  "type": "number",
+                  "description": "Numerical region ID (e.g. 901).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "region_name": {
+                  "type": "string",
+                  "description": "Descriptive region name, e.g. 'Seattle [LBR]'.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of DERP regions.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the single ACLDERPMap object at /derpmap with typed fields.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal ID, same as `name`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of group members (strings: emails, other groups, etc.).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "tacl_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Same as the host's Name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP address (or IP/CIDR) for this host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique hostname.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single host entry in TACL\u2019s /hosts array, which is ultimately stored as a map of Name=>IP.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_nodeattr": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_json": {
+            "type": "string",
+            "description": "Optional JSON for `app`. Must be empty if `attr` is used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "attr": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of attributes (mutually exclusive with `app_json`).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "TACL's stable ID for this nodeattr.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "target": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of targets (the server may overwrite if `app_json` is used).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a nodeattr entry by stable ID in TACL\u2019s /nodeattrs.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_posture": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Same as 'name'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique name of posture (or 'default').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rules": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of posture rules (strings).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single posture (named or default). If 'name' = 'default', we manage the default posture at /postures/default.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "disable_ipv4": {
+            "type": "bool",
+            "description": "Disable IPv4 setting (disableIPv4).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always 'settings' once created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "one_cgnat_route": {
+            "type": "string",
+            "description": "OneCGNATRoute setting.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "randomize_client_port": {
+            "type": "bool",
+            "description": "Randomize client port (randomizeClientPort).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the single Settings object at /settings.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_ssh": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accept_env": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of environment variables to allow.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "action": {
+            "type": "string",
+            "description": "SSH action: 'accept' or 'check'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "check_period": {
+            "type": "string",
+            "description": "Optional duration if action='check', e.g. '12h'.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dst": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Destinations (tags, host:port, etc.).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Stable UUID of the SSH rule.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "src": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Sources (tags, CIDRs).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of SSH users allowed.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single SSH rule by stable ID in TACL\u2019s /ssh.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_tag_owner": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Same as 'name' once created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique tag name (e.g. 'webserver').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of owners for this tag.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a single TagOwner by name in TACL\u2019s /tagowners.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "tacl_acl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "ACL action, e.g. 'accept' or 'deny'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dst": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of ACL destinations (CIDRs, tags, etc.).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Stable UUID of the ACL entry in TACL.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol, e.g. 'tcp' or 'udp'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "src": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of ACL sources (CIDRs, tags, etc.).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a single ACL entry by stable UUID.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_auto_approvers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "exit_node": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "ExitNode => slice of strings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always 'autoapprovers' if present.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "routes": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "Map route => list of autoapprove users.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading the single autoapprovers object.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_derpmap": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Always 'derpmap' if a DERPMap exists on the server.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "omit_default_regions": {
+            "type": "bool",
+            "description": "If the server sets OmitDefaultRegions to true, the default Tailscale DERP regions won't be included.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "nodes": {
+                  "nested_type": {
+                    "attributes": {
+                      "host_name": {
+                        "type": "string",
+                        "description": "Hostname or domain, e.g. 'sea-derp1.lbrlabs.com'.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "ipv4": {
+                        "type": "string",
+                        "description": "IPv4 address for the node.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "ipv6": {
+                        "type": "string",
+                        "description": "IPv6 address for the node.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Node name, e.g. 'sea-lbr1'.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "region_id": {
+                        "type": "number",
+                        "description": "Region ID the node belongs to.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of DERP nodes in this region, typed read-only.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_code": {
+                  "type": "string",
+                  "description": "Short region code, e.g. 'sea-lbr'.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_id": {
+                  "type": "number",
+                  "description": "Numerical region ID, e.g. 901.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_name": {
+                  "type": "string",
+                  "description": "Descriptive region name, e.g. 'Seattle [LBR]'.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of DERP regions from the server, typed read-only.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading the single DERPMap object at /derpmap (typed).",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Always the same as `name` for reference.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of group members.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "tacl_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Same as 'name' after read.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP address for this host, if found.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the host to look up.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for reading one host by name from /hosts.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_nodeattr": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_json": {
+            "type": "string",
+            "description": "If present, TACL's 'app' data as JSON.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "attr": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of attribute strings.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Index of the node attribute in TACL\u2019s array (example).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "target": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of target strings.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a single node attribute by numeric index (example).",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_posture": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Either a named posture (e.g. 'latestMac') or 'default'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rules": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Rules for this posture (strings).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a posture (named or default). If 'id' is 'default', we read /postures/default. Otherwise, /postures/:name.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "disable_ipv4": {
+            "type": "bool",
+            "description": "Disable IPv4 setting.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always 'settings' if found.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "one_cgnat_route": {
+            "type": "string",
+            "description": "OneCGNATRoute.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "randomize_client_port": {
+            "type": "bool",
+            "description": "Randomize client port.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading the single /settings object.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_ssh": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accept_env": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of environment variables allowed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "action": {
+            "type": "string",
+            "description": "SSH rule action: 'accept' or 'check'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "check_period": {
+            "type": "string",
+            "description": "CheckPeriod for 'check' actions, e.g. '12h'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dst": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Destination tags/CIDRs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The stable UUID of the SSH rule in TACL.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "src": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Source tags/CIDRs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "SSH users allowed.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a single SSH rule by UUID from /ssh/:id.",
+        "description_kind": "plain"
+      }
+    },
+    "tacl_tag_owner": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "Name of the tag (e.g. 'webserver') to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "owners": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of owners for this tag.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Data source for reading a single TagOwner by name from /tagowners/:name.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
