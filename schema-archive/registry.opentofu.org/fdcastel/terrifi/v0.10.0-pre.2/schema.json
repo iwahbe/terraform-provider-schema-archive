@@ -1,0 +1,1443 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "allow_insecure": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification. Useful for local controllers with self-signed certs. Can be specified with the `UNIFI_INSECURE` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "api_key": {
+          "type": "string",
+          "description": "API key for the UniFi controller. Can be specified with the `UNIFI_API_KEY` environment variable. If set, `username` and `password` are ignored.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "URL of the UniFi controller API. Can be specified with the `UNIFI_API` environment variable. Do not include the `/api` path \u2014 the SDK discovers API paths automatically to support both UDM-style and classic controller layouts.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password for the UniFi controller API. Can be specified with the `UNIFI_PASSWORD` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "response_caching": {
+          "type": "bool",
+          "description": "Cache GET responses from v2 API endpoints during a single Terraform run. Reduces duplicate list-all calls for firewall zones and policies, which is especially helpful on low-end hardware (e.g., Raspberry Pi). Any write operation invalidates the cache. Can be specified with the `UNIFI_RESPONSE_CACHING` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "site": {
+          "type": "string",
+          "description": "The UniFi site to manage. Can be specified with the `UNIFI_SITE` environment variable. Default: `default`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Local username for the UniFi controller API. Can be specified with the `UNIFI_USERNAME` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Terraform provider for managing Ubiquiti UniFi network infrastructure.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "terrifi_client_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "blocked": {
+            "type": "bool",
+            "description": "Whether the client device is blocked from network access. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "client_group_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of client group IDs to assign this device to. Use `terrifi_client_group` to manage groups.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "device_type_id": {
+            "type": "number",
+            "description": "The device type ID (fingerprint override) to set a custom icon for this client device. Use `terrifi list-device-types` to list IDs as CSV, or `terrifi list-device-types --html` to generate a browsable page with icons and fuzzy search.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fixed_ap_mac": {
+            "type": "string",
+            "description": "The MAC address of the access point to lock this client to (e.g. `aa:bb:cc:dd:ee:ff`). When set, the client will only connect to this AP.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "fixed_ip": {
+            "type": "string",
+            "description": "A fixed IP address to assign to this client via DHCP reservation. Requires `network_id` or `network_override_id` to also be set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the client device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "local_dns_record": {
+            "type": "string",
+            "description": "A local DNS hostname for this client device. Requires `fixed_ip` to also be set (controller requirement).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mac": {
+            "type": "string",
+            "description": "The MAC address of the client device (e.g. `aa:bb:cc:dd:ee:ff`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The alias/display name for the client device.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "network_id": {
+            "type": "string",
+            "description": "The network ID for fixed IP assignment. Required when `fixed_ip` is set unless `network_override_id` provides the network context.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "network_override_id": {
+            "type": "string",
+            "description": "The network ID for VLAN/network override. When set, the client will be placed on this network regardless of the SSID or port profile it connects to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "note": {
+            "type": "string",
+            "description": "A free-text note for the client device.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the client device with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a client device on the UniFi controller. Use this resource to set aliases, notes, fixed IPs, VLAN overrides, local DNS records, custom device icons, AP locking, and blocked status for known clients.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_client_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the client group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the client group. Must be 1-128 characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the client group with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a client group on the UniFi controller. Client groups can be referenced when assigning client devices.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "adopted": {
+            "type": "bool",
+            "description": "Whether the device has been adopted by the controller.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "config_network": {
+            "nested_type": {
+              "attributes": {
+                "dns1": {
+                  "type": "string",
+                  "description": "Primary DNS server.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "dns2": {
+                  "type": "string",
+                  "description": "Secondary DNS server.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "gateway": {
+                  "type": "string",
+                  "description": "Default gateway IPv4 address. Required when `type = static`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "Static IPv4 address. Required when `type = static`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "netmask": {
+                  "type": "string",
+                  "description": "Subnet mask (e.g. `255.255.255.0`). Required when `type = static`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Addressing mode: `dhcp` or `static`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Management network configuration for the device. Use `type = \"dhcp\"` to receive an address from DHCP, or `type = \"static\"` with `ip`, `netmask`, and `gateway` set to assign a fixed management address. Omit this block to leave the device's current configuration unchanged.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether the device is administratively disabled. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "The current IP address of the device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "led_brightness": {
+            "type": "number",
+            "description": "LED brightness (0\u2013100).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "led_color": {
+            "type": "string",
+            "description": "LED color as a hex string (e.g. `#0000ff`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "led_enabled": {
+            "type": "bool",
+            "description": "Whether LEDs are enabled. `true` forces LEDs on, `false` forces LEDs off. Omit to follow the site default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "locked": {
+            "type": "bool",
+            "description": "Whether the device is locked to prevent accidental removal. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mac": {
+            "type": "string",
+            "description": "The MAC address of the device (e.g. `aa:bb:cc:dd:ee:ff`). The device must already be adopted by the controller.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "model": {
+            "type": "string",
+            "description": "The hardware model of the device (e.g. `U6-LR`, `US-16-XG`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name for the device.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "outdoor_mode_override": {
+            "type": "string",
+            "description": "Outdoor mode override. `default` follows the device default, `on` enables outdoor mode, `off` disables it.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "radio_24": {
+            "nested_type": {
+              "attributes": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel number or `auto`. Valid channels depend on the radio band and country.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "channel_width": {
+                  "type": "number",
+                  "description": "Channel width in MHz. Typical values: `20`, `40`, `80`, `160`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi": {
+                  "type": "number",
+                  "description": "Minimum RSSI threshold for client association (dBm, -90 to -67).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi_enabled": {
+                  "type": "bool",
+                  "description": "Whether the minimum RSSI client association threshold is enabled.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power": {
+                  "type": "string",
+                  "description": "Transmit power in dBm. Only used when `transmit_power_mode` is `custom`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power_mode": {
+                  "type": "string",
+                  "description": "Transmit power mode: `auto`, `high`, `medium`, `low`, `custom`, or `disabled`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Radio settings for the 2.4 GHz (`ng`) radio on an access point. Omit to leave this radio's settings unchanged.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "radio_5": {
+            "nested_type": {
+              "attributes": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel number or `auto`. Valid channels depend on the radio band and country.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "channel_width": {
+                  "type": "number",
+                  "description": "Channel width in MHz. Typical values: `20`, `40`, `80`, `160`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi": {
+                  "type": "number",
+                  "description": "Minimum RSSI threshold for client association (dBm, -90 to -67).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi_enabled": {
+                  "type": "bool",
+                  "description": "Whether the minimum RSSI client association threshold is enabled.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power": {
+                  "type": "string",
+                  "description": "Transmit power in dBm. Only used when `transmit_power_mode` is `custom`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power_mode": {
+                  "type": "string",
+                  "description": "Transmit power mode: `auto`, `high`, `medium`, `low`, `custom`, or `disabled`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Radio settings for the 5 GHz (`na`) radio on an access point. Omit to leave this radio's settings unchanged.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "radio_6": {
+            "nested_type": {
+              "attributes": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel number or `auto`. Valid channels depend on the radio band and country.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "channel_width": {
+                  "type": "number",
+                  "description": "Channel width in MHz. Typical values: `20`, `40`, `80`, `160`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi": {
+                  "type": "number",
+                  "description": "Minimum RSSI threshold for client association (dBm, -90 to -67).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "min_rssi_enabled": {
+                  "type": "bool",
+                  "description": "Whether the minimum RSSI client association threshold is enabled.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power": {
+                  "type": "string",
+                  "description": "Transmit power in dBm. Only used when `transmit_power_mode` is `custom`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transmit_power_mode": {
+                  "type": "string",
+                  "description": "Transmit power mode: `auto`, `high`, `medium`, `low`, `custom`, or `disabled`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Radio settings for the 6 GHz (`6e`) radio on an access point. Omit to leave this radio's settings unchanged.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site the device belongs to. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "snmp_contact": {
+            "type": "string",
+            "description": "[SNMP](https://en.wikipedia.org/wiki/Simple_Network_Management_Protocol) contact string (max 255 characters). Identifies who is responsible for the device; read by network monitoring tools.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "snmp_location": {
+            "type": "string",
+            "description": "[SNMP](https://en.wikipedia.org/wiki/Simple_Network_Management_Protocol) location string (max 255 characters). Describes where the device is physically located; read by network monitoring tools.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "state": {
+            "type": "number",
+            "description": "The device state. 0 = unknown, 1 = connected, 2 = pending, 4 = upgrading, 5 = provisioning, 6 = heartbeat missed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The device type (e.g. `uap` for access point, `usw` for switch, `ugw` for gateway).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "volume": {
+            "type": "number",
+            "description": "Speaker volume (0\u2013100). Only applicable to devices with speakers.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages settings on an adopted UniFi network device (access point, switch, or gateway). The device must already be adopted by the controller. This resource does not adopt or forget devices \u2014 it only manages configurable properties like name, LED behavior, and SNMP settings. Removing the resource from Terraform state does not affect the device on the controller.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the DNS record is enabled. Default: `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the DNS record.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname for the DNS record.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The port for SRV records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "The priority for MX/SRV records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "record_type": {
+            "type": "string",
+            "description": "The DNS record type (A, AAAA, CNAME, MX, TXT, SRV, PTR).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the DNS record with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "The TTL in seconds.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the DNS record (IP address, hostname, etc.).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "weight": {
+            "type": "number",
+            "description": "The weight for SRV records.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a DNS record on the UniFi controller.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_firewall_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the firewall group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The members of the firewall group. For `port-group`, these are port numbers or port ranges (e.g. `\"80\"`, `\"8080-8090\"`). For `address-group`, these are IPv4 addresses or CIDRs. For `ipv6-address-group`, these are IPv6 addresses or CIDRs.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the firewall group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the firewall group with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of firewall group. One of: `port-group`, `address-group`, `ipv6-address-group`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a firewall group on the UniFi controller. Firewall groups are named collections of ports or addresses that can be referenced by firewall policies and rules.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_firewall_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "The action to take when traffic matches this policy. Valid values: `ALLOW`, `BLOCK`, `REJECT`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "connection_state_type": {
+            "type": "string",
+            "description": "Connection state type. Valid values: `ALL`, `RESPOND_ONLY`, `CUSTOM`. When set to `CUSTOM`, specify individual states via `connection_states`. Default: `ALL`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "connection_states": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of connection states to match (e.g. `NEW`, `ESTABLISHED`, `RELATED`, `INVALID`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "create_allow_respond": {
+            "type": "bool",
+            "description": "Whether to automatically create a corresponding allow-respond rule. Not supported when the destination zone is the external zone \u2014 UniFi handles WAN return traffic at the stateful firewall level automatically.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the firewall policy.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the firewall policy is enabled. Default: `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the firewall policy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "index": {
+            "type": "number",
+            "description": "The ordering index of the policy, assigned by the controller.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ip_version": {
+            "type": "string",
+            "description": "IP version to match. Valid values: `BOTH`, `IPV4`, `IPV6`. Default: `BOTH`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "logging": {
+            "type": "bool",
+            "description": "Whether to enable syslog logging for matched traffic.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "match_ipsec": {
+            "type": "bool",
+            "description": "Whether to match IPsec traffic.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the firewall policy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol to match. Valid values: `all`, `tcp`, `udp`, `tcp_udp`, `icmp`, `icmpv6`. Default: `all`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the firewall policy with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "destination": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "device_ids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Client device MAC addresses to match. Use the `mac` attribute from `terrifi_client_device` resources.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ips": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "IP addresses or CIDR ranges to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mac_addresses": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "MAC addresses to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "match_opposite_ips": {
+                  "type": "bool",
+                  "description": "Inverts IP matching. When `true` and action is `ALLOW`, all IPs except the specified ones are allowed. When `true` and action is `BLOCK`, all IPs except the specified ones are blocked.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "match_opposite_ports": {
+                  "type": "bool",
+                  "description": "Inverts port matching. When `true` and action is `ALLOW`, all ports except the specified ones are allowed. When `true` and action is `BLOCK`, all ports except the specified ones are blocked.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "network_ids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Network IDs to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Specific port number to match (when `port_matching_type` is `SPECIFIC`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port_group_id": {
+                  "type": "string",
+                  "description": "Port group ID to match (when `port_matching_type` is `OBJECT`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port_matching_type": {
+                  "type": "string",
+                  "description": "Port matching type. Valid values: `ANY`, `SPECIFIC`, `OBJECT`. Default: `ANY`. Automatically derived when `port` or `port_group_id` is set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "zone_id": {
+                  "type": "string",
+                  "description": "The ID of the firewall zone.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Destination endpoint configuration for the firewall policy.",
+              "description_kind": "markdown"
+            }
+          },
+          "schedule": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "date": {
+                  "type": "string",
+                  "description": "Date for one-time schedules.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "date_end": {
+                  "type": "string",
+                  "description": "End date of the schedule range (e.g. `2026-12-31`). Required for `CUSTOM` mode.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "date_start": {
+                  "type": "string",
+                  "description": "Start date of the schedule range (e.g. `2026-01-01`). Required for `CUSTOM` mode.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mode": {
+                  "type": "string",
+                  "description": "Schedule mode. Valid values: `ALWAYS`, `EVERY_DAY`, `EVERY_WEEK`, `ONE_TIME_ONLY`, `CUSTOM`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "repeat_on_days": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Days of the week to repeat on. Valid values: `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "time_all_day": {
+                  "type": "bool",
+                  "description": "Whether the schedule applies all day.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "time_range_end": {
+                  "type": "string",
+                  "description": "End time for the schedule (e.g. `17:00`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "time_range_start": {
+                  "type": "string",
+                  "description": "Start time for the schedule (e.g. `08:00`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Schedule configuration for when this policy is active.",
+              "description_kind": "markdown"
+            }
+          },
+          "source": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "device_ids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Client device MAC addresses to match. Use the `mac` attribute from `terrifi_client_device` resources.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ips": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "IP addresses or CIDR ranges to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mac_addresses": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "MAC addresses to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "match_opposite_ips": {
+                  "type": "bool",
+                  "description": "Inverts IP matching. When `true` and action is `ALLOW`, all IPs except the specified ones are allowed. When `true` and action is `BLOCK`, all IPs except the specified ones are blocked.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "match_opposite_ports": {
+                  "type": "bool",
+                  "description": "Inverts port matching. When `true` and action is `ALLOW`, all ports except the specified ones are allowed. When `true` and action is `BLOCK`, all ports except the specified ones are blocked.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "network_ids": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Network IDs to match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Specific port number to match (when `port_matching_type` is `SPECIFIC`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port_group_id": {
+                  "type": "string",
+                  "description": "Port group ID to match (when `port_matching_type` is `OBJECT`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port_matching_type": {
+                  "type": "string",
+                  "description": "Port matching type. Valid values: `ANY`, `SPECIFIC`, `OBJECT`. Default: `ANY`. Automatically derived when `port` or `port_group_id` is set.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "zone_id": {
+                  "type": "string",
+                  "description": "The ID of the firewall zone.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Source endpoint configuration for the firewall policy.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a firewall policy on the UniFi controller. Firewall policies define traffic rules between firewall zones.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_firewall_policy_order": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "destination_zone_id": {
+            "type": "string",
+            "description": "The ID of the destination firewall zone.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic ID in the format `source_zone_id:destination_zone_id`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policy_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Ordered list of firewall policy IDs. Policies are evaluated in this order, before any predefined (system) policies.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the ordering with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source_zone_id": {
+            "type": "string",
+            "description": "The ID of the source firewall zone.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the evaluation order of firewall policies for a specific zone pair. Policies are evaluated in the order specified by `policy_ids`. This resource uses the UniFi batch-reorder API to set the order of custom policies before predefined (system) policies.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_firewall_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the firewall zone.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the firewall zone.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "network_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of network IDs to associate with this firewall zone.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the firewall zone with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "zone_key": {
+            "type": "string",
+            "description": "The zone key assigned by the controller.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a firewall zone on the UniFi controller. Firewall zones group networks together for firewall rule management.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_network": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dhcp_boot_enabled": {
+            "type": "bool",
+            "description": "Whether DHCP PXE/TFTP boot options (66/67) are emitted on leases. Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dhcp_boot_filename": {
+            "type": "string",
+            "description": "DHCP option 67 \u2014 boot filename (e.g. `netboot.xyz.kpxe`). Only emitted on leases when `dhcp_boot_enabled = true`. Note: removing this attribute from config does not clear it on the controller (see provider docs).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dhcp_boot_server": {
+            "type": "string",
+            "description": "DHCP option 66 \u2014 TFTP/PXE boot server IP. Only emitted on leases when `dhcp_boot_enabled = true`. Note: removing this attribute from config does not clear it on the controller (see provider docs).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dhcp_dns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of DNS servers for DHCP clients. Maximum 4 servers.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dhcp_enabled": {
+            "type": "bool",
+            "description": "Whether DHCP is enabled on this network. Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dhcp_lease": {
+            "type": "number",
+            "description": "The DHCP lease time in seconds. Default: `86400` (24 hours).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dhcp_start": {
+            "type": "string",
+            "description": "The starting IP address for the DHCP pool.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "dhcp_stop": {
+            "type": "string",
+            "description": "The ending IP address for the DHCP pool.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "domain_name": {
+            "type": "string",
+            "description": "Domain name published via DHCP option 15. Note: removing this attribute from config does not clear it on the controller (see provider docs).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the network.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "internet_access_enabled": {
+            "type": "bool",
+            "description": "Whether internet access is enabled on this network. Default: `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "multicast_dns": {
+            "type": "bool",
+            "description": "Whether the mDNS reflector (Bonjour/zeroconf) is enabled on this network. Default: `true` (matches the controller's create-time default \u2014 set explicitly to `false` to disable).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the network.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "network_group": {
+            "type": "string",
+            "description": "The network group. Default: `LAN`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "purpose": {
+            "type": "string",
+            "description": "The purpose of the network. One of: `corporate`, `vlan-only`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the network with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subnet": {
+            "type": "string",
+            "description": "The subnet for the network in CIDR notation (e.g., `192.168.33.0/24`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "vlan_id": {
+            "type": "number",
+            "description": "The VLAN ID for the network. Must be between 2 and 4095.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a network on the UniFi controller.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_wlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application": {
+            "type": "string",
+            "description": "The application type for this WLAN. Must be `standard`, `hotspot`, or `iot`. `hotspot` enables guest behavior (captive portal); `iot` enables IoT-optimized behavior. Default: `standard`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the WLAN is enabled. Default: `true`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hide_ssid": {
+            "type": "bool",
+            "description": "Whether to hide the SSID from broadcast. Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the WLAN.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The SSID (network name) of the WLAN. Must be 1-32 characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "network_id": {
+            "type": "string",
+            "description": "The ID of the network to associate with this WLAN.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "optimize_iot_connectivity": {
+            "type": "bool",
+            "description": "Enable IoT-specific radio optimizations that improve connection reliability for IoT devices. Only meaningful when `application = \"iot\"`. Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "passphrase": {
+            "type": "string",
+            "description": "The WPA passphrase for the WLAN. Must be 8-255 characters. Required when security is `wpapsk`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "security": {
+            "type": "string",
+            "description": "The security protocol for this WLAN. Must be `open` or `wpapsk`. Default: `wpapsk`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to associate the WLAN with. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wifi_band": {
+            "type": "string",
+            "description": "The WiFi band for this WLAN. Must be `2g`, `5g`, or `both`. Default: `both`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wpa3_support": {
+            "type": "bool",
+            "description": "Whether to enable WPA3 support. Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wpa3_transition": {
+            "type": "bool",
+            "description": "Whether to enable WPA3 transition mode (WPA2/WPA3 mixed). Default: `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wpa_mode": {
+            "type": "string",
+            "description": "The WPA mode for this WLAN. Must be `auto` or `wpa2`. Default: `wpa2`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a WLAN (WiFi network) on the UniFi controller.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "terrifi_clients": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "clients": {
+            "nested_type": {
+              "attributes": {
+                "blocked": {
+                  "type": "bool",
+                  "description": "Whether the client is blocked from network access.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "first_seen": {
+                  "type": "number",
+                  "description": "Unix timestamp when the controller first saw the client.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "fixed_ap_mac": {
+                  "type": "string",
+                  "description": "The MAC of the access point the client is locked to (if any).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "fixed_ip": {
+                  "type": "string",
+                  "description": "The fixed (DHCP-reserved) IP assigned to the client, if any.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "The hostname the client reported via DHCP option 12 (if any).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The controller-assigned ID of the client record.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "The IP the client most recently held (controller field `last_ip`). May be null if the controller has never observed the client connecting.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_guest": {
+                  "type": "bool",
+                  "description": "Whether the client is on a guest network.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_wired": {
+                  "type": "bool",
+                  "description": "Whether the client was last seen on a wired connection.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "last_seen": {
+                  "type": "number",
+                  "description": "Unix timestamp when the controller last saw the client.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "local_dns_record": {
+                  "type": "string",
+                  "description": "The local DNS record hostname for the client, if one is configured.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mac": {
+                  "type": "string",
+                  "description": "The MAC address of the client.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The user-assigned alias for the client (the `name` field on `terrifi_client_device`). Often null for clients that have never had an alias set.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "network_id": {
+                  "type": "string",
+                  "description": "The configured network ID for the client (set when `fixed_ip` is in use).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "network_name": {
+                  "type": "string",
+                  "description": "The name of the network the client was last seen on (controller field `last_connection_network_name`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "note": {
+                  "type": "string",
+                  "description": "Free-text note attached to the client (the `note` field on `terrifi_client_device`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "oui": {
+                  "type": "string",
+                  "description": "The OUI (vendor) of the client's MAC address.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of clients on the site. Ordering is controller-defined and not stable across reads.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to read clients from. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Returns the list of clients the UniFi controller knows about on a site \u2014 every record at `/api/s/{site}/rest/user`, which is the union of currently-connected stations and configured/remembered clients. Useful as a read-only liveness check on the controller and as a source for `for_each` loops over existing clients.",
+        "description_kind": "markdown"
+      }
+    },
+    "terrifi_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "adopted": {
+            "type": "bool",
+            "description": "Whether the device has been adopted by the controller.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether the device is administratively disabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ip": {
+            "type": "string",
+            "description": "The current IP address of the device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mac": {
+            "type": "string",
+            "description": "The MAC address of the device to look up (e.g. `aa:bb:cc:dd:ee:ff`). Exactly one of `name` or `mac` must be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "model": {
+            "type": "string",
+            "description": "The hardware model of the device (e.g. `U6-LR`, `US-16-XG`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the device to look up. Exactly one of `name` or `mac` must be specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The site to look up the device in. Defaults to the provider site.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "state": {
+            "type": "number",
+            "description": "The device state. 0 = unknown, 1 = connected, 2 = pending, 4 = upgrading, 5 = provisioning, 6 = heartbeat missed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The device type (e.g. `uap` for access point, `usw` for switch, `ugw` for gateway).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Looks up a UniFi network device (access point, switch, or gateway) by name or MAC address.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

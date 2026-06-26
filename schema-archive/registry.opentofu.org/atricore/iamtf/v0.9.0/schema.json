@@ -1,0 +1,4355 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "client_id": {
+          "type": "string",
+          "description": "client identifier used to connect to the JOSSO server. Supports configuration from environment variable **JOSSO_API_CLIENT_ID**",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "client_secret": {
+          "type": "string",
+          "description": "Secret used to connect to the JOSSO server. Supports configuration from environment variable **JOSSO_API_SECRET**",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "JOSSO Server endpoint, for example: http://localhost:8081/atricore-rest/services/iam-deploy. Supports configuration from environment variable **JOSSO_API_ENDPOINT**",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "import_ida": {
+          "type": "string",
+          "description": "Name of the identity appliance used when importing resources. Supports configuration from environment variable **JOSSO_API_APPLIANCE**",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "org_name": {
+          "type": "string",
+          "description": "Organization using JOSSO. Supports configuration from environment variable **JOSSO_ORG_NAME**",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "trace": {
+          "type": "bool",
+          "description": "Trace API traffic (See also TF_LOG and TF_PROVIDER_LOG).  Supports configuration from environment variable **JOSSO_API_TRACE**",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "iamtf_app_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_location": {
+            "type": "string",
+            "description": "application location.  Base application URL, i.e. https://myapp.com",
+            "description_kind": "plain",
+            "required": true
+          },
+          "app_slo_location": {
+            "type": "string",
+            "description": "Application single logout location",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dashboard_url": {
+            "type": "string",
+            "description": "Application URL used to display error information (combined with error_binding)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "default_resource": {
+            "type": "string",
+            "description": "application default resource (after SSO/SLO) i.e. https://myapp.com/home",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Application description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "internal element ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "error_binding": {
+            "type": "string",
+            "description": "how errors are displayed to users (combined with dashboard_url)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "exec_env": {
+            "type": "string",
+            "description": "name of the execution environment resource",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "Identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ignored_web_resources": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of URL patterns not subject to SSO control (space sperated)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sp_id": {
+            "type": "string",
+            "description": "Service provider ID. The name of the SP that will be associated with the application",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "is_preferred": {
+                  "type": "bool",
+                  "description": "identifies this IdP as the preferred one (only one IdP must be set to preferred)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted IdP",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "account_linkage": {
+                        "type": "string",
+                        "description": "account linkage: which attribute to use as UID from the IdP.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "account_linkage_name": {
+                        "type": "string",
+                        "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identity_mapping": {
+                        "type": "string",
+                        "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "identity_mapping_localid": {
+                        "type": "bool",
+                        "description": "Use local SP user identifier even when REMOTE is configured",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identiyt_mapping_name": {
+                        "type": "string",
+                        "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "SAML message time to live",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "SAML message time to live tolerance",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_authentication_requests": {
+                        "type": "bool",
+                        "description": "sign authentication requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_requests": {
+                        "type": "bool",
+                        "description": "sign requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "saml signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "want_assertion_signed": {
+                        "type": "bool",
+                        "description": "require signed assertions from IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "SP SAML 2 settings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "SP to IDP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          },
+          "keystore": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "Certificate and private key alias (optional)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "key_password": {
+                  "type": "string",
+                  "description": "PKCS12 private key password (optional, the store password is used if not present)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "PKCS12 keystore password",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "PKCS12 keystore in base64 format",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Keystore configuration.  A single keystore containing the private key and certificate is supported.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "saml2": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "account_linkage": {
+                  "type": "string",
+                  "description": "account linkage: which attribute to use as UID from the IdP.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "account_linkage_name": {
+                  "type": "string",
+                  "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identity_mapping": {
+                  "type": "string",
+                  "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "identity_mapping_localid": {
+                  "type": "bool",
+                  "description": "Use local SP user identifier even when REMOTE is configured",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identiyt_mapping_name": {
+                  "type": "string",
+                  "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message_ttl": {
+                  "type": "number",
+                  "description": "SAML message time to live",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_tolerance": {
+                  "type": "number",
+                  "description": "SAML message time to live tolerance",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_authentication_requests": {
+                  "type": "bool",
+                  "description": "sign authentication requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_requests": {
+                  "type": "bool",
+                  "description": "sign requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "signature_hash": {
+                  "type": "string",
+                  "description": "saml signature hash algorithm",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "want_assertion_signed": {
+                  "type": "bool",
+                  "description": "require signed assertions from IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "bindings": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "artifact": {
+                        "type": "bool",
+                        "description": "use Artifact binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_post": {
+                        "type": "bool",
+                        "description": "use HTTP POST binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_redirect": {
+                        "type": "bool",
+                        "description": "use HTTP REDIRECT binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "local": {
+                        "type": "bool",
+                        "description": "use LOCAL binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "soap": {
+                        "type": "bool",
+                        "description": "use SOAP binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "enabled SAML bindings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "SP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_app_oidc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_authn": {
+            "type": "string",
+            "description": "client authentication. Valid values are: **NONE** **CLIENT_SECRET_BASIC** **CLIENT_SECRET_JWT** **CLIENT_SECRET_POST** **PRIVATE_KEY_JWT**.  Note: use **NONE** will assume **code challenge (PKE)** is used",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "client ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "client secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "relaying party description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "internal element ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "encryption_alg": {
+            "type": "string",
+            "description": "encryption algorithm. Valid values: NONE, RSA1_5, A128KW, A128GCMKW, A192KW, A192GCMKW, A256KW, A256GCMKW.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "encryption_method": {
+            "type": "string",
+            "description": "encryption method. Valid values: NONE, A128CBC-HS256, A192CBC-HS384, A256CBC-HS512, A128GCM, A192GCM, A256GCM.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "grant_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of OIDC grant types. Valid values: AUTHORIZATION_CODE, REFRESH_TOKEN, JWT_BEARER_PWD, CLIENT_CREDENTIALS, JWT_BEARER, PASSWORD, IMPLICIT, SAML2_BEARER.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "idtoken_encryption_alg": {
+            "type": "string",
+            "description": "ID token encryption algorithm. Valid values: NONE, RSA1_5, A128KW, A128GCMKW, A192KW, A192GCMKW, A256KW, A256GCMKW.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "idtoken_encryption_method": {
+            "type": "string",
+            "description": "ID token encryption method. Valid values: NONE, A128CBC-HS256, A192CBC-HS384, A256CBC-HS512, A128GCM, A192GCM, A256GCM.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "idtoken_signature_alg": {
+            "type": "string",
+            "description": "ID token signature algorithm. Valid values: NONE, HS256, HS384, HS512, RS256, RS384, RS512.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "resource name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "post_logout_redirect_uris": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of URIs for redirection after logout",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "redirect_uris": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of URIs for use in the redirect-based flow. This is required for all application types except service. Note: see okta_app_oauth_redirect_uri for appending to this list in a decentralized way.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "response_modes": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of OIDC response type strings. Valid values: QUERY, JWT.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "response_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of OIDC response type strings. Valid values: TOKEN, CODE, ID_TOKEN.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "signature_alg": {
+            "type": "string",
+            "description": "signature algorithm. Valid values: NONE, HS256, HS384, HS512, RS256, RS384, RS512.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "is_preferred": {
+                  "type": "bool",
+                  "description": "identifies this IdP as the preferred one (only one IdP must be set to preferred)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted IdP",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "account_linkage": {
+                        "type": "string",
+                        "description": "account linkage: which attribute to use as UID from the IdP.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "account_linkage_name": {
+                        "type": "string",
+                        "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identity_mapping": {
+                        "type": "string",
+                        "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "identity_mapping_localid": {
+                        "type": "bool",
+                        "description": "Use local SP user identifier even when REMOTE is configured",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identiyt_mapping_name": {
+                        "type": "string",
+                        "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "SAML message time to live",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "SAML message time to live tolerance",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_authentication_requests": {
+                        "type": "bool",
+                        "description": "sign authentication requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_requests": {
+                        "type": "bool",
+                        "description": "sign requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "saml signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "want_assertion_signed": {
+                        "type": "bool",
+                        "description": "require signed assertions from IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "SP SAML 2 settings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "SP to IDP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_app_saml2": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "SAML 2 service provider description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "internal element id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "metadata": {
+            "type": "string",
+            "description": "SAML 2 service provider XML metadata descriptor",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "resource name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "is_preferred": {
+                  "type": "bool",
+                  "description": "identifies this IdP as the preferred one (only one IdP must be set to preferred)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted IdP",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of IDP resource names trusted by this SP",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_app_sharepoint": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_slo_location": {
+            "type": "string",
+            "description": "SLO location URL",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "app_slo_location_enabled": {
+            "type": "bool",
+            "description": "enable application SLO location",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Sharepoint application description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "resource name",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sp_id": {
+            "type": "string",
+            "description": "SAML SP internal name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sts_encrypting_cert_subject": {
+            "type": "string",
+            "description": "STS encrypting certificate subject",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sts_signing_cert_subject": {
+            "type": "string",
+            "description": "STS signing certificate subject",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "is_preferred": {
+                  "type": "bool",
+                  "description": "identifies this IdP as the preferred one (only one IdP must be set to preferred)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted IdP",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "account_linkage": {
+                        "type": "string",
+                        "description": "account linkage: which attribute to use as UID from the IdP.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "account_linkage_name": {
+                        "type": "string",
+                        "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identity_mapping": {
+                        "type": "string",
+                        "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "identity_mapping_localid": {
+                        "type": "bool",
+                        "description": "Use local SP user identifier even when REMOTE is configured",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identiyt_mapping_name": {
+                        "type": "string",
+                        "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "SAML message time to live",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "SAML message time to live tolerance",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_authentication_requests": {
+                        "type": "bool",
+                        "description": "sign authentication requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_requests": {
+                        "type": "bool",
+                        "description": "sign requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "saml signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "want_assertion_signed": {
+                        "type": "bool",
+                        "description": "require signed assertions from IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "SP SAML 2 settings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "SP to IDP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          },
+          "keystore": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "Certificate and private key alias (optional)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "key_password": {
+                  "type": "string",
+                  "description": "PKCS12 private key password (optional, the store password is used if not present)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "PKCS12 keystore password",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "PKCS12 keystore in base64 format",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Keystore configuration.  A single keystore containing the private key and certificate is supported.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "saml2": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "account_linkage": {
+                  "type": "string",
+                  "description": "account linkage: which attribute to use as UID from the IdP.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "account_linkage_name": {
+                  "type": "string",
+                  "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identity_mapping": {
+                  "type": "string",
+                  "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "identity_mapping_localid": {
+                  "type": "bool",
+                  "description": "Use local SP user identifier even when REMOTE is configured",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identiyt_mapping_name": {
+                  "type": "string",
+                  "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message_ttl": {
+                  "type": "number",
+                  "description": "SAML message time to live",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_tolerance": {
+                  "type": "number",
+                  "description": "SAML message time to live tolerance",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_authentication_requests": {
+                  "type": "bool",
+                  "description": "sign authentication requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_requests": {
+                  "type": "bool",
+                  "description": "sign requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "signature_hash": {
+                  "type": "string",
+                  "description": "saml signature hash algorithm",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "want_assertion_signed": {
+                  "type": "bool",
+                  "description": "require signed assertions from IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "bindings": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "artifact": {
+                        "type": "bool",
+                        "description": "use Artifact binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_post": {
+                        "type": "bool",
+                        "description": "use HTTP POST binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_redirect": {
+                        "type": "bool",
+                        "description": "use HTTP REDIRECT binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "local": {
+                        "type": "bool",
+                        "description": "use LOCAL binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "soap": {
+                        "type": "bool",
+                        "description": "use SOAP binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "enabled SAML bindings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "SP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_execenv_iis": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "activation_override_setup": {
+            "type": "bool",
+            "description": "(activation) Override agent setup",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_path": {
+            "type": "string",
+            "description": "(activation) IIS path",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_remote_target": {
+            "type": "string",
+            "description": "(activation) Activate using remote JOSSO server ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "architecture": {
+            "type": "string",
+            "description": "IIS architecture. Values: 32, 64",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "IIS execution environment description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "isapi_extension_path": {
+            "type": "string",
+            "description": "IIS ISAPI filter URI (i.e. /josso)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "resource name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_execenv_php": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "activation_install_samples": {
+            "type": "bool",
+            "description": "(activation) install samples",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_override_setup": {
+            "type": "bool",
+            "description": "(activation) Override agent setup",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_path": {
+            "type": "string",
+            "description": "(activation) PHP install path",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_remote_target": {
+            "type": "string",
+            "description": "(activation) Activate using remote JOSSO server ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Execution environment description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "PHP install type",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Execution environment name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_execenv_tomcat": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "activation_install_samples": {
+            "type": "bool",
+            "description": "(activation) install samples",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_override_setup": {
+            "type": "bool",
+            "description": "(activation) override agent setup",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_path": {
+            "type": "string",
+            "description": "(activation) Tomcat path",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_remote_target": {
+            "type": "string",
+            "description": "(activation) activate using remote JOSSO server",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "execution environment description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "execution environment name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Tomcat version",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_execenv_weblogic": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "activation_install_samples": {
+            "type": "bool",
+            "description": "(activation) install samples",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_override_setup": {
+            "type": "bool",
+            "description": "(activation) override agent setup",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_path": {
+            "type": "string",
+            "description": "(activation) Weblogic server path",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "activation_remote_target": {
+            "type": "string",
+            "description": "(activation) activate using remote JOSSO server ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "execution environment description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "weblogic domain path (relative to the activation path: i.e. ../../../../wldomain/base_domain/)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "execution environment ",
+            "description_kind": "plain",
+            "required": true
+          },
+          "target_jdk": {
+            "type": "string",
+            "description": "target jdk",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Weblogic version",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_identity_appliance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branding": {
+            "type": "string",
+            "description": "the name of the UI branding plugin installed in JOSSO",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bundles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of additional OSGi bundles this appliance requires",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Provide a description for your identity appliance.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "Reserved for internal use",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "idp_selector": {
+            "type": "string",
+            "description": "the stragegy used to select IdPs during authentication.  This are built-in options: requested-preferred-idp-selection, requested-previous-preferred-idp-selection, usr-selected-idp-selection, preferred-only-idp-selection",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "location": {
+            "type": "string",
+            "description": "The location is the public base URL for the appliance, for example: https://mysso.mycompany.com, or http://localhost:8081",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "This MUST be a unique value, use only letters, numbers and hyphen (-)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "This MUST be a unique value, conforming JAVA package naming conventions. For example: **com.mycompany.appliance1.dev**",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branding": {
+            "type": "string",
+            "description": "the name of the UI branding plugin installed in JOSSO",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dashboard_url": {
+            "type": "string",
+            "description": "External user dashborad URL",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "provider description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "destroy_previous_session": {
+            "type": "bool",
+            "description": "JOSSO will logout an existing session to avoid exceeding the max session per user. if false, login will be  denied after reaching the max.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "element id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "error_binding": {
+            "type": "string",
+            "description": "how error information is encoded and shared with a custom user dashboard",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id_sources": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of identity sources used by the IDP.  At least one is required.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "max_sessions_per_user": {
+            "type": "number",
+            "description": "Max number of sessions per user, -1 unbounded. This will limit the amount of simutaneous SSO sessions a user can create.  Works in combination with **destroy_previous_session**.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "idp name, unique in the appliance scope",
+            "description_kind": "plain",
+            "required": true
+          },
+          "session_timeout": {
+            "type": "number",
+            "description": "SSO session timeout (minutes, default 30)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id": {
+            "type": "string",
+            "description": "subject identifier. valid values: **PRINCIPAL**, **EMAIL**, **ATTRIBUTE**, **CUSTOM**",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id_attr": {
+            "type": "string",
+            "description": "subject identifier attribute, only valid for **ATTRIBUTE** and **CUSTOM** subject identifier",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id_ignore_requested": {
+            "type": "bool",
+            "description": "ignore requested subject id type",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attributes": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "include_unmapped_claims": {
+                  "type": "bool",
+                  "description": "when using a custom profile, include unmapped claims",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "profile": {
+                  "type": "string",
+                  "description": "Attribute profile to use: **JOSSO**, **BASIC**, **ONE_TO_ONE**, **CUSTOM**, **EXTENSION**",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "map": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "format": {
+                        "type": "string",
+                        "description": "how the new claim name should be formatted.  Basic if the name will be used as is, URN to add a default SAML2 urn to the claim",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "mapping": {
+                        "type": "string",
+                        "description": "value to us when doing the mapping, depending on the type this will be an existing claim name, a constant value or an expresison value",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "name of the new claim",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "mapping type.  claim if you want to man an existing claim to a new name.  const if you want to add a new constant value as claim.  exp if you want to create a claim using an expression",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Custom attribute mappings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "attributes mappings.  Define IdP claim mappings.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "authn_basic": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "crypt_salt_length": {
+                  "type": "number",
+                  "description": "crypt salt length (in bytes: 0, 8, 16, 24, 32, 48, 64, 128, 256)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "pwd_encoding": {
+                  "type": "string",
+                  "description": "password encoding algorithm, valid values are:\n* NONE\n * BASE64\n * HEX",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwd_hash": {
+                  "type": "string",
+                  "description": "password hashing algorithm, valid values are:\n* NONE (NOT recommended!)\n* CRYPT (LDAP only)\n* BCRYPT\n* SHA-512\n* SHA-256\n* SHA-1\n* MD5 (NOT recommended!)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "salt_prefix": {
+                  "type": "string",
+                  "description": "fixed salt prefix for password hashing",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "salt_suffix": {
+                  "type": "string",
+                  "description": "fixed salt suffix for password hashing",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "saml_authn_ctx": {
+                  "type": "string",
+                  "description": "reported SAML2 password authentication context. Some proivders required a specific value.  Valid values are: \n* urn:oasis:names:tc:SAML:2.0:ac:classes:Password (default)\n * urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport\n",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Basic authentication settings. JOSSO will verify user provided credentials (username, password) with stored values in an identity source",
+              "description_kind": "plain"
+            }
+          },
+          "authn_bind_ldap": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "authentication": {
+                  "type": "string",
+                  "description": "credential to connect to the LDAP server",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "initial_ctx_factory": {
+                  "type": "string",
+                  "description": "Java JNDI initial context factory (default: com.sun.jndi.ldap.LdapCtxFactory)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "operational_attrs": {
+                  "type": "bool",
+                  "description": "Require LDAP operational attributes (useful for LDAP password policy management)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "secret credential to connect to the LDAP server",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "password_policy": {
+                  "type": "string",
+                  "description": "Support LDAP password policy management. Values : none, ldap-rfc-draft (default none)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "perform_dn_search": {
+                  "type": "bool",
+                  "description": "Perform a user search by DN before authentiation",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "provider_url": {
+                  "type": "string",
+                  "description": "LDAP server connection url: ldaps://localhost:636",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "referrals": {
+                  "type": "string",
+                  "description": "how to process referrals in a directory node.  Values: follow, ignore",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "saml_authn_ctx": {
+                  "type": "string",
+                  "description": "reported SAML 2 authentication context class",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "search_scope": {
+                  "type": "string",
+                  "description": "LDAP search scope. Values : base, one, subtree, children",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "userid_attr": {
+                  "type": "string",
+                  "description": "The Idp will provide the configured user identifier, ignoring the requested type(SAML 2)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "username credential to connect to the LDAP server",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "users_ctx_dn": {
+                  "type": "string",
+                  "description": "DN to search for users",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "LDAP bind authentication settings",
+              "description_kind": "plain"
+            }
+          },
+          "authn_client_cert": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "clr_enabled": {
+                  "type": "bool",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "crl_refresh_seconds": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "crl_url": {
+                  "type": "string",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "ocsp_enabled": {
+                  "type": "bool",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "ocsp_server": {
+                  "type": "string",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "uid": {
+                  "type": "string",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Basic authentication settings. JOSSO will verify user provided credentials (username, password) with stored values in an identity source",
+              "description_kind": "plain"
+            }
+          },
+          "authn_custom": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "claim_names": {
+                  "type": "string",
+                  "description": "name of the claim to be used, depends on claim type",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "claim_type": {
+                  "type": "string",
+                  "description": "Claim type",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "external_service": {
+                  "type": "string",
+                  "description": "URL to external authentication service to collect claims",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "inject_id_source": {
+                  "type": "bool",
+                  "description": "Inject identity source into custom authenticator (must have proper setter)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "saml_authn_ctx": {
+                  "type": "string",
+                  "description": "SAML authentication context",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Authentication type: BASIC, 2FA, PRE_AUTHN",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Custom authentication mechanism",
+              "description_kind": "plain"
+            }
+          },
+          "authn_oauth2_pre": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "authn_service": {
+                  "type": "string",
+                  "description": "authentication service URL used to redirect the user to login",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "client identifier to be used by the external authentication application",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "client_secret": {
+                  "type": "string",
+                  "description": "client secret (must match oauth2 config)",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "external_auth": {
+                  "type": "bool",
+                  "description": "external authentication",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "remember_me": {
+                  "type": "bool",
+                  "description": "enable remember me functionalities",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Basic authentication settings. JOSSO will verify user provided credentials (username, password) with stored values in an identity source",
+              "description_kind": "plain"
+            }
+          },
+          "authn_wia": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "domain": {
+                  "type": "string",
+                  "description": "windows domain",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "domain_controller": {
+                  "type": "string",
+                  "description": "domain controller server",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "JOSSO hostname",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "keytab": {
+                  "type": "string",
+                  "description": "Kerberos keytab file",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "overwrite_kerberos_setup": {
+                  "type": "bool",
+                  "description": "override JOSSO kerberos configuration",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "JOSSO server port",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "JOSSO server protocol (http/https)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "service_class": {
+                  "type": "string",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "service_name": {
+                  "type": "string",
+                  "description": "authentiacation priority compared to other mechanisms (ascening order)",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "extension": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "fqcn": {
+                        "type": "string",
+                        "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "osgi_filter": {
+                        "type": "string",
+                        "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "property": {
+                        "nesting_mode": "set",
+                        "block": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Name as the property",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value as the property ",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Windows Integrated Authentication. JOSSO will verify identity by contacting a domain controller",
+              "description_kind": "plain"
+            }
+          },
+          "keystore": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "Certificate and private key alias (optional)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "key_password": {
+                  "type": "string",
+                  "description": "PKCS12 private key password (optional, the store password is used if not present)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "PKCS12 keystore password",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "PKCS12 keystore in base64 format",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Keystore configuration.  A single keystore containing the private key and certificate is supported.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "oauth2": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "enable OAuth2 protocol for this IDP",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwdless_authn_enabled": {
+                  "type": "bool",
+                  "description": "passwordless authentication enabled. Usefull for one-click logins",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwdless_authn_from": {
+                  "type": "string",
+                  "description": "passwordless authn subject FROM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwdless_authn_subject": {
+                  "type": "string",
+                  "description": "message subject used during one-click login",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwdless_authn_template": {
+                  "type": "string",
+                  "description": "name of the message template sent to the user during one-click login",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pwdless_authn_to": {
+                  "type": "string",
+                  "description": "passwordless authn subject TO",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "rememberme_token_validity": {
+                  "type": "number",
+                  "description": "remember me token validity (sec, default 43200)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "shared_key": {
+                  "type": "string",
+                  "description": "IDP secret key to be shared with the OAuth client",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "token_validity": {
+                  "type": "number",
+                  "description": "token validity (sec, default 300)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "OAuth2 protocol settings.  This is maily used by JOSSO internally, for SSO connetions OpenID Connect is the recommended protocol, which is a superset of OAuth2",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "oidc": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_token_ttl": {
+                  "type": "number",
+                  "description": "access token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "authz_code_ttl": {
+                  "type": "number",
+                  "description": "authorization code time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "enable OIDC for this IDP",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id_token_ttl": {
+                  "type": "number",
+                  "description": "id token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "refresh_token_ttl": {
+                  "type": "number",
+                  "description": "refresh token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "user_claims_in_access_token": {
+                  "type": "bool",
+                  "description": "include user claims in access token",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "OpenID Connect protocol settings.  This is the recommended SSO protocol. You must combine this with **iamtf_app_odic** resources (Applications)",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "saml2": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "encrypt_algorithm": {
+                  "type": "string",
+                  "description": "encrypt assertion algorithm",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message_ttl": {
+                  "type": "number",
+                  "description": "message ttl (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_tolerance": {
+                  "type": "number",
+                  "description": "message ttl tolerance (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_reqs": {
+                  "type": "bool",
+                  "description": "sign all requests to SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "signature_hash": {
+                  "type": "string",
+                  "description": "signature hash algorithm",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "want_authn_req_signed": {
+                  "type": "bool",
+                  "description": "want authn requests signed by SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "want_req_signed": {
+                  "type": "bool",
+                  "description": "want requests signed by SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "bindings": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "artifact": {
+                        "type": "bool",
+                        "description": "use Artifact binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_post": {
+                        "type": "bool",
+                        "description": "use HTTP POST binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_redirect": {
+                        "type": "bool",
+                        "description": "use HTTP REDIRECT binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "local": {
+                        "type": "bool",
+                        "description": "use LOCAL binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "soap": {
+                        "type": "bool",
+                        "description": "use SOAP binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "enabled SAML bindings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "IDP SAML2 protocol settings",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "sp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted sp. It normally is the name of the application plus the -sp suffix",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "encrypt_algorithm": {
+                        "type": "string",
+                        "description": "encrypt assertion algorithm",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "message ttl (sec)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "message ttl tolerance (sec)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_reqs": {
+                        "type": "bool",
+                        "description": "sign all requests to SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "want_authn_req_signed": {
+                        "type": "bool",
+                        "description": "want authn requests signed by SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "want_req_signed": {
+                        "type": "bool",
+                        "description": "want requests signed by SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "IDP SAML2 protocol settings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "IDP to SP SAML 2 settings. Optional, only required is specific SAML IdP settings are required by the SP",
+              "description_kind": "plain"
+            }
+          },
+          "subject_authn_policies": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the authentication policy",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "subject authentication policies",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp_azure": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token_service": {
+            "type": "string",
+            "description": "authorization endpiont: https://login.microsoft.com/{tenant}/oauth2/v2.0/token",
+            "description_kind": "plain",
+            "required": true
+          },
+          "authz_token_service": {
+            "type": "string",
+            "description": "token endpoint: https://login.microsoft.com/{tenant}/oauth2/v2.0/authorize",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "azure app client id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "azure app secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "IdP description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "IdP name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "server_key": {
+            "type": "string",
+            "description": "azure app server key",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp_facebook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token_service": {
+            "type": "string",
+            "description": "facebook access token endpoint",
+            "description_kind": "plain",
+            "required": true
+          },
+          "authz_token_service": {
+            "type": "string",
+            "description": "facebook authorization token endpoint",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "facebook application id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "facebook application secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "idp description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "idp name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scopes": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "facebook premissions. These will be added to **email** and **public_profile**",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_fields": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "facebook user fields. These will be added to **id**, **name**, **email**, **first_name**, **last_name**",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp_google": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token_service": {
+            "type": "string",
+            "description": "google access token endpoint",
+            "description_kind": "plain",
+            "required": true
+          },
+          "authz_token_service": {
+            "type": "string",
+            "description": "google authorization token endpoint",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "google application id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "google application secret",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "idp description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "google_apis": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "APIs to be accessed with the authorization token",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "google_apps_domain": {
+            "type": "string",
+            "description": "google suite domain ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "idp name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp_oidc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token_service": {
+            "type": "string",
+            "description": "OIDC token endpoint (optional when load_metadata is true)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "authz_token_service": {
+            "type": "string",
+            "description": "OIDC authorization endpoint (optional when load_metadata is true)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "client_id": {
+            "type": "string",
+            "description": "OIDC client id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "OIDC client secret",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "description": {
+            "type": "string",
+            "description": "idp description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "issuer": {
+            "type": "string",
+            "description": "OIDC issuer identifier",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "load_metadata": {
+            "type": "bool",
+            "description": "automatically load OIDC metadata from provider's well-known endpoint",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "idp name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scopes": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "OIDC scopes to request",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "server_key": {
+            "type": "string",
+            "description": "OIDC server key (optional)",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "user_fields": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "User fields to request from userinfo endpoint",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idp_saml2": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "SAML 2 service provider description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "internal element id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "metadata": {
+            "type": "string",
+            "description": "SAML 2 service provider XML metadata descriptor",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "resource name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idsource_db": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acquire_increment": {
+            "type": "number",
+            "description": "number of connections to aquire when incrementing the pool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "connection_pool": {
+            "type": "bool",
+            "description": "enable a connection pool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "connectionurl": {
+            "type": "string",
+            "description": "jdbc connection string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "resource description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dml_reset_credential": {
+            "type": "string",
+            "description": "query string used to update the password credential",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "idle_connection_test_period": {
+            "type": "number",
+            "description": "dbidentitysource idleconnectiontestperiod",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "initial_pool_size": {
+            "type": "number",
+            "description": "dbidentitysource initialpoolsize",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "jdbc_driver": {
+            "type": "string",
+            "description": "JDBC driver",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "max_idle_time": {
+            "type": "number",
+            "description": "dbidentitysource maxidletime",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "max_pool_size": {
+            "type": "number",
+            "description": "dbidentitysource maxpoolsize",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "min_pool_size": {
+            "type": "number",
+            "description": "dbidentitysource minpoolsize",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "identiy source name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "connection password",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sql_credentials": {
+            "type": "string",
+            "description": "credentials query string. Must return a single row with columns: username, password, salt (optional)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sql_groups": {
+            "type": "string",
+            "description": "user groups query string.  Must return a single column with group names",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sql_relay_credential": {
+            "type": "string",
+            "description": "query string to retrieve the credential/claim used to recover a password (i.e. email)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "sql_user_attrs": {
+            "type": "string",
+            "description": "user attributes query string. Must return a single row with columns: username, name, value",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sql_username": {
+            "type": "string",
+            "description": "username query string. Used to retrieve the username from the DB",
+            "description_kind": "plain",
+            "required": true
+          },
+          "use_column_name_as_property_name": {
+            "type": "bool",
+            "description": "Use sql_user_attrs result-set column names as properties names",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description": "connection username",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "extension": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "fqcn": {
+                  "type": "string",
+                  "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "osgi_filter": {
+                  "type": "string",
+                  "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "property": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name as the property",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Value as the property ",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idsource_ldap": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "authentication": {
+            "type": "string",
+            "description": "credential to connect to the LDAP server",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "id source description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "element ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "group_match_mode": {
+            "type": "string",
+            "description": "Specifies the type of value stored as a groupmember of a group",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "groupid_attr": {
+            "type": "string",
+            "description": "LDAP attribute containing a group identifier",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "groupmember_attr": {
+            "type": "string",
+            "description": "LDAP attribute containing a user identifier in a group",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "groups_ctx_dn": {
+            "type": "string",
+            "description": "DN to search for groups",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "initial_ctx_factory": {
+            "type": "string",
+            "description": "Java JNDI initial context factory",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "id source name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "operational_attrs": {
+            "type": "bool",
+            "description": "Require LDAP operational attributes (useful for LDAP password policy management)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "credential to connect to the LDAP server",
+            "description_kind": "plain",
+            "required": true
+          },
+          "provider_url": {
+            "type": "string",
+            "description": "LDAP server connection url: ldaps://localhost:636",
+            "description_kind": "plain",
+            "required": true
+          },
+          "referrals": {
+            "type": "string",
+            "description": "how to process referrals in a directory node",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "search_scope": {
+            "type": "string",
+            "description": "LDAP search scope",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "userid_attr": {
+            "type": "string",
+            "description": "LDAP attribute containing a user identifier",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description": "credential to connect to the LDAP server",
+            "description_kind": "plain",
+            "required": true
+          },
+          "users_ctx_dn": {
+            "type": "string",
+            "description": "DN to search for users",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "extension": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "fqcn": {
+                  "type": "string",
+                  "description": "component java FQCN. Refers to the OSGi component type or Java class to be instantiated",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "osgi_filter": {
+                  "type": "string",
+                  "description": "filter to locate the OSGi service (Only when extension type is SERVICE).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "extension type: SERVICE (for OSGi service references) or INSTANCE (for creating a new instance). ",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "property": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name as the property",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Value as the property ",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "list of configuration properties and its values (only when extension type is INSTANCE)",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Allows you to use a custom component for a given resource.  Components are installed as OSGi bundles in the server.  You can refer to a component instance or create a new instance based on its class",
+              "description_kind": "plain"
+            }
+          },
+          "user_attributes": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "attribute": {
+                  "type": "string",
+                  "description": "LDAP attribute",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "claim": {
+                  "type": "string",
+                  "description": "claim name reported to applications",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of LDAP attributes and the name to be used as claim for a user",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_idvault": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "connector": {
+            "type": "string",
+            "description": "identity connector",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "id vault description",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "element ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "id vault name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_self_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "idp description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "idp description",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "iamtf_vp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dashboard_url": {
+            "type": "string",
+            "description": "External user dashborad URL",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "provider description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "element id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "error_binding": {
+            "type": "string",
+            "description": "how error information is encoded and shared with a custom user dashboard",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id_sources": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of identity sources used by the IDP.  At least one is required.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ida": {
+            "type": "string",
+            "description": "identity appliane name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "vp name, unique in the appliance scope",
+            "description_kind": "plain",
+            "required": true
+          },
+          "session_timeout": {
+            "type": "number",
+            "description": "SSO session timeout (minutes, default 30)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id": {
+            "type": "string",
+            "description": "subject identifier. valid values: **PRINCIPAL**, **EMAIL**, **ATTRIBUTE**, **CUSTOM**",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id_attr": {
+            "type": "string",
+            "description": "subject identifier attribute, only valid for **ATTRIBUTE** and **CUSTOM** subject identifier",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subject_id_ignore_requested": {
+            "type": "bool",
+            "description": "Ignore SP requested subject identifier",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attributes": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "include_unmapped_claims": {
+                  "type": "bool",
+                  "description": "when using a custom profile, include unmapped claims",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "profile": {
+                  "type": "string",
+                  "description": "Attribute profile to use: **JOSSO**, **BASIC**, **ONE_TO_ONE**, **CUSTOM**, **EXTENSION**",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "map": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "format": {
+                        "type": "string",
+                        "description": "how the new claim name should be formatted.  Basic if the name will be used as is, URN to add a default SAML2 urn to the claim",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "mapping": {
+                        "type": "string",
+                        "description": "value to us when doing the mapping, depending on the type this will be an existing claim name, a constant value or an expresison value",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "name of the new claim",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "mapping type.  claim if you want to man an existing claim to a new name.  const if you want to add a new constant value as claim.  exp if you want to create a claim using an expression",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Custom attribute mappings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "attributes mappings.  Define IdP claim mappings.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "is_preferred": {
+                  "type": "bool",
+                  "description": "identifies this IdP as the preferred one (only one IdP must be set to preferred)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted IdP",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "account_linkage": {
+                        "type": "string",
+                        "description": "account linkage: which attribute to use as UID from the IdP.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "account_linkage_name": {
+                        "type": "string",
+                        "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identity_mapping": {
+                        "type": "string",
+                        "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "identity_mapping_localid": {
+                        "type": "bool",
+                        "description": "Use local SP user identifier even when REMOTE is configured",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "identiyt_mapping_name": {
+                        "type": "string",
+                        "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "SAML message time to live",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "SAML message time to live tolerance",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_authentication_requests": {
+                        "type": "bool",
+                        "description": "sign authentication requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_requests": {
+                        "type": "bool",
+                        "description": "sign requests issued to IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "saml signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "want_assertion_signed": {
+                        "type": "bool",
+                        "description": "require signed assertions from IdPs",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "SP SAML 2 settings",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "SP to IDP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          },
+          "keystore": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "alias": {
+                  "type": "string",
+                  "description": "Certificate and private key alias (optional)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "key_password": {
+                  "type": "string",
+                  "description": "PKCS12 private key password (optional, the store password is used if not present)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "PKCS12 keystore password",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "PKCS12 keystore in base64 format",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Keystore configuration.  A single keystore containing the private key and certificate is supported.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "oauth2_idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "enable OAuth2 protocol for this IDP",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "rememberme_token_validity": {
+                  "type": "number",
+                  "description": "remember me token validity (sec, default 43200)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "shared_key": {
+                  "type": "string",
+                  "description": "IDP secret key to be shared with the OAuth client",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "token_validity": {
+                  "type": "number",
+                  "description": "token validity (sec, default 300)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "OAuth2 protocol settings.  This is maily used by JOSSO internally, for SSO connetions OpenID Connect is the recommended protocol, which is a superset of OAuth2",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "oidc_idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_token_ttl": {
+                  "type": "number",
+                  "description": "access token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "authz_code_ttl": {
+                  "type": "number",
+                  "description": "authorization code time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "enable OIDC for this IDP",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id_token_ttl": {
+                  "type": "number",
+                  "description": "id token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "refresh_token_ttl": {
+                  "type": "number",
+                  "description": "refresh token time to live (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "user_claims_in_access_token": {
+                  "type": "bool",
+                  "description": "include user claims in access token",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "OpenID Connect protocol settings.  This is the recommended SSO protocol. You must combine this with **iamtf_app_odic** resources (Applications)",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "saml2_idp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "encrypt_algorithm": {
+                  "type": "string",
+                  "description": "encrypt assertion algorithm",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message_ttl": {
+                  "type": "number",
+                  "description": "message ttl (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_tolerance": {
+                  "type": "number",
+                  "description": "message ttl tolerance (sec)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_reqs": {
+                  "type": "bool",
+                  "description": "sign all requests to SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "signature_hash": {
+                  "type": "string",
+                  "description": "signature hash algorithm",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "want_authn_req_signed": {
+                  "type": "bool",
+                  "description": "want authn requests signed by SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "want_req_signed": {
+                  "type": "bool",
+                  "description": "want requests signed by SPs",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "bindings": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "artifact": {
+                        "type": "bool",
+                        "description": "use Artifact binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_post": {
+                        "type": "bool",
+                        "description": "use HTTP POST binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_redirect": {
+                        "type": "bool",
+                        "description": "use HTTP REDIRECT binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "local": {
+                        "type": "bool",
+                        "description": "use LOCAL binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "soap": {
+                        "type": "bool",
+                        "description": "use SOAP binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "enabled SAML bindings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "IDP SAML2 protocol settings",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "saml2_sp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "account_linkage": {
+                  "type": "string",
+                  "description": "account linkage: which attribute to use as UID from the IdP.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "account_linkage_name": {
+                  "type": "string",
+                  "description": "account linkage name, only valid when account_linkage is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identity_mapping": {
+                  "type": "string",
+                  "description": "how the user identity should be mapped for this SP. LOCAL means that the user claims will be retrieved from an identity source connected to the SP.  REMOTE means that claims from the IdP will be used. MERGE is a mix of both claim sets (LOCAL and REMOTE)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "identity_mapping_localid": {
+                  "type": "bool",
+                  "description": "Use local SP user identifier even when REMOTE is configured",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "identiyt_mapping_name": {
+                  "type": "string",
+                  "description": "identity mapping name, only valid when identity_mapping is set to CUSTOM",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "message_ttl": {
+                  "type": "number",
+                  "description": "SAML message time to live",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_tolerance": {
+                  "type": "number",
+                  "description": "SAML message time to live tolerance",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_authentication_requests": {
+                  "type": "bool",
+                  "description": "sign authentication requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sign_requests": {
+                  "type": "bool",
+                  "description": "sign requests issued to IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "signature_hash": {
+                  "type": "string",
+                  "description": "saml signature hash algorithm",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "want_assertion_signed": {
+                  "type": "bool",
+                  "description": "require signed assertions from IdPs",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "bindings": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "artifact": {
+                        "type": "bool",
+                        "description": "use Artifact binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_post": {
+                        "type": "bool",
+                        "description": "use HTTP POST binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "http_redirect": {
+                        "type": "bool",
+                        "description": "use HTTP REDIRECT binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "local": {
+                        "type": "bool",
+                        "description": "use LOCAL binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "soap": {
+                        "type": "bool",
+                        "description": "use SOAP binding",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "enabled SAML bindings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "SP SAML 2 settings",
+              "description_kind": "plain"
+            }
+          },
+          "sp": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "name of the trusted sp. It normally is the name of the application plus the -sp suffix",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "saml2": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "encrypt_algorithm": {
+                        "type": "string",
+                        "description": "encrypt assertion algorithm",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "message_ttl": {
+                        "type": "number",
+                        "description": "message ttl (sec)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "message_ttl_tolerance": {
+                        "type": "number",
+                        "description": "message ttl tolerance (sec)",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "sign_reqs": {
+                        "type": "bool",
+                        "description": "sign all requests to SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "signature_hash": {
+                        "type": "string",
+                        "description": "signature hash algorithm",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "want_authn_req_signed": {
+                        "type": "bool",
+                        "description": "want authn requests signed by SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "want_req_signed": {
+                        "type": "bool",
+                        "description": "want requests signed by SPs",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "bindings": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "artifact": {
+                              "type": "bool",
+                              "description": "use Artifact binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_post": {
+                              "type": "bool",
+                              "description": "use HTTP POST binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "http_redirect": {
+                              "type": "bool",
+                              "description": "use HTTP REDIRECT binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "local": {
+                              "type": "bool",
+                              "description": "use LOCAL binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "soap": {
+                              "type": "bool",
+                              "description": "use SOAP binding",
+                              "description_kind": "plain",
+                              "optional": true
+                            }
+                          },
+                          "description": "enabled SAML bindings",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "IDP SAML2 protocol settings",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "IDP to SP SAML 2 settings. Optional, only required is specific SAML IdP settings are required by the SP",
+              "description_kind": "plain"
+            }
+          },
+          "subject_authn_policies": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Todo",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "todo add description for subject authens policies",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "iamtf_identity_appliance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "branding": {
+            "type": "string",
+            "description": "the name of the UI branding plugin installed in JOSSO",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bundles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "list of additional OSGi bundles this appliance requires",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Identity Appliance description",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "element_id": {
+            "type": "string",
+            "description": "Identity Appliance element id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "Identity Appliance location",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Identity Appliance name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "This MUST be a unique value, conforming JAVA package naming conventions. For example: **com.mycompany.appliance1.dev**",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

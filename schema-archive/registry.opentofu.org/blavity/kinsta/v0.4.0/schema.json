@@ -1,0 +1,246 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "The API key for the Kinsta API.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "company_id": {
+          "type": "string",
+          "description": "The ID of your Kinsta company.",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "kinsta_wordpress_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_email": {
+            "type": "string",
+            "description": "WordPress admin email (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "admin_password": {
+            "type": "string",
+            "description": "WordPress admin password (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "admin_user": {
+            "type": "string",
+            "description": "WordPress admin username (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name for the environment (e.g., 'staging', 'premium-staging')",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of the created environment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_premium": {
+            "type": "bool",
+            "description": "Whether this is a premium staging environment (true) or standard staging (false) (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "The ID of the WordPress site to create the environment in",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_title": {
+            "type": "string",
+            "description": "WordPress site title for this environment (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "wp_language": {
+            "type": "string",
+            "description": "WordPress language (default: en_US) (write-only, cannot be read back)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "kinsta_wordpress_site": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_email": {
+            "type": "string",
+            "description": "Email address for the WordPress admin account. Write-only: not returned by the API after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "admin_password": {
+            "type": "string",
+            "description": "Password for the WordPress admin account. Write-only: not returned by the API after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "admin_user": {
+            "type": "string",
+            "description": "Username for the WordPress admin account. Write-only: not returned by the API after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "A human-readable name for the site shown in MyKinsta (e.g., `my-production-site`).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The unique identifier for the live environment automatically created with the site.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "install_mode": {
+            "type": "string",
+            "description": "WordPress installation mode. `new` (default) provisions the full WordPress install template \u2014 default theme, sample content, and the admin user from `admin_user`/`admin_email`/`admin_password`. `plain` creates an empty WordPress container per the spec's `addPlainWPSite-Body` shape (matches the \"Empty site\" option in the MyKinsta UI), suitable for sites whose contents are pushed by a downstream pipeline (e.g., Bedrock). `migrate` provisions an empty container in preparation for a migration request submitted via the MyKinsta UI; the migration flow itself is out of scope for this provider. **Important \u2014 `plain` mode body shape:** `addPlainWPSite-Body` only carries `company`, `display_name`, and `region`. `admin_email`, `admin_password`, `admin_user`, `site_title`, `wp_language`, and the multisite/WooCommerce/Yoast flags are **not sent to the API** when `install_mode = \"plain\"` \u2014 they are preserved in state for documentation but have no effect on create. For `new` and `migrate`, all those fields flow through to the API as documented.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_multisite": {
+            "type": "bool",
+            "description": "Enable WordPress Multisite. Cannot be read back from the API after creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_subdomain_multisite": {
+            "type": "bool",
+            "description": "Use subdomain-based multisite instead of subdirectory multisite. Only applies when `is_multisite` is `true`. Cannot be read back from the API after creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Data center region where the site is hosted (e.g., `us-central1`, `europe-west1`). See the [Kinsta API docs](https://api-docs.kinsta.com) for the full list of supported regions. Write-only: not returned by the API after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "The unique identifier for the WordPress site, used to reference this site in other resources.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site_title": {
+            "type": "string",
+            "description": "WordPress site title displayed in the browser tab and site header. Write-only: not returned by the API after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "woocommerce": {
+            "type": "bool",
+            "description": "Pre-install the WooCommerce plugin. Cannot be read back from the API after creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wordpressseo": {
+            "type": "bool",
+            "description": "Pre-install the Yoast SEO plugin. Cannot be read back from the API after creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wp_language": {
+            "type": "string",
+            "description": "WordPress locale code (e.g., `en_US`, `fr_FR`, `de_DE`). Defaults to `en_US`.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}

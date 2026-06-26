@@ -1,0 +1,722 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "AccessFlow API key (the `af_`-prefixed token) used for `Authorization: ApiKey`. May also be set with the `ACCESSFLOW_API_KEY` environment variable. Bootstrap one declaratively with a service account (see the provider docs).",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Base URL of the AccessFlow backend, e.g. `https://accessflow.example`. May also be set with the `ACCESSFLOW_ENDPOINT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Manage AccessFlow database access governance resources (datasources, review plans, routing/row-security/masking policies, AI configs, notification channels) via the REST API.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "accessflow_ai_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ai_provider": {
+            "type": "string",
+            "description": "`OPENAI`, `ANTHROPIC`, `OLLAMA`, `OPENAI_COMPATIBLE`, or `HUGGING_FACE`. (Named `ai_provider` because `provider` is a reserved Terraform argument.)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "api_key": {
+            "type": "string",
+            "description": "Write-only. Never returned by the API, so changes are applied but not detected as drift.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "endpoint": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_completion_tokens": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "max_prompt_tokens": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "model": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "system_prompt_template": {
+            "type": "string",
+            "description": "Custom analyzer prompt; must contain `{{sql}}`. Omit for the built-in default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "timeout_ms": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "An AI analyzer configuration (provider + model + connection). The API key is write-only.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_datasource": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ai_analysis_enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ai_config_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "connection_pool_size": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "database_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "db_type": {
+            "type": "string",
+            "description": "Engine, e.g. `POSTGRESQL`, `MYSQL`, `MONGODB`, `NEO4J`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Datasource UUID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "jdbc_url_override": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "local_datacenter": {
+            "type": "string",
+            "description": "Required for Cassandra/ScyllaDB datasources.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "max_rows_per_query": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique datasource name within the organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Write-only. Never returned by the API, so changes are applied but not detected as drift.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "require_review_reads": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "require_review_writes": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "review_plan_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssl_mode": {
+            "type": "string",
+            "description": "`DISABLE`, `REQUIRE`, `VERIFY_CA`, or `VERIFY_FULL`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "text_to_sql_enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A governed database connection (relational or NoSQL). Credentials are write-only.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_masking_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "column_ref": {
+            "type": "string",
+            "description": "Fully-qualified column, e.g. `schema.table.column`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datasource_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reveal_to_group_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "reveal_to_roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "reveal_to_user_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "strategy": {
+            "type": "string",
+            "description": "`FULL`, `PARTIAL`, `HASH`, `EMAIL`, or `FORMAT_PRESERVING`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "strategy_params": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Strategy-specific params, e.g. `{ visible_suffix = \"4\" }` for `PARTIAL`.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A dynamic data-masking policy for a datasource column.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_notification_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "channel_type": {
+            "type": "string",
+            "description": "`EMAIL`, `SLACK`, `WEBHOOK`, `DISCORD`, `TELEGRAM`, `MS_TEAMS`, or `PAGERDUTY`. Changing forces replacement.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "config": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Channel-type-specific settings as string values (e.g. `webhook_url`, `smtp_host`, `bot_token`).",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A notification channel (Email, Slack, Webhook, Discord, Telegram, MS Teams, PagerDuty). Sensitive `config` values are write-only \u2014 the provider keeps the configured map rather than refreshing it.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_review_plan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "approval_timeout_hours": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "approvers": {
+            "nested_type": {
+              "attributes": {
+                "role": {
+                  "type": "string",
+                  "description": "`ADMIN` or `USER`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "stage": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "user_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Ordered approver stages.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_approve_reads": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "min_approvals_required": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "notify_channels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Notification channel IDs to notify on review events.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "requires_ai_review": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "requires_human_approval": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A review plan: AI review + multi-stage human approval policy attached to datasources.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_routing_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "`AUTO_APPROVE`, `AUTO_REJECT`, `REQUIRE_APPROVALS`, or `ESCALATE`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "condition": {
+            "type": "string",
+            "description": "The typed condition tree as a JSON object string.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datasource_id": {
+            "type": "string",
+            "description": "Scope to a single datasource; omit for org-wide.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Lower numbers evaluate first.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "reason": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "required_approvals": {
+            "type": "number",
+            "description": "Required when action is `REQUIRE_APPROVALS` or `ESCALATE`.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "An attribute-based routing policy (auto-approve / auto-reject / require N approvals / escalate).",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_row_security_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "applies_to_group_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "applies_to_roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "applies_to_user_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "column_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "datasource_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "`EQUALS`, `NOT_EQUALS`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IN`, `NOT_IN`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "table_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value_expression": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value_type": {
+            "type": "string",
+            "description": "`VARIABLE` (resolves `:user.<key>`) or `LITERAL`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A row-level security predicate injected into queries against a datasource table.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "accessflow_datasource": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ai_analysis_enabled": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ai_config_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "database_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "db_type": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Datasource UUID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "port": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "review_plan_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssl_mode": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing datasource by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "accessflow_review_plan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "approval_timeout_hours": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auto_approve_reads": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Review plan UUID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "min_approvals_required": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "notify_channels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "requires_ai_review": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "requires_human_approval": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing review plan by id.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
