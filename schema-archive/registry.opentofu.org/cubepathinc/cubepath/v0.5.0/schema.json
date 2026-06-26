@@ -1,0 +1,2612 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "API token for CubePath Cloud. Can also be set via CUBE_API_TOKEN environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "baremetal_deploy_timeout": {
+          "type": "number",
+          "description": "Timeout in seconds for baremetal deployment operations. Defaults to 1800 (30 minutes).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Base URL for the CubePath API. Defaults to https://api.cubepath.com. Can also be set via CUBE_API_URL environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "default_timeout": {
+          "type": "number",
+          "description": "Default timeout in seconds for API operations. Defaults to 300 (5 minutes).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "max_retries": {
+          "type": "number",
+          "description": "Maximum number of retries for failed API requests. Defaults to 3.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "retry_wait_max": {
+          "type": "number",
+          "description": "Maximum wait time in seconds between retries. Defaults to 30.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "retry_wait_min": {
+          "type": "number",
+          "description": "Minimum wait time in seconds between retries. Defaults to 1.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "vps_create_timeout": {
+          "type": "number",
+          "description": "Timeout in seconds for VPS creation operations. Defaults to 600 (10 minutes).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "vps_destroy_timeout": {
+          "type": "number",
+          "description": "Timeout in seconds for VPS destruction operations. Defaults to 300 (5 minutes).",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Interact with CubePath Cloud API to manage infrastructure resources.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "cubepath_availability_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the availability group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the availability group.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the availability group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "location_name": {
+            "type": "string",
+            "description": "The location where the availability group operates (e.g., 'us-mia-1').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "max_servers": {
+            "type": "number",
+            "description": "Maximum number of VPS that can be assigned to this group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the availability group. Must be unique per project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The ID of the project this availability group belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "strategy": {
+            "type": "string",
+            "description": "The placement strategy. Currently always 'spread' (distribute VPS across different physical hosts).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vps_count": {
+            "type": "number",
+            "description": "Current number of VPS assigned to this group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages an availability group on CubePath Cloud. VPS instances in the same availability group are distributed across different physical hosts for high availability.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_baremetal": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cpu": {
+            "type": "string",
+            "description": "CPU model of the server.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the server was deployed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disk_layout_name": {
+            "type": "string",
+            "description": "The disk layout configuration (e.g., 'single', 'raid1').",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disk_size": {
+            "type": "string",
+            "description": "Total disk size.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The hostname of the Baremetal server.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the Baremetal server.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ipv6": {
+            "type": "string",
+            "description": "The IPv6 address of the server.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "A label for the Baremetal server.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "The location where the Baremetal server will be deployed (e.g., 'us-mia-1').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "main_ip": {
+            "type": "string",
+            "description": "The main public IPv4 address of the server.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "model_name": {
+            "type": "string",
+            "description": "The model name for the Baremetal server (e.g., 'c1.metal.plus').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "monitoring_enable": {
+            "type": "bool",
+            "description": "Enable monitoring for this Baremetal server.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "os_name": {
+            "type": "string",
+            "description": "The operating system to install (e.g., 'debian-12').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Root password for the Baremetal server.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "power_state": {
+            "type": "string",
+            "description": "Desired power state of the server. Valid values: 'running', 'stopped'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID to associate the Baremetal server with.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ram": {
+            "type": "number",
+            "description": "RAM in GB.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssh_key_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of SSH key IDs to add to the server.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the Baremetal server (read-only).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "storage_type": {
+            "type": "string",
+            "description": "Storage type (SSD, HDD, NVMe).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user": {
+            "type": "string",
+            "description": "SSH user for the server. Defaults to 'root'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a Baremetal server on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_cdn_origin": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "Origin IP or hostname. Use this OR origin_url.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "base_path": {
+            "type": "string",
+            "description": "Base path prefix.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the origin is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "health_check_enabled": {
+            "type": "bool",
+            "description": "Enable health checks.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "health_check_path": {
+            "type": "string",
+            "description": "Health check path.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "health_status": {
+            "type": "string",
+            "description": "Current health status.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host_header": {
+            "type": "string",
+            "description": "Custom Host header.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the origin.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_backup": {
+            "type": "bool",
+            "description": "Mark as backup origin.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Origin name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "origin_url": {
+            "type": "string",
+            "description": "Full origin URL (auto-parsed). Use this OR address.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Origin port (1-65535).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Priority (1-100).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol: http or https.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "verify_ssl": {
+            "type": "bool",
+            "description": "Verify SSL certificates.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "weight": {
+            "type": "number",
+            "description": "Load balancing weight (1-1000).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "zone_uuid": {
+            "type": "string",
+            "description": "The UUID of the CDN zone.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a CDN origin server on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_cdn_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action_config": {
+            "type": "string",
+            "description": "Action configuration as JSON string.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the rule is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the rule.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "match_conditions": {
+            "type": "string",
+            "description": "Match conditions as JSON string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Rule priority (1-10000).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "rule_type": {
+            "type": "string",
+            "description": "Edge rule type: cache, cache_bypass, redirect, header_request, header_response.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone_uuid": {
+            "type": "string",
+            "description": "The UUID of the CDN zone.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a CDN edge rule on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_cdn_waf_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action_config": {
+            "type": "string",
+            "description": "Action configuration as JSON string.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the rule is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the WAF rule.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "match_conditions": {
+            "type": "string",
+            "description": "Match conditions as JSON string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Rule priority (1-10000).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "rule_type": {
+            "type": "string",
+            "description": "WAF rule type: firewall_ip, firewall_country, firewall_ua, rate_limit, js_challenge, limit_download_speed, limit_requests, limit_connections, limit_bandwidth.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone_uuid": {
+            "type": "string",
+            "description": "The UUID of the CDN zone.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a CDN WAF rule on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_cdn_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "When the zone was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "custom_domain": {
+            "type": "string",
+            "description": "Custom domain for the CDN zone.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The CDN domain assigned to the zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the CDN zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Zone name (3-32 chars, lowercase alphanumeric + hyphens).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "plan_name": {
+            "type": "string",
+            "description": "The CDN plan name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ssl_type": {
+            "type": "string",
+            "description": "SSL type: automatic or custom.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the CDN zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "When the zone was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a CDN zone on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Record content/value.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the DNS record.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name (e.g., '@' for root, 'www', 'mail').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Record priority (for MX, SRV records).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to live in seconds. Defaults to 3600.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone_uuid": {
+            "type": "string",
+            "description": "The UUID of the DNS zone.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a DNS record on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_dns_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "When the zone was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name for the zone.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the DNS zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nameservers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Assigned nameservers for the zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID. Uses default project if not specified.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "records_count": {
+            "type": "number",
+            "description": "Number of DNS records in the zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the DNS zone.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a DNS zone on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_firewall_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the firewall group is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the firewall group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the firewall group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The ID of the project this firewall group belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vps_count": {
+            "type": "number",
+            "description": "Number of VPS instances using this firewall group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "comment": {
+                  "type": "string",
+                  "description": "A comment describing this rule.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "direction": {
+                  "type": "string",
+                  "description": "Direction of traffic: 'in' for incoming, 'out' for outgoing.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "port": {
+                  "type": "string",
+                  "description": "Port specification (e.g., '80', '80-443', '80,443,8080'). Optional for icmp/gre.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "Protocol: 'tcp', 'udp', 'icmp', or 'gre'.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "source": {
+                  "type": "string",
+                  "description": "Source IP or CIDR (e.g., '0.0.0.0/0', '10.0.0.0/24'). Defaults to any if not specified.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Firewall rules in this group.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a firewall group with reusable firewall rules for VPS instances.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_floating_ip": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "The acquired floating IP address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "assign_baremetal_id": {
+            "type": "number",
+            "description": "Baremetal server ID to assign the floating IP to.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "assign_vps_id": {
+            "type": "number",
+            "description": "VPS ID to assign the floating IP to.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The floating IP address (used as identifier).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_type": {
+            "type": "string",
+            "description": "IP type: IPv4 or IPv6.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "location_name": {
+            "type": "string",
+            "description": "Location name (e.g., us-mia-1).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reverse_dns": {
+            "type": "string",
+            "description": "Reverse DNS (PTR record) hostname.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the floating IP.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a floating IP address on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_addon": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Addon category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "UUID of the Kubernetes cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Addon description.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "helm_chart": {
+            "type": "string",
+            "description": "Helm chart name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the installed addon.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "installed_at": {
+            "type": "string",
+            "description": "When the addon was installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Addon display name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Kubernetes namespace where the addon is installed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Addon slug identifier (e.g., cert-manager, ingress-nginx).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current installation status.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "values": {
+            "type": "string",
+            "description": "Custom Helm values as JSON string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Installed version.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Kubernetes addon installation on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allocate_ipv4": {
+            "type": "bool",
+            "description": "Whether to allocate a public IPv4 address to cluster nodes. Defaults to true. Requires replacement if changed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "allocate_ipv6": {
+            "type": "bool",
+            "description": "Whether to allocate a public IPv6 address to cluster nodes. Defaults to true. Requires replacement if changed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "api_endpoint": {
+            "type": "string",
+            "description": "The API endpoint URL for the cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the cluster was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ha_control_plane": {
+            "type": "bool",
+            "description": "Enable high-availability control plane.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the Kubernetes cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_node_count": {
+            "type": "number",
+            "description": "Number of initial worker nodes in the default pool.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional label for the cluster.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "The location name (e.g., us-mia-1).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "network_id": {
+            "type": "number",
+            "description": "Existing network ID to use. If not set, a new network is created.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node_cidr": {
+            "type": "string",
+            "description": "Custom node CIDR.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "plan": {
+            "type": "string",
+            "description": "The server plan for the default node pool.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pod_cidr": {
+            "type": "string",
+            "description": "Pod CIDR range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID to create the cluster in.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_cidr": {
+            "type": "string",
+            "description": "Service CIDR range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Kubernetes version. Defaults to the latest available version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Kubernetes cluster on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_node_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_scale": {
+            "type": "bool",
+            "description": "Enable auto scaling.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "UUID of the Kubernetes cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the node pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Kubernetes labels applied to nodes in this pool.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "max_nodes": {
+            "type": "number",
+            "description": "Maximum number of nodes (set by the API).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "min_nodes": {
+            "type": "number",
+            "description": "Minimum number of nodes (set by the API).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the node pool.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_count": {
+            "type": "number",
+            "description": "Desired number of worker nodes.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "nodes": {
+            "nested_type": {
+              "attributes": {
+                "floating_ip": {
+                  "type": "string",
+                  "description": "Floating IP address.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "k8s_status": {
+                  "type": "string",
+                  "description": "Kubernetes status of the node.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "private_ip": {
+                  "type": "string",
+                  "description": "Private IP address.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vps_name": {
+                  "type": "string",
+                  "description": "VPS name of the node.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vps_status": {
+                  "type": "string",
+                  "description": "VPS status of the node.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Current nodes in the pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "plan": {
+            "type": "string",
+            "description": "Server plan for the nodes.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "taints": {
+            "nested_type": {
+              "attributes": {
+                "effect": {
+                  "type": "string",
+                  "description": "Taint effect (NoSchedule, NoExecute, PreferNoSchedule).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Taint key.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Taint value.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Kubernetes taints applied to nodes in this pool.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a Kubernetes node pool on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_lb_listener": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algorithm": {
+            "type": "string",
+            "description": "Load balancing algorithm: round_robin, least_conn, or source.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the listener is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the listener.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "loadbalancer_id": {
+            "type": "string",
+            "description": "The UUID of the load balancer.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the listener.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol: http, https, tcp, or tls.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "source_port": {
+            "type": "number",
+            "description": "The port to listen on.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sticky_sessions": {
+            "type": "bool",
+            "description": "Enable sticky sessions.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "target_port": {
+            "type": "number",
+            "description": "The port to forward traffic to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a load balancer listener on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_loadbalancer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "When the load balancer was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the load balancer.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_address": {
+            "type": "string",
+            "description": "The floating IP address assigned to the load balancer.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional label for the load balancer.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location_name": {
+            "type": "string",
+            "description": "The location name (e.g., us-mia-1).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the load balancer.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "network_id": {
+            "type": "number",
+            "description": "The private network ID to attach the load balancer to. Requires replacement if changed.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "plan_name": {
+            "type": "string",
+            "description": "The plan name (e.g., lb.small).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID. Uses default project if not specified.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the load balancer.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a load balancer on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_nat_gateway": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "When the NAT gateway was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the NAT gateway.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional label for the NAT gateway.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location_name": {
+            "type": "string",
+            "description": "The location where the NAT gateway is deployed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the NAT gateway.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "network_id": {
+            "type": "number",
+            "description": "The private network ID to attach the NAT gateway to. Requires replacement if changed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "plan_name": {
+            "type": "string",
+            "description": "The plan name (e.g., nat.small). Changing this resizes the NAT gateway in-place.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID. Uses default project if not specified. Requires replacement if changed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the NAT gateway.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a NAT gateway on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_network": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description": "The full CIDR notation (computed from ip_range and prefix).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the network was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_range": {
+            "type": "string",
+            "description": "The base IP address for the network (e.g., '10.0.0.0').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "A label for the network.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "The location where the network will be created.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the network.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "prefix": {
+            "type": "number",
+            "description": "The network prefix (8-30).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID to associate the network with.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a private network on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_network_route": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Optional description for the route.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "The destination CIDR for this route (e.g., 192.168.10.0/24). Requires replacement if changed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the network route.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "network_id": {
+            "type": "number",
+            "description": "The ID of the network to add the route to. Requires replacement if changed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "next_hop_target": {
+            "type": "string",
+            "description": "The next hop target: an IP address when next_hop_type is 'ip', or the numeric VPS/baremetal ID when next_hop_type is 'vps'/'baremetal'. Requires replacement if changed.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "next_hop_type": {
+            "type": "string",
+            "description": "The next hop type. One of: ip, vps, baremetal. Requires replacement if changed.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a static route within a private network on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the project was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the project.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a project on CubePath Cloud. Projects are used to organize and group resources.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the SSH key was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "The fingerprint of the SSH key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the SSH key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_type": {
+            "type": "string",
+            "description": "The type of the SSH key (e.g., ssh-rsa, ssh-ed25519).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the SSH key.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The SSH public key.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages an SSH key on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_vps": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "availability_group_uuid": {
+            "type": "string",
+            "description": "UUID of the availability group to place this VPS in. VPS in the same availability group are distributed across different physical hosts.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bandwidth": {
+            "type": "number",
+            "description": "Bandwidth in GB.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the VPS was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "custom_cloudinit": {
+            "type": "string",
+            "description": "Custom cloud-init configuration (YAML). Only for Linux templates.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enable_backups": {
+            "type": "bool",
+            "description": "Enable automatic backups for this VPS. Defaults to false.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "firewall_group_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of firewall group IDs to assign to this VPS.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the VPS.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ipv4": {
+            "type": "bool",
+            "description": "Enable public IPv4 address (dual-stack). Additional $1.50/month. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ipv6": {
+            "type": "string",
+            "description": "The public IPv6 address of the VPS (read-only). Empty when ipv6_enabled is false.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ipv6_enabled": {
+            "type": "bool",
+            "description": "Enable public IPv6 address (free). Defaults to true. Set to false to deploy without any public IP \u2014 requires network_id.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "A label for the VPS.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "The location where the VPS will be created (e.g., 'us-mia-1').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "main_ip": {
+            "type": "string",
+            "description": "The main public IPv4 address of the VPS.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The hostname of the VPS.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "network_id": {
+            "type": "number",
+            "description": "Optional private network ID to attach to the VPS.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Root password for the VPS. Required if ssh_key_ids is not provided.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "plan_name": {
+            "type": "string",
+            "description": "The plan name for the VPS (e.g., 'gp.pro').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "power_state": {
+            "type": "string",
+            "description": "Desired power state of the VPS. Valid values: 'running', 'stopped'. Changing this will start or stop the VPS.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "private_ip": {
+            "type": "string",
+            "description": "The private IP address if attached to a network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The project ID to associate the VPS with.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ram": {
+            "type": "number",
+            "description": "RAM in MB.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ssh_key_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of SSH key IDs to add to the VPS.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the VPS (read-only).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "storage": {
+            "type": "number",
+            "description": "Storage in GB.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "template_name": {
+            "type": "string",
+            "description": "The operating system template (e.g., 'debian-12').",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user": {
+            "type": "string",
+            "description": "SSH user for the VPS. Defaults to 'root' for Linux or 'Administrator' for Windows.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vcpus": {
+            "type": "number",
+            "description": "Number of vCPUs.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a VPS instance on CubePath Cloud.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "cubepath_availability_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "The timestamp when the availability group was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the availability group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "The location where the availability group operates.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_servers": {
+                  "type": "number",
+                  "description": "Maximum number of VPS in this group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the availability group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "strategy": {
+                  "type": "string",
+                  "description": "The placement strategy (spread or cluster).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the availability group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vps_count": {
+                  "type": "number",
+                  "description": "Current number of VPS in this group.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of availability groups.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The ID of the project to list availability groups for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Fetches the list of availability groups for a CubePath Cloud project.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_cdn_plans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "plans": {
+            "nested_type": {
+              "attributes": {
+                "base_price_per_hour": {
+                  "type": "number",
+                  "description": "Base price per hour.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "custom_ssl_allowed": {
+                  "type": "bool",
+                  "description": "Whether custom SSL certificates are allowed.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Plan description.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_origins_per_zone": {
+                  "type": "number",
+                  "description": "Maximum origins per zone.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_rules_per_zone": {
+                  "type": "number",
+                  "description": "Maximum rules per zone.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_zones": {
+                  "type": "number",
+                  "description": "Maximum number of CDN zones.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Plan name.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Available CDN plans.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches available CDN plans.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_dns_zones": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zones": {
+            "nested_type": {
+              "attributes": {
+                "domain": {
+                  "type": "string",
+                  "description": "The domain name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "records_count": {
+                  "type": "number",
+                  "description": "Number of records in the zone.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The zone status.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "uuid": {
+                  "type": "string",
+                  "description": "The UUID of the DNS zone.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of DNS zones.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of DNS zones.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_firewall_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether the firewall group is enabled",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Firewall group ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Firewall group name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project_id": {
+                  "type": "number",
+                  "description": "Project ID this firewall group belongs to",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "rules": {
+                  "nested_type": {
+                    "attributes": {
+                      "comment": {
+                        "type": "string",
+                        "description": "Rule comment",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "direction": {
+                        "type": "string",
+                        "description": "Direction of traffic",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "port": {
+                        "type": "string",
+                        "description": "Port specification",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "protocol": {
+                        "type": "string",
+                        "description": "Protocol",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "source": {
+                        "type": "string",
+                        "description": "Source IP or CIDR",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Firewall rules in this group",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "vps_count": {
+                  "type": "number",
+                  "description": "Number of VPS instances using this firewall group",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of firewall groups",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches all firewall groups for the user's organization",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_addons": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "addons": {
+            "nested_type": {
+              "attributes": {
+                "category": {
+                  "type": "string",
+                  "description": "Addon category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "default_version": {
+                  "type": "string",
+                  "description": "Default Helm chart version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Addon description.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "documentation_url": {
+                  "type": "string",
+                  "description": "Link to addon documentation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "helm_chart": {
+                  "type": "string",
+                  "description": "Helm chart name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_k8s_version": {
+                  "type": "string",
+                  "description": "Minimum Kubernetes version required.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Addon display name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "namespace": {
+                  "type": "string",
+                  "description": "Default namespace for installation.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "Addon slug identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Available Kubernetes addons.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches available Kubernetes addons.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_kubeconfig": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "string",
+            "description": "UUID of the Kubernetes cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "kubeconfig": {
+            "type": "string",
+            "description": "The kubeconfig YAML content for connecting to the cluster.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Fetches the kubeconfig for a Kubernetes cluster.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_plans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "plans": {
+            "nested_type": {
+              "attributes": {
+                "cpu": {
+                  "type": "number",
+                  "description": "Number of CPU cores.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Plan ID.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Plan name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "price_per_hour": {
+                  "type": "number",
+                  "description": "Price per hour.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "ram": {
+                  "type": "number",
+                  "description": "RAM in MB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "storage": {
+                  "type": "number",
+                  "description": "Storage in GB.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Available Kubernetes-compatible server plans.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Filter plans by Kubernetes version.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Fetches server plans compatible with Kubernetes.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_kubernetes_versions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "versions": {
+            "nested_type": {
+              "attributes": {
+                "is_default": {
+                  "type": "bool",
+                  "description": "Whether this is the default version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_cpu": {
+                  "type": "number",
+                  "description": "Minimum CPU cores required.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_ram_mb": {
+                  "type": "number",
+                  "description": "Minimum RAM in MB required.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Kubernetes version string.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Available Kubernetes versions.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches available Kubernetes versions.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_lb_plans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "locations": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Location description.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "Location identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "plans": {
+                  "nested_type": {
+                    "attributes": {
+                      "connections_per_second": {
+                        "type": "number",
+                        "description": "Maximum connections per second.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "max_listeners": {
+                        "type": "number",
+                        "description": "Maximum number of listeners.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "max_targets": {
+                        "type": "number",
+                        "description": "Maximum number of targets.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Plan name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "price_per_hour": {
+                        "type": "string",
+                        "description": "Price per hour.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Available plans at this location.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Plans grouped by location.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches available load balancer plans.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_locations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "locations": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Human-readable description of the location.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "location_name": {
+                  "type": "string",
+                  "description": "The location identifier (e.g., 'us-mia-1').",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of available locations.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of available locations for CubePath Cloud resources.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_nat_gateway_plans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "plans": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Plan name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "price_per_hour": {
+                  "type": "string",
+                  "description": "Price per hour.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Available NAT gateway plans.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches available NAT gateway plans.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_ssh_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fingerprint": {
+            "type": "string",
+            "description": "SSH key fingerprint",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "SSH key ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_type": {
+            "type": "string",
+            "description": "SSH key type (e.g., ssh-rsa, ssh-ed25519)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "SSH key name to lookup",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Fetches an existing SSH key by name",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_vps_plans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "Optional filter by location name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "plans": {
+            "nested_type": {
+              "attributes": {
+                "bandwidth": {
+                  "type": "number",
+                  "description": "Bandwidth in GB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cluster": {
+                  "type": "string",
+                  "description": "The cluster where this plan is available.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cpu": {
+                  "type": "number",
+                  "description": "Number of vCPUs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "location": {
+                  "type": "string",
+                  "description": "The location where this plan is available.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "plan_name": {
+                  "type": "string",
+                  "description": "The plan identifier (e.g., 'gp.pro').",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "price_per_hour": {
+                  "type": "number",
+                  "description": "Price per hour in USD.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "ram": {
+                  "type": "number",
+                  "description": "RAM in MB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "storage": {
+                  "type": "number",
+                  "description": "Storage in GB.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of available VPS plans.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of available VPS plans.",
+        "description_kind": "plain"
+      }
+    },
+    "cubepath_vps_templates": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "templates": {
+            "nested_type": {
+              "attributes": {
+                "os_name": {
+                  "type": "string",
+                  "description": "The operating system name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "template_name": {
+                  "type": "string",
+                  "description": "The template identifier (e.g., 'debian-12').",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "The OS version.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of available VPS templates.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches the list of available VPS operating system templates.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
