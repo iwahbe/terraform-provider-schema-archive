@@ -1,0 +1,2992 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "retry_on": {
+          "type": [
+            "list",
+            "number"
+          ],
+          "description": "A list of HTTP error codes you want the provider to retry on.\nIf this is unset, the provider will retry on 404 and 502 using an exponential backoff strategy. If you DON'T want the provider to retry on any error, set this to an empty list.\nThe provider will ALWAYS retry on 403 errors that indicate a rate limiting / quota issue.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "scopes": {
+          "type": [
+            "list",
+            "string"
+          ],
+          "description": "List of scopes that the provider will add to the API client.\nIf this is unset, the provider will use the following scopes that must be added to the Domain-Wide Delegation configuration in the Google Workspace Admin Console:\n* https://www.googleapis.com/auth/drive\n* https://www.googleapis.com/auth/drive.labels\n* https://www.googleapis.com/auth/drive.admin.labels\n* https://www.googleapis.com/auth/cloud-identity.orgunits",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "service_account": {
+          "type": "string",
+          "description": "The email address of the Service Account you want to impersonate with Application Default Credentials (ADC).\nLeave empty if you want to use the Service Account of a GCP service (GCE, Cloud Run, Cloud Build, etc) directly.<br>\nYou can also use the \"SERVICE_ACCOUNT\" environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "service_account_key": {
+          "type": "string",
+          "description": "The path to or the content of a key file for your Service Account.\nLeave empty if you want to use Application Default Credentials (ADC) (**recommended**).<br>\nYou can also use the \"SERVICE_ACCOUNT_KEY\" environment variable to store either the path to the key file or the key itself (in JSON format).",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "subject": {
+          "type": "string",
+          "description": "The email address of the Workspace user you want to impersonate with Domain Wide Delegation (DWD).<br>\nYou can also use the \"SUBJECT\" environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "gdrive_drive": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "drive_id": {
+            "type": "string",
+            "description": "The ID of the Shared Drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "restrictions": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "admin_managed_restrictions": {
+                  "type": "bool",
+                  "description": "Whether administrative privileges on this Shared Drive are required to modify restrictions.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "copy_requires_writer_permission": {
+                  "type": "bool",
+                  "description": "Whether the options to copy, print, or download files inside this Shared Drive, should be disabled for readers and commenters.\n\nWhen this restriction is set to true, it will override the similarly named field to true for any file inside this Shared Drive.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "domain_users_only": {
+                  "type": "bool",
+                  "description": "Whether access to this Shared Drive and items inside this Shared Drive is restricted to users of the domain to which this Shared Drive belongs.\n\nThis restriction may be overridden by other sharing policies controlled outside of this Shared Drive.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "drive_members_only": {
+                  "type": "bool",
+                  "description": "Whether access to items inside this Shared Drive is restricted to its members.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The restrictions that should be set on the Shared Drive.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Shared Drive.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_drive_ou_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "drive_id": {
+            "type": "string",
+            "description": "ID of the Shared Drive",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "org_unit_id": {
+            "type": "string",
+            "description": "The ID of the OrgUnit (OrgUnitId)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "ID of the organizational unit (NOT the path!)",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Sets the membership of a Shared Drive in an organizational unit.\n\nThe resource will move the Shared Drive to the specified OU in your Admin Console.\n\nSome things to note:\n* You need to specify the **ID** of the OU (**not the path**).\n  * You can find the ID via the Admin SDK (or https://gsm.hayashi-ke.online/gsm/orgunits/list/).\n* If you move the Shared Drive outside of Terraform, the resource will be re-created.\n* A destroy of this resource will not do anything.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Path to a file to upload.\n\nThe provider does not check the content of the file for updates.\n\nIf you need to upload/import a new version of a file, you need to supply a different file name.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "drive_id": {
+            "type": "string",
+            "description": "ID of the Shared Drive.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "The ID of the file.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "MIME type of the target file (in Google Drive).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mime_type_source": {
+            "type": "string",
+            "description": "MIME type of the source file (on the local system).,",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "name of the file / folder.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "The file_id of the parent.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Creates a file or folder with the given MIME type and optionally uploads or imports a local file.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_type": {
+            "type": "string",
+            "description": "The type of this label.\n\nThe following values are accepted:\n* \"SHARED\"  - Shared labels may be shared with users to apply to Drive items.\n* \"ADMIN\"   - Admin-owned label. Only creatable and editable by admins. Supports some additional admin-only features.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Resource name of the label.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "The description of the label.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Title of the label.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Basic properties of the label.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Drive Label.\n\nThe label must be published before it can be assigned to files. This is controlled via the 'life_cycle'\nproperty.\n\nPublishing can only be done via the label resource, NOT the field resources.\n\nIf a label is changed via an \"external\" resource (e.g., a field), those changes must be published\nvia the label resource, before they are available for files.\n\nThis means that, if you have labels and fields in the same Terraform configuration and you make changes\nto the fields you may have to apply twice in order to\n1. Apply the changes to the fields.\n2. Publish the changes via the label.\n\nA label must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fields": {
+            "nested_type": {
+              "attributes": {
+                "field_id": {
+                  "type": "string",
+                  "description": "The identifier of this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value_type": {
+                  "type": "string",
+                  "description": "The field type.\nWhile new values may be supported in the future, the following are currently allowed:\n* dateString\n* integer\n* selection\n* text\n* user",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "values": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The values that should be set.\n\nMust be compatible with the specified value_type.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A Set of fields of the assigned label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file to assign the label to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Sets a label on a Drive object.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_date_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_id": {
+            "type": "string",
+            "description": "The key of the field, unique within a label or library.\n\nThis value is autogenerated. Matches the regex: ([a-zA-Z0-9])+",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query_key": {
+            "type": "string",
+            "description": "The key to use when constructing Drive search queries to find files based on values defined for this field on files. For example, \"{queryKey} > 2001-01-01\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "date_options": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "date_format_type": {
+                  "type": "string",
+                  "description": "Localized date formatting option. Field values are rendered in this format according to their locale.\n\nThe following values are accepted:\n* \"LONG_DATE\"   - Includes full month name. For example, January 12, 1999 (MMMM d, y)\n* \"SHORT_DATE\"  - Short, numeric, representation. For example, 12/13/99 (M/d/yy)",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Date field options.",
+              "description_kind": "markdown"
+            }
+          },
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_field": {
+                  "type": "string",
+                  "description": "Insert or move this field before the indicated field.\nIf empty, the field is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the field should be marked as required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The basic properties of the field.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Date Field for a Drive Label.\n\nChanges made to a Field must be published via the Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Field resources.\n\nThis means that, if you have Labels and Fields in the same Terraform configuration and you make changes\nto the Fields you may have to apply twice in order to\n1. Apply the changes to the Fields.\n2. Publish the changes via the Label.\n\nA Field must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_integer_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_id": {
+            "type": "string",
+            "description": "The key of the field, unique within a label or library.\n\nThis value is autogenerated. Matches the regex: ([a-zA-Z0-9])+",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query_key": {
+            "type": "string",
+            "description": "The key to use when constructing Drive search queries to find files based on values defined for this field on files. For example, \"{queryKey} > 2001-01-01\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_field": {
+                  "type": "string",
+                  "description": "Insert or move this field before the indicated field.\nIf empty, the field is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the field should be marked as required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The basic properties of the field.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates an Integer Field for a Drive Label.\n\nChanges made to a Field must be published via the Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Field resources.\n\nThis means that, if you have Labels and Fields in the same Terraform configuration and you make changes\nto the Fields you may have to apply twice in order to\n1. Apply the changes to the Fields.\n2. Publish the changes via the Label.\n\nA Field must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "audience": {
+            "type": "string",
+            "description": "Audience to grant a role to.\n\nThe magic value of 'audiences/default' may be used to apply the role to the default audience in the context of the organization that owns the Label.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Specifies the email address for a user or group pricinpal.\n\nUser and Group permissions may only be inserted using email address.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Resource name of this permission.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role the principal should have. Possible values are:\n\n* READER     - A reader can read the label and associated metadata applied to Drive items.\n* APPLIER    - An applier can write associated metadata on Drive items in which they also have write access to. Implies READER.\n* ORGANIZER  - An organizer can pin this label in shared drives they manage and add new appliers to the label.\n* EDITOR     - Editors can make any update including deleting the label which also deletes the associated Drive item metadata. Implies APPLIER.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Updates a Label's permissions.\n\nIf a permission for the indicated principal doesn't exist, a new Label Permission is created, otherwise the existing permission is updated.\n\nPermissions affect the Label resource as a whole, are not revisioned, and do not require publishing.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file to assign the label(s) to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "labels": {
+            "nested_type": {
+              "attributes": {
+                "fields": {
+                  "nested_type": {
+                    "attributes": {
+                      "field_id": {
+                        "type": "string",
+                        "description": "The identifier of this field.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "value_type": {
+                        "type": "string",
+                        "description": "The field type.\nWhile new values may be supported in the future, the following are currently allowed:\n* dateString\n* integer\n* selection\n* text\n* user",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "values": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "The values that should be set.\n\nMust be compatible with the specified value_type.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description": "A Set of fields of the assigned label.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "label_id": {
+                  "type": "string",
+                  "description": "The ID of the label.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The set of labels that should be applied to this file.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Enforces a set of labels on a Drive object.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_selection_choice": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "choice_id": {
+            "type": "string",
+            "description": "The unique value of the choice. This ID is autogenerated. Matches the regex: ([a-zA-Z0-9_])+.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "field_id": {
+            "type": "string",
+            "description": "The ID of the field.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this choice.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_choice": {
+                  "type": "string",
+                  "description": "Insert or move this choice before the indicated choice. If empty, the choice is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "badge_config": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "priority_override": {
+                        "type": "number",
+                        "description": "Override the default global priority of this badge.\nWhen set to 0, the default priority heuristic is used.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "block_types": {
+                      "color": {
+                        "nesting_mode": "single",
+                        "block": {
+                          "attributes": {
+                            "alpha": {
+                              "type": "number",
+                              "description": "The alpha value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "blue": {
+                              "type": "number",
+                              "description": "The blue value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "green": {
+                              "type": "number",
+                              "description": "The green value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            },
+                            "red": {
+                              "type": "number",
+                              "description": "The red value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            }
+                          },
+                          "description": "The color of the badge.\nWhen not specified, no badge is rendered.\nThe background, foreground, and solo (light and dark mode) colors set here are changed in the Drive UI into the closest recommended supported color.\n\n*After setting this property, the plan will likely show a difference, because the API automatically modifies the values.\nIt is recommended to change the Terraform configuration to match the values set by the API.",
+                          "description_kind": "markdown"
+                        }
+                      }
+                    },
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Basic properties of the choice.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Choice for a Selection Field.\n\nChanges made to a Choice must be published via the Choice's Selection Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Choice or Field resources.\n\nThis means that, if you have Labels and Choices / Fields in the same Terraform configuration and you make changes\nto the Choices / Fields you may have to apply twice in order to\n1. Apply the changes to the Choices / Fields.\n2. Publish the changes via the Label.\n\nA Choice must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_selection_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_id": {
+            "type": "string",
+            "description": "The key of the field, unique within a label or library.\n\nThis value is autogenerated. Matches the regex: ([a-zA-Z0-9])+",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query_key": {
+            "type": "string",
+            "description": "The key to use when constructing Drive search queries to find files based on values defined for this field on files. For example, \"{queryKey} > 2001-01-01\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_field": {
+                  "type": "string",
+                  "description": "Insert or move this field before the indicated field.\nIf empty, the field is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the field should be marked as required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The basic properties of the field.",
+              "description_kind": "markdown"
+            }
+          },
+          "selection_options": {
+            "nesting_mode": "single",
+            "block": {
+              "block_types": {
+                "list_options": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "max_entries": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Options for a multi-valued variant of an associated field type.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "Selection field options.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Selection Field for a Drive Label.\n\nChanges made to a Field must be published via the Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Field resources.\n\nThis means that, if you have Labels and Fields in the same Terraform configuration and you make changes\nto the Fields you may have to apply twice in order to\n1. Apply the changes to the Fields.\n2. Publish the changes via the Label.\n\nA Field must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_text_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_id": {
+            "type": "string",
+            "description": "The key of the field, unique within a label or library.\n\nThis value is autogenerated. Matches the regex: ([a-zA-Z0-9])+",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query_key": {
+            "type": "string",
+            "description": "The key to use when constructing Drive search queries to find files based on values defined for this field on files. For example, \"{queryKey} > 2001-01-01\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_field": {
+                  "type": "string",
+                  "description": "Insert or move this field before the indicated field.\nIf empty, the field is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the field should be marked as required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The basic properties of the field.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a Text Field for a Drive Label.\n\nChanges made to a Field must be published via the Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Field resources.\n\nThis means that, if you have Labels and Fields in the same Terraform configuration and you make changes\nto the Fields you may have to apply twice in order to\n1. Apply the changes to the Fields.\n2. Publish the changes via the Label.\n\nA Field must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label_user_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_id": {
+            "type": "string",
+            "description": "The key of the field, unique within a label or library.\n\nThis value is autogenerated. Matches the regex: ([a-zA-Z0-9])+",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "The ID of the label.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query_key": {
+            "type": "string",
+            "description": "The key to use when constructing Drive search queries to find files based on values defined for this field on files. For example, \"{queryKey} > 2001-01-01\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "life_cycle": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "disabled_policy": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "The lifecycle state of an object, such as label, field, or choice.\n\nThe lifecycle enforces the following transitions:\n* UNPUBLISHED_DRAFT (starting state)\n* UNPUBLISHED_DRAFT -> PUBLISHED\n* UNPUBLISHED_DRAFT -> (Deleted)\n* PUBLISHED -> DISABLED\n* DISABLED -> PUBLISHED\n* DISABLED -> (Deleted)",
+              "description_kind": "markdown"
+            }
+          },
+          "properties": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "display_name": {
+                  "type": "string",
+                  "description": "The display text to show in the UI identifying this field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "insert_before_field": {
+                  "type": "string",
+                  "description": "Insert or move this field before the indicated field.\nIf empty, the field is placed at the end of the list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the field should be marked as required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The basic properties of the field.",
+              "description_kind": "markdown"
+            }
+          },
+          "user_options": {
+            "nesting_mode": "single",
+            "block": {
+              "block_types": {
+                "list_options": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "max_entries": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Options for a multi-valued variant of an associated field type.",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "User field options.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Creates a User Field for a Drive Label.\n\nChanges made to a Field must be published via the Field's Label before they are available for files.\n\nPublishing can only be done via the Label resource, NOT the Field resources.\n\nThis means that, if you have Labels and Fields in the same Terraform configuration and you make changes\nto the Fields you may have to apply twice in order to\n1. Apply the changes to the Fields.\n2. Publish the changes via the Label.\n\nA Field must be deactivated before it can be deleted.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain that should be granted access.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email_address": {
+            "type": "string",
+            "description": "The email address of the trustee.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email_message": {
+            "type": "string",
+            "description": "An optional email message that will be sent when the permission is created.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file or Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "move_to_new_owners_root": {
+            "type": "bool",
+            "description": "This parameter only takes effect if the item is not in a shared drive and the request is attempting to transfer the ownership of the item.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "permission_id": {
+            "type": "string",
+            "description": "PermissionID of the trustee.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "send_notification_email": {
+            "type": "bool",
+            "description": "Wether to send a notfication email.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "transfer_ownership": {
+            "type": "bool",
+            "description": "Whether to transfer ownership to the specified user.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the trustee. Can be 'user', 'domain', 'group' or 'anyone'.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Grants a permission on a file/folder or Shared Drive.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_permissions_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file or Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "domain": {
+                  "type": "string",
+                  "description": "The domain that should be granted access.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "email_address": {
+                  "type": "string",
+                  "description": "The email address of the trustee.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "email_message": {
+                  "type": "string",
+                  "description": "An optional email message that will be sent when the permission is created.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "move_to_new_owners_root": {
+                  "type": "bool",
+                  "description": "This parameter only takes effect if the item is not in a shared drive and the request is attempting to transfer the ownership of the item.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "permission_id": {
+                  "type": "string",
+                  "description": "PermissionID of the trustee.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The role.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "send_notification_email": {
+                  "type": "bool",
+                  "description": "Wether to send a notfication email.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "transfer_ownership": {
+                  "type": "bool",
+                  "description": "Whether to transfer ownership to the specified user.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the trustee. Can be 'user', 'domain', 'group' or 'anyone'.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Defines the set of permissions to set on the file or Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Creates an authoratative permissions policy on a file or Shared Drive.\n\n**Warning: This resource will set exactly the defined permissions and remove everything else!**\n\nIt is HIGHLY recommended that you import the resource and make sure that the owner is properly set before applying it!\n\n**Important**: On a *destroy*, this resource will preserve the owner and organizer permissions!",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "gdrive_drive": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "drive_id": {
+            "type": "string",
+            "description": "ID of the Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this shared drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "restrictions": {
+            "nested_type": {
+              "attributes": {
+                "admin_managed_restrictions": {
+                  "type": "bool",
+                  "description": "Whether administrative privileges on this shared drive are required to modify restrictions.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "copy_requires_writer_permission": {
+                  "type": "bool",
+                  "description": "Whether the options to copy, print, or download files inside this shared drive, should be disabled for readers and commenters.\nWhen this restriction is set to true, it will override the similarly named field to true for any file inside this shared drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "domain_users_only": {
+                  "type": "bool",
+                  "description": "Whether access to this shared drive and items inside this shared drive is restricted to users of the domain to which this shared drive belongs.\nThis restriction may be overridden by other sharing policies controlled outside of this shared drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "drive_members_only": {
+                  "type": "bool",
+                  "description": "Whether access to items inside this shared drive is restricted to its members.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "A set of restrictions that apply to this Shared Drive or items inside this Shared Drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Gets a Shared Drive and returns its metadata.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_drives": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "drives": {
+            "nested_type": {
+              "attributes": {
+                "drive_id": {
+                  "type": "string",
+                  "description": "ID of the Shared Drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of this resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this shared drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "restrictions": {
+                  "nested_type": {
+                    "attributes": {
+                      "admin_managed_restrictions": {
+                        "type": "bool",
+                        "description": "Whether administrative privileges on this shared drive are required to modify restrictions.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "copy_requires_writer_permission": {
+                        "type": "bool",
+                        "description": "Whether the options to copy, print, or download files inside this shared drive, should be disabled for readers and commenters.\nWhen this restriction is set to true, it will override the similarly named field to true for any file inside this shared drive.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "domain_users_only": {
+                        "type": "bool",
+                        "description": "Whether access to this shared drive and items inside this shared drive is restricted to users of the domain to which this shared drive belongs.\nThis restriction may be overridden by other sharing policies controlled outside of this shared drive.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "drive_members_only": {
+                        "type": "bool",
+                        "description": "Whether access to items inside this shared drive is restricted to its members.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "A set of restrictions that apply to this Shared Drive or items inside this Shared Drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A set of Shared Drives that match the specified query.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this shared drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "query": {
+            "type": "string",
+            "description": "Query string for searching shared drives.\n\nSee the https://developers.google.com/drive/api/v3/search-shareddrives for supported syntax.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Returns a list of Shared Drives that match the given query.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "download_path": {
+            "type": "string",
+            "description": "Use this to specify a local file path to download a (non-Google) file.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "drive_id": {
+            "type": "string",
+            "description": "The ID of the Shared Drive the file is located it. Only present if the file is located in a Shared Drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "export_mime_type": {
+            "type": "string",
+            "description": "Specify the target MIME type for the export.\n\nFor a list of supported MIME types see https://developers.google.com/file/api/v3/ref-export-formats",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "export_path": {
+            "type": "string",
+            "description": "Use this to specify a local file path to export a Google file (sheet, doc, etc.)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "local_file_path": {
+            "type": "string",
+            "description": "The path where the local copy or export of the file was created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "Name MIME type of the file in Google file.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the file.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "The ID of the file's parent.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "This data source can be used for the following:\n* Get a file and return its metadata.\n* Download a file from Drive to the local file system.\n* Export a Google file (Doc, Sheet, etc) to a native file format (CSV, Excel, Word, etc.) and download it to the local file system.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_files": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "corpora": {
+            "type": "string",
+            "description": "Groupings of files to which the query applies.\n\nSupported groupings are:\n* 'user' (files created by, opened by, or shared directly with the user)\n* 'drive' (files in the specified shared drive as indicated by the 'driveId')\n* 'domain' (files shared to the user's domain)\n* 'allDrives' (A combination of 'user' and 'drive' for all drives where the user is a member).\n\nWhen able, use 'user' or 'drive', instead of 'allDrives', for efficiency.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "drive_id": {
+            "type": "string",
+            "description": "ID of the shared drive.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "files": {
+            "nested_type": {
+              "attributes": {
+                "drive_id": {
+                  "type": "string",
+                  "description": "The ID of the Shared Drive the file is located in. Only present if the file is located in a Shared Drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "file_id": {
+                  "type": "string",
+                  "description": "The ID of the file.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of this resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mime_type": {
+                  "type": "string",
+                  "description": "The MIME type of the file.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the file.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "parent": {
+                  "type": "string",
+                  "description": "The ID of the file's parent.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A set of files that match the specified query.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "include_items_from_all_drives": {
+            "type": "bool",
+            "description": "Whether both My Drive and shared drive items should be included in results.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "query": {
+            "type": "string",
+            "description": "A query for filtering the file results.\n\nSee the https://developers.google.com/drive/api/v3/search-files for the supported syntax.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "spaces": {
+            "type": "string",
+            "description": "A comma-separated list of spaces to query within the corpus.\n\nSupported values are 'drive', 'appDataFolder' and 'photos'.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Returns a list of files that match the given query.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_label": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fields": {
+            "nested_type": {
+              "attributes": {
+                "date_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "date_format": {
+                        "type": "string",
+                        "description": "ICU date format.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "date_format_type": {
+                        "type": "string",
+                        "description": "Localized date formatting option. Field values are rendered in this format according to their locale.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "max_value": {
+                        "nested_type": {
+                          "attributes": {
+                            "day": {
+                              "type": "number",
+                              "description": "Day of a month.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "month": {
+                              "type": "number",
+                              "description": "Month of a year.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "year": {
+                              "type": "number",
+                              "description": "Year of the date.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Min/Max valid value (year, month, day).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "min_value": {
+                        "nested_type": {
+                          "attributes": {
+                            "day": {
+                              "type": "number",
+                              "description": "Day of a month.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "month": {
+                              "type": "number",
+                              "description": "Month of a year.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "year": {
+                              "type": "number",
+                              "description": "Year of the date.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Min/Max valid value (year, month, day).",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "A set of restrictions that apply to this shared drive or items inside this shared drive.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "field_id": {
+                  "type": "string",
+                  "description": "The key of a field, unique within a label or library.\nUse this when referencing a field somewhere.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of this resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "integer_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "max_value": {
+                        "type": "number",
+                        "description": "The maximum valid value for the integer field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "min_value": {
+                        "type": "number",
+                        "description": "The minimum valid value for the integer field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Options for the Integer field type.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "life_cycle": {
+                  "nested_type": {
+                    "attributes": {
+                      "disabled_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "hide_in_search": {
+                              "type": "bool",
+                              "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_in_apply": {
+                              "type": "bool",
+                              "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "has_unpublished_changes": {
+                        "type": "bool",
+                        "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "state": {
+                        "type": "string",
+                        "description": "The state of the object associated with this lifecycle.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The lifecycle state of an object, such as label, field, or choice.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "properties": {
+                  "nested_type": {
+                    "attributes": {
+                      "display_name": {
+                        "type": "string",
+                        "description": "The display text to show in the UI identifying this field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "required": {
+                        "type": "bool",
+                        "description": "Whether the field should be marked as required.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The basic properties of the field.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "query_key": {
+                  "type": "string",
+                  "description": "The key to use when constructing Drive search queries to find labels based on values defined for this field on labels.\nFor example, \"{queryKey} > 2001-01-01\".",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "selection_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "choices": {
+                        "nested_type": {
+                          "attributes": {
+                            "choice_id": {
+                              "type": "string",
+                              "description": "The unique value of the choice.\nUse this when referencing / setting a choice.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "The unique ID of this resource.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "life_cycle": {
+                              "nested_type": {
+                                "attributes": {
+                                  "disabled_policy": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "hide_in_search": {
+                                          "type": "bool",
+                                          "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        },
+                                        "show_in_apply": {
+                                          "type": "bool",
+                                          "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        }
+                                      },
+                                      "nesting_mode": "single"
+                                    },
+                                    "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "has_unpublished_changes": {
+                                    "type": "bool",
+                                    "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "description": "The state of the object associated with this lifecycle.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "The lifecycle state of an object, such as label, field, or choice.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "properties": {
+                              "nested_type": {
+                                "attributes": {
+                                  "badge_config": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "color": {
+                                          "nested_type": {
+                                            "attributes": {
+                                              "alpha": {
+                                                "type": "number",
+                                                "description": "The alpha value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              },
+                                              "blue": {
+                                                "type": "number",
+                                                "description": "The blue value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              },
+                                              "green": {
+                                                "type": "number",
+                                                "description": "The green value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              },
+                                              "red": {
+                                                "type": "number",
+                                                "description": "The red value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              }
+                                            },
+                                            "nesting_mode": "single"
+                                          },
+                                          "description": "The color of the badge.\nWhen not specified, no badge is rendered.\nThe background, foreground, and solo (light and dark mode) colors set here are changed in the Drive UI into the closest recommended supported color.\n\n*After setting this property, the plan will likely show a difference, because the API automatically modifies the values.\nIt is recommended to change the Terraform configuration to match the values set by the API.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        },
+                                        "priority_override": {
+                                          "type": "number",
+                                          "description": "Override the default global priority of this badge.\nWhen set to 0, the default priority heuristic is used.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        }
+                                      },
+                                      "nesting_mode": "single"
+                                    },
+                                    "description_kind": "plain",
+                                    "computed": true
+                                  },
+                                  "display_name": {
+                                    "type": "string",
+                                    "description": "The display text to show in the UI identifying this choice.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "Basic properties of the choice.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "list_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "max_entries": {
+                              "type": "number",
+                              "description": "Maximum number of entries permitted.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "List options",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Options for the selection field type.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "text_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "max_length": {
+                        "type": "number",
+                        "description": "The maximum valid length of values for the text field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "min_length": {
+                        "type": "number",
+                        "description": "The minimum valid length of values for the text field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Options for the Text field type.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "list_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "max_entries": {
+                              "type": "number",
+                              "description": "Maximum number of entries permitted.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "List options",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Options for the user field type.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "value_type": {
+                  "type": "string",
+                  "description": "The type of the field.\nUse this when setting the values for a field.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The fields of this label.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_id": {
+            "type": "string",
+            "description": "ID of the label",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "label_type": {
+            "type": "string",
+            "description": "The type of this label.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "life_cycle": {
+            "nested_type": {
+              "attributes": {
+                "disabled_policy": {
+                  "nested_type": {
+                    "attributes": {
+                      "hide_in_search": {
+                        "type": "bool",
+                        "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "show_in_apply": {
+                        "type": "bool",
+                        "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "has_unpublished_changes": {
+                  "type": "bool",
+                  "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "state": {
+                  "type": "string",
+                  "description": "The state of the object associated with this lifecycle.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The lifecycle state of an object, such as label, field, or choice.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Label resource name.\n\nMay be any of:\n* labels/{id} (equivalent to labels/{id}@latest)\n* labels/{id}@latest\n* labels/{id}@published\n* labels/{id}@{revisionId}",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "properties": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "The description of the label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Title of the label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Basic properties of the label.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "revision": {
+            "type": "string",
+            "description": "The revision of the label to retrieve.\n\nDefaults to the latest revision.\n\nReading other revisions may require additional permissions and / or setting the 'use_admin_access' flag.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "This resource can be used to get the fields and other metadata for a single label.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_labels": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "labels": {
+            "nested_type": {
+              "attributes": {
+                "fields": {
+                  "nested_type": {
+                    "attributes": {
+                      "date_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "date_format": {
+                              "type": "string",
+                              "description": "ICU date format.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "date_format_type": {
+                              "type": "string",
+                              "description": "Localized date formatting option. Field values are rendered in this format according to their locale.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "max_value": {
+                              "nested_type": {
+                                "attributes": {
+                                  "day": {
+                                    "type": "number",
+                                    "description": "Day of a month.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "month": {
+                                    "type": "number",
+                                    "description": "Month of a year.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "year": {
+                                    "type": "number",
+                                    "description": "Year of the date.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "Min/Max valid value (year, month, day).",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "min_value": {
+                              "nested_type": {
+                                "attributes": {
+                                  "day": {
+                                    "type": "number",
+                                    "description": "Day of a month.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "month": {
+                                    "type": "number",
+                                    "description": "Month of a year.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "year": {
+                                    "type": "number",
+                                    "description": "Year of the date.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "Min/Max valid value (year, month, day).",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A set of restrictions that apply to this shared drive or items inside this shared drive.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "field_id": {
+                        "type": "string",
+                        "description": "The key of a field, unique within a label or library.\nUse this when referencing a field somewhere.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The unique ID of this resource.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "integer_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "max_value": {
+                              "type": "number",
+                              "description": "The maximum valid value for the integer field.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "min_value": {
+                              "type": "number",
+                              "description": "The minimum valid value for the integer field.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Options for the Integer field type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "life_cycle": {
+                        "nested_type": {
+                          "attributes": {
+                            "disabled_policy": {
+                              "nested_type": {
+                                "attributes": {
+                                  "hide_in_search": {
+                                    "type": "bool",
+                                    "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "show_in_apply": {
+                                    "type": "bool",
+                                    "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "has_unpublished_changes": {
+                              "type": "bool",
+                              "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "state": {
+                              "type": "string",
+                              "description": "The state of the object associated with this lifecycle.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The lifecycle state of an object, such as label, field, or choice.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "properties": {
+                        "nested_type": {
+                          "attributes": {
+                            "display_name": {
+                              "type": "string",
+                              "description": "The display text to show in the UI identifying this field.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "required": {
+                              "type": "bool",
+                              "description": "Whether the field should be marked as required.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The basic properties of the field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "query_key": {
+                        "type": "string",
+                        "description": "The key to use when constructing Drive search queries to find labels based on values defined for this field on labels.\nFor example, \"{queryKey} > 2001-01-01\".",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "selection_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "choices": {
+                              "nested_type": {
+                                "attributes": {
+                                  "choice_id": {
+                                    "type": "string",
+                                    "description": "The unique value of the choice.\nUse this when referencing / setting a choice.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "The unique ID of this resource.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "life_cycle": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "disabled_policy": {
+                                          "nested_type": {
+                                            "attributes": {
+                                              "hide_in_search": {
+                                                "type": "bool",
+                                                "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              },
+                                              "show_in_apply": {
+                                                "type": "bool",
+                                                "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              }
+                                            },
+                                            "nesting_mode": "single"
+                                          },
+                                          "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        },
+                                        "has_unpublished_changes": {
+                                          "type": "bool",
+                                          "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "description": "The state of the object associated with this lifecycle.",
+                                          "description_kind": "markdown",
+                                          "computed": true
+                                        }
+                                      },
+                                      "nesting_mode": "single"
+                                    },
+                                    "description": "The lifecycle state of an object, such as label, field, or choice.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  },
+                                  "properties": {
+                                    "nested_type": {
+                                      "attributes": {
+                                        "badge_config": {
+                                          "nested_type": {
+                                            "attributes": {
+                                              "color": {
+                                                "nested_type": {
+                                                  "attributes": {
+                                                    "alpha": {
+                                                      "type": "number",
+                                                      "description": "The alpha value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                      "description_kind": "markdown",
+                                                      "computed": true
+                                                    },
+                                                    "blue": {
+                                                      "type": "number",
+                                                      "description": "The blue value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                      "description_kind": "markdown",
+                                                      "computed": true
+                                                    },
+                                                    "green": {
+                                                      "type": "number",
+                                                      "description": "The green value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                      "description_kind": "markdown",
+                                                      "computed": true
+                                                    },
+                                                    "red": {
+                                                      "type": "number",
+                                                      "description": "The red value for the badge color as a float (number between 1 and 0 - e.g. \"0.5\")",
+                                                      "description_kind": "markdown",
+                                                      "computed": true
+                                                    }
+                                                  },
+                                                  "nesting_mode": "single"
+                                                },
+                                                "description": "The color of the badge.\nWhen not specified, no badge is rendered.\nThe background, foreground, and solo (light and dark mode) colors set here are changed in the Drive UI into the closest recommended supported color.\n\n*After setting this property, the plan will likely show a difference, because the API automatically modifies the values.\nIt is recommended to change the Terraform configuration to match the values set by the API.",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              },
+                                              "priority_override": {
+                                                "type": "number",
+                                                "description": "Override the default global priority of this badge.\nWhen set to 0, the default priority heuristic is used.",
+                                                "description_kind": "markdown",
+                                                "computed": true
+                                              }
+                                            },
+                                            "nesting_mode": "single"
+                                          },
+                                          "description_kind": "plain",
+                                          "computed": true
+                                        },
+                                        "display_name": {
+                                          "type": "string",
+                                          "description": "The display text to show in the UI identifying this choice.",
+                                          "description_kind": "markdown",
+                                          "required": true
+                                        }
+                                      },
+                                      "nesting_mode": "single"
+                                    },
+                                    "description": "Basic properties of the choice.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "list_options": {
+                              "nested_type": {
+                                "attributes": {
+                                  "max_entries": {
+                                    "type": "number",
+                                    "description": "Maximum number of entries permitted.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "List options",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Options for the selection field type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "text_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "max_length": {
+                              "type": "number",
+                              "description": "The maximum valid length of values for the text field.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "min_length": {
+                              "type": "number",
+                              "description": "The minimum valid length of values for the text field.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Options for the Text field type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "user_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "list_options": {
+                              "nested_type": {
+                                "attributes": {
+                                  "max_entries": {
+                                    "type": "number",
+                                    "description": "Maximum number of entries permitted.",
+                                    "description_kind": "markdown",
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "List options",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Options for the user field type.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "value_type": {
+                        "type": "string",
+                        "description": "The type of the field.\nUse this when setting the values for a field.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The fields of this label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of this resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "label_id": {
+                  "type": "string",
+                  "description": "The id of this label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "label_type": {
+                  "type": "string",
+                  "description": "The type of this label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "life_cycle": {
+                  "nested_type": {
+                    "attributes": {
+                      "disabled_policy": {
+                        "nested_type": {
+                          "attributes": {
+                            "hide_in_search": {
+                              "type": "bool",
+                              "description": "Whether to hide this disabled object in the search menu for Drive items.\n\nWhen false, the object is generally shown in the UI as disabled but it appears in the search results when searching for Drive items.\nWhen true, the object is generally hidden in the UI when searching for Drive items.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            },
+                            "show_in_apply": {
+                              "type": "bool",
+                              "description": "Whether to show this disabled object in the apply menu on Drive items.\n\nWhen true, the object is generally shown in the UI as disabled and is unselectable.\nWhen false, the object is generally hidden in the UI.",
+                              "description_kind": "markdown",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The policy that governs how to show a disabled label, field, or selection choice.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "has_unpublished_changes": {
+                        "type": "bool",
+                        "description": "Whether the object associated with this lifecycle has unpublished changes.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "state": {
+                        "type": "string",
+                        "description": "The state of the object associated with this lifecycle.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The lifecycle state of an object, such as label, field, or choice.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "properties": {
+                  "nested_type": {
+                    "attributes": {
+                      "description": {
+                        "type": "string",
+                        "description": "The description of the label.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Title of the label.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Basic properties of the label.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The labels that were found.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "language_code": {
+            "type": "string",
+            "description": "The BCP-47 language code to use for evaluating localized field labels.\n\nWhen not specified, values in the default configured language are used.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "minimum_role": {
+            "type": "string",
+            "description": "Specifies the level of access the user must have on the returned Labels.\nThe minimum role a user must have on a label.\nDefaults to READER.\nREADER     - A reader can read the label and associated metadata applied to Drive items.\nAPPLIER    - An applier can write associated metadata on Drive items in which they also have write access to. Implies READER.\nORGANIZER  - An organizer can pin this label in shared drives they manage and add new appliers to the label.\nEDITOR     - Editors can make any update including deleting the label which also deletes the associated Drive item metadata. Implies APPLIER.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "published_only": {
+            "type": "bool",
+            "description": "Whether to include only published labels in the results.\n\nWhen true, only the current published label revisions are returned. Disabled labels are included.\nReturned label resource names reference the published revision (labels/{id}/{revisionId}).\n\nWhen false, the current label revisions are returned, which might not be published.\nReturned label resource names don't reference a specific revision (labels/{id}).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_admin_access": {
+            "type": "bool",
+            "description": "Set to true in order to use the user's admin credentials.\n\nThe server verifies that the user is an admin for the label before allowing access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "This resource can be used to get the fields and other metadata for all labels that match the specified restrictions.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain if the type of this permissions is 'domain'.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email_address": {
+            "type": "string",
+            "description": "The email address if the type of this permissions is 'user' or 'group'.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file or Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permission_id": {
+            "type": "string",
+            "description": "ID of the permission.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role that this trustee is granted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the trustee. Can be 'user', 'domain', 'group' or 'anyone'.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Returns the metadata of a permission on a file or Shared Drive.",
+        "description_kind": "markdown"
+      }
+    },
+    "gdrive_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "file_id": {
+            "type": "string",
+            "description": "ID of the file or Shared Drive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "deleted": {
+                  "type": "bool",
+                  "description": "Whether the account associated with this permission has been deleted.\n\nThis field only pertains to user and group permissions.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "The \"pretty\" name of the value of the permission.\n\nThe following is a list of examples for each type of permission:\n* user    - User's full name, as defined for their Google account, such as \"Joe Smith.\"\n* group   - Name of the Google Group, such as \"The Company Administrators.\"\n* domain  - String domain name, such as \"thecompany.com.\"\n* anyone  - No displayName is present.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "domain": {
+                  "type": "string",
+                  "description": "The domain if the type of this permissions is 'domain'.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "email_address": {
+                  "type": "string",
+                  "description": "The email address if the type of this permissions is 'user' or 'group'.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "expiration_time": {
+                  "type": "string",
+                  "description": "The time at which this permission will expire (RFC 3339 date-time).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "permission_id": {
+                  "type": "string",
+                  "description": "ID of the permission.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The role that this trustee is granted.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the trustee. Can be 'user', 'domain', 'group' or 'anyone'.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The list of permissions set on this file or Shared Drive.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "use_domain_admin_access": {
+            "type": "bool",
+            "description": "Use domain admin access.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Returns the list of all permissions on a file or Shared Drive",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
