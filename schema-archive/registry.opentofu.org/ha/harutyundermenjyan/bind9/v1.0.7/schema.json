@@ -1,0 +1,703 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "API key for authentication. Can also be set via BIND9_API_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "BIND9 REST API endpoint URL (e.g., https://dns.example.com:8080). Can also be set via BIND9_ENDPOINT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "insecure": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification. Default: false",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password for JWT authentication. Can also be set via BIND9_PASSWORD environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "timeout": {
+          "type": "number",
+          "description": "API request timeout in seconds. Default: 30",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Username for JWT authentication. Can also be set via BIND9_USERNAME environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "\nThe BIND9 provider allows you to manage DNS zones and records on a BIND9 server through its REST API.\n\n## Authentication\n\nThe provider supports two authentication methods:\n\n1. **API Key** (recommended): Set the `api_key` attribute or `BIND9_API_KEY` environment variable\n2. **Username/Password**: Set `username` and `password` attributes or `BIND9_USERNAME` and `BIND9_PASSWORD` environment variables\n\n## Example Usage\n\n```hcl\nprovider \"bind9\" {\n  endpoint = \"https://dns.example.com:8080\"\n  api_key  = var.bind9_api_key\n}\n\nresource \"bind9_zone\" \"example\" {\n  name = \"example.com\"\n  type = \"master\"\n}\n\nresource \"bind9_record\" \"www\" {\n  zone    = bind9_zone.example.name\n  name    = \"www\"\n  type    = \"A\"\n  ttl     = 300\n  records = [\"192.168.1.100\"]\n}\n```\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "bind9_acl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "comment": {
+            "type": "string",
+            "description": "Optional description/comment for the ACL. Server may append a timestamp.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "entries": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of ACL entries (IPs, networks, keys, or ACL references)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ACL identifier (same as name)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "ACL name (must be unique, cannot be reserved names like 'any', 'none', 'localhost', 'localnets')",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nManages an Access Control List (ACL) on a BIND9 server.\n\nACLs are named groups of IP addresses, networks, TSIG keys, or other ACLs \nthat can be referenced in zone configurations for access control.\n\n## Example Usage\n\n### Basic ACL\n\n```hcl\nresource \"bind9_acl\" \"internal\" {\n  name = \"internal\"\n  entries = [\n    \"localhost\",\n    \"localnets\",\n    \"10.0.0.0/8\",\n    \"172.16.0.0/12\",\n    \"192.168.0.0/16\",\n  ]\n  comment = \"Internal networks\"\n}\n```\n\n### ACL with TSIG Key\n\n```hcl\nresource \"bind9_acl\" \"ddns_clients\" {\n  name = \"ddns-clients\"\n  entries = [\n    \"172.25.44.0/24\",\n    \"key \\\"ddns-key\\\"\",\n  ]\n  comment = \"Clients allowed to perform dynamic DNS updates\"\n}\n```\n\n### ACL for Zone Transfers\n\n```hcl\nresource \"bind9_acl\" \"trusted_secondaries\" {\n  name = \"trusted-secondaries\"\n  entries = [\n    \"192.168.1.11\",\n    \"192.168.1.12\",\n    \"key \\\"transfer-key\\\"\",\n  ]\n  comment = \"Secondary DNS servers\"\n}\n```\n\n## Usage in Zones\n\nOnce defined, ACLs can be referenced in zone configurations:\n\n```hcl\nresource \"bind9_zone\" \"example\" {\n  name = \"example.com\"\n  type = \"master\"\n  \n  allow_query    = [\"internal\"]           # Reference the ACL by name\n  allow_transfer = [\"trusted-secondaries\"]\n  allow_update   = [\"ddns-clients\"]\n}\n```\n\n## Valid Entry Types\n\n- IP addresses: `192.168.1.1`\n- Networks (CIDR): `10.0.0.0/8`\n- TSIG keys: `key \"keyname\"`\n- Built-in ACLs: `localhost`, `localnets`, `any`, `none`\n- Other ACL names: `internal`\n- Negated entries: `!192.168.1.100`\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_dnssec_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algorithm": {
+            "type": "number",
+            "description": "DNSSEC algorithm number (8=RSASHA256, 13=ECDSAP256SHA256, 14=ECDSAP384SHA384, 15=ED25519)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bits": {
+            "type": "number",
+            "description": "Key size in bits (only for RSA algorithms)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ds_records": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "DS records for registrar",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "flags": {
+            "type": "number",
+            "description": "DNSKEY flags",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Key identifier (zone/key_tag)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_tag": {
+            "type": "number",
+            "description": "Key tag (computed)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key_type": {
+            "type": "string",
+            "description": "Key type: KSK, ZSK, or CSK",
+            "description_kind": "plain",
+            "required": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "Base64-encoded public key",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sign_zone": {
+            "type": "bool",
+            "description": "Sign zone after key creation",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Key state",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "DNSKEY record TTL",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nManages DNSSEC keys for DNS zones.\n\n## Example Usage\n\n### Generate KSK (Key Signing Key)\n\n```hcl\nresource \"bind9_dnssec_key\" \"ksk\" {\n  zone      = \"example.com\"\n  key_type  = \"KSK\"\n  algorithm = 13  # ECDSAP256SHA256\n  sign_zone = true\n}\n```\n\n### Generate ZSK (Zone Signing Key)\n\n```hcl\nresource \"bind9_dnssec_key\" \"zsk\" {\n  zone      = \"example.com\"\n  key_type  = \"ZSK\"\n  algorithm = 13  # ECDSAP256SHA256\n}\n```\n\n## Algorithm Reference\n\n| Value | Algorithm |\n|-------|-----------|\n| 8 | RSASHA256 |\n| 10 | RSASHA512 |\n| 13 | ECDSAP256SHA256 (recommended) |\n| 14 | ECDSAP384SHA384 |\n| 15 | ED25519 |\n| 16 | ED448 |\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "IP address for A/AAAA records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "class": {
+            "type": "string",
+            "description": "Record class (IN, CH, HS)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "flags": {
+            "type": "number",
+            "description": "Flags for CAA records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Record identifier (zone/name/type)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name (e.g., www, @, _sip._tcp)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Port for SRV records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Priority for MX/SRV records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "records": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Record data values",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tag": {
+            "type": "string",
+            "description": "Tag for CAA records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "target": {
+            "type": "string",
+            "description": "Target for CNAME/NS/PTR/DNAME records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "text": {
+            "type": "string",
+            "description": "Text content for TXT records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to live in seconds",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Record type (A, AAAA, CNAME, MX, TXT, NS, PTR, SRV, CAA, etc.)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Value for CAA records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "weight": {
+            "type": "number",
+            "description": "Weight for SRV records (convenience attribute)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone name (e.g., example.com)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nManages DNS records on a BIND9 server. Supports all common record types.\n\n## Example Usage\n\n### A Record\n\n```hcl\nresource \"bind9_record\" \"www\" {\n  zone    = \"example.com\"\n  name    = \"www\"\n  type    = \"A\"\n  ttl     = 300\n  records = [\"192.168.1.100\"]\n}\n```\n\n### AAAA Record\n\n```hcl\nresource \"bind9_record\" \"www_ipv6\" {\n  zone    = \"example.com\"\n  name    = \"www\"\n  type    = \"AAAA\"\n  ttl     = 300\n  records = [\"2001:db8::1\"]\n}\n```\n\n### CNAME Record\n\n```hcl\nresource \"bind9_record\" \"alias\" {\n  zone    = \"example.com\"\n  name    = \"blog\"\n  type    = \"CNAME\"\n  ttl     = 3600\n  records = [\"www.example.com.\"]\n}\n```\n\n### MX Record\n\n```hcl\nresource \"bind9_record\" \"mx\" {\n  zone    = \"example.com\"\n  name    = \"@\"\n  type    = \"MX\"\n  ttl     = 3600\n  records = [\"10 mail.example.com.\", \"20 mail2.example.com.\"]\n}\n```\n\n### TXT Record\n\n```hcl\nresource \"bind9_record\" \"spf\" {\n  zone    = \"example.com\"\n  name    = \"@\"\n  type    = \"TXT\"\n  ttl     = 3600\n  records = [\"v=spf1 include:_spf.google.com ~all\"]\n}\n```\n\n### SRV Record\n\n```hcl\nresource \"bind9_record\" \"sip\" {\n  zone    = \"example.com\"\n  name    = \"_sip._tcp\"\n  type    = \"SRV\"\n  ttl     = 3600\n  records = [\"10 60 5060 sip.example.com.\"]\n}\n```\n\n### CAA Record\n\n```hcl\nresource \"bind9_record\" \"caa\" {\n  zone    = \"example.com\"\n  name    = \"@\"\n  type    = \"CAA\"\n  ttl     = 3600\n  records = [\"0 issue \\\"letsencrypt.org\\\"\"]\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_query": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "ACL for queries",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "allow_transfer": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "ACL for zone transfers",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "allow_update": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "ACL for dynamic updates",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "default_ttl": {
+            "type": "number",
+            "description": "Default TTL for records",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "delete_file_on_destroy": {
+            "type": "bool",
+            "description": "Delete zone file when zone is destroyed",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dnssec_enabled": {
+            "type": "bool",
+            "description": "Whether DNSSEC is enabled",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "file": {
+            "type": "string",
+            "description": "Zone file path (auto-generated if not specified)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Zone identifier (same as name)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "loaded": {
+            "type": "bool",
+            "description": "Whether zone is loaded",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Zone name (e.g., example.com)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "nameservers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of authoritative nameservers",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notify": {
+            "type": "bool",
+            "description": "Send NOTIFY to slaves on zone changes",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ns_addresses": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of nameserver names to IP addresses for glue records (e.g., {\"ns1\" = \"192.168.1.1\"})",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "serial": {
+            "type": "number",
+            "description": "Current zone serial number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "soa_expire": {
+            "type": "number",
+            "description": "SOA expire time in seconds",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "soa_minimum": {
+            "type": "number",
+            "description": "SOA minimum/negative TTL in seconds",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "soa_mname": {
+            "type": "string",
+            "description": "Primary nameserver for SOA record",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "soa_refresh": {
+            "type": "number",
+            "description": "SOA refresh interval in seconds",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "soa_retry": {
+            "type": "number",
+            "description": "SOA retry interval in seconds",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "soa_rname": {
+            "type": "string",
+            "description": "Responsible person email for SOA (use . instead of @)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Zone type: master, slave, forward, stub",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nManages a DNS zone on a BIND9 server.\n\n## Example Usage\n\n### Master Zone\n\n```hcl\nresource \"bind9_zone\" \"example\" {\n  name = \"example.com\"\n  type = \"master\"\n  \n  soa_mname  = \"ns1.example.com\"\n  soa_rname  = \"hostmaster.example.com\"\n  default_ttl = 3600\n  \n  nameservers = [\n    \"ns1.example.com\",\n    \"ns2.example.com\",\n  ]\n  \n  allow_transfer = [\"192.168.1.0/24\"]\n  notify = true\n}\n```\n\n### Slave Zone\n\n```hcl\nresource \"bind9_zone\" \"slave\" {\n  name = \"example.com\"\n  type = \"slave\"\n  \n  # Masters would be configured in BIND9 directly\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "bind9_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Record identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "records": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Record values",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Record TTL",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Record type",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nRetrieves DNS records from a zone by name and type.\n\n## Example Usage\n\n```hcl\ndata \"bind9_record\" \"www\" {\n  zone = \"example.com\"\n  name = \"www\"\n  type = \"A\"\n}\n\noutput \"www_ips\" {\n  value = data.bind9_record.www.records\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_records": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Data source identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Filter by record name",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Record name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "rdata": {
+                  "type": "string",
+                  "description": "Record data",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Record TTL",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Record type",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of records",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Filter by record type",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nRetrieves all DNS records from a zone with optional filtering.\n\n## Example Usage\n\n```hcl\n# Get all records in a zone\ndata \"bind9_records\" \"all\" {\n  zone = \"example.com\"\n}\n\n# Get all A records\ndata \"bind9_records\" \"a_records\" {\n  zone = \"example.com\"\n  type = \"A\"\n}\n\n# Get records for specific name\ndata \"bind9_records\" \"www\" {\n  zone = \"example.com\"\n  name = \"www\"\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dnssec_enabled": {
+            "type": "bool",
+            "description": "Whether DNSSEC is enabled",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "file": {
+            "type": "string",
+            "description": "Zone file path",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Zone identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "loaded": {
+            "type": "bool",
+            "description": "Whether zone is loaded",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Zone name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "record_count": {
+            "type": "number",
+            "description": "Number of records in zone",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "serial": {
+            "type": "number",
+            "description": "Zone serial number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Zone type (master, slave, forward, stub)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nRetrieves information about a DNS zone on the BIND9 server.\n\n## Example Usage\n\n```hcl\ndata \"bind9_zone\" \"example\" {\n  name = \"example.com\"\n}\n\noutput \"zone_serial\" {\n  value = data.bind9_zone.example.serial\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bind9_zones": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Data source identifier",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Filter by zone type",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zones": {
+            "nested_type": {
+              "attributes": {
+                "dnssec_enabled": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "file": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "loaded": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "serial": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of zones",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nRetrieves a list of all DNS zones on the BIND9 server.\n\n## Example Usage\n\n```hcl\ndata \"bind9_zones\" \"all\" {}\n\noutput \"zone_count\" {\n  value = length(data.bind9_zones.all.zones)\n}\n\n# Filter to master zones only\ndata \"bind9_zones\" \"masters\" {\n  type = \"master\"\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

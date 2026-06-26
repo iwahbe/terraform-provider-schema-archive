@@ -1,0 +1,3730 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "The MAAS API key. If not provided, it will be read from the MAAS_API_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "The MAAS API URL (eg: http://127.0.0.1:5240/MAAS). If not provided, it will be read from the MAAS_API_URL environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_version": {
+          "type": "string",
+          "description": "The MAAS API version (default 2.0)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "installation_method": {
+          "type": "string",
+          "description": "The MAAS installation method. Valid options: `snap`, and `deb`.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_ca_cert_path": {
+          "type": "string",
+          "description": "Certificate CA bundle path to use to verify the MAAS certificate. If not provided, it will be read from the MAAS_API_CACERT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_insecure_skip_verify": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "maas_block_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_size": {
+            "type": "number",
+            "description": "The block size of the block device. Defaults to `512`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id_path": {
+            "type": "string",
+            "description": "Only used if `model` and `serial` cannot be provided. This should be a path that is fixed and doesn't change depending on the boot order or kernel version. This argument is computed if it's not given.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_boot_device": {
+            "type": "bool",
+            "description": "Boolean value indicating if the block device is set as the boot device.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The machine identifier (system ID, hostname, or FQDN) that owns the block device.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "model": {
+            "type": "string",
+            "description": "Model of the block device. Used in conjunction with `serial` argument. Conflicts with `id_path`. This argument is computed if it's not given.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The block device name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Block device path.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "serial": {
+            "type": "string",
+            "description": "Serial number of the block device. Used in conjunction with `model` argument. Conflicts with `id_path`. This argument is computed if it's not given.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "size_gigabytes": {
+            "type": "number",
+            "description": "The size of the block device (given in GB).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names assigned to the new block device. This argument is computed if it's not given.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Block device UUID.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "partitions": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "bootable": {
+                  "type": "bool",
+                  "description": "Boolean value indicating if the partition is set as bootable.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "fs_type": {
+                  "type": "string",
+                  "description": "The file system type (e.g. `ext4`). If this is not set, the partition is unformatted.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "The ID of the partition.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "label": {
+                  "type": "string",
+                  "description": "The label assigned if the partition is formatted.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "mount_options": {
+                  "type": "string",
+                  "description": "The options used for the partition mount.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "mount_point": {
+                  "type": "string",
+                  "description": "The mount point used. If this is not set, the partition is not mounted. This is used only the partition is formatted.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "The path of the partition.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "size_gigabytes": {
+                  "type": "number",
+                  "description": "The partition size (given in GB).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "tags": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "The tags assigned to the new block device partition.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "List of partition resources created for the new block device. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). And, it is computed if it's not given.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage MAAS machines' block devices.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_block_device_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_device_id": {
+            "type": "number",
+            "description": "The block device ID to tag.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the network interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The tags to assign to the network interface. Tag names should be short and without spaces.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage tags as strings on a block device.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_boot_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created": {
+            "type": "string",
+            "description": "The creation time of the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyring_data": {
+            "type": "string",
+            "description": "The data on the keyring for the boot source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "keyring_filename": {
+            "type": "string",
+            "description": "The filename on the keyring for the boot source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated": {
+            "type": "string",
+            "description": "The time of most recent update of the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the boot source.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage the MAAS boot source.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_boot_source_selection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The architecture list for this selection. Valid architectures are: `[\"amd64\", \"arm64\", \"armhf\", \"i386\", \"ppc64el\", \"s390x\"]`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "boot_source": {
+            "type": "number",
+            "description": "The boot source database ID this selection is associated with.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The label list for this selection. Default is: `[\"*\"]`",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "os": {
+            "type": "string",
+            "description": "The operating system for this selection.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "release": {
+            "type": "string",
+            "description": "The specific release of the operating system for this selection.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subarches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of subarches for this selection. Default is: `[\"*\"]`",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage a MAAS boot source selection.\n\n*Note*: MAAS automatically creates a default commissioning boot source selection for the Ubuntu LTS release that accompanies the current MAAS version (e.g., Noble for MAAS 3.6). The commissioning distro series can be changed by administrators, but whatever boot source selection points to the current commissioning distro series at any point in time cannot be deleted. When managing boot source selections through Terraform:\n\n- **Create**: If creating a selection for Ubuntu with the current commissioning distro series, Terraform will adopt and update the existing selection instead of creating a new one\n- **Delete**: If deleting a selection that matches Ubuntu with the current commissioning distro series at deletion time, Terraform will remove the resource from state without deleting it from MAAS (no-op operation)\n\nThis behavior ensures MAAS functionality is not disrupted while allowing Terraform to manage boot source selection configurations.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key corresponding to the configuration setting.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Value for the configuration setting, always specified as a string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS configuration settings through key value pairs. See MAAS server in the [MAAS API documentation](https://maas.io/docs/api) for a full list of keys and their values. Upon destroy, the specified key will no longer be managed by Terraform, but the set value will remain set in MAAS.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the device.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the device.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The device FQDN.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The device hostname.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_addresses": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of IP addressed assigned to the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "The owner of the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The zone of the device.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "network_interfaces": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "number",
+                  "description": "The id of the network interface.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mac_address": {
+                  "type": "string",
+                  "description": "MAC address of the network interface.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the network interface.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "A set of network interfaces attached to the device.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          }
+        },
+        "description": "Provides a resource to manage MAAS devices.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_dns_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "authoritative": {
+            "type": "bool",
+            "description": "Boolean value indicating if the new DNS domain is authoritative. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Boolean value indicating if the new DNS domain will be set as the default in the MAAS environment. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the new DNS domain.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "The default TTL for the new DNS domain.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS DNS domains.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": "string",
+            "description": "The data set for the new DNS record.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the new DNS record. Used in conjunction with `name`. It conflicts with `fqdn` argument.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The fully qualified domain name of the new DNS record. This contains the name and the domain of the new DNS record. It conflicts with `name` and `domain` arguments.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The new DNS record resource name. Used in conjunction with `domain`. It conflicts with `fqdn` argument.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "The TTL of the new DNS record.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The DNS record type. Valid options are: `A/AAAA`, `CNAME`, `MX`, `NS`, `SRV`, `SSHFP`, `TXT`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS DNS domain records.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_fabric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The fabric name.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network fabrics.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_instance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "architecture": {
+            "type": "string",
+            "description": "The deployed MAAS machine architecture.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cpu_count": {
+            "type": "number",
+            "description": "The number of CPU cores of the deployed MAAS machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The deployed MAAS machine FQDN.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The deployed MAAS machine hostname.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_addresses": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of IP addressed assigned to the deployed MAAS machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "The RAM memory size (in GiB) of the deployed MAAS machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The deployed MAAS machine pool name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names associated to the deployed MAAS machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The deployed MAAS machine zone name.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "allocate_params": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "architecture": {
+                  "type": "string",
+                  "description": "The architecture type of the machine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "The hostname of the MAAS machine to be allocated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "min_cpu_count": {
+                  "type": "number",
+                  "description": "The minimum number of cores used to allocate the MAAS machine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "min_memory": {
+                  "type": "number",
+                  "description": "The minimum RAM memory size (in MB) used to allocate the MAAS machine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "pool": {
+                  "type": "string",
+                  "description": "The pool name of the MAAS machine to be allocated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "system_id": {
+                  "type": "string",
+                  "description": "The system_id of the MAAS machine to be allocated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tags": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "A set of tag names that must be assigned on the MAAS machine to be allocated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "zone": {
+                  "type": "string",
+                  "description": "The zone name of the MAAS machine to be allocated.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Nested argument with the constraints used to machine allocation. Defined below.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "deploy_params": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "distro_series": {
+                  "type": "string",
+                  "description": "The distro series used to deploy the allocated MAAS machine. If it's not given, the MAAS server default value is used.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "enable_hw_sync": {
+                  "type": "bool",
+                  "description": "Periodically sync hardware",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ephemeral": {
+                  "type": "bool",
+                  "description": "Deploy machine in memory",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "hwe_kernel": {
+                  "type": "string",
+                  "description": "Hardware enablement kernel to use with the image. Only used when deploying Ubuntu.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "user_data": {
+                  "type": "string",
+                  "description": "Cloud-init user data script that gets run on the machine once it has deployed. A good practice is to set this with `file(\"/tmp/user-data.txt\")`, where `/tmp/user-data.txt` is a cloud-init script.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Nested argument with the config used to deploy the allocated machine. Defined below.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "network_interfaces": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "ip_address": {
+                  "type": "string",
+                  "description": "Static IP address to be configured on the network interface. If this is set, the `subnet_cidr` is required.\n\n**NOTE:** If both `subnet_cidr` and `ip_address` are not defined, the interface will not be configured on the allocated machine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the network interface to be configured on the allocated machine.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "subnet_cidr": {
+                  "type": "string",
+                  "description": "An existing subnet CIDR used to configure the network interface. Unless `ip_address` is defined, a free IP address is allocated from the subnet.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Specifies a network interface configuration done before the machine is deployed. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).",
+              "description_kind": "plain"
+            }
+          },
+          "release_params": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "comment": {
+                  "type": "string",
+                  "description": "A comment to be added to the event log when the machine is released.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "erase": {
+                  "type": "bool",
+                  "description": "Erase the disk when releasing.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "force": {
+                  "type": "bool",
+                  "description": "Force the release of the machine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "quick_erase": {
+                  "type": "bool",
+                  "description": "Use quick erase. Wipe 2MiB at the start and at the end of the drive to make data recovery inconvenient and unlikely to happen by accident. This is not secure.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "scripts": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of the names of existing node release scripts to run when releasing the machine. These scripts run on an ephemeral copy of Ubuntu that is loaded after the deployed OS has been shut down. Only available in MAAS 3.5 and later.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "secure_erase": {
+                  "type": "bool",
+                  "description": "Use the drive's secure erase feature if available.  In some cases, this can be much faster than overwriting the drive. Some drives implement secure erasure by overwriting themselves so this could still be slow.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Parameters used to release the allocated machine when the resource is destroyed.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to deploy and release machines already configured in MAAS, based on the specified parameters. If no parameters are given, a random machine will be allocated and deployed using the defaults.\n\n**NOTE:** The MAAS provider currently provides both standalone resources and in-line resources for network interfaces. You cannot use in-line network interfaces in conjunction with any standalone network interfaces resources. Doing so will cause conflicts and will overwrite network configs.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_logical_volume": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fs_type": {
+            "type": "string",
+            "description": "The file system type (e.g. `ext4`). If this is not set, the volume is unformatted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The machine identifier (system ID, hostname, or FQDN) that owns the volume group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mount_options": {
+            "type": "string",
+            "description": "Comma separated options used for the logical volume mount.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mount_point": {
+            "type": "string",
+            "description": "The mount point used. If this is not set, the logical volume is not mounted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for this logical volume",
+            "description_kind": "plain",
+            "required": true
+          },
+          "size_gigabytes": {
+            "type": "number",
+            "description": "The volume size (given in GB).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "volume_group": {
+            "type": "string",
+            "description": "The volume group identifier (ID or name) to apply this logical volume on top of.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "maas_machine": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "architecture": {
+            "type": "string",
+            "description": "The architecture type of the machine. Defaults to `amd64/generic`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "block_devices": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "number",
+                  "id_path": "string",
+                  "model": "string",
+                  "name": "string",
+                  "serial": "string",
+                  "size_gigabytes": "number"
+                }
+              ]
+            ],
+            "description": "A list of block devices attached to the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "commissioning_scripts": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Commissioning script names and tags to be run. By default all custom commissioning scripts are run. Built-in commissioning scripts always run. Selecting 'update_firmware' or 'configure_hba' will run firmware updates or configure HBA's on matching machines.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the machine. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The machine hostname. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_dpu": {
+            "type": "bool",
+            "description": "A flag to set whether this machine is a DPU or not.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "min_hwe_kernel": {
+            "type": "string",
+            "description": "The minimum kernel version allowed to run on this machine. Only used when deploying Ubuntu. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "network_interfaces": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of MAC addresses of network interfaces attached to the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The resource pool of the machine. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "power_parameters": {
+            "type": "string",
+            "description": "Serialized JSON string containing the parameters specific to the `power_type`. See [Power types](https://maas.io/docs/api#power-types) section for a list of the available power parameters for each power type.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "power_type": {
+            "type": "string",
+            "description": "A power management type (e.g. `ipmi`).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pxe_mac_address": {
+            "type": "string",
+            "description": "The MAC address of the machine's PXE boot NIC, optional for IPMI machines but required for all other power types.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "script_parameters": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Scripts specified to run may define their own parameters. These parameters may be passed as parameter name (key) value pairs as a map. Optionally a parameter may have the script name prepended to have that parameter only apply to that specific script, e.g. my-script_param=value.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "skip_bmc_config": {
+            "type": "bool",
+            "description": "Optional parameter to skip re-configuration of the BMC for IPMI based machines",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "testing_scripts": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Testing scripts names and tags to be run after commissioning. By default all tests tagged 'testing' will be run. Set to ['none'] to disable running tests.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The zone of the machine. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage MAAS machines.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_bond": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accept_ra": {
+            "type": "bool",
+            "description": "Accept router advertisements. (IPv6 only).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_downdelay": {
+            "type": "number",
+            "description": "Specifies the time, in milliseconds, to wait before disabling a slave after a link failure has been detected.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_lacp_rate": {
+            "type": "string",
+            "description": "Option specifying the rate at which to ask the link partner to transmit LACPDU packets in 802.3ad mode. Available options are ``fast`` or ``slow``. (Default: ``slow``).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_miimon": {
+            "type": "number",
+            "description": "The link monitoring frequency in milliseconds. (Default: 100).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_mode": {
+            "type": "string",
+            "description": "The operating mode of the bond. (Default: active-backup). Supported bonding modes: - ``balance-rr``: Transmit packets in sequential order from the first available slave through the last. This mode provides load balancing and fault tolerance. - ``active-backup``: Only one slave in the bond is active. A different slave becomes active if, and only if, the active slave fails. The bond's MAC address is externally visible on only one port (network adapter) to avoid confusing the switch. - ``balance-xor``: Transmit based on the selected transmit hash policy. The default policy is a simple [(source MAC address XOR'd with destination MAC address XOR packet type ID) modulo slave count]. - ``broadcast``: Transmits everything on all slave interfaces. This mode provides fault tolerance. - ``802.3ad``: IEEE 802.3ad dynamic link aggregation. Creates aggregation groups that share the same speed and duplex settings. Uses all slaves in the active aggregator according to the 802.3ad specification. - ``balance-tlb``: Adaptive transmit load balancing: channel bonding that does not require any special switch support. - ``balance-alb``: Adaptive load balancing: includes balance-tlb plus receive load balancing (rlb) for IPV4 traffic, and does not require any special switch support. The receive load balancing is achieved by ARP negotiation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_num_grat_arp": {
+            "type": "number",
+            "description": "The number of peer notifications (IPv4 ARP or IPv6 Neighbour Advertisements) to be issued after a failover. (Default: 1).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_updelay": {
+            "type": "number",
+            "description": "Specifies the time, in milliseconds, to wait before enabling a slave after a link recovery has been detected.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bond_xmit_hash_policy": {
+            "type": "string",
+            "description": "The transmit hash policy to use for slave selection in balance-xor, 802.3ad, and tlb modes. Possible values are: ``layer2``, ``layer2+3``, ``layer3+4``, ``encap2+3``, ``encap3+4``. (Default: ``layer2``).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "The bond interface MAC address.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the bond interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU of the bond interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The bond interface name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parents": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Parent interface names for this bond interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names to be assigned to the bond interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN the bond interface is connected to.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network Bonds.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_bridge": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accept_ra": {
+            "type": "bool",
+            "description": "Accept router advertisements. (IPv6 only).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bridge_fd": {
+            "type": "number",
+            "description": "Set bridge forward delay to time seconds. (Default: 15).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "bridge_stp": {
+            "type": "bool",
+            "description": "Turn spanning tree protocol on or off. (Default: False).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bridge_type": {
+            "type": "string",
+            "description": "The type of bridge to create. Possible values are: ``standard``, ``ovs``.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "The bridge interface MAC address.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the bridge interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU of the bridge interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The bridge interface name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "Parent interface name for this bridge interface.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names to be assigned to the bridge interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN the bridge interface is connected to.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network Bridges.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_gateway": {
+            "type": "bool",
+            "description": "Boolean value. When enabled, it sets the subnet gateway IP address as the default gateway for the machine the interface belongs to. This option can only be used with the `AUTO` and `STATIC` modes. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "device": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the device with the network interface. Either `machine` or `device` must be provided.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_address": {
+            "type": "string",
+            "description": "Valid IP address (from the given subnet) to be configured on the network interface. Only used when `mode` is set to `STATIC`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the network interface. Either `machine` or `device` must be provided.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Connection mode to subnet. It defaults to `AUTO`. Valid options are:\n\t* `AUTO` - Random static IP address from the subnet.\n\t* `DHCP` - IP address from the DHCP on the given subnet.\n\t* `STATIC` - Use `ip_address` as static IP address.\n\t* `LINK_UP` - Bring the interface up only on the given subnet. No IP address will be assigned.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "network_interface": {
+            "type": "string",
+            "description": "The identifier (MAC address, name, or ID) of the network interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subnet": {
+            "type": "string",
+            "description": "The identifier (CIDR or ID) of the subnet to be connected.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage network configuration on a network interface.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_physical": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "The physical network interface MAC address.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the physical network interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU of the physical network interface. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The physical network interface name. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names to be assigned to the physical network interface. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN the physical network interface is connected to.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to manage a physical network interface from an existing MAAS machine.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "device": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the device with the network interface. Either `machine` or `device` must be provided.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "interface_id": {
+            "type": "number",
+            "description": "The network interface ID to tag.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the network interface. Either `machine` or `device` must be provided.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The tags to assign to the network interface. Tag names should be short and without spaces.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage tags as strings on a network interface.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_vlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accept_ra": {
+            "type": "bool",
+            "description": "Accept router advertisements. (IPv6 only).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "fabric": {
+            "type": "string",
+            "description": "The identifier (name or ID) of the fabric for the new VLAN interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the VLAN interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU of the VLAN interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the VLAN interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "Parent interface name for this VLAN interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names to be assigned to the VLAN interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN the VLAN interface is connected to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network VLANs.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_node_script": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "apply_configured_networking": {
+            "type": "bool",
+            "description": "Whether the provided network configuration is applied before the node script runs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of what the node script does.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "destructive": {
+            "type": "bool",
+            "description": "Whether or not the node script overwrites data on any drive on the running system.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "for_hardware": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of modalias, PCI IDs, and/or USB IDs the node script will automatically run on.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hardware_type": {
+            "type": "string",
+            "description": "Defines what type of hardware the node script is associated with. May be `cpu`, `memory`, `storage`, `network`, `gpu`, or `node`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "may_reboot": {
+            "type": "bool",
+            "description": "Whether or not the node script may reboot the system while running.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the node script.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "packages": {
+            "type": "string",
+            "description": "Dictionary of packages to be installed or extracted before running the node script.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parallel": {
+            "type": "string",
+            "description": "Whether the node script may be run in parallel with other scripts. May be `disabled` to run by itself, `instance` to run along scripts with the same name, or `any` to run along any script.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parameters": {
+            "type": "string",
+            "description": "The parameters the node script accepts.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "recommission": {
+            "type": "bool",
+            "description": "Whether builtin commissioning scripts should be rerun after successfully running this node script.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results": {
+            "type": "string",
+            "description": "The results the node script will return on completion.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "script": {
+            "type": "string",
+            "description": "The node script content encoded in base64.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "script_type": {
+            "type": "string",
+            "description": "Defines when the node script should be used: `commissioning` or `testing` or `release`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A set of tag names assigned to the node script.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeout": {
+            "type": "string",
+            "description": "How long the node script is allowed to run before failing. `0` means unlimited time. The time is represented in the following format: `[DD] [[HH:]MM:]ss[.uuuuuu]`",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the node script.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS node scripts. It expects a script with metadata defined only embedded in the script, and it computes them in the Terraform state after the resource creation. Details about script metadata can be found in MAAS docs, ref: https://maas.io/docs/reference-commissioning-scripts",
+        "description_kind": "plain"
+      }
+    },
+    "maas_package_repository": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of supported architectures.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "components": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of components to enable. Only applicable to custom repositories.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disable_sources": {
+            "type": "bool",
+            "description": "Disable deb-src lines.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disabled_components": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of components to disable. Only applicable to the default Ubuntu repositories.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disabled_pockets": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of pockets to disable. This only applies to Ubuntu repositories; custom or not.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "distributions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Which package distributions to include.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether or not the repository is enabled.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The authentication key to use with the repository.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the package repository.\n*Note*: the Name field for the Ubuntu Archive and Ubuntu Ports repos are `main_archive` and `ports_archive` respectively. As they are default resources, the MAAS UI shows a different name to their internal database name entry.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the package repository.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS package repositories.\n*Note*: The two Ubuntu archives that ship with MAAS are import-only Terraform resources, only custom repositories can be created or destroyed.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_raid": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_devices": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of block devices to be included in the RAID.\n*Note*: The boot disk cannot participate in the RAID as a block device, a partition on top of it should be supplied instead.\n*Note*: Block devices with partitions are not valid targets to construct a RAID, supply their partitions instead.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "fs_type": {
+            "type": "string",
+            "description": "The file system type (e.g. `ext4`). If this is not set, the RAID is unformatted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "level": {
+            "type": "string",
+            "description": "The RAID Level. Valid levels are: `\"0\", \"1\", \"5\", \"6\", \"10\"`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The machine identifier (system ID, hostname, or FQDN) that owns the RAID.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mount_options": {
+            "type": "string",
+            "description": "Comma separated options used for the RAID mount.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mount_point": {
+            "type": "string",
+            "description": "The mount point used. If this is not set, the RAID is not mounted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the RAID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "partitions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of partitions to be included in the RAID.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "size_gigabytes": {
+            "type": "number",
+            "description": "The volume size (given in GB).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "spare_devices": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of spare block devices for the RAID.\n*Note*: The boot disk cannot participate in the RAID as a block device, a partition on top of it should be supplied instead.\n*Note*: Block devices with partitions are not valid targets to construct a RAID, supply their partitions instead.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "spare_partitions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of spare partitions for the RAID.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS RAIDs, and construct them from block devices and partitions.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_resource_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the resource pool.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the resource pool.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS resource pools.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the new space.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network spaces.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_ssh_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keys": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Valid SSH public keys. If specified, these keys will be uploaded to MAAS. Otherwise this field will be computed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keysource": {
+            "type": "string",
+            "description": "The source of the SSH key(s). Can be used to 'import' a requesting user's SSH keys from a source for a specific user into MAAS, specified in the format source:user. Valid sources include 'lp' for Launchpad and 'gh' for GitHub. E.g. 'lp:my_launchpad_username'. **Note** all keys from the source will be imported into MAAS, and all keys will be managed by this resource. Keysources are not supported for import, so the expected keys must be specified using the `keys` field.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a resource to manage one or many SSH keys in MAAS.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_static_route": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "destination": {
+            "type": "string",
+            "description": "Destination subnet name for the route.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "gateway_ip": {
+            "type": "string",
+            "description": "IP address of the gateway on the source subnet.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metric": {
+            "type": "number",
+            "description": "Weight of the route on a deployed machine. Defaults to 0.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Source subnet name for the route.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS static routes.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_subnet": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_dns": {
+            "type": "bool",
+            "description": "Boolean value that indicates if the MAAS DNS resolution is enabled for this subnet. Defaults to `true`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "allow_proxy": {
+            "type": "bool",
+            "description": "Boolean value that indicates if `maas-proxy` allows requests from this subnet. Defaults to `true`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The subnet CIDR.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "dns_servers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of IP addresses set as DNS servers for the new subnet. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "fabric": {
+            "type": "string",
+            "description": "The fabric identifier (ID or name) for the new subnet.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "gateway_ip": {
+            "type": "string",
+            "description": "Gateway IP address for the new subnet. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The subnet name.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rdns_mode": {
+            "type": "number",
+            "description": "How reverse DNS is handled for this subnet. Defaults to `2`. Valid options are:\n\t* `0` - Disabled, no reverse zone is created.\n\t* `1` - Enabled, generate reverse zone.\n\t* `2` - RFC2317, extends `1` to create the necessary parent zone with the appropriate CNAME resource records for the network, if the network is small enough to require the support described in RFC2317.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vlan": {
+            "type": "string",
+            "description": "The VLAN identifier (ID or traffic segregation ID) for the new subnet. If this is set, the `fabric` argument is required.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "ip_ranges": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "comment": {
+                  "type": "string",
+                  "description": "A description of this range.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "end_ip": {
+                  "type": "string",
+                  "description": "The end IP for the new IP range (inclusive).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "start_ip": {
+                  "type": "string",
+                  "description": "The start IP for the new IP range (inclusive).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The IP range type. Valid options are: `dynamic`, `reserved`.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "A set of IP ranges configured on the new subnet. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage MAAS network subnets.\n\n**NOTE:** The MAAS provider currently supports both standalone resources and in-line resources for subnet IP ranges. You cannot use in-line `ip_ranges` in conjunction with standalone `maas_subnet_ip_range` resources. Doing so will cause conflicts and will overwrite subnet IP ranges.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_subnet_ip_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "comment": {
+            "type": "string",
+            "description": "A description of this range. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "end_ip": {
+            "type": "string",
+            "description": "The end IP for the new IP range (inclusive).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "start_ip": {
+            "type": "string",
+            "description": "The start IP for the new IP range (inclusive).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subnet": {
+            "type": "string",
+            "description": "The subnet identifier (ID or CIDR) for the new IP range.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The IP range type. Valid options are: `dynamic`, `reserved`.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network subnets IP ranges.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "comment": {
+            "type": "string",
+            "description": "A description of what the the tag will be used for in natural language.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "definition": {
+            "type": "string",
+            "description": "An XPATH query that is evaluated against the hardware_details stored for all nodes. (i.e. the output of ``lshw -xml``)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "kernel_opts": {
+            "type": "string",
+            "description": "Nodes associated with this tag will add this string to their kernel options when booting. The value overrides the global ``kernel_opts`` setting. If more than one tag is associated with a node, command line will be concatenated from all associated tags, in alphabetic tag name order.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "machines": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of MAAS machines' identifiers (system ID, hostname, or FQDN) that will be tagged with the new tag.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The new tag name. Because the name will be used in urls, it should be short.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage a MAAS tag, used to tag machines.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The user e-mail address.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_admin": {
+            "type": "bool",
+            "description": "Boolean value indicating if the user is a MAAS administrator. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The user name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The user password.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "transfer_to_user": {
+            "type": "string",
+            "description": "If provided, resources owned by the deleted user will be transferred to this user.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS users. *Note* You cannot use this to modify the logged in terraform user, or any users not managed by MAAS.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dhcp_on": {
+            "type": "bool",
+            "description": "Boolean value. Whether or not DHCP should be managed on the new VLAN. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "fabric": {
+            "type": "string",
+            "description": "The identifier (name or ID) of the fabric for the new VLAN.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU to use on the new VLAN. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the new VLAN. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "The space of the new VLAN. Passing in an empty string (or the string `undefined`) will cause the VLAN to be placed in the `undefined` space. This argument is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vid": {
+            "type": "number",
+            "description": "The traffic segregation ID for the new VLAN.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS network VLANs.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vlan_dhcp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fabric": {
+            "type": "number",
+            "description": "Database ID of the fabric of the VLAN whose DHCP is managed. This parameter `fabric` and `vlan` are used to identify the VLAN.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_ranges": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "A set of IP range ids to serve DHCP to. IP ranges must be of type dynamic.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "primary_rack_controller": {
+            "type": "string",
+            "description": "The system_id of the Rack controller to use as primary for DHCP.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "relay_vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN to use as a relay for DHCP.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secondary_rack_controller": {
+            "type": "string",
+            "description": "The system_id of the Rack controller to use as secondary for DHCP.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "subnets": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "A set of subnet ids to serve DHCP on their dynamic IP ranges.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "VID of the VLAN whose DHCP is managed. This parameter `vlan` and `fabric` are used to identify the VLAN.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage DHCP on MAAS network VLANs.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vm_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "certificate": {
+            "type": "string",
+            "description": "Certificate to use for power control of a LXD VM host. It can't be set if `machine`, `power_user` or `power_pass` parameters are used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "cpu_over_commit_ratio": {
+            "type": "number",
+            "description": "The new VM host CPU overcommit ratio. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "default_macvlan_mode": {
+            "type": "string",
+            "description": "The new VM host default macvlan mode. Supported values are: `bridge`, `passthru`, `private`, `vepa`. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Certificate key to use for power control of a LXD VM host. It can't be set if `machine`, `power_user`, or `power_pass` parameters are used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (hostname, FQDN or system ID) of a registered ready MAAS machine. This is going to be deployed and registered as a new VM host. This argument conflicts with: `power_address`, `power_user`, `power_pass`, `certificate`, `key` and `password`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "memory_over_commit_ratio": {
+            "type": "number",
+            "description": "The new VM host RAM memory overcommit ratio. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The new VM host name. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "LXD trust password to use for power control of a LXD VM Host. If parameters `certificate` and `key` are used, the trust password will be used to trust the certificate-key pair. If no `certificate` and `key` are specified, MAAS will generate a trusted certificate and key for the VM host. It can't be set if `machine`, `power_user`, or `power_pass` parameters are used.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The new VM host pool name. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "power_address": {
+            "type": "string",
+            "description": "Address that gives MAAS access to the VM host power control. For example: `qemu+ssh://172.16.99.2/system`. The address given here must reachable by the MAAS server. It can't be set if `machine` argument is used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "power_pass": {
+            "type": "string",
+            "description": "User password to use for power control of a Virsh VM host. Cannot be set if `machine`, `certificate`, `key` or `password` parameters are used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "power_user": {
+            "type": "string",
+            "description": "User name to use for power control of a Virsh VM host. Cannot be set if `machine`, `certificate`, `key` or `password` parameters are used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "project": {
+            "type": "string",
+            "description": "LXD project to be used by VM host to deploy machines to. Cannot be set if `machine`, `power_user` or `power_pass` parameters are used.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "resources_cores_total": {
+            "type": "number",
+            "description": "The VM host total number of CPU cores.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resources_local_storage_total": {
+            "type": "number",
+            "description": "The VM host total local storage (in bytes).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resources_memory_total": {
+            "type": "number",
+            "description": "The VM host total RAM memory (in MB).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names to assign to the new VM host. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The VM host type. Supported values are: `lxd`, `virsh`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The new VM host zone name. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "deploy_params": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "distro_series": {
+                  "type": "string",
+                  "description": "The distro series used to deploy the specifed MAAS machine. If it's not given, the MAAS server default value is used.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "enable_hw_sync": {
+                  "type": "bool",
+                  "description": "Periodically sync hardware",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "hwe_kernel": {
+                  "type": "string",
+                  "description": "Hardware enablement kernel to use with the image. Only used when deploying Ubuntu.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "user_data": {
+                  "type": "string",
+                  "description": "Cloud-init user data script that gets run on the machine once it has deployed. A good practice is to set this with `file(\"/tmp/user-data.txt\")`, where `/tmp/user-data.txt` is a cloud-init script.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Nested argument with the config used to deploy the machine specified using `machine`.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage MAAS VM hosts.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vm_host_machine": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cores": {
+            "type": "number",
+            "description": "The number of CPU cores (defaults to 1).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The VM host machine domain. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The VM host machine hostname. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "The VM host machine RAM memory, specified in MB (defaults to 2048).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "pinned_cores": {
+            "type": "number",
+            "description": "List of host CPU cores to pin the VM host machine to. If this is passed, the `cores` parameter is ignored.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The VM host machine pool. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vm_host": {
+            "type": "string",
+            "description": "ID or name of the VM host used to compose the new machine.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The VM host machine zone. This is computed if it's not set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "network_interfaces": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "fabric": {
+                  "type": "string",
+                  "description": "The fabric for the network interface.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip_address": {
+                  "type": "string",
+                  "description": "Static IP configured on the new network interface.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The network interface name.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "subnet_cidr": {
+                  "type": "string",
+                  "description": "The subnet CIDR for the network interface.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "vlan": {
+                  "type": "string",
+                  "description": "The VLAN for the network interface.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "A list of network interfaces for new the VM host. This argument only works when the VM host is deployed from a registered MAAS machine. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).",
+              "description_kind": "plain"
+            }
+          },
+          "storage_disks": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "pool": {
+                  "type": "string",
+                  "description": "The VM host storage pool name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "size_gigabytes": {
+                  "type": "number",
+                  "description": "The storage disk size, specified in GB.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "A list of storage disks for the new VM host. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Provides a resource to manage MAAS VM host machines.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_volume_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "block_devices": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of block device ids to be included in this volume group.\n*Note*: For the boot disk, a partition should be supplied instead, as MAAS would otherwise automatically create one.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The machine identifier (system ID, hostname, or FQDN) that owns the volume group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for this volume group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "partitions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of partition ids to be included in this volume group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "size_gigabytes": {
+            "type": "number",
+            "description": "The volume group size (GB).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Volume group UUID.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS Volume Groups, and construct them from partion-less block devices.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A brief description of the new zone.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the new zone.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a resource to manage MAAS zones.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "maas_boot_resources": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "boot_resources": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "architecture": "string",
+                  "name": "string",
+                  "subarches": "string"
+                }
+              ]
+            ],
+            "description": "The set of boot resources for this os/release",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "os": {
+            "type": "string",
+            "description": "The operating system for this resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "release": {
+            "type": "string",
+            "description": "The specific release of the operating system for this resource.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a data source to fetch MAAS boot resources.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_boot_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created": {
+            "type": "string",
+            "description": "The creation time of the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyring_data": {
+            "type": "string",
+            "description": "The data on the keyring for the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "keyring_filename": {
+            "type": "string",
+            "description": "The filename on the keyring for the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated": {
+            "type": "string",
+            "description": "The time of most recent update of the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the boot source.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to fetch the MAAS boot source.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_boot_source_selection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The architecture list for this selection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "boot_source": {
+            "type": "number",
+            "description": "The boot source database ID this resource is associated with.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The label list for this selection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "os": {
+            "type": "string",
+            "description": "The operating system for this selection.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "release": {
+            "type": "string",
+            "description": "The specific release of the operating system for this selection.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subarches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of subarches for this selection.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a resource to fetch a MAAS boot source selection.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key corresponding to the configuration setting.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Value for the configuration setting.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides details about a particular MAAS configuration setting. See MAAS server in the [MAAS API documentation](https://maas.io/docs/api) for a full list of keys and their values.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The device FQDN.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The device hostname.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_addresses": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of IP addressed assigned to the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "network_interfaces": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "id": "number",
+                  "mac_address": "string",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "A set of network interfaces attached to the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "The owner of the device.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The zone of the device.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides details about an existing MAAS device.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_devices": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "devices": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "hostname": "string",
+                  "system_id": "string"
+                }
+              ]
+            ],
+            "description": "A set of devices visible to the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Lists MAAS devices visible to the user.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_fabric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The fabric name.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides details about an existing MAAS network fabric.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_machine": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "architecture": {
+            "type": "string",
+            "description": "The architecture type of the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "block_devices": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "number",
+                  "id_path": "string",
+                  "model": "string",
+                  "name": "string",
+                  "serial": "string",
+                  "size_gigabytes": "number"
+                }
+              ]
+            ],
+            "description": "A list of physical block devices attached to the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The machine hostname.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "min_hwe_kernel": {
+            "type": "string",
+            "description": "The minimum kernel version allowed to run on this machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The resource pool of the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "power_parameters": {
+            "type": "string",
+            "description": "Serialized JSON string containing the parameters specific to the `power_type`. See [Power types](https://maas.io/docs/api#power-types) section for a list of the available power parameters for each power type.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "power_type": {
+            "type": "string",
+            "description": "The power management type (e.g. `ipmi`) of the machine.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pxe_mac_address": {
+            "type": "string",
+            "description": "The MAC address of the machine's PXE boot NIC.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The machine status",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The zone of the machine.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "maas_machines": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "machines": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "hostname": "string",
+                  "system_id": "string"
+                }
+              ]
+            ],
+            "description": "A set of machines visible to the user.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists MAAS machines visible to the user.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_network_interface_physical": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "The physical network interface MAC address.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "machine": {
+            "type": "string",
+            "description": "The identifier (system ID, hostname, or FQDN) of the machine with the physical network interface.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU of the physical network interface.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The physical network interface name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of tag names assigned to the physical network interface.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "Database ID of the VLAN the physical network interface is connected to.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "maas_package_repository": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arches": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of supported architectures.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "components": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of components that are enabled. Only applicable to custom repositories.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disable_sources": {
+            "type": "bool",
+            "description": "Whether deb-src lines are disabled for this repository.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disabled_components": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of components that are disabled. Only applicable to the default Ubuntu repositories.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disabled_pockets": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of pockets that are disabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "distributions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of included package distributions.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether or not the repository is enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The authentication key used with the repository.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the package repository.\n*Note*: the Name field for the Ubuntu Archive and Ubuntu Ports repos are `main_archive` and `ports_archive` respectively. As they are default resources, the MAAS UI shows a different name to their internal database name entry.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the package repository.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a data source to fetch MAAS package repositories.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_rack_controller": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the rack controller.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The hostname of the rack controller.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "services": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "status": "string"
+                }
+              ]
+            ],
+            "description": "The services running on the rack controller.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The MAAS version of the rack controller.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides details about an existing MAAS rack controller.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_rack_controllers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "controllers": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "hostname": "string",
+                  "id": "string",
+                  "services": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "name": "string",
+                        "status": "string"
+                      }
+                    ]
+                  ],
+                  "subnets": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "cidr": "string",
+                        "fabric": "string",
+                        "id": "string",
+                        "vlan": "number"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "description": "List of all rack controllers.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Provides details about all MAAS rack controllers.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_resource_pool": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the resource pool.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the resource pool.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides details about an existing MAAS resource pool.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_subnet": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_dns": {
+            "type": "bool",
+            "description": "Boolean value that indicates if the MAAS DNS resolution is enabled for this subnet.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "allow_proxy": {
+            "type": "bool",
+            "description": "Boolean value that indicates if `maas-proxy` allows requests from this subnet.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cidr": {
+            "type": "string",
+            "description": "The subnet CIDR.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "dns_servers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of IP addresses set as DNS servers for the subnet.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fabric": {
+            "type": "string",
+            "description": "The subnet fabric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "gateway_ip": {
+            "type": "string",
+            "description": "Gateway IP address for the subnet.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The subnet name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "rdns_mode": {
+            "type": "number",
+            "description": "How reverse DNS is handled for this subnet. It can have one of the following values:\n\t* `0` - Disabled, no reverse zone is created.\n\t* `1` - Enabled, generate reverse zone.\n\t* `2` - RFC2317, extends `1` to create the necessary parent zone with the appropriate CNAME resource records for the network, if the network is small enough to require the support described in RFC2317.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vid": {
+            "type": "number",
+            "description": "The subnet VLAN traffic segregation ID.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides details about an existing MAAS network subnet.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dhcp_on": {
+            "type": "bool",
+            "description": "Boolean value indicating if DHCP is enabled on the VLAN.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fabric": {
+            "type": "string",
+            "description": "The fabric identifier (ID or name) for the VLAN.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mtu": {
+            "type": "number",
+            "description": "The MTU used on the VLAN.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The VLAN name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "space": {
+            "type": "string",
+            "description": "The VLAN space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vlan": {
+            "type": "string",
+            "description": "The VLAN identifier (ID or traffic segregation ID).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides details about an existing MAAS VLAN.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_vm_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "certificate": {
+            "type": "string",
+            "description": "Certificate to use for power control of the LXD VM host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cpu_over_commit_ratio": {
+            "type": "number",
+            "description": "The VM host CPU overcommit ratio.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "default_macvlan_mode": {
+            "type": "string",
+            "description": "The VM host default macvlan mode.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key to use for power control of the LXD VM host.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "memory_over_commit_ratio": {
+            "type": "number",
+            "description": "The VM host RAM memory overcommit ratio.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The VM host name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pool": {
+            "type": "string",
+            "description": "The VM host pool name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "power_address": {
+            "type": "string",
+            "description": "Address that gives MAAS access to the VM host power control.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "power_pass": {
+            "type": "string",
+            "description": "User password to use for power control of the VM host.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "power_user": {
+            "type": "string",
+            "description": "User name to use for power control of the VM host.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "For `lxd` VM hosts, the project that MAAS will manage.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resources_cores_total": {
+            "type": "number",
+            "description": "The VM host total number of CPU cores.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resources_local_storage_total": {
+            "type": "number",
+            "description": "The VM host total local storage (in bytes).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "resources_memory_total": {
+            "type": "number",
+            "description": "The VM host total RAM memory (in MB).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "A set of VM host tag names.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The VM host type. Supported values are: `lxd`, `virsh`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "The VM host zone name.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides details about an existing MAAS VM host.",
+        "description_kind": "plain"
+      }
+    },
+    "maas_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A brief description of the zone.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The zone's name.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides details about an existing MAAS zone.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
