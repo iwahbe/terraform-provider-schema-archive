@@ -1,0 +1,398 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "host": {
+          "type": "string",
+          "description": "Edge router URL. Can be set with `EDGE_HOST`.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "insecure": {
+          "type": "bool",
+          "description": "Specify if the connection to the Edge configuration API should be insecure. Can be set with `EDGE_INSECURE`.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Admin password. Can be set with `EDGE_PASSWORD`.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Admin username. Can be set with `EDGE_USERNAME`.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "\nThe Edge provider provides the ability to configure a Ubiquiti Edge device.\n\n~> You must use `-parallelism=1` on all `destroy` and `apply` operations because the EdgeOS configuration API is not safe for concurrent use.\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "edge_firewall_address_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidrs": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A non-overlapping list of cidrs.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A human readable description for this address group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the resource. This will always be the name. It is present only for legacy purposes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique, human readable name for this address group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A logical grouping of addresses.",
+        "description_kind": "plain"
+      }
+    },
+    "edge_firewall_port_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "A human readable description for this port group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the resource. This will always be the name. It is present only for legacy purposes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique, human readable name for this port group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port_ranges": {
+            "nested_type": {
+              "attributes": {
+                "from": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "to": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of port ranges.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ports": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "A list of port numbers.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A logical grouping of ports.",
+        "description_kind": "plain"
+      }
+    },
+    "edge_firewall_ruleset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_action": {
+            "type": "string",
+            "description": "The default action to take if traffic is not matched by one of the rules in the ruleset. Must be one of `reject`, `drop`, `accept`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "default_logging": {
+            "type": "bool",
+            "description": "Turn on logging for this rule. These rotated logs can be found in /var/log/messages on your router.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A human readable description for this ruleset.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of the resource. This will always be the name. It is present only for legacy purposes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique, human readable name for this ruleset.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "The action to take on traffic that matches this rule. Must be one of `reject`, `drop`, `accept`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A human readable description for this rule.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "destination": {
+                  "nested_type": {
+                    "attributes": {
+                      "address": {
+                        "type": "string",
+                        "description": "The cidr this rule applies to. If not provided, it is treated as `0.0.0.0/0`. Conflicts with `address_group`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "address_group": {
+                        "type": "string",
+                        "description": "The address group this rule applies to. If not provided, all addresses will be matched. Conflicts with `address`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port": {
+                        "nested_type": {
+                          "attributes": {
+                            "from": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "to": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A port range. Conflicts with `port_group`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port_group": {
+                        "type": "string",
+                        "description": "The port group this rule applies to. If not provided, all ports will be matched. Conflicts with `port`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Details about the traffic's destination. If not specified, all sources will be evaluated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "log": {
+                  "type": "bool",
+                  "description": "Turn on logging for this rule. These rotated logs can be found in /var/log/messages on your router.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "The priority of this rule. The higher the priority, the higher the precedence.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "The protocol this rule applies to. If not specified, this rule applies to all protcols. Values prefixed with `!` specifies a _not_ behavior. If `!` is provided, this rule applies to all protocols except this one.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "source": {
+                  "nested_type": {
+                    "attributes": {
+                      "address": {
+                        "type": "string",
+                        "description": "The cidr this rule applies to. If not provided, it is treated as `0.0.0.0/0`. Conflicts with `address_group`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "address_group": {
+                        "type": "string",
+                        "description": "The address group this rule applies to. If not provided, all addresses will be matched. Conflicts with `address`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "mac": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port": {
+                        "nested_type": {
+                          "attributes": {
+                            "from": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "to": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A port range. Conflicts with `port_group`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "port_group": {
+                        "type": "string",
+                        "description": "The port group this rule applies to. If not provided, all ports will be matched. Conflicts with `port`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Details about the traffic's source. If not specified, all sources will be evaluated.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "state": {
+                  "nested_type": {
+                    "attributes": {
+                      "established": {
+                        "type": "bool",
+                        "description": "Match packets that are part of a two-way connection.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "invalid": {
+                        "type": "bool",
+                        "description": "Match packets that cannot be identified.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "new": {
+                        "type": "bool",
+                        "description": "Match packets creating a new connection.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "related": {
+                        "type": "bool",
+                        "description": "Match packets related to established connections.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "This describes the connection state of a packet.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "A grouping of firewall rules. The firewall is not enforced unless attached to an interface which can be done with the `firewall_ruleset_attachment` resource.",
+        "description_kind": "plain"
+      }
+    },
+    "edge_firewall_ruleset_attachment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The identifier of the resource. This will always be the interface. It is present only for legacy purposes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "in": {
+            "type": "string",
+            "description": "Match inbound packets.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "interface": {
+            "type": "string",
+            "description": "The interface to attach firewall rules to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "local": {
+            "type": "string",
+            "description": "Match local packets.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "out": {
+            "type": "string",
+            "description": "Match outbound packets.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Attach a firewall ruleset to inbound, outbound, and local traffic.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "edge_interface_ethernet": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    }
+  }
+}
