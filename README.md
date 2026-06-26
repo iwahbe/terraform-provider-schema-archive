@@ -17,17 +17,19 @@ maintain-archive/               # The function that maintains archive.json & the
   uv.lock                       # Pinned dependency lockfile
 schema-archive/                 # The full archive
   <registry>/                   # The registry of the provider
-    <org>/                      # The org of the provider
-      <provider>/               # The name of the provider
-        <version>/              # The version of the provider
-          schema.json           # The provider's schema, indexed out of `tofu providers schema -json`
-          stdout.txt            # The stdout of the schema dump
-          stderr.txt            # The stderr of the schema dump
-          metadata.json         # Metadata about how the schema was generated
+    <prefix>/                   # The org's first two characters, sharding orgs so no folder grows unbounded
+      <org>/                    # The org of the provider
+        <provider>/             # The name of the provider
+          <version>/            # The version of the provider
+            schema.json         # The provider's schema, indexed out of `tofu providers schema -json`
+            stdout.txt          # The stdout of the schema dump
+            stderr.txt          # The stderr of the schema dump
+            metadata.json       # Metadata about how the schema was generated
 schema-latest/                  # A simplified view of schema-archive, containing only the latest providers
   <registry>/                   # The registry of the provider
-    <org>/                      # The org of the provider
-      <provider>                # A symlink into schema-archive's tree for the highest version of the published provider
+    <prefix>/                   # The org's first two characters (same sharding as schema-archive)
+      <org>/                    # The org of the provider
+        <provider>              # A symlink into schema-archive's tree for the highest version of the published provider
 .github/workflows/maintain.yaml # The workflow that maintains the archive via a chron
 ```
 

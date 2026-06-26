@@ -216,8 +216,21 @@ def backoff(attempt: int, stop):
         waited += 1
 
 
+def org_prefix(org: str) -> str:
+    "First two characters of an org, used to shard org directories so no folder grows unbounded."
+    return org[:2]
+
+
+def archive_dir(registry: str, org: str, provider: str, version: str) -> str:
+    return os.path.join(SCHEMA_ARCHIVE, registry, org_prefix(org), org, provider, version)
+
+
+def latest_link(registry: str, org: str, provider: str) -> str:
+    return os.path.join(SCHEMA_LATEST, registry, org_prefix(org), org, provider)
+
+
 def write_outputs(provider: Provider, version: Version, result: dump.DumpResult):
-    directory = os.path.join(SCHEMA_ARCHIVE, provider.registry, provider.org, provider.name, version.version)
+    directory = archive_dir(provider.registry, provider.org, provider.name, version.version)
     os.makedirs(directory, exist_ok=True)
     with open(os.path.join(directory, "stdout.txt"), "w") as f:
         f.write(result.stdout)
@@ -394,8 +407,8 @@ def update_latest_symlink(provider: Provider):
     if not done:
         return
     latest = max(done, key=lambda v: latest_key(v.version))
-    link = os.path.join(SCHEMA_LATEST, provider.registry, provider.org, provider.name)
-    target = os.path.join(SCHEMA_ARCHIVE, provider.registry, provider.org, provider.name, latest.version)
+    link = latest_link(provider.registry, provider.org, provider.name)
+    target = archive_dir(provider.registry, provider.org, provider.name, latest.version)
     os.makedirs(os.path.dirname(link), exist_ok=True)
     if os.path.islink(link) or os.path.exists(link):
         os.remove(link)
