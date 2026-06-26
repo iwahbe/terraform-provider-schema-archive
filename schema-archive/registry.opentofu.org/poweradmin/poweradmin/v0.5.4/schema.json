@@ -1,0 +1,921 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "API key for authentication (X-API-Key header)",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "Poweradmin API base URL (e.g., https://dns.example.com)",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "api_version": {
+          "type": "string",
+          "description": "Poweradmin API version to use. Only 'v2' is supported (Poweradmin 4.1.0+). Defaults to 'v2'",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "insecure": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification (not recommended for production)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password for HTTP basic authentication",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Username for HTTP basic authentication (alternative to api_key)",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Provider for managing Poweradmin DNS zones and records. Compatible with both Terraform and OpenTofu.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "poweradmin_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the group",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "perm_templ_id": {
+            "type": "number",
+            "description": "Permission template ID for the group. Must reference a group-type permission template. Changing this forces recreation of the group.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a group in Poweradmin. Groups can have members and zones assigned to them. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_group_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "number",
+            "description": "ID of the group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier in the format `group_id/user_id`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_id": {
+            "type": "number",
+            "description": "ID of the user to add to the group",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a user's membership in a Poweradmin group. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_group_zone_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "number",
+            "description": "ID of the group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier in the format `group_id/zone_id`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "ID of the zone to assign to the group",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Assigns a DNS zone to a Poweradmin group. All members of the group gain access to the zone. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "The record content/value",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "create_ptr": {
+            "type": "bool",
+            "description": "Automatically create a PTR (reverse DNS) record for this record. Only applicable to A and AAAA records. Requires a matching reverse zone. Defaults to false. Changing this value requires resource replacement.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether the record is disabled. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the record",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The record name (e.g., 'www' for www.example.com, or '@' for the zone apex)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Priority for MX and SRV records. Defaults to 0.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to Live in seconds. Defaults to 3600.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The record type (A, AAAA, CNAME, MX, TXT, SRV, NS, PTR, etc.)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "The ID of the zone this record belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a DNS record in a Poweradmin zone. Supports all standard DNS record types (A, AAAA, CNAME, MX, TXT, SRV, etc.).",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_rrset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "RRSet identifier (format: zone_id/name/type)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name (use @ for zone apex, or subdomain like 'www')",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "Record content (IP address, hostname, text, etc.)",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "disabled": {
+                  "type": "bool",
+                  "description": "Whether this record is disabled. Default: false",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "Priority for MX, SRV and other priority-bearing records. Default: 0",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of record contents. All records in the RRSet share the same name, type, and TTL. Order is not significant.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to live (TTL) in seconds. Defaults to 3600.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Record type (A, AAAA, CNAME, MX, TXT, etc.)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "Zone ID where the RRSet will be created",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a DNS Resource Record Set (RRSet). An RRSet is a collection of records with the same name and type, managed as a single unit. This matches PowerDNS behavior and is the DNS-correct way to handle multiple records.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description": "Whether the user account is active. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description or notes about the user",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "fullname": {
+            "type": "string",
+            "description": "Full name of the user",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the user",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "User password (will be hashed). Cannot be read back from the API.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "perm_templ": {
+            "type": "number",
+            "description": "Permission template ID to assign to the user",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "use_ldap": {
+            "type": "bool",
+            "description": "Whether the user should use LDAP authentication. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique username for the user",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a user in Poweradmin. Users can be assigned permission templates and can own DNS zones.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account": {
+            "type": "string",
+            "description": "Account name for the zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the zone",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the zone",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "masters": {
+            "type": "string",
+            "description": "Master server(s) for SLAVE zones. Supports multiple formats:\n  - Plain IP: `192.0.2.1`\n  - Multiple IPs: `192.0.2.1,192.0.2.2`\n  - IP with port: `192.0.2.1:5300`\n  - Multiple with ports: `192.0.2.1:5300,192.0.2.2:5300`\n  - IPv6 with port (requires brackets): `[2001:db8::1]:5300`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The zone name (e.g., example.com)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "template": {
+            "type": "string",
+            "description": "Template to use when creating the zone (only applies during creation)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Zone type: MASTER, SLAVE, or NATIVE. Defaults to MASTER.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a DNS zone in Poweradmin. Supports MASTER, SLAVE, and NATIVE zone types.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the zone template",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the zone template",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_global": {
+            "type": "bool",
+            "description": "Whether this template is global (visible to all users). Requires ueberuser permission to set true. Defaults to `false` on first create; once set, the value is preserved across applies (toggle it explicitly to change it, since toggling reassigns ownership server-side).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the zone template (must be unique)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner": {
+            "type": "number",
+            "description": "User ID that owns the template. `0` indicates a global template.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a zone template in Poweradmin. Zone templates are reusable sets of DNS records that can be applied when creating new zones. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone_template_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Record content. Supports the same placeholders as `name`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier in the format `template_id/record_id`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name. Supports the `[ZONE]` placeholder.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Record priority (used by `MX`, `SRV`). Defaults to `0`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "record_id": {
+            "type": "number",
+            "description": "Numeric record ID assigned by Poweradmin",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "template_id": {
+            "type": "number",
+            "description": "ID of the zone template that owns this record. Changing this forces recreation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Record TTL in seconds. Defaults to `86400`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "DNS record type (e.g. `A`, `AAAA`, `CNAME`, `MX`, `TXT`, `NS`, `SOA`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a record inside a Poweradmin zone template. Template records can use the placeholders `[ZONE]`, `[NS1]`, `[NS2]`, `[HOSTMASTER]`, and `[SERIAL]`, which are substituted when a zone is created from the template. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "poweradmin_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The group ID. Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "member_count": {
+            "type": "number",
+            "description": "Number of members in the group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The group name. Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "perm_templ_id": {
+            "type": "number",
+            "description": "Permission template ID assigned to the group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone_count": {
+            "type": "number",
+            "description": "Number of zones assigned to the group",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a group in Poweradmin. You can look up a group by ID or name. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "descr": {
+            "type": "string",
+            "description": "Description of what this permission allows",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The permission ID. Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The permission name (e.g., 'zone_content_view_own'). Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a permission in Poweradmin. You can look up a permission by ID or name. Permissions are read-only and define what actions users can perform.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_records": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "Filter by exact record name. Optional.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "Record content",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "disabled": {
+                  "type": "bool",
+                  "description": "Whether the record is disabled",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Record ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Record name (FQDN)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "Priority (for MX, SRV records)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Time to live",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Record type",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of matching DNS records",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Filter by record type (e.g., A, AAAA, CNAME). Optional.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "Zone ID to query records from",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches a list of DNS records from a zone. You can filter by record type and/or name.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_rrsets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "rrsets": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The record name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "records": {
+                  "nested_type": {
+                    "attributes": {
+                      "content": {
+                        "type": "string",
+                        "description": "Record content/value",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "disabled": {
+                        "type": "bool",
+                        "description": "Whether the record is disabled",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "priority": {
+                        "type": "number",
+                        "description": "Priority for MX, SRV records",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of records in this RRSet",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Time to live in seconds",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The record type",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of RRSets in the zone",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Optional filter by record type (e.g., 'A', 'AAAA', 'MX')",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "zone_id": {
+            "type": "number",
+            "description": "The ID of the zone to retrieve RRSets from",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves all Resource Record Sets (RRSets) from a zone. RRSets represent DNS-correct grouping of records with the same name and type.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account": {
+            "type": "string",
+            "description": "Account name for the zone",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the zone",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The zone ID. Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "masters": {
+            "type": "string",
+            "description": "Comma-separated list of master nameservers (for SLAVE zones)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The zone name (e.g., example.com). Either id or name must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Zone type (MASTER, SLAVE, or NATIVE)",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a DNS zone in Poweradmin. You can look up a zone by ID or name.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the zone template",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Zone template ID. Either `id` or `name` must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_global": {
+            "type": "bool",
+            "description": "Whether the template is global",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Zone template name. Either `id` or `name` must be specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owner": {
+            "type": "number",
+            "description": "User ID that owns the template. `0` for global templates.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "content": {
+                  "type": "string",
+                  "description": "Record content",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Record ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Record name (may contain `[ZONE]` placeholder)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "Record priority (used by MX, SRV)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Record TTL in seconds",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Record type",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Records defined in the template",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zones_linked": {
+            "type": "number",
+            "description": "Number of zones linked to this template",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about a Poweradmin zone template, including its records. Look up by `id` or `name`. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    },
+    "poweradmin_zone_templates": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "templates": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Description of the zone template",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Zone template ID",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_global": {
+                  "type": "bool",
+                  "description": "Whether the template is global",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Zone template name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "owner": {
+                  "type": "number",
+                  "description": "User ID that owns the template. `0` for global templates.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "zones_linked": {
+                  "type": "number",
+                  "description": "Number of zones linked to this template",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Zone templates visible to the caller",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all Poweradmin zone templates visible to the authenticated caller. Requires Poweradmin 4.2.0+.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

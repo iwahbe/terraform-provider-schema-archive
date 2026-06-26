@@ -1,0 +1,686 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_token": {
+          "type": "string",
+          "description": "Access token for the Matrix user. Falls back to MATRIX_ACCESS_TOKEN.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "homeserver_url": {
+          "type": "string",
+          "description": "Base URL of the homeserver (e.g. https://matrix.org). Falls back to MATRIX_HOMESERVER_URL.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "request_timeout": {
+          "type": "string",
+          "description": "Per-request timeout as a Go duration string (e.g. \"30s\"). Default: 30s.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "user_id": {
+          "type": "string",
+          "description": "Full Matrix user ID (e.g. @alice:matrix.org). Falls back to MATRIX_USER_ID. If omitted, derived via /whoami.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Manage Matrix rooms, spaces, membership, and power levels from a user account.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "matrix_room": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "Avatar mxc:// URI (m.room.avatar).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "canonical_alias": {
+            "type": "string",
+            "description": "Canonical alias currently set on the room.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "encryption_enabled": {
+            "type": "bool",
+            "description": "If true, enable end-to-end encryption at creation time. Cannot be disabled once set.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "history_visibility": {
+            "type": "string",
+            "description": "Controls who can read the timeline: joined | invited | shared | world_readable. If unset, reflects the homeserver's default. Updatable after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Matrix room ID (!abc:server).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_invites": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "User IDs to invite during room creation. Subsequent changes are ignored \u2014 use matrix_room_member.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_direct": {
+            "type": "bool",
+            "description": "Mark the room as a direct chat.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name (m.room.name).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "preset": {
+            "type": "string",
+            "description": "Creation preset: private_chat | trusted_private_chat | public_chat.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "room_alias_name": {
+            "type": "string",
+            "description": "Localpart of the canonical alias to set at creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "room_version": {
+            "type": "string",
+            "description": "Room version (e.g. \"11\").",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Room topic (m.room.topic).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Directory visibility: public | private.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A Matrix room.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_alias": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Full alias including #name:server.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equal to alias.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description": "Target room ID.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Maps an alias (#name:server) to a room in the homeserver's directory.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_join_rules": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_rooms": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "For restricted/knock_restricted: room IDs whose members are allowed to join. Typically a matrix_space.id, but any room ID is permitted by the spec.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equal to room_id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "join_rule": {
+            "type": "string",
+            "description": "One of: public | invite | knock | restricted | knock_restricted.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "room_id": {
+            "type": "string",
+            "description": "ID of the room or space to manage join rules for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the m.room.join_rules state event for a room or space. Use `restricted` with `allow_rooms` to gate joinability on membership of another space.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Composite ID: <room_id>|<user_id>.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "membership": {
+            "type": "string",
+            "description": "Desired membership: invite | join | leave | ban | knock. Read as \"at least\": if you declare `invite` and the user later accepts (membership becomes `join`), no drift is reported because `join` semantically satisfies `invite`. Same for `leave` \u2286 `ban`, and `knock` \u2286 `invite`/`join`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reason": {
+            "type": "string",
+            "description": "Optional reason sent with the state change.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "room_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages one user's membership in a room from the caller's perspective.\n\nThis resource is declarative: as long as the HCL says `membership = \"invite\"`, the provider keeps the room reconciled to that intent. If the user accepts the invite and later leaves the room, the next `terraform apply` will re-invite them, since `\"leave\"` no longer matches the declared `\"invite\"`. To stop reconciling, either `terraform state rm` the resource (drops it from state, leaves the server alone) or add a `lifecycle { ignore_changes = [membership] }` block (initial invite still fires; subsequent leaves are ignored).",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_power_levels": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ban": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "events": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Per-event-type overrides.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "events_default": {
+            "type": "number",
+            "description": "Default level to send message events.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equal to room_id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "invite": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "kick": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "notify_room": {
+            "type": "number",
+            "description": "Power level required for @room notifications (notifications.room).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "redact": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description": "ID of the room or space to manage power levels for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state_default": {
+            "type": "number",
+            "description": "Default level to send state events.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Per-user overrides by mxid.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "users_default": {
+            "type": "number",
+            "description": "Default level for users not listed in `users`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the m.room.power_levels state event for a single room. Works on any room-like entity, including spaces \u2014 point `room_id` at a matrix_space.id to tune its permissions (e.g. to unlock messages in a space, set `events_default = 0`).",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_server_acl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Allow-list of homeserver globs (e.g. [\"*\"], or [\"matrix.org\", \"*.example.com\"]). If empty or unset, defaults to allowing all.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "allow_ip_literals": {
+            "type": "bool",
+            "description": "Whether server names that are IP literals are permitted. Default: true (per spec).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "deny": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Deny-list of homeserver globs. Evaluated before allow.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equal to room_id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description": "ID of the room or space to manage the ACL for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the m.room.server_acl state event for a room or space. Lets you block specific homeservers from federating events into the room.\n\n**Warning \u2014 self-lockout risk.** A misconfigured ACL can permanently lock the caller's homeserver (and therefore the caller) out of the room: once the ACL blocks your server, you cannot send further events \u2014 including a corrective ACL. Recovery requires a homeserver admin to intervene. Before applying: make sure `allow` either contains your homeserver (or `\"*\"`) and `deny` does not match it. This provider emits a plan-time warning if it detects a likely self-lockout, but the final responsibility is yours.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_room_state": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content_json": {
+            "type": "string",
+            "description": "JSON-encoded state event content. Compared semantically, so whitespace/key order don't trigger drift.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "event_type": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite: <room_id>|<event_type>|<state_key>.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state_key": {
+            "type": "string",
+            "description": "Defaults to empty string.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Sends an arbitrary state event. Escape hatch for anything not covered by typed resources.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "Avatar mxc:// URI (m.room.avatar).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "canonical_alias": {
+            "type": "string",
+            "description": "Canonical alias currently set on the room.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "history_visibility": {
+            "type": "string",
+            "description": "Controls who can read the timeline: joined | invited | shared | world_readable. If unset, reflects the homeserver's default. Updatable after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Matrix room ID (!abc:server).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_invites": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "User IDs to invite during room creation. Subsequent changes are ignored \u2014 use matrix_room_member.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Room name (m.room.name).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "preset": {
+            "type": "string",
+            "description": "Creation preset: private_chat | trusted_private_chat | public_chat.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "room_alias_name": {
+            "type": "string",
+            "description": "Localpart of the canonical alias to set at creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "room_version": {
+            "type": "string",
+            "description": "Room version (e.g. \"11\").",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Room topic (m.room.topic).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Directory visibility: public | private.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A Matrix space (a room with `creation_content.type = m.space`). At creation, applies Element-style defaults that lock messages to admins (`events_default = 100`) and let moderators invite (`invite = 50`), atomically with the /createRoom call. Override or relax these via a `matrix_room_power_levels` resource pointing at this space.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_space_child": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "child_room_id": {
+            "type": "string",
+            "description": "Room/space ID to include as child.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite ID: <parent_space_id>|<child_room_id>.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order": {
+            "type": "string",
+            "description": "Lexicographic ordering string.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_space_id": {
+            "type": "string",
+            "description": "Space room ID that acts as parent.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "suggested": {
+            "type": "bool",
+            "description": "Whether clients should suggest the child to users.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "via": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Servers to use when joining the child.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Links a room or space as a child under a parent space (m.space.child).",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_user_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "Avatar mxc:// URI. If unset, reflects whatever's currently on the server.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name shown in clients. If unset, reflects whatever's currently on the server.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Matrix user ID of the caller, derived from the configured access_token.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages the caller's global profile (display name and avatar). Targets whichever user is authenticated by the provider's access_token \u2014 there's no way to set someone else's profile through a regular user token. Useful for bot accounts whose displayname/avatar should track config across deployments.\n\n**Declare at most one `matrix_user_profile` per provider configuration.** Every instance resolves to the same identity (the caller's mxid), so multiple declarations race over the same global profile on every apply and the last one wins silently. If you need different profiles for different identities, configure additional providers with `alias` and a different access_token.\n\nDestroy semantics: removing the resource drops it from state but leaves the profile as-is on the homeserver. Matrix has no protocol-level concept of a \"deleted\" profile, and clearing the displayname would render the bot as a raw mxid in clients \u2014 almost never what you want.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_user_profile_override": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "Per-room avatar mxc:// URI. If null, the user's global avatar is used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Per-room display name. If null, the user's global display name is used.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite ID: <room_id>|<user_id>.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a user's per-room profile override (displayname / avatar) by editing the `m.room.member` state event for that user in that room. Common use: a bot that wants different displaynames in different rooms (\"PagerDuty Bot\" in #oncall, \"StatusBot\" in #general). Membership itself must already be set \u2014 typically by a `matrix_room_member` resource \u2014 this resource only modifies the displayname/avatar fields and preserves whatever membership is currently in place.\n\nPermissions: setting your own per-room profile always works. Setting someone else's requires sufficient power level on the m.room.member event.\n\n**Ordering with `matrix_user_profile`.** Most homeservers (Synapse included) propagate global profile changes to every `m.room.member` event the user has, which wipes per-room overrides if the global change happens *after* the override. If you manage both, add `depends_on = [matrix_user_profile.<name>]` to this resource so Terraform applies the override last. Without that, you'll see perpetual drift after every apply.\n\n**Override persists across leave/rejoin.** Per-room overrides live in the `m.room.member` state event, which sticks around even after the user leaves the room (with `membership = \"leave\"`). If the user later rejoins, the previous displayname/avatar override is still attached. To fully clear an override, destroy this resource before the user leaves.\n\nDestroy semantics: removes display_name and avatar_url from the m.room.member event (revealing the global profile again) while preserving the user's membership.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "matrix_room": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "avatar_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "room_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "servers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Resolves a Matrix room by alias. State attributes are best-effort and require the caller to be a member.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Reads a user's public profile.",
+        "description_kind": "plain"
+      }
+    },
+    "matrix_whoami": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "device_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Returns identity of the access token used by the provider.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

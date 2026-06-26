@@ -1,0 +1,4200 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_rate_burst": {
+          "type": "number",
+          "description": "Burst size for rate limiter, allows temporary bursts above the rate limit. 0 means use automatic default (2x rate limit, minimum 10).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_rate_limit": {
+          "type": "number",
+          "description": "Maximum number of API requests per second. 0 means no limit.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_retry_max": {
+          "type": "number",
+          "description": "Maximum number of retries for API requests.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_retry_wait_max": {
+          "type": "number",
+          "description": "Maximum time to wait between retries in seconds.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_retry_wait_min": {
+          "type": "number",
+          "description": "Minimum time to wait between retries in seconds.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_timeout": {
+          "type": "number",
+          "description": "Timeout for individual HTTP requests in seconds.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "api_token": {
+          "type": "string",
+          "description": "Better Stack Telemetry API token. The value can be omitted if `LOGTAIL_API_TOKEN` environment variable is set. See https://betterstack.com/docs/logs/api/getting-started/#get-an-logs-api-token on how to obtain the API token for your team.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "logtail_collector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this collector was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the collector in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing collector, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after collector is created` error.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "databases_count": {
+            "type": "number",
+            "description": "The number of database connections configured for this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hosts_count": {
+            "type": "number",
+            "description": "The number of hosts connected to this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hosts_up_count": {
+            "type": "number",
+            "description": "The number of hosts currently online.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "Whether ingestion is paused for this collector.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "live_tail_pattern": {
+            "type": "string",
+            "description": "Freeform text template for formatting Live tail output with columns wrapped in {column} brackets. Example: \"PID: {message_json.pid} {level} {message}\"",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "logs_retention": {
+            "type": "number",
+            "description": "Data retention for logs in days. Allowed values: 7, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metrics_retention": {
+            "type": "number",
+            "description": "Data retention for metrics in days. Allowed values: 7, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this collector.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "note": {
+            "type": "string",
+            "description": "A description or note about this collector.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "pinged_at": {
+            "type": "string",
+            "description": "The time when this collector last received data.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform of this collector. This value can be set only when creating a new collector and cannot be changed later. Valid values are: `docker`, `swarm`, `kubernetes`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "The secret token used to authenticate collector hosts.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "source_group_id": {
+            "type": "number",
+            "description": "The ID of the source group (folder) this collector belongs to. Set to `0` to remove from a group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "source_id": {
+            "type": "number",
+            "description": "The ID of the underlying source. Use this with `logtail_metric` to define metrics on this collector's data.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_vrl_transformation": {
+            "type": "string",
+            "description": "Server-side VRL transformation that runs during ingestion on Better Stack. Use this for enrichment, routing, or light normalization that doesn't involve sensitive data. For PII redaction and sensitive data filtering, prefer `configuration.vrl_transformation` which runs on the collector host and ensures raw data never leaves your network. Read more about [VRL transformations](https://betterstack.com/docs/logs/using-logtail/transforming-ingested-data/logs-vrl/).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this collector was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_vector_config": {
+            "type": "string",
+            "description": "Custom Vector YAML configuration for additional sources and transforms beyond the built-in component toggles. Must not contain `command:` directives.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "configuration": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "buffer_max_events": {
+                  "type": "number",
+                  "description": "Maximum number of events held in the collector's in-memory buffer before overflowing to the disk buffer. Defaults to 10000.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "disk_batch_size_mb": {
+                  "type": "number",
+                  "description": "Disk buffer size in MB for outgoing requests. Minimum 256 MB.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "log_line_length_limit_kb": {
+                  "type": "number",
+                  "description": "Maximum log line length in kB. Lines longer than this are dropped by the collector to protect Vector from memory exhaustion. Higher values may use more memory. Must be between 4 and 128. Defaults to 8.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "logs_sample_rate": {
+                  "type": "number",
+                  "description": "Sample rate for logs (0-100).",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "memory_batch_size_mb": {
+                  "type": "number",
+                  "description": "Memory batch size in MB for outgoing requests. Maximum 40 MB.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "merge_logs": {
+                  "type": "bool",
+                  "description": "Whether to merge multi-line logs (e.g. stack traces) into single log entries on the collector host before transmission. Matches the Merge logs tab in the collector's Transform data UI.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "merge_logs_config": {
+                  "type": "string",
+                  "description": "VRL condition detecting the first line of a new log entry \u2014 consecutive lines not matching it are merged into the preceding entry. Leave unset to use the built-in heuristic (lines starting with a timestamp or log level). Only used when `merge_logs` is `true`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "traces_sample_rate": {
+                  "type": "number",
+                  "description": "Sample rate for traces (0-100).",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "vrl_transformation": {
+                  "type": "string",
+                  "description": "VRL transformation that runs on the collector host, inside your infrastructure, before data is transmitted to Better Stack. Use this for PII redaction and sensitive data filtering \u2014 raw data never leaves your network. For server-side transformations that run during ingestion on Better Stack, use the top-level `source_vrl_transformation` attribute instead. Read more about [VRL transformations](https://betterstack.com/docs/logs/using-logtail/transforming-ingested-data/logs-vrl/).",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "when_full": {
+                  "type": "string",
+                  "description": "What the collector does when the disk buffer is full. `drop_newest` (default) drops incoming data, preferring availability; `block` applies backpressure to producers, preferring completeness.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "components": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "ebpf_metrics": {
+                        "type": "bool",
+                        "description": "Enable eBPF-based metrics collection.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "ebpf_red_metrics": {
+                        "type": "bool",
+                        "description": "Enable service map and RED (Requests, Error rate, Duration) metrics via eBPF.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "ebpf_tracing_basic": {
+                        "type": "bool",
+                        "description": "Enable basic eBPF tracing.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "ebpf_tracing_full": {
+                        "type": "bool",
+                        "description": "Enable full eBPF tracing.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "logs_collector_internals": {
+                        "type": "bool",
+                        "description": "Collect internal collector logs.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "logs_docker": {
+                        "type": "bool",
+                        "description": "Collect Docker container logs.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "logs_host": {
+                        "type": "bool",
+                        "description": "Collect host-level logs.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "logs_kubernetes": {
+                        "type": "bool",
+                        "description": "Collect Kubernetes logs.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "metrics_apache": {
+                        "type": "bool",
+                        "description": "Collect Apache metrics.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "metrics_databases": {
+                        "type": "bool",
+                        "description": "Collect database metrics via the cluster agent.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "metrics_nginx": {
+                        "type": "bool",
+                        "description": "Collect Nginx metrics.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "traces_opentelemetry": {
+                        "type": "bool",
+                        "description": "Accept OpenTelemetry SDK traces on ports 4317 (gRPC) and 4318 (HTTP).",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "description": "Enable or disable specific collector components. Maps to the Logs, Metrics, and eBPF tabs in the collector settings UI.",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                },
+                "namespace_option": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "ingest_traces": {
+                        "type": "bool",
+                        "description": "Whether to ingest traces for this namespace.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "log_sampling": {
+                        "type": "number",
+                        "description": "Log sampling rate (0-100).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Namespace name.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Per-namespace overrides for log sampling rate and trace ingestion (Kubernetes only). Order-independent; entries are identified by name.",
+                    "description_kind": "plain"
+                  }
+                },
+                "service_option": {
+                  "nesting_mode": "set",
+                  "block": {
+                    "attributes": {
+                      "ingest_traces": {
+                        "type": "bool",
+                        "description": "Whether to ingest traces for this service.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "log_sampling": {
+                        "type": "number",
+                        "description": "Log sampling rate (0-100).",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Service name.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Per-service overrides for log sampling rate and trace ingestion. Only includes user-managed services; internal collector services (`better-stack-beyla`, `better-stack-collector`) are excluded. Use the `logtail_collector` data source to see all discovered services.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "Collector-level configuration including active components, sampling rates, batching, and VRL transformations. These settings run on the collector host inside your infrastructure.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "custom_bucket": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "Access key ID for the bucket.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "Bucket endpoint URL.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "keep_data_after_retention": {
+                  "type": "bool",
+                  "description": "Whether to keep data in the bucket after the retention period.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Bucket name.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "Secret access key for the bucket.",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Optional custom bucket configuration for the collector. Once set, it cannot be removed.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "databases": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "The database host.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "The ID of this database connection (assigned by the API).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The database password.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The database port.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "service_type": {
+                  "type": "string",
+                  "description": "The type of database service.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "ssl_mode": {
+                  "type": "string",
+                  "description": "SSL mode for PostgreSQL connections. Valid values: `disable`, `require`, `verify-ca`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tls": {
+                  "type": "string",
+                  "description": "TLS mode for MySQL connections. Valid values: `false`, `true`, `skip-verify`, `preferred`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The database username.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Database connections for the collector. Deprecated \u2014 use the `logtail_collector_target` resource instead.",
+              "description_kind": "plain",
+              "deprecated": true
+            }
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Better Stack Collectors. For more information about the Collectors API check https://betterstack.com/docs/logs/api/collectors/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_collector_target": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description": "API key for authentication. Used by elasticsearch.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "collector_host": {
+            "type": "string",
+            "description": "Hostname of the collector host running this process. Use this for process kinds (nginx, apache, kafka, prometheus). Must match the hostname of a `collector_host` reporting to this collector. For database kinds use `host` instead.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "collector_id": {
+            "type": "string",
+            "description": "The ID of the collector this target belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "container": {
+            "type": "string",
+            "description": "Container the target was detected in, if any.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this target was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the collector should scrape this target. Defaults to `true` server-side. Setting to `false` puts the target into `disabled` status \u2014 it remains configured but is not scraped.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Full scrape URL. Required for prometheus.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Hostname or IP of the database server. Use this for database kinds (postgres, pgbouncer, mysql, redis, mongodb, memcached, elasticsearch). For process kinds use `collector_host` instead.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this target.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "The target kind. One of: postgres, pgbouncer, mysql, redis, mongodb, memcached, elasticsearch, nginx, apache, kafka, prometheus.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "listen_ip": {
+            "type": "string",
+            "description": "IP address the process listens on, as seen from the collector host. Used for nginx, apache, kafka.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for authentication. Used by database kinds.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Port the target listens on. Required for database kinds and most process kinds; not used by prometheus (use `endpoint` instead).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scheme": {
+            "type": "string",
+            "description": "URL scheme. Required for elasticsearch. Valid values: `http`, `https`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "Friendly name for the target. Required for process kinds.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssl_mode": {
+            "type": "string",
+            "description": "SSL mode. Required for postgres-family kinds. Valid values: `disable`, `require`, `verify-ca`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the target as reported by the collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tls": {
+            "type": "string",
+            "description": "TLS mode. Required for mysql. Valid values: `false`, `true`, `skip-verify`, `preferred`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this target was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for authentication. Used by database kinds.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages a single 'Collect metrics' target on a Better Stack Collector \u2014 a database (postgres, pgbouncer, mysql, redis, mongodb, memcached, elasticsearch) or process exporter (nginx, apache, kafka, prometheus) that the collector scrapes.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_type": {
+            "type": "string",
+            "description": "Type of client connection. Currently only `clickhouse` is supported.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this connection was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Information about the user who created this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name. Permitted values for most plans are: `us_east`, `germany`, `singapore`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "data_sources": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "data_sources": [
+                    "list",
+                    "string"
+                  ],
+                  "source_id": "number",
+                  "source_name": "string",
+                  "team_name": "string"
+                }
+              ]
+            ],
+            "description": "List of available data sources for this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The connection hostname.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_allowlist": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Array of IP addresses or CIDR ranges that are allowed to use this connection.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "note": {
+            "type": "string",
+            "description": "A descriptive note for the connection.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The connection password. Only available immediately after creation.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The connection port.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sample_query": {
+            "type": "string",
+            "description": "A sample query showing how to use this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "Array of team IDs to associate with the connection. Only one of `team_names` or `team_ids` should be provided.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "team_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Array of team names to associate with the connection. Only one of `team_names` or `team_ids` should be provided.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The connection username.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "valid_until": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the connection expires.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "This resource allows you to create and manage ClickHouse connections for remote querying. For more information about the Connection API check https://betterstack.com/docs/logs/api/connections/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this dashboard was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_group_id": {
+            "type": "number",
+            "description": "The ID of the dashboard group this dashboard belongs to. Use 0 to remove from group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "data": {
+            "type": "string",
+            "description": "The dashboard configuration data as a JSON string. When set, the dashboard is created via the import API and any change forces re-creation. Cannot be combined with individual fields like refresh_interval, date_range_from, chart and variable blocks, etc.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "date_range_from": {
+            "type": "string",
+            "description": "The start of the date range (e.g., 'now-3h', 'now-24h').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "date_range_to": {
+            "type": "string",
+            "description": "The end of the date range (e.g., 'now').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this dashboard.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the dashboard.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "refresh_interval": {
+            "type": "number",
+            "description": "The auto-refresh interval in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_eligibility_sql": {
+            "type": "string",
+            "description": "SQL expression to filter eligible sources.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "team_id": {
+            "type": "number",
+            "description": "The team ID of the dashboard.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "The team name to associate with the dashboard when using a global API token. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this dashboard was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "variable": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "default_values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "For 'string', 'number', and 'boolean' variables: fallback value used when `values` is empty. For 'select_value' variables: the predefined options shown in the picker. Unused for other types.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the variable (used as {{name}} in queries).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "sql_definition": {
+                  "type": "string",
+                  "description": "SQL definition for 'select_with_sql' or 'multi_select_with_sql' type variables.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The selected values. For 'source' variables these are the source IDs the variable resolves to (e.g. `logtail_source.web.id`) \u2014 this is the field that selects the source. For other types it is the current picker selection or input.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "variable_type": {
+                  "type": "string",
+                  "description": "The type of variable: 'source', 'string', 'number', 'date', 'datetime', 'boolean', 'sql_expression', 'select_value', 'select_with_sql', or 'multi_select_with_sql'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Variables for this dashboard. Default variables (time, start_time, end_time, source) are auto-created.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "This resource allows you to create and manage dashboards. Use 'data' for import mode (JSON blob, re-created on change) or individual fields for CRUD mode (updatable). For more information about the Dashboard API check https://betterstack.com/docs/logs/api/dashboards/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation_interval": {
+            "type": "number",
+            "description": "The data aggregation interval in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "alert_type": {
+            "type": "string",
+            "description": "The type of alert: 'threshold', 'relative', or 'anomaly_rrcf'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "anomaly_sensitivity": {
+            "type": "number",
+            "description": "Anomaly detection sensitivity 0-100 (only for 'anomaly_rrcf' type, lower = more sensitive).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "anomaly_trigger": {
+            "type": "string",
+            "description": "Anomaly trigger mode: 'any', 'higher', or 'lower' (only for 'anomaly_rrcf' type).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "call": {
+            "type": "bool",
+            "description": "Enable phone call notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "chart_id": {
+            "type": "string",
+            "description": "The ID of the chart this alert belongs to. Accepts either a bare chart ID or a composite dashboard_id/chart_id from logtail_dashboard_chart resources.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "check_period": {
+            "type": "number",
+            "description": "How often to check the alert condition in seconds. Required for threshold and relative alerts; ignored for anomaly alerts, which derive their cadence from query_period.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "confirmation_period": {
+            "type": "number",
+            "description": "The confirmation delay in seconds before triggering.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this alert was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "critical_alert": {
+            "type": "bool",
+            "description": "Mark as critical alert (bypasses quiet hours).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this alert belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "email": {
+            "type": "bool",
+            "description": "Enable email notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_cause": {
+            "type": "string",
+            "description": "Incident description template (supports {{variable}} interpolation).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "incident_per_series": {
+            "type": "bool",
+            "description": "Create separate incidents per series.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom metadata key-value pairs included in incident notifications. Use a plain string for a single value; for multiple values use jsonencode([...]).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this alert.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "The comparison operator. Required for threshold and relative alerts; not used for anomaly alerts. For threshold: 'equal', 'not_equal', 'higher_than', 'higher_than_or_equal', 'lower_than', 'lower_than_or_equal'. For relative: 'increases_by', 'decreases_by', 'changes_by'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the alert is paused.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "paused_reason": {
+            "type": "string",
+            "description": "Read-only field explaining why the alert is paused (e.g., 'Manually paused', complexity issues, too many failures).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "push": {
+            "type": "bool",
+            "description": "Enable push notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_period": {
+            "type": "number",
+            "description": "The query evaluation window in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "recovery_period": {
+            "type": "number",
+            "description": "The recovery delay in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "series_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Specific series to monitor.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "sms": {
+            "type": "bool",
+            "description": "Enable SMS notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_mode": {
+            "type": "string",
+            "description": "Source selection mode: 'source_variable', 'platforms_single_source', or 'platforms_all_sources'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_platforms": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Platform filters (used when source_mode is 'platforms_*').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_variable": {
+            "type": "string",
+            "description": "Source reference (format: 'source:table_name'). If omitted, derived from the parent resource's source variable.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "string_value": {
+            "type": "string",
+            "description": "The string threshold value (only for threshold alerts with 'equal' or 'not_equal' operators).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this alert was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The numeric threshold value. Required for threshold and relative alerts.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "escalation_target": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "policy_id": {
+                  "type": "number",
+                  "description": "The Better Stack escalation policy ID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "policy_name": {
+                  "type": "string",
+                  "description": "The Better Stack escalation policy name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "team_id": {
+                  "type": "number",
+                  "description": "The Better Stack team ID to escalate to.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "team_name": {
+                  "type": "string",
+                  "description": "The Better Stack team name to escalate to.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "The escalation target for this alert. Specify either team_id/team_name OR policy_id/policy_name.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Alerts on Dashboard Charts in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_chart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "chart_type": {
+            "type": "string",
+            "description": "The type of chart: 'line_chart', 'bar_chart', 'pie_chart', 'number_chart', 'table_chart', 'tail_chart', 'static_text_chart', 'scatter_chart', 'gauge_chart', 'heatmap_chart', 'map_chart', 'text_chart', 'funnel_chart', or 'anomalies_chart'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this chart was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this chart belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of this chart.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "h": {
+            "type": "number",
+            "description": "The height of this chart in grid units.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this chart.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this chart.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": "string",
+            "description": "Chart settings as a JSON string. Settings vary by chart type and include options like unit, decimal_places, legend, stacking, etc.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this chart was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "w": {
+            "type": "number",
+            "description": "The width of this chart in grid units (1-12).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "x": {
+            "type": "number",
+            "description": "The horizontal position of this chart in the dashboard grid (0-11).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "y": {
+            "type": "number",
+            "description": "The vertical position of this chart in the dashboard grid.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "query": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "number",
+                  "description": "The ID of this query (read-only).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the query.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "query_type": {
+                  "type": "string",
+                  "description": "The type of query: 'sql_expression', 'tail_query', or 'static_text'. Note: 'pql_expression', 'query_builder', and 'funnel_query' are read-only.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "source_variable": {
+                  "type": "string",
+                  "description": "The source variable reference (default: 'source').",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sql_query": {
+                  "type": "string",
+                  "description": "The SQL query string. Required when query_type is 'sql_expression'.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "static_text": {
+                  "type": "string",
+                  "description": "The static text content (markdown). Required when query_type is 'static_text'.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "where_condition": {
+                  "type": "string",
+                  "description": "The WHERE condition for filtering. Required when query_type is 'tail_query'.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The queries for this chart. At least one query is required.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Charts in a Dashboard in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this dashboard group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this dashboard group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this dashboard group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this dashboard group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Dashboard Groups. Dashboard Groups help organize dashboards in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_section": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collapsed": {
+            "type": "bool",
+            "description": "Whether this section is collapsed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this section was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this section belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this section.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this section.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this section was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "y": {
+            "type": "number",
+            "description": "The vertical position of this section in the dashboard grid.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Sections in a Dashboard in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_errors_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_group_id": {
+            "type": "number",
+            "description": "ID of the application group this application belongs to. Set to `0` to remove from a group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "code_mapping_source_root": {
+            "type": "string",
+            "description": "Source code root path that replaces the stack trace root prefix. Used to map container or build paths to the corresponding repository paths for git blame.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "code_mapping_stack_root": {
+            "type": "string",
+            "description": "Stack trace root path prefix to match. When a stack trace file starts with this prefix, it will be replaced with the source code root to map to the correct repository path.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "correlate_with_source_id": {
+            "type": "number",
+            "description": "ID of an existing source to correlate errors from this application with, for log and trace correlation. Cannot be changed after the application is created.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this application was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the application in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing application, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after application is created` error.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "errors_retention": {
+            "type": "number",
+            "description": "Error data retention period in days. Default retention is 90 days.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "github_repository_name": {
+            "type": "string",
+            "description": "Full name of a GitHub repository (e.g. `owner/repo`) to connect to this application for source links, git blame, and AI-assisted fixes. The repository must already be connected to your team's GitHub integration. Set to an empty string to disconnect.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this application.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_host": {
+            "type": "string",
+            "description": "The host where the errors should be sent. See documentation for your specific platform for details.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "This property allows you to temporarily pause data ingesting for this application.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name. Must be unique within your team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform type for the application. This helps configure appropriate SDKs and integrations. You can't update this value later. Valid values are:\n    - `aiohttp_errors`\n    - `android_errors`\n    - `angular_errors`\n    - `asgi_errors`\n    - `asp_dot_net_core_errors`\n    - `asp_dot_net_errors`\n    - `astro_errors`\n    - `aws_lambda_dot_net_errors`\n    - `aws_lambda_node_errors`\n    - `aws_lambda_python_errors`\n    - `azure_functions_node_errors`\n    - `bottle_errors`\n    - `bun_errors`\n    - `celery_errors`\n    - `chalice_errors`\n    - `cli_errors`\n    - `cloudflare_pages_errors`\n    - `connect_errors`\n    - `dart_errors`\n    - `deno_errors`\n    - `django_errors`\n    - `dot_net_errors`\n    - `dot_net_http_errors`\n    - `dot_net_maui_errors`\n    - `echo_errors`\n    - `electron_errors`\n    - `elixir_errors`\n    - `ember_errors`\n    - `express_errors`\n    - `falcon_errors`\n    - `fastapi_errors`\n    - `fasthttp_errors`\n    - `fastify_errors`\n    - `fiber_errors`\n    - `flask_errors`\n    - `flutter_errors`\n    - `gatsby_errors`\n    - `gin_errors`\n    - `go_errors`\n    - `godot_errors`\n    - `google_cloud_function_dot_net_errors`\n    - `google_cloud_function_node_errors`\n    - `google_cloud_function_python_errors`\n    - `hapi_errors`\n    - `ios_errors`\n    - `iris_errors`\n    - `java_errors`\n    - `javascript_errors`\n    - `koa_errors`\n    - `kotlin_errors`\n    - `laravel_errors`\n    - `log4j_errors`\n    - `logback_errors`\n    - `macos_errors`\n    - `minidump_errors`\n    - `native_errors`\n    - `negroni_errors`\n    - `nest_js_errors`\n    - `next_js_errors`\n    - `node_errors`\n    - `nuxt_errors`\n    - `php_errors`\n    - `powershell_errors`\n    - `pyramid_errors`\n    - `python_errors`\n    - `qt_errors`\n    - `quart_errors`\n    - `rack_middleware_errors`\n    - `rails_errors`\n    - `react_errors`\n    - `react_native_errors`\n    - `react_router_framework_errors`\n    - `remix_errors`\n    - `rq_errors`\n    - `ruby_errors`\n    - `rust_errors`\n    - `sanic_errors`\n    - `serverless_python_errors`\n    - `solid_errors`\n    - `solidstart_errors`\n    - `spring_boot_errors`\n    - `spring_errors`\n    - `starlette_errors`\n    - `svelte_errors`\n    - `sveltekit_errors`\n    - `symfony_errors`\n    - `tanstack_start_react_errors`\n    - `tornado_errors`\n    - `tryton_errors`\n    - `unity_errors`\n    - `unreal_engine_errors`\n    - `vue_errors`\n    - `windows_forms_errors`\n    - `wpf_errors`\n    - `wsgi_errors`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "table_name": {
+            "type": "string",
+            "description": "The table name generated for this application.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of this application. This token is used to identify and route the data you will send to Better Stack.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this application was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "custom_bucket": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "Access key ID",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "Bucket endpoint",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "keep_data_after_retention": {
+                  "type": "bool",
+                  "description": "Whether we should keep data in the bucket after the retention period.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Bucket name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "Secret access key",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Optional custom bucket configuration for the application. When provided, all fields (name, endpoint, access_key_id, secret_access_key) are required.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete your Errors applications. For more information about the Errors API check https://betterstack.com/docs/errors/api/applications/create/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_errors_application_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this application group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this application group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application group name. Must be unique within your team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sort_index": {
+            "type": "number",
+            "description": "The sort index of this application group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this application group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete your Errors application groups. For more information about the Errors API check https://betterstack.com/docs/errors/api/applications-groups/create/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this exploration was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "date_range_from": {
+            "type": "string",
+            "description": "The start of the date range (e.g., 'now-3h', 'now-24h').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "date_range_to": {
+            "type": "string",
+            "description": "The end of the date range (e.g., 'now').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "exploration_group_id": {
+            "type": "number",
+            "description": "The ID of the exploration group this exploration belongs to. Use 0 to remove from group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this exploration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this exploration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this exploration was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "chart": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "chart_type": {
+                  "type": "string",
+                  "description": "The type of chart: 'line_chart', 'bar_chart', 'pie_chart', 'number_chart', 'table_chart', 'tail_chart', 'static_text_chart', 'scatter_chart', 'gauge_chart', 'heatmap_chart', 'map_chart', 'text_chart', 'funnel_chart', or 'anomalies_chart'.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the chart.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the chart. Automatically set to the exploration name by the API.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settings": {
+                  "type": "string",
+                  "description": "Chart settings as a JSON string. Settings vary by chart type and include options like unit, decimal_places, legend, stacking, etc.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "The chart configuration for this exploration.",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "query": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "number",
+                  "description": "The ID of this query (read-only).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the query.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "query_type": {
+                  "type": "string",
+                  "description": "The type of query: 'sql_expression', 'tail_query', or 'static_text'. Note: 'pql_expression', 'query_builder', and 'funnel_query' are read-only.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "source_variable": {
+                  "type": "string",
+                  "description": "The source variable reference (default: 'source').",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "sql_query": {
+                  "type": "string",
+                  "description": "The SQL query string. Required when query_type is 'sql_expression'.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "static_text": {
+                  "type": "string",
+                  "description": "The static text content (markdown). Required when query_type is 'static_text'.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "where_condition": {
+                  "type": "string",
+                  "description": "The WHERE condition for filtering. Required when query_type is 'tail_query'.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "The queries for this exploration. At least one query is required.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "variable": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "default_values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "For 'string', 'number', and 'boolean' variables: fallback value used when `values` is empty. For 'select_value' variables: the predefined options shown in the picker. Unused for other types.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the variable (used as {{name}} in queries).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "sql_definition": {
+                  "type": "string",
+                  "description": "SQL definition for 'select_with_sql' or 'multi_select_with_sql' type variables.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The selected values. For 'source' variables these are the source IDs the variable resolves to (e.g. `logtail_source.web.id`) \u2014 this is the field that selects the source. For other types it is the current picker selection or input.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "variable_type": {
+                  "type": "string",
+                  "description": "The type of variable: 'source', 'string', 'number', 'date', 'datetime', 'boolean', 'sql_expression', 'select_value', 'select_with_sql', or 'multi_select_with_sql'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Variables for this exploration. Default variables (time, start_time, end_time, source) are auto-created.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Explorations in Better Stack Telemetry. Explorations are interactive charts with queries and variables.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation_interval": {
+            "type": "number",
+            "description": "The data aggregation interval in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "alert_type": {
+            "type": "string",
+            "description": "The type of alert: 'threshold', 'relative', or 'anomaly_rrcf'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "anomaly_sensitivity": {
+            "type": "number",
+            "description": "Anomaly detection sensitivity 0-100 (only for 'anomaly_rrcf' type, lower = more sensitive).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "anomaly_trigger": {
+            "type": "string",
+            "description": "Anomaly trigger mode: 'any', 'higher', or 'lower' (only for 'anomaly_rrcf' type).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "call": {
+            "type": "bool",
+            "description": "Enable phone call notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "check_period": {
+            "type": "number",
+            "description": "How often to check the alert condition in seconds. Required for threshold and relative alerts; ignored for anomaly alerts, which derive their cadence from query_period.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "confirmation_period": {
+            "type": "number",
+            "description": "The confirmation delay in seconds before triggering.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this alert was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "critical_alert": {
+            "type": "bool",
+            "description": "Mark as critical alert (bypasses quiet hours).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "email": {
+            "type": "bool",
+            "description": "Enable email notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "exploration_id": {
+            "type": "string",
+            "description": "The ID of the exploration this alert belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_cause": {
+            "type": "string",
+            "description": "Incident description template (supports {{variable}} interpolation).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "incident_per_series": {
+            "type": "bool",
+            "description": "Create separate incidents per series.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom metadata key-value pairs included in incident notifications. Use a plain string for a single value; for multiple values use jsonencode([...]).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this alert.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "The comparison operator. Required for threshold and relative alerts; not used for anomaly alerts. For threshold: 'equal', 'not_equal', 'higher_than', 'higher_than_or_equal', 'lower_than', 'lower_than_or_equal'. For relative: 'increases_by', 'decreases_by', 'changes_by'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the alert is paused.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "paused_reason": {
+            "type": "string",
+            "description": "Read-only field explaining why the alert is paused (e.g., 'Manually paused', complexity issues, too many failures).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "push": {
+            "type": "bool",
+            "description": "Enable push notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "query_period": {
+            "type": "number",
+            "description": "The query evaluation window in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "recovery_period": {
+            "type": "number",
+            "description": "The recovery delay in seconds.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "series_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Specific series to monitor.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "sms": {
+            "type": "bool",
+            "description": "Enable SMS notifications.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_mode": {
+            "type": "string",
+            "description": "Source selection mode: 'source_variable', 'platforms_single_source', or 'platforms_all_sources'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_platforms": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Platform filters (used when source_mode is 'platforms_*').",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_variable": {
+            "type": "string",
+            "description": "Source reference (format: 'source:table_name'). If omitted, derived from the parent resource's source variable.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "string_value": {
+            "type": "string",
+            "description": "The string threshold value (only for threshold alerts with 'equal' or 'not_equal' operators).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this alert was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The numeric threshold value. Required for threshold and relative alerts.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "escalation_target": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "policy_id": {
+                  "type": "number",
+                  "description": "The Better Stack escalation policy ID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "policy_name": {
+                  "type": "string",
+                  "description": "The Better Stack escalation policy name.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "team_id": {
+                  "type": "number",
+                  "description": "The Better Stack team ID to escalate to.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "team_name": {
+                  "type": "string",
+                  "description": "The Better Stack team name to escalate to.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "The escalation target for this alert. Specify either team_id/team_name OR policy_id/policy_name.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Alerts on Explorations in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this exploration group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this exploration group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this exploration group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this exploration group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete Exploration Groups. Exploration Groups help organize explorations in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_metric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregations": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of aggregations to perform on the metric. Optional: omit it (or set it to an empty list) to create a Label (a group-by dimension) instead of a Metric.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this metric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this metric.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "The ID of the source this metric belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sql_expression": {
+            "type": "string",
+            "description": "The SQL expression used to extract the metric value.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the metric.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "This resource allows you to create, update and delete Metrics.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "code_mapping_source_root": {
+            "type": "string",
+            "description": "Source code root path that replaces the stack trace root prefix. Used to map container or build paths to the corresponding repository paths for git blame.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "code_mapping_stack_root": {
+            "type": "string",
+            "description": "Stack trace root path prefix to match. When a stack trace file starts with this prefix, it will be replaced with the source code root to map to the correct repository path.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this monitor group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the source in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing source, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after source is created` error.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_host": {
+            "type": "string",
+            "description": "The host where the logs or metrics should be sent. See [documentation](https://betterstack.com/docs/logs/start/) for your specific source platform for details.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "This property allows you to temporarily pause data ingesting for this source (e.g., when you are reaching your plan's usage quota and you want to prioritize some sources over others).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "live_tail_pattern": {
+            "type": "string",
+            "description": "Freeform text template for formatting Live tail output with columns wrapped in {column} brackets. Example: \"PID: {message_json.pid} {level} {message}\"",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "logs_retention": {
+            "type": "number",
+            "description": "Data retention for logs in days. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "metrics_retention": {
+            "type": "number",
+            "description": "Data retention for metrics in days. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform of this source. This value can be set only when you're creating a new source. You can't update this value later. Valid values are:\n    - `apache2`\n    - `aws`\n    - `aws_cloudwatch`\n    - `aws_ecs`\n    - `aws_elb`\n    - `aws_fargate`\n    - `azure`\n    - `azure_logs`\n    - `cloudflare_logpush`\n    - `cloudflare_prometheus_exporter`\n    - `cloudflare_worker`\n    - `datadog_agent`\n    - `digitalocean`\n    - `docker`\n    - `dokku`\n    - `dotnet`\n    - `elasticsearch`\n    - `erlang`\n    - `filebeat`\n    - `flights`\n    - `fluentbit`\n    - `fluentd`\n    - `fly_io`\n    - `gcp`\n    - `go`\n    - `google_cloud_pubsub`\n    - `haproxy`\n    - `heroku`\n    - `http`\n    - `java`\n    - `javascript`\n    - `kubernetes`\n    - `logstash`\n    - `minio`\n    - `mongodb`\n    - `mysql`\n    - `nginx`\n    - `open_telemetry`\n    - `php`\n    - `postgresql`\n    - `prometheus`\n    - `prometheus_scrape`\n    - `python`\n    - `rabbitmq`\n    - `redis`\n    - `render`\n    - `rsyslog`\n    - `ruby`\n    - `syslog-ng`\n    - `traefik`\n    - `ubuntu`\n    - `vector`\n    - `vercel_integration`\n    - `winlogbeat`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "scrape_frequency_secs": {
+            "type": "number",
+            "description": "For scrape platform types, how often to scrape the URLs.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scrape_request_basic_auth_password": {
+            "type": "string",
+            "description": "Basic auth password for scraping.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "scrape_request_basic_auth_user": {
+            "type": "string",
+            "description": "Basic auth username for scraping.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scrape_request_headers": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "An array of request headers, each containing `name` and `value` fields.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "scrape_urls": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "For scrape platform types, the set of urls to scrape.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "skip_ssl_verify": {
+            "type": "bool",
+            "description": "Should the scraper skip SSL certificate verification? Enable for endpoints with self-signed or invalid certificates.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_group_id": {
+            "type": "number",
+            "description": "The ID of the source group this source belongs to.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "table_name": {
+            "type": "string",
+            "description": "The table name generated for this source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource. Can be used with table_name in [Query API](https://betterstack.com/docs/logs/query-api/connect-remotely/).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of this source. This token is used to identify and route the data you will send to Better Stack.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this monitor group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vrl_transformation": {
+            "type": "string",
+            "description": "VRL transformation that runs on Better Stack's servers during ingestion. Note: data has already left your infrastructure at this point. For transformations that must run before data leaves your network (e.g. PII redaction), use `logtail_collector` with `configuration.vrl_transformation` instead. Read more about [VRL transformations](https://betterstack.com/docs/logs/using-logtail/transforming-ingested-data/logs-vrl/).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_bucket": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "access_key_id": {
+                  "type": "string",
+                  "description": "Access key ID",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "Bucket endpoint",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "keep_data_after_retention": {
+                  "type": "bool",
+                  "description": "Whether we should keep data in the bucket after the retention period.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Bucket name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "secret_access_key": {
+                  "type": "string",
+                  "description": "Secret access key",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "description": "Optional custom bucket configuration for the source. When provided, all fields (name, endpoint, access_key_id, secret_access_key) are required.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete your Sources. For more information about the Sources API check https://betterstack.com/docs/logs/api/list-all-existing-sources/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_source_aws_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aws_account_id": {
+            "type": "string",
+            "description": "The ID of an existing connected AWS account to link this source to. Provide this instead of `aws_role_arn`/`aws_external_id` to reuse an account you've already connected. Write-only: the API does not return it, so it isn't refreshed from state.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "aws_external_id": {
+            "type": "string",
+            "description": "The external ID used for the STS assume-role trust \u2014 the `ExternalId` output of the Better Stack CloudFormation stack. Provide together with `aws_role_arn`. Write-only: the API does not return it, so it isn't refreshed from state.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "aws_role_arn": {
+            "type": "string",
+            "description": "The IAM role ARN to connect your AWS account \u2014 the `IntegrationRoleArn` output of the Better Stack CloudFormation stack. Provide together with `aws_external_id`. Write-only: the API does not return it, so it isn't refreshed from state.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "The ID of the `logtail_source` (with `platform = \"aws\"`) to link the AWS account to. Changing this forces a new resource, re-running the account connect against the new source.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links an AWS account to an `aws` platform `logtail_source` by pasting back the CloudFormation role ARN / external ID (or reusing an already-connected account).\n\nThe credentials are write-only \u2014 the API never returns them, so they aren't refreshed into Terraform state. Destroying this resource only removes it from state; the AWS account stays linked to the source until the source itself is destroyed.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_source_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this source group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this source group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this source group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sort_index": {
+            "type": "number",
+            "description": "The sort index of this source group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this source group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This resource allows you to create, modify, and delete your Source Groups. For more information about the Source Groups API check https://betterstack.com/docs/logs/api/",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "logtail_collector": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "buffer_max_events": "number",
+                  "components": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "ebpf_metrics": "bool",
+                        "ebpf_red_metrics": "bool",
+                        "ebpf_tracing_basic": "bool",
+                        "ebpf_tracing_full": "bool",
+                        "logs_collector_internals": "bool",
+                        "logs_docker": "bool",
+                        "logs_host": "bool",
+                        "logs_kubernetes": "bool",
+                        "metrics_apache": "bool",
+                        "metrics_databases": "bool",
+                        "metrics_nginx": "bool",
+                        "traces_opentelemetry": "bool"
+                      }
+                    ]
+                  ],
+                  "disk_batch_size_mb": "number",
+                  "log_line_length_limit_kb": "number",
+                  "logs_sample_rate": "number",
+                  "memory_batch_size_mb": "number",
+                  "merge_logs": "bool",
+                  "merge_logs_config": "string",
+                  "namespace_option": [
+                    "set",
+                    [
+                      "object",
+                      {
+                        "ingest_traces": "bool",
+                        "log_sampling": "number",
+                        "name": "string"
+                      }
+                    ]
+                  ],
+                  "service_option": [
+                    "set",
+                    [
+                      "object",
+                      {
+                        "ingest_traces": "bool",
+                        "log_sampling": "number",
+                        "name": "string"
+                      }
+                    ]
+                  ],
+                  "traces_sample_rate": "number",
+                  "vrl_transformation": "string",
+                  "when_full": "string"
+                }
+              ]
+            ],
+            "description": "Collector-level configuration including active components, sampling rates, batching, and VRL transformations. These settings run on the collector host inside your infrastructure.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this collector was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "custom_bucket": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "access_key_id": "string",
+                  "endpoint": "string",
+                  "keep_data_after_retention": "bool",
+                  "name": "string",
+                  "secret_access_key": "string"
+                }
+              ]
+            ],
+            "description": "Optional custom bucket configuration for the collector. Once set, it cannot be removed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the collector in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing collector, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after collector is created` error.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "databases": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "host": "string",
+                  "id": "number",
+                  "password": "string",
+                  "port": "number",
+                  "service_type": "string",
+                  "ssl_mode": "string",
+                  "tls": "string",
+                  "username": "string"
+                }
+              ]
+            ],
+            "description": "Database connections for the collector. Deprecated \u2014 use the `logtail_collector_target` resource instead.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "computed": true
+          },
+          "databases_count": {
+            "type": "number",
+            "description": "The number of database connections configured for this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hosts_count": {
+            "type": "number",
+            "description": "The number of hosts connected to this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hosts_up_count": {
+            "type": "number",
+            "description": "The number of hosts currently online.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "Whether ingestion is paused for this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "live_tail_pattern": {
+            "type": "string",
+            "description": "Freeform text template for formatting Live tail output with columns wrapped in {column} brackets. Example: \"PID: {message_json.pid} {level} {message}\"",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logs_retention": {
+            "type": "number",
+            "description": "Data retention for logs in days. Allowed values: 7, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metrics_retention": {
+            "type": "number",
+            "description": "Data retention for metrics in days. Allowed values: 7, 30, 60, 90, 180, 365, 730, 1095, 1460, 1825. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this collector.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "note": {
+            "type": "string",
+            "description": "A description or note about this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pinged_at": {
+            "type": "string",
+            "description": "The time when this collector last received data.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform of this collector. This value can be set only when creating a new collector and cannot be changed later. Valid values are: `docker`, `swarm`, `kubernetes`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "The secret token used to authenticate collector hosts.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "source_group_id": {
+            "type": "number",
+            "description": "The ID of the source group (folder) this collector belongs to. Set to `0` to remove from a group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_id": {
+            "type": "number",
+            "description": "The ID of the underlying source. Use this with `logtail_metric` to define metrics on this collector's data.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_vrl_transformation": {
+            "type": "string",
+            "description": "Server-side VRL transformation that runs during ingestion on Better Stack. Use this for enrichment, routing, or light normalization that doesn't involve sensitive data. For PII redaction and sensitive data filtering, prefer `configuration.vrl_transformation` which runs on the collector host and ensures raw data never leaves your network. Read more about [VRL transformations](https://betterstack.com/docs/logs/using-logtail/transforming-ingested-data/logs-vrl/).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of this collector.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this collector was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_vector_config": {
+            "type": "string",
+            "description": "Custom Vector YAML configuration for additional sources and transforms beyond the built-in component toggles. Must not contain `command:` directives.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This Data Source allows you to look up existing Collectors by name.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_connection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_type": {
+            "type": "string",
+            "description": "Type of client connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this connection was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Information about the user who created this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region of the connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_sources": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "data_sources": [
+                    "list",
+                    "string"
+                  ],
+                  "source_id": "number",
+                  "source_name": "string",
+                  "team_name": "string"
+                }
+              ]
+            ],
+            "description": "List of available data sources for this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The connection hostname.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the connection to retrieve.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_allowlist": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Array of IP addresses allowed to use this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "note": {
+            "type": "string",
+            "description": "Descriptive note for the connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "port": {
+            "type": "number",
+            "description": "The connection port.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sample_query": {
+            "type": "string",
+            "description": "A sample query showing how to use this connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "Array of team IDs associated with the connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Array of team names associated with the connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The connection username.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "valid_until": {
+            "type": "string",
+            "description": "Timestamp when the connection expires.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to retrieve information about ClickHouse connections. For more information about the Connection API check https://betterstack.com/docs/logs/api/connections/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this dashboard was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data": {
+            "type": "string",
+            "description": "The dashboard configuration data in JSON format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the dashboard to retrieve.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the dashboard.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "team_id": {
+            "type": "number",
+            "description": "The team ID of the dashboard.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "The team name associated with the dashboard.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this dashboard was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to look up existing dashboards using their ID or name. For more information about the Dashboard API check https://betterstack.com/docs/logs/api/dashboards/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation_interval": {
+            "type": "number",
+            "description": "The data aggregation interval in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "alert_type": {
+            "type": "string",
+            "description": "The type of alert: 'threshold', 'relative', or 'anomaly_rrcf'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "anomaly_sensitivity": {
+            "type": "number",
+            "description": "Anomaly detection sensitivity 0-100 (only for 'anomaly_rrcf' type, lower = more sensitive).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "anomaly_trigger": {
+            "type": "string",
+            "description": "Anomaly trigger mode: 'any', 'higher', or 'lower' (only for 'anomaly_rrcf' type).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "call": {
+            "type": "bool",
+            "description": "Enable phone call notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "chart_id": {
+            "type": "string",
+            "description": "The ID of the chart this alert belongs to. Accepts either a bare chart ID or a composite dashboard_id/chart_id from logtail_dashboard_chart resources.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "check_period": {
+            "type": "number",
+            "description": "How often to check the alert condition in seconds. Required for threshold and relative alerts; ignored for anomaly alerts, which derive their cadence from query_period.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "confirmation_period": {
+            "type": "number",
+            "description": "The confirmation delay in seconds before triggering.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this alert was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "critical_alert": {
+            "type": "bool",
+            "description": "Mark as critical alert (bypasses quiet hours).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this alert belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "email": {
+            "type": "bool",
+            "description": "Enable email notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "escalation_target": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "policy_id": "number",
+                  "policy_name": "string",
+                  "team_id": "number",
+                  "team_name": "string"
+                }
+              ]
+            ],
+            "description": "The escalation target for this alert. Specify either team_id/team_name OR policy_id/policy_name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_cause": {
+            "type": "string",
+            "description": "Incident description template (supports {{variable}} interpolation).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_per_series": {
+            "type": "bool",
+            "description": "Create separate incidents per series.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom metadata key-value pairs included in incident notifications. Use a plain string for a single value; for multiple values use jsonencode([...]).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this alert.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "The comparison operator. Required for threshold and relative alerts; not used for anomaly alerts. For threshold: 'equal', 'not_equal', 'higher_than', 'higher_than_or_equal', 'lower_than', 'lower_than_or_equal'. For relative: 'increases_by', 'decreases_by', 'changes_by'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the alert is paused.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "paused_reason": {
+            "type": "string",
+            "description": "Read-only field explaining why the alert is paused (e.g., 'Manually paused', complexity issues, too many failures).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "push": {
+            "type": "bool",
+            "description": "Enable push notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "query_period": {
+            "type": "number",
+            "description": "The query evaluation window in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "recovery_period": {
+            "type": "number",
+            "description": "The recovery delay in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "series_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Specific series to monitor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sms": {
+            "type": "bool",
+            "description": "Enable SMS notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_mode": {
+            "type": "string",
+            "description": "Source selection mode: 'source_variable', 'platforms_single_source', or 'platforms_all_sources'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_platforms": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Platform filters (used when source_mode is 'platforms_*').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_variable": {
+            "type": "string",
+            "description": "Source reference (format: 'source:table_name'). If omitted, derived from the parent resource's source variable.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "string_value": {
+            "type": "string",
+            "description": "The string threshold value (only for threshold alerts with 'equal' or 'not_equal' operators).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this alert was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The numeric threshold value. Required for threshold and relative alerts.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about an Alert on a Dashboard Chart in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_chart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "chart_type": {
+            "type": "string",
+            "description": "The type of chart: 'line_chart', 'bar_chart', 'pie_chart', 'number_chart', 'table_chart', 'tail_chart', 'static_text_chart', 'scatter_chart', 'gauge_chart', 'heatmap_chart', 'map_chart', 'text_chart', 'funnel_chart', or 'anomalies_chart'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this chart was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this chart belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of this chart.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "h": {
+            "type": "number",
+            "description": "The height of this chart in grid units.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this chart.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this chart.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "query": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "number",
+                  "name": "string",
+                  "query_type": "string",
+                  "source_variable": "string",
+                  "sql_query": "string",
+                  "static_text": "string",
+                  "where_condition": "string"
+                }
+              ]
+            ],
+            "description": "The queries for this chart. At least one query is required.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settings": {
+            "type": "string",
+            "description": "Chart settings as a JSON string. Settings vary by chart type and include options like unit, decimal_places, legend, stacking, etc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this chart was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "w": {
+            "type": "number",
+            "description": "The width of this chart in grid units (1-12).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "x": {
+            "type": "number",
+            "description": "The horizontal position of this chart in the dashboard grid (0-11).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "y": {
+            "type": "number",
+            "description": "The vertical position of this chart in the dashboard grid.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about a Chart in a Dashboard in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this dashboard group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this dashboard group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this dashboard group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this dashboard group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about a Dashboard Group in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_section": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collapsed": {
+            "type": "bool",
+            "description": "Whether this section is collapsed.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this section was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "dashboard_id": {
+            "type": "string",
+            "description": "The ID of the dashboard this section belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this section.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this section.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this section was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "y": {
+            "type": "number",
+            "description": "The vertical position of this section in the dashboard grid.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about a Section in a Dashboard in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_dashboard_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": "string",
+            "description": "The dashboard template configuration data in JSON format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the dashboard template to retrieve.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the dashboard template.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to look up dashboard templates by ID or name. For more information about dashboard templates check https://betterstack.com/dashboards/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_errors_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_group_id": {
+            "type": "number",
+            "description": "ID of the application group this application belongs to. Set to `0` to remove from a group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "code_mapping_source_root": {
+            "type": "string",
+            "description": "Source code root path that replaces the stack trace root prefix. Used to map container or build paths to the corresponding repository paths for git blame.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "code_mapping_stack_root": {
+            "type": "string",
+            "description": "Stack trace root path prefix to match. When a stack trace file starts with this prefix, it will be replaced with the source code root to map to the correct repository path.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "correlate_with_source_id": {
+            "type": "number",
+            "description": "ID of an existing source to correlate errors from this application with, for log and trace correlation. Cannot be changed after the application is created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this application was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "custom_bucket": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "access_key_id": "string",
+                  "endpoint": "string",
+                  "keep_data_after_retention": "bool",
+                  "name": "string",
+                  "secret_access_key": "string"
+                }
+              ]
+            ],
+            "description": "Optional custom bucket configuration for the application. When provided, all fields (name, endpoint, access_key_id, secret_access_key) are required.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the application in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing application, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after application is created` error.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "errors_retention": {
+            "type": "number",
+            "description": "Error data retention period in days. Default retention is 90 days.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "github_repository_name": {
+            "type": "string",
+            "description": "Full name of a GitHub repository (e.g. `owner/repo`) to connect to this application for source links, git blame, and AI-assisted fixes. The repository must already be connected to your team's GitHub integration. Set to an empty string to disconnect.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this application.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_host": {
+            "type": "string",
+            "description": "The host where the errors should be sent. See documentation for your specific platform for details.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "This property allows you to temporarily pause data ingesting for this application.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name. Must be unique within your team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform type for the application. This helps configure appropriate SDKs and integrations. You can't update this value later. Valid values are:\n    - `aiohttp_errors`\n    - `android_errors`\n    - `angular_errors`\n    - `asgi_errors`\n    - `asp_dot_net_core_errors`\n    - `asp_dot_net_errors`\n    - `astro_errors`\n    - `aws_lambda_dot_net_errors`\n    - `aws_lambda_node_errors`\n    - `aws_lambda_python_errors`\n    - `azure_functions_node_errors`\n    - `bottle_errors`\n    - `bun_errors`\n    - `celery_errors`\n    - `chalice_errors`\n    - `cli_errors`\n    - `cloudflare_pages_errors`\n    - `connect_errors`\n    - `dart_errors`\n    - `deno_errors`\n    - `django_errors`\n    - `dot_net_errors`\n    - `dot_net_http_errors`\n    - `dot_net_maui_errors`\n    - `echo_errors`\n    - `electron_errors`\n    - `elixir_errors`\n    - `ember_errors`\n    - `express_errors`\n    - `falcon_errors`\n    - `fastapi_errors`\n    - `fasthttp_errors`\n    - `fastify_errors`\n    - `fiber_errors`\n    - `flask_errors`\n    - `flutter_errors`\n    - `gatsby_errors`\n    - `gin_errors`\n    - `go_errors`\n    - `godot_errors`\n    - `google_cloud_function_dot_net_errors`\n    - `google_cloud_function_node_errors`\n    - `google_cloud_function_python_errors`\n    - `hapi_errors`\n    - `ios_errors`\n    - `iris_errors`\n    - `java_errors`\n    - `javascript_errors`\n    - `koa_errors`\n    - `kotlin_errors`\n    - `laravel_errors`\n    - `log4j_errors`\n    - `logback_errors`\n    - `macos_errors`\n    - `minidump_errors`\n    - `native_errors`\n    - `negroni_errors`\n    - `nest_js_errors`\n    - `next_js_errors`\n    - `node_errors`\n    - `nuxt_errors`\n    - `php_errors`\n    - `powershell_errors`\n    - `pyramid_errors`\n    - `python_errors`\n    - `qt_errors`\n    - `quart_errors`\n    - `rack_middleware_errors`\n    - `rails_errors`\n    - `react_errors`\n    - `react_native_errors`\n    - `react_router_framework_errors`\n    - `remix_errors`\n    - `rq_errors`\n    - `ruby_errors`\n    - `rust_errors`\n    - `sanic_errors`\n    - `serverless_python_errors`\n    - `solid_errors`\n    - `solidstart_errors`\n    - `spring_boot_errors`\n    - `spring_errors`\n    - `starlette_errors`\n    - `svelte_errors`\n    - `sveltekit_errors`\n    - `symfony_errors`\n    - `tanstack_start_react_errors`\n    - `tornado_errors`\n    - `tryton_errors`\n    - `unity_errors`\n    - `unreal_engine_errors`\n    - `vue_errors`\n    - `windows_forms_errors`\n    - `wpf_errors`\n    - `wsgi_errors`",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "table_name": {
+            "type": "string",
+            "description": "The table name generated for this application.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of this application. This token is used to identify and route the data you will send to Better Stack.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this application was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This Data Source allows you to look up existing Errors applications using their name. For more information about the Errors API check https://betterstack.com/docs/errors/api/applications/list/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_errors_application_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this application group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this application group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application group name. Must be unique within your team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sort_index": {
+            "type": "number",
+            "description": "The sort index of this application group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this application group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This Data Source allows you to look up existing Errors application groups using their name. For more information about the Errors API check https://betterstack.com/docs/errors/api/applications-groups/list/",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "chart": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "chart_type": "string",
+                  "description": "string",
+                  "name": "string",
+                  "settings": "string"
+                }
+              ]
+            ],
+            "description": "The chart configuration for this exploration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this exploration was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "date_range_from": {
+            "type": "string",
+            "description": "The start of the date range (e.g., 'now-3h', 'now-24h').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "date_range_to": {
+            "type": "string",
+            "description": "The end of the date range (e.g., 'now').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "exploration_group_id": {
+            "type": "number",
+            "description": "The ID of the exploration group this exploration belongs to. Use 0 to remove from group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this exploration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this exploration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "query": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "number",
+                  "name": "string",
+                  "query_type": "string",
+                  "source_variable": "string",
+                  "sql_query": "string",
+                  "static_text": "string",
+                  "where_condition": "string"
+                }
+              ]
+            ],
+            "description": "The queries for this exploration. At least one query is required.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this exploration was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "variable": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "default_values": [
+                    "list",
+                    "string"
+                  ],
+                  "name": "string",
+                  "sql_definition": "string",
+                  "values": [
+                    "list",
+                    "string"
+                  ],
+                  "variable_type": "string"
+                }
+              ]
+            ],
+            "description": "Variables for this exploration. Default variables (time, start_time, end_time, source) are auto-created.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about an Exploration in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregation_interval": {
+            "type": "number",
+            "description": "The data aggregation interval in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "alert_type": {
+            "type": "string",
+            "description": "The type of alert: 'threshold', 'relative', or 'anomaly_rrcf'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "anomaly_sensitivity": {
+            "type": "number",
+            "description": "Anomaly detection sensitivity 0-100 (only for 'anomaly_rrcf' type, lower = more sensitive).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "anomaly_trigger": {
+            "type": "string",
+            "description": "Anomaly trigger mode: 'any', 'higher', or 'lower' (only for 'anomaly_rrcf' type).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "call": {
+            "type": "bool",
+            "description": "Enable phone call notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "check_period": {
+            "type": "number",
+            "description": "How often to check the alert condition in seconds. Required for threshold and relative alerts; ignored for anomaly alerts, which derive their cadence from query_period.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "confirmation_period": {
+            "type": "number",
+            "description": "The confirmation delay in seconds before triggering.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this alert was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "critical_alert": {
+            "type": "bool",
+            "description": "Mark as critical alert (bypasses quiet hours).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "bool",
+            "description": "Enable email notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "escalation_target": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "policy_id": "number",
+                  "policy_name": "string",
+                  "team_id": "number",
+                  "team_name": "string"
+                }
+              ]
+            ],
+            "description": "The escalation target for this alert. Specify either team_id/team_name OR policy_id/policy_name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "exploration_id": {
+            "type": "string",
+            "description": "The ID of the exploration this alert belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this alert.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_cause": {
+            "type": "string",
+            "description": "Incident description template (supports {{variable}} interpolation).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_per_series": {
+            "type": "bool",
+            "description": "Create separate incidents per series.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom metadata key-value pairs included in incident notifications. Use a plain string for a single value; for multiple values use jsonencode([...]).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this alert.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "operator": {
+            "type": "string",
+            "description": "The comparison operator. Required for threshold and relative alerts; not used for anomaly alerts. For threshold: 'equal', 'not_equal', 'higher_than', 'higher_than_or_equal', 'lower_than', 'lower_than_or_equal'. For relative: 'increases_by', 'decreases_by', 'changes_by'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the alert is paused.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "paused_reason": {
+            "type": "string",
+            "description": "Read-only field explaining why the alert is paused (e.g., 'Manually paused', complexity issues, too many failures).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "push": {
+            "type": "bool",
+            "description": "Enable push notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "query_period": {
+            "type": "number",
+            "description": "The query evaluation window in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "recovery_period": {
+            "type": "number",
+            "description": "The recovery delay in seconds.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "series_names": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Specific series to monitor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sms": {
+            "type": "bool",
+            "description": "Enable SMS notifications.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_mode": {
+            "type": "string",
+            "description": "Source selection mode: 'source_variable', 'platforms_single_source', or 'platforms_all_sources'.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_platforms": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Platform filters (used when source_mode is 'platforms_*').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_variable": {
+            "type": "string",
+            "description": "Source reference (format: 'source:table_name'). If omitted, derived from the parent resource's source variable.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "string_value": {
+            "type": "string",
+            "description": "The string threshold value (only for threshold alerts with 'equal' or 'not_equal' operators).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this alert was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The numeric threshold value. Required for threshold and relative alerts.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about an Alert on an Exploration in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_exploration_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this exploration group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this exploration group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this exploration group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this exploration group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about an Exploration Group in Better Stack Telemetry.",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_metric": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aggregations": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of aggregations to perform on the metric. Optional: omit it (or set it to an empty list) to create a Label (a group-by dimension) instead of a Metric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this metric.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this metric.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "The ID of the source this metric belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sql_expression": {
+            "type": "string",
+            "description": "The SQL expression used to extract the metric value.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the metric.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This Data Source allows you to look up existing Metrics using their name. You can list all your existing metrics via the [Metrics API](https://betterstack.com/docs/logs/api/list-all-existing-metrics/).",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "code_mapping_source_root": {
+            "type": "string",
+            "description": "Source code root path that replaces the stack trace root prefix. Used to map container or build paths to the corresponding repository paths for git blame.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "code_mapping_stack_root": {
+            "type": "string",
+            "description": "Stack trace root path prefix to match. When a stack trace file starts with this prefix, it will be replaced with the source code root to map to the correct repository path.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The time when this monitor group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "custom_bucket": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "access_key_id": "string",
+                  "endpoint": "string",
+                  "keep_data_after_retention": "bool",
+                  "name": "string",
+                  "secret_access_key": "string"
+                }
+              ]
+            ],
+            "description": "Optional custom bucket configuration for the source. When provided, all fields (name, endpoint, access_key_id, secret_access_key) are required.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_region": {
+            "type": "string",
+            "description": "Data region or private cluster name to create the source in. Permitted values for most plans are: `us_east`, `germany`, `singapore`. This value can only be set at creation time and cannot be changed afterwards. The API returns the specific cluster name, which may differ from the value you provide (for example, `germany` may read back as `eu-nbg-2`).  \nWhen importing an existing source, leave `data_region` unset in your configuration - Terraform reads it from the API. Pinning it to an identifier that differs from the stored cluster name produces a spurious `data_region cannot be changed after source is created` error.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_host": {
+            "type": "string",
+            "description": "The host where the logs or metrics should be sent. See [documentation](https://betterstack.com/docs/logs/start/) for your specific source platform for details.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ingesting_paused": {
+            "type": "bool",
+            "description": "This property allows you to temporarily pause data ingesting for this source (e.g., when you are reaching your plan's usage quota and you want to prioritize some sources over others).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "live_tail_pattern": {
+            "type": "string",
+            "description": "Freeform text template for formatting Live tail output with columns wrapped in {column} brackets. Example: \"PID: {message_json.pid} {level} {message}\"",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logs_retention": {
+            "type": "number",
+            "description": "Data retention for logs in days. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metrics_retention": {
+            "type": "number",
+            "description": "Data retention for metrics in days. There might be additional charges for longer retention.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform of this source. This value can be set only when you're creating a new source. You can't update this value later. Valid values are:\n    - `apache2`\n    - `aws`\n    - `aws_cloudwatch`\n    - `aws_ecs`\n    - `aws_elb`\n    - `aws_fargate`\n    - `azure`\n    - `azure_logs`\n    - `cloudflare_logpush`\n    - `cloudflare_prometheus_exporter`\n    - `cloudflare_worker`\n    - `datadog_agent`\n    - `digitalocean`\n    - `docker`\n    - `dokku`\n    - `dotnet`\n    - `elasticsearch`\n    - `erlang`\n    - `filebeat`\n    - `flights`\n    - `fluentbit`\n    - `fluentd`\n    - `fly_io`\n    - `gcp`\n    - `go`\n    - `google_cloud_pubsub`\n    - `haproxy`\n    - `heroku`\n    - `http`\n    - `java`\n    - `javascript`\n    - `kubernetes`\n    - `logstash`\n    - `minio`\n    - `mongodb`\n    - `mysql`\n    - `nginx`\n    - `open_telemetry`\n    - `php`\n    - `postgresql`\n    - `prometheus`\n    - `prometheus_scrape`\n    - `python`\n    - `rabbitmq`\n    - `redis`\n    - `render`\n    - `rsyslog`\n    - `ruby`\n    - `syslog-ng`\n    - `traefik`\n    - `ubuntu`\n    - `vector`\n    - `vercel_integration`\n    - `winlogbeat`",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scrape_frequency_secs": {
+            "type": "number",
+            "description": "For scrape platform types, how often to scrape the URLs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scrape_request_basic_auth_password": {
+            "type": "string",
+            "description": "Basic auth password for scraping.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "scrape_request_basic_auth_user": {
+            "type": "string",
+            "description": "Basic auth username for scraping.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scrape_request_headers": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "An array of request headers, each containing `name` and `value` fields.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scrape_urls": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "For scrape platform types, the set of urls to scrape.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "skip_ssl_verify": {
+            "type": "bool",
+            "description": "Should the scraper skip SSL certificate verification? Enable for endpoints with self-signed or invalid certificates.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source_group_id": {
+            "type": "number",
+            "description": "The ID of the source group this source belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "table_name": {
+            "type": "string",
+            "description": "The table name generated for this source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID for this resource. Can be used with table_name in [Query API](https://betterstack.com/docs/logs/query-api/connect-remotely/).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The token of this source. This token is used to identify and route the data you will send to Better Stack.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this monitor group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vrl_transformation": {
+            "type": "string",
+            "description": "VRL transformation that runs on Better Stack's servers during ingestion. Note: data has already left your infrastructure at this point. For transformations that must run before data leaves your network (e.g. PII redaction), use `logtail_collector` with `configuration.vrl_transformation` instead. Read more about [VRL transformations](https://betterstack.com/docs/logs/using-logtail/transforming-ingested-data/logs-vrl/).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This Data Source allows you to look up existing Sources using their table name. The table name is shown on the Source settings page on telemetry.betterstack.com or you can list all your existing sources via the [Sources API](https://betterstack.com/docs/logs/api/list-all-existing-sources/).",
+        "description_kind": "plain"
+      }
+    },
+    "logtail_source_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The time when this source group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this source group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this source group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sort_index": {
+            "type": "number",
+            "description": "The sort index of this source group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_name": {
+            "type": "string",
+            "description": "Used to specify the team the resource should be created in when using global tokens. You can't update this value later.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The time when this source group was updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "This data source allows you to get information about a Source Group. For more information about the Source Groups API check https://betterstack.com/docs/logs/api/",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
