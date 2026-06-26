@@ -1,0 +1,1958 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "email": {
+          "type": "string",
+          "description": "Email to login with",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Password to login with",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "site_url": {
+          "type": "string",
+          "description": "Wiki.JS Site URL",
+          "description_kind": "markdown",
+          "required": true
+        }
+      },
+      "description": "The WikiJS provider aims to implement the complete GraphQL API of WikiJS.\nIt should be possible to configure any instance of WikiJS via this provider.\nThe main focus is for administration backend to be complete but also provide necessary resources and data_source to aid with that.\n\nUse the navigation to the left to read about the available resources.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "wikijs_api": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Enable the Wiki.JS API",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_api_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation time as returned by Wiki.JS (expect RFC3339 format)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expiration": {
+            "type": "string",
+            "description": "The actual expiration date of this key",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expires_in": {
+            "type": "string",
+            "description": "When creating an API Key wiki.js expects an expiration timespan (e. g. '1d' '20h')",
+            "description_kind": "plain",
+            "required": true
+          },
+          "full_access": {
+            "type": "bool",
+            "description": "Set to true to create an API Key with full access rights. Mutually exclusive with group_id.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group_id": {
+            "type": "number",
+            "description": "Mutually exclusive with full_access. List of group_ids the API Key should inherit it's permissions and page rules form.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Internal Id of the API Key",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The actual API Key. Keep it secret!",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "key_short": {
+            "type": "string",
+            "description": "Suffix of the actual API Key as shown in the Web UI (Hint: Wiki.JS always adds three dots before the actual suffix. You need to remove those if you need to match an actual key)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "min_remaining_duration": {
+            "type": "string",
+            "description": "Set a minimum duration the api key needs to remain active. This field is changed when the expiration dates comes to close and triggers a replace",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the API Key (not unique)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_auth_strategies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "strategies": {
+            "nested_type": {
+              "attributes": {
+                "auto_enroll_groups": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "When self_registration is set to true, this list must contain the group ids the newly created account is added to.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Map with config options for this specifc auth strategie\n\n```graphql\nquery GetAuthStrategies {\n  authentication {\n    strategies {\n      title\n      key\n      props {\n        key\n        value\n      }\n    }\n  }\n}\n```",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Name for this instance to be shown in the interface and at the login screen",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "domain_whitelist": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "When self_registration is set to true, this list must contain the allowed domains",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether to enable this auth strategy instance",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Unique Key for this instance of the auth strategy. This resource can generate a unique key for you, but when you change the order of your auth strategies you have to explicitly set this key by yourself.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "self_registration": {
+                  "type": "bool",
+                  "description": "Automatically create user accounts for people who successfully login via this auth strategie",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "strategy_key": {
+                  "type": "string",
+                  "description": "Unique Identifier of the auth strategie to use (e.g. local, oauth2, oidc, keycloak, ldap)\n\n```graphql\nquery GetAuthStrategies {\n  authentication {\n    strategies {\n      title\n      key\n      description\n    }\n  }\n}\n```",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "Internal id of the group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description": "Whether this is a system group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "page_rules": {
+            "nested_type": {
+              "attributes": {
+                "deny": {
+                  "type": "bool",
+                  "description": "Defines whether this is a deny or allow rule",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Internal ID for this rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "locales": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Locale to match on. Empty list to match on any locale.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "match": {
+                  "type": "string",
+                  "description": "Match pattern for this rule. One of:\n  - START\n  - EXACT\n  - END\n  - REGEX\n  - TAG",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Path to match on",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "roles": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Permissions of this role (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/client/components/admin/admin-groups-edit-permissions.vue#L43)",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Page rules for this group. See nested object",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Global permissions for this group (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/client/components/admin/admin-groups-edit-permissions.vue#L43)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "redirect_on_login": {
+            "type": "string",
+            "description": "Path to redirect members to upon login",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_localization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_update": {
+            "type": "bool",
+            "description": "Automatically download updates to this locale as they become available.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "locale": {
+            "type": "string",
+            "description": "All UI text elements will be displayed in selected language.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "namespaces": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of locales enabled for multilingual namespacing. The base locale defined above must always be included.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "namespacing": {
+            "type": "bool",
+            "description": "Enables multiple language versions of the same page.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_managed_system_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "page_rules": {
+            "nested_type": {
+              "attributes": {
+                "deny": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "locales": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "match": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "roles": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "redirect_on_login": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Content of the page (format is defined by editor)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation date of this page (expect RFC 3399 timestamp). Use data source to get updated_at",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_email": {
+            "type": "string",
+            "description": "Email of the page creator. Use data source to get authors",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_id": {
+            "type": "number",
+            "description": "User id of the creator. Use data source to get authors",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_name": {
+            "type": "string",
+            "description": "Name of the page creator. Use data source to get authors",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Meta description of the page for search engines",
+            "description_kind": "plain",
+            "required": true
+          },
+          "editor": {
+            "type": "string",
+            "description": "Editor type to use for this page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "hash": {
+            "type": "string",
+            "description": "Page hash computed by wiki.js (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/server/helpers/page.js#L71)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Internal id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_private": {
+            "type": "bool",
+            "description": "Whether this is a private page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_published": {
+            "type": "bool",
+            "description": "Whether this page is published",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "locale": {
+            "type": "string",
+            "description": "Language of this page",
+            "description_kind": "plain",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the page (omit leading slash)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "private_ns": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "publish_end_date": {
+            "type": "string",
+            "description": "Set to an RFC 3399 timestamp to define an unpublish date.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "publish_start_date": {
+            "type": "string",
+            "description": "Set to an RFC 3399 timestamp to define a publish date.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "script_css": {
+            "type": "string",
+            "description": "Additional CSS to add to the rendered page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "script_js": {
+            "type": "string",
+            "description": "Additional JS to add to the rendered page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of page tags",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Page Title",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_renderers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "renderers": {
+            "nested_type": {
+              "attributes": {
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Map with config options for this specific renderer.\n",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "is_enabled": {
+                  "type": "bool",
+                  "description": "Is the renderer enabled or not.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The registered/machine name of the renderer used to identify it in the system.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API mutatation `rendering{updateRenderers{renderers{\u2026}}}`.\n\n**Be aware**.\nThis {{ .Type }} supports only one instance as the implementation needs the complete configuration of renderers.\nYou cannot specify one renderer with its config as this will erase the complete list.\nIf you are unsure about the `key` and `config` fields, you can query the API after activating it manually or with the `wikijs_api` resource.\nThe query with the minimal information you need is as follows:\n\n```graphql\nquery{\n  rendering{\n    renderers{\n      title,\n      key,\n      isEnabled,\n      config{\n        key,\n        value\n      }\n    }\n  }\n}\n```\n\nThe `title` field is not needed in the `{{ .Name }}` {{ .Type }} but is necessary for the graphql query.\nYou get back a JSON in the `config.value` field where you have to look for another `value` field.",
+        "description_kind": "markdown"
+      }
+    },
+    "wikijs_search_engines": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "search_engines": {
+            "nested_type": {
+              "attributes": {
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Map with config options for this specific search engine.\n",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "is_enabled": {
+                  "type": "bool",
+                  "description": "Is the search engine enabled or not.\n",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The registered/machine name of the search engine used to identify it in the system.\n",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of search engines and their config.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API mutatation `search{updateSearchEngines{engines{\u2026}}}`.\n\n**Be aware**.\nThis {{ .Type }} supports only one instance as the implementation needs the complete configuration of search engines.\nYou cannot specify one search engine with its config as this will erase the complete list.\nIf you are unsure about the `key` and `config` fields, you can query the API after activating it manually or with the `wikijs_api` resource.\nMake sure that the search provider `isAvailable` before you try to set `isEnabled` and that you have always exactly one search engine enabled.\nThe query with the minimal information you need is as follows:\n\n```graphql\nquery{\n  search{\n    searchEngines{\n      title,\n      key,\n      isEnabled,\n      isAvailable,\n      config{\n        key,\n        value\n      }\n    }  }\n}\n```\n\nThe `title` field is not needed in the `{{ .Name }}` {{ .Type }} but is necessary for the graphql query.\nYou get back a JSON in the `config.value` field where you have to look for another `value` field.",
+        "description_kind": "markdown"
+      }
+    },
+    "wikijs_site_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "analytics_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "analytics_service": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_auto_login": {
+            "type": "bool",
+            "description": "Should the user be redirected automatically to the first authentication provider.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_enforce_2fa": {
+            "type": "bool",
+            "description": "Force all users to use Two-Factor Authentication when using an authentication provider with a user / password form.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_hide_local": {
+            "type": "bool",
+            "description": "Don't show the local authentication provider on the login screen. Add ?all to the URL to temporarily use it.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_jwt_audience": {
+            "type": "string",
+            "description": "Audience URN used in JWT issued upon login. Usually your domain name. (e.g. urn:your.domain.com)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_jwt_expiration": {
+            "type": "string",
+            "description": "The expiration period of a token until it must be renewed. (default: 30m)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_jwt_renewable_period": {
+            "type": "string",
+            "description": "The maximum period a token can be renewed when expired. (default: 14d)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auth_login_bg_url": {
+            "type": "string",
+            "description": "Specify an image to use as the login background. PNG and JPG are supported, 1920x1080 recommended. Leave empty for default. Click the button on the right to upload a new image. Note that the Guests group must have read-access to the selected image!",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "company": {
+            "type": "string",
+            "description": "Name to use when displaying copyright notice in the footer. Leave empty to hide.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "content_license": {
+            "type": "string",
+            "description": "License shown in the footer of all content pages.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Default description when none is provided for a page.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_fab": {
+            "type": "bool",
+            "description": "Display the edit floating action button (FAB) with a speed-dial menu in the bottom right corner of the screen.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_bar": {
+            "type": "bool",
+            "description": "Display the edit menu bar in the page header.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_btn": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_external_btn": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_external_icon": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_external_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "edit_menu_external_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "feature_page_comments": {
+            "type": "bool",
+            "description": "Allow users to leave comments on pages.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "feature_page_ratings": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "feature_personal_wikis": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "footer_override": {
+            "type": "string",
+            "description": "Optionally override the footer text with a custom message. Useful if none of the above licenses are appropriate.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Full URL to your wiki, without the trailing slash. (e.g. https://wiki.example.com)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "logo_url": {
+            "type": "string",
+            "description": "Specify an image to use as the logo. SVG, PNG, JPG are supported, in a square ratio, 34x34 pixels or larger. Click the button on the right to upload a new image.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "page_extensions": {
+            "type": "string",
+            "description": "A comma-separated list of URL extensions that will be treated as pages. For example, adding md will treat /foobar.md the same as /foobar.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "robots": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Default: Index, Follow. Can also be set on a per-page basis.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_csp": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_csp_directives": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_hsts": {
+            "type": "bool",
+            "description": "This ensures the connection cannot be established through an insecure HTTP connection.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_hsts_duration": {
+            "type": "number",
+            "description": "Defines the duration for which the server should only deliver content through HTTPS. It's a good idea to start with small values and make sure that nothing breaks on your wiki before moving to longer values.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_iframe": {
+            "type": "bool",
+            "description": "Prevents other websites from embedding your wiki in an iframe. This provides clickjacking protection.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_open_redirect": {
+            "type": "bool",
+            "description": "Prevents user controlled URLs from directing to websites outside of your wiki. This provides Open Redirect protection.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_referrer_policy": {
+            "type": "bool",
+            "description": "Limits the referrer header to same origin.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_sri": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "security_trust_proxy": {
+            "type": "bool",
+            "description": "Should be enabled when using a reverse-proxy like nginx, apache, CloudFlare, etc in front of Wiki.js. Turn off otherwise.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Displayed in the top bar and appended to all pages meta title.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upload_force_download": {
+            "type": "bool",
+            "description": "Should non-image files be forced as downloads when accessed directly. This prevents potential XSS attacks via unsafe file extensions uploads.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upload_max_file_size": {
+            "type": "number",
+            "description": "The maximum size for a single file.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upload_max_files": {
+            "type": "number",
+            "description": "How many files can be uploaded in a single batch?",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upload_scan_svg": {
+            "type": "bool",
+            "description": "Should SVG uploads be scanned for vulnerabilities and stripped of any potentially unsafe content.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_theme_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dark_mode": {
+            "type": "bool",
+            "description": "Dark Mode.\n  Not recommended for accessibility.\n  May not be supported by all themes.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "iconset": {
+            "type": "string",
+            "description": "Set of icons to use for the sidebar navigation.\n  Accepted values: `mdi`, `fa`, `fa4`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "inject_body": {
+            "type": "string",
+            "description": "HTML code to be injected just before the closing body tag.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "inject_css": {
+            "type": "string",
+            "description": "CSS code to inject after system default CSS.\n  Consider using custom themes if you have a large amount of css code.\n  Injecting too much CSS code will result in poor page load performance!\n  CSS will automatically be minified.\n  \n  **CAUTION**: When adding styles for page content, you must scope them to the `.contents` class.\n  Omitting this could break the layout of the editor!",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "inject_head": {
+            "type": "string",
+            "description": "HTML code to be injected just before the closing head tag.  Usually for script tags.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "theme": {
+            "type": "string",
+            "description": "Themes affect how content pages are displayed.\n  Other site sections (such as the editor or admin area) are not affected.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "toc_position": {
+            "type": "string",
+            "description": "Select whether the table of contents is shown on the left, right or not at all.\n  Accepted values: `left`, `right`, `off`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API mutatation `theming{setConfig{\u2026}}`.\nIt can be used to manipulate the theme setting on instances with custom themes.\nThe Schema descriptions are mostly lifted from the descriptions of the input fields in WikiJS.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "wikijs_api": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "States whether the Wiki.JS API is enabled",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_api_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation time as returned by Wiki.JS (expect RFC3339 format)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "expiration": {
+                  "type": "string",
+                  "description": "Expiration time as returned by Wiki.JS (expect RFC3339 format)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Internal Id of the API Key",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_revoked": {
+                  "type": "bool",
+                  "description": "Whether the API Key is revoked",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key_short": {
+                  "type": "string",
+                  "description": "Suffix of the actual API Key as shown in the Web UI (Hint: Wiki.JS always adds three dots before the actual suffix. You need to remove those if you need to match an actual key)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the API Key (not unique)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Time of last updated of the key as returned by Wiki.JS (expect RFC3339 format)",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of all API Keys known to wiki.js, see the nested object for details.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_auth_strategies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "strategies": {
+            "nested_type": {
+              "attributes": {
+                "auto_enroll_groups": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "When self_registration is set to true, this list contains the group ids the newly created account is added to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Map with config options for this specifc auth strategie",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Name for this instance to be shown in the interface and at the login screen",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "domain_whitelist": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "When self_registration is set to true, this list contains the allowed domains",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether to enable this auth strategy instance",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Unique Key for this instance of the auth strategie",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "self_registration": {
+                  "type": "bool",
+                  "description": "Allow users to create a user account via this auth strategy",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "strategy_key": {
+                  "type": "string",
+                  "description": "Unique Identifier of the auth strategie to use (e.g. local, oauth2, oidc, keycloak, ldap)\n\n```graphql\nquery GetAuthStrategies {\n  authentication {\n    strategies {\n      title\n      key\n      description\n    }\n  }\n}\n```",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of active auth strategies (active means configured, not necessary enabled)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation time of this group (expect RFC3399)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "group_id": {
+            "type": "number",
+            "description": "Internal id of the group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "is_system": {
+            "type": "bool",
+            "description": "Whether this is a system group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "page_rules": {
+            "nested_type": {
+              "attributes": {
+                "deny": {
+                  "type": "bool",
+                  "description": "Defines whether this is a deny or allow rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Internal ID for this rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "locales": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Locale to match on. Empty list to match on any locale.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "match": {
+                  "type": "string",
+                  "description": "Match pattern for this rule. One of:\n  - START\n  - EXACT\n  - END\n  - REGEX\n  - TAG",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Path to match on",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "roles": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Permissions of this role (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/client/components/admin/admin-groups-edit-permissions.vue#L43)",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Page rules for this group. See nested object",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Global permissions for this group (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/client/components/admin/admin-groups-edit-permissions.vue#L43)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "redirect_on_login": {
+            "type": "string",
+            "description": "Path to redirect members to upon login",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update time of this group (expect RFC3399)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "type": "string",
+            "description": "Seems like this is just part of the graphql schema but not implemented in the wiki.js server",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation time of this group (expect RFC3399)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Internal id of the group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_system": {
+                  "type": "bool",
+                  "description": "Whether this is a system group",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the group",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update time of this group (expect RFC3399)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "user_count": {
+                  "type": "number",
+                  "description": "Number of users in this group",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order_by": {
+            "type": "string",
+            "description": "Seems like this is just part of the graphql schema but not implemented in the wiki.js server",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "author_email": {
+            "type": "string",
+            "description": "Email of the page last author.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "author_id": {
+            "type": "number",
+            "description": "User id of the last author.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "author_name": {
+            "type": "string",
+            "description": "Name of the page last author.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Content of the page (format is defined by editor)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "content_type": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation date of this page (expect RFC 3399 timestamp)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_email": {
+            "type": "string",
+            "description": "Email of the page creator.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_id": {
+            "type": "number",
+            "description": "User id of the creator.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creator_name": {
+            "type": "string",
+            "description": "Name of the page creator.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Meta description of the page for search engines",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "editor": {
+            "type": "string",
+            "description": "Editor type of this page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hash": {
+            "type": "string",
+            "description": "Page hash computed by wiki.js (see: https://github.com/requarks/wiki/blob/db8a09fe8c267a54fbbfabe0dc871a2108824968/server/helpers/page.js#L71)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_private": {
+            "type": "bool",
+            "description": "Whether this is a private page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_published": {
+            "type": "bool",
+            "description": "Whether this page is published",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "locale": {
+            "type": "string",
+            "description": "Language of this page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "page_id": {
+            "type": "number",
+            "description": "Internal ID of this page",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the page (omit leading slash)",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "private_ns": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "publish_end_date": {
+            "type": "string",
+            "description": "RFC 3399 timestamp, when an unpublish date is defined.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "publish_start_date": {
+            "type": "string",
+            "description": "RFC 3399 timestamp, when a publish date is defined.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "render": {
+            "type": "string",
+            "description": "Rendered HTML of the content",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "script_css": {
+            "type": "string",
+            "description": "Additional CSS to add to the rendered page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "script_js": {
+            "type": "string",
+            "description": "Additional JS to add to the rendered page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation date of this tag (expect RFC 3399 timestamp)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Internal id of this tag",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tag": {
+                  "type": "string",
+                  "description": "The actual tag name. Use this string, when referencing a tag",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Display name of this tag",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Update date of this tag (expect RFC 3399 timestamp)",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "List of page tags",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Page Title",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Update date of this page (expect RFC 3399 timestamp)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_renderers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "renderers": {
+            "nested_type": {
+              "attributes": {
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "A list of Key/Value pairs of config for each renderer.\n  Some take none, others have a long list.\n  You can use this field in the `renderers` ressource.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "depends_on": {
+                  "type": "string",
+                  "description": "The `key` of the renderer, this renderer depends on.\n  This could be `markdownCore` for a markdown renderer.\n  The `renderers` ressource currently does not check against this, so make sure to activate them.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the renderer shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "The icon of the renderer shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "input": {
+                  "type": "string",
+                  "description": "What kind of input format this renderer takes.\n  This could be for example `markdown`, `asciidoc`, `openapi`, `html` or `null`.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_enabled": {
+                  "type": "bool",
+                  "description": "Either if the renderer is active or not.\n  You can use this field in the `renderers` ressource.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The unique identifier of each renderer.\n  This is set in code and you can use this field in the `renderers` ressource.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "output": {
+                  "type": "string",
+                  "description": "What kind of output format this renderer produces.\n  This could be for example `html` or `null`.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the renderer shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of renderers in the system.\n",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API query `rendering{renderers{\u2026}}`.\nYou can use this data source to manipulate only certain fields with the `renderers` resource.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "wikijs_search_engines": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "search_engines": {
+            "nested_type": {
+              "attributes": {
+                "config": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "A list of Key/Value pairs of config for each search engine.\n  Some take none, others have a long list.\n  You can use this field in the `search_engines` resource.\n",
+                  "description_kind": "markdown",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the search engines shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_available": {
+                  "type": "bool",
+                  "description": "Wether the implementation of this search engine is finished and can be used.\n  Check this field before enabling a search engine with the resource `wikijs_search_engines`.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_enabled": {
+                  "type": "bool",
+                  "description": "Either if the search engine is active or not.\n  You can use this field in the `search_engines` resource.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The unique identifier of each search engine.\n  This is set in code and you can use this field in the `search_engines` resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "logo": {
+                  "type": "string",
+                  "description": "The logo of the search engine shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the search engine shown in the backend.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "website": {
+                  "type": "string",
+                  "description": "The website of the search engine.\n",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of search engines in the system.\n",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API query `search{searchEngines{\u2026}}`.\nYou can use this {{ .Type }} to manipulate only certain fields with the `search_engines` resource.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "wikijs_site_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "analytics_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "analytics_service": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_auto_login": {
+            "type": "bool",
+            "description": "Should the user be redirected automatically to the first authentication provider.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_enforce_2fa": {
+            "type": "bool",
+            "description": "Force all users to use Two-Factor Authentication when using an authentication provider with a user / password form.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_hide_local": {
+            "type": "bool",
+            "description": "Don't show the local authentication provider on the login screen. Add ?all to the URL to temporarily use it.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_jwt_audience": {
+            "type": "string",
+            "description": "Audience URN used in JWT issued upon login. Usually your domain name. (e.g. urn:your.domain.com)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_jwt_expiration": {
+            "type": "string",
+            "description": "The expiration period of a token until it must be renewed. (default: 30m)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_jwt_renewable_period": {
+            "type": "string",
+            "description": "The maximum period a token can be renewed when expired. (default: 14d)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "auth_login_bg_url": {
+            "type": "string",
+            "description": "Specify an image to use as the login background. PNG and JPG are supported, 1920x1080 recommended. Leave empty for default. Click the button on the right to upload a new image. Note that the Guests group must have read-access to the selected image!",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "company": {
+            "type": "string",
+            "description": "Name to use when displaying copyright notice in the footer. Leave empty to hide.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "content_license": {
+            "type": "string",
+            "description": "License shown in the footer of all content pages.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Default description when none is provided for a page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_fab": {
+            "type": "bool",
+            "description": "Display the edit floating action button (FAB) with a speed-dial menu in the bottom right corner of the screen.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_bar": {
+            "type": "bool",
+            "description": "Display the edit menu bar in the page header.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_btn": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_external_btn": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_external_icon": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_external_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "edit_menu_external_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "feature_page_comments": {
+            "type": "bool",
+            "description": "Allow users to leave comments on pages.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "feature_page_ratings": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "feature_personal_wikis": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "footer_override": {
+            "type": "string",
+            "description": "Optionally override the footer text with a custom message. Useful if none of the above licenses are appropriate.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Full URL to your wiki, without the trailing slash. (e.g. https://wiki.example.com)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logo_url": {
+            "type": "string",
+            "description": "Specify an image to use as the logo. SVG, PNG, JPG are supported, in a square ratio, 34x34 pixels or larger. Click the button on the right to upload a new image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "page_extensions": {
+            "type": "string",
+            "description": "A comma-separated list of URL extensions that will be treated as pages. For example, adding md will treat /foobar.md the same as /foobar.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "robots": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Default: Index, Follow. Can also be set on a per-page basis.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_csp": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_csp_directives": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_hsts": {
+            "type": "bool",
+            "description": "This ensures the connection cannot be established through an insecure HTTP connection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_hsts_duration": {
+            "type": "number",
+            "description": "Defines the duration for which the server should only deliver content through HTTPS. It's a good idea to start with small values and make sure that nothing breaks on your wiki before moving to longer values.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_iframe": {
+            "type": "bool",
+            "description": "Prevents other websites from embedding your wiki in an iframe. This provides clickjacking protection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_open_redirect": {
+            "type": "bool",
+            "description": "Prevents user controlled URLs from directing to websites outside of your wiki. This provides Open Redirect protection.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_referrer_policy": {
+            "type": "bool",
+            "description": "Limits the referrer header to same origin.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_sri": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "security_trust_proxy": {
+            "type": "bool",
+            "description": "Should be enabled when using a reverse-proxy like nginx, apache, CloudFlare, etc in front of Wiki.js. Turn off otherwise.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Displayed in the top bar and appended to all pages meta title.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "upload_force_download": {
+            "type": "bool",
+            "description": "Should non-image files be forced as downloads when accessed directly. This prevents potential XSS attacks via unsafe file extensions uploads.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "upload_max_file_size": {
+            "type": "number",
+            "description": "The maximum size for a single file.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "upload_max_files": {
+            "type": "number",
+            "description": "How many files can be uploaded in a single batch?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "upload_scan_svg": {
+            "type": "bool",
+            "description": "Should SVG uploads be scanned for vulnerabilities and stripped of any potentially unsafe content.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "wikijs_theme_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dark_mode": {
+            "type": "bool",
+            "description": "Dark Mode.\n  Not recommended for accessibility.\n  May not be supported by all themes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "iconset": {
+            "type": "string",
+            "description": "Set of icons to use for the sidebar navigation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inject_body": {
+            "type": "string",
+            "description": "HTML code to be injected just before the closing body tag.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inject_css": {
+            "type": "string",
+            "description": "CSS code to inject after system default CSS.\n  Consider using custom themes if you have a large amount of css code.\n  Injecting too much CSS code will result in poor page load performance!\n  CSS will automatically be minified.\n  \n  **CAUTION**: When adding styles for page content, you must scope them to the `.contents` class.\n  Omitting this could break the layout of the editor!",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inject_head": {
+            "type": "string",
+            "description": "HTML code to be injected just before the closing head tag.  Usually for script tags.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "theme": {
+            "type": "string",
+            "description": "Themes affect how content pages are displayed.\n  Other site sections (such as the editor or admin area) are not affected.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "toc_position": {
+            "type": "string",
+            "description": "Select whether the table of contents is shown on the left, right or not at all.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API query `theming{config{\u2026}}`.\nIt can be used to read the current state and only change one of the required or any of the optional, without touching the required.\nThe Schema descriptions are directly lifted from the descriptions of the input fields in WikiJS.",
+        "description_kind": "markdown"
+      }
+    },
+    "wikijs_themes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "themes": {
+            "nested_type": {
+              "attributes": {
+                "author": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of registered themes.\n",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "The `{{ .Name }}` {{ .Type }} implements the WikiJS API query `theming{themes{\u2026}}`.\nIn wikijs [v2][api-themes] this contains only the default theme.\n\n[api-themes]: https://github.com/requarks/wiki/blob/main/server/graph/resolvers/theming.js#L16-L19",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

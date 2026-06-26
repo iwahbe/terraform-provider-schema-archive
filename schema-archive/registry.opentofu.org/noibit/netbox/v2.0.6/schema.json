@@ -1,0 +1,2707 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "allow_insecure_https": {
+          "type": "bool",
+          "description": "Flag to set whether to allow https with invalid certificates. Can be set via the `NETBOX_ALLOW_INSECURE_HTTPS` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "api_token": {
+          "type": "string",
+          "description": "Netbox API authentication token. Can be set via the `NETBOX_API_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "headers": {
+          "type": [
+            "map",
+            "string"
+          ],
+          "description": "Set these header on all requests to Netbox. Can be set via the `NETBOX_HEADERS` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "server_url": {
+          "type": "string",
+          "description": "Location of Netbox server including scheme (http or https) and optional port, but without trailing slash. Can be set via the `NETBOX_SERVER_URL` environment variable.",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "skip_version_check": {
+          "type": "bool",
+          "description": "If true, do not try to determine the running Netbox version at provider startup. Disables warnings about possibly unsupported Netbox version. Also useful for local testing on terraform plans. Can be set via the `NETBOX_SKIP_VERSION_CHECK` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "netbox_aggregate": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "prefix": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "rir_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#aggregates):\n\n> NetBox allows us to specify the portions of IP space that are interesting to us by defining aggregates. Typically, an aggregate will correspond to either an allocation of public (globally routable) IP space granted by a regional authority, or a private (internally-routable) designation.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_asn": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "asn": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "rir_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#asn):\n> ASN is short for Autonomous System Number. This identifier is used in the BGP protocol to identify which \"autonomous system\" a particular prefix is originating and transiting through.\n>\n> The AS number model within NetBox allows you to model some of this real-world relationship.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_available_ip_address": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dns_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "interface_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ip_address": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_range_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "prefix_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Defaults to `active`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):Per [the docs](https://netbox.readthedocs.io/en/stable/models/ipam/ipaddress/):\n\n> An IP address comprises a single host address (either IPv4 or IPv6) and its subnet mask. Its mask should match exactly how the IP address is configured on an interface in the real world.\n> Like a prefix, an IP address can optionally be assigned to a VRF (otherwise, it will appear in the \"global\" table). IP addresses are automatically arranged under parent prefixes within their respective VRFs according to the IP hierarchya.\n>\n> Each IP address can also be assigned an operational status and a functional role. Statuses are hard-coded in NetBox and include the following: \n> * Active\n> * Reserved\n> * Deprecated\n> * DHCP\n> * SLAAC (IPv6 Stateless Address Autoconfiguration)\n\nThis resource will retrieve the next available IP address from a given prefix or IP range (specified by ID)",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_available_prefix": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_pool": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mark_utilized": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_prefix_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "prefix": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "prefix_length": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vlan_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_field": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the existing custom field (text, integer, boolean, url, selection, multiple).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Existing custom fields to associate to this prefix (ipam module).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_circuit": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cid": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "provider_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Circuits:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/circuits/#circuits_1):\n\n> A communications circuit represents a single physical link connecting exactly two endpoints, commonly referred to as its A and Z terminations. A circuit in NetBox may have zero, one, or two terminations defined. It is common to have only one termination defined when you don't necessarily care about the details of the provider side of the circuit, e.g. for Internet access circuits. Both terminations would likely be modeled for circuits which connect one customer site to another.\n> \n> Each circuit is associated with a provider and a user-defined type. For example, you might have Internet access circuits delivered to each site by one provider, and private MPLS circuits delivered by another. Each circuit must be assigned a circuit ID, each of which must be unique per provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_circuit_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Circuits:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/circuits/#providers):\n\n> A circuit provider is any entity which provides some form of connectivity of among sites or organizations within a site. While this obviously includes carriers which offer Internet and private transit service, it might also include Internet exchange (IX) points and even organizations with whom you peer directly. Each circuit within NetBox must be assigned a provider and a circuit ID which is unique to that provider.\n>\n> Each provider may be assigned an autonomous system number (ASN), an account number, and contact information.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_circuit_termination": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "circuit_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "port_speed": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "term_side": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "upstream_speed": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Circuits:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/circuits/#circuit-terminations):\n\n> The association of a circuit with a particular site and/or device is modeled separately as a circuit termination. A circuit may have up to two terminations, labeled A and Z. A single-termination circuit can be used when you don't know (or care) about the far end of a circuit (for example, an Internet access circuit which connects to a transit provider). A dual-termination circuit is useful for tracking circuits which connect two sites.\n>\n> Each circuit termination is attached to either a site or to a provider network. Site terminations may optionally be connected via a cable to a specific device interface or port within that site. Each termination must be assigned a port speed, and can optionally be assigned an upstream speed if it differs from the downstream speed (a common scenario with e.g. DOCSIS cable modems). Fields are also available to track cross-connect and patch panel details.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_circuit_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Circuits:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/circuits/#circuit-types):\n\n> Circuits are classified by functional type. These types are completely customizable, and are typically used to convey the type of service being delivered over a circuit.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cluster_type_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/virtualization/#clusters):\n\n> A cluster is a logical grouping of physical resources within which virtual machines run. A cluster must be assigned a type (technological classification), and may optionally be assigned to a cluster group, site, and/or tenant. Each cluster must have a unique name within its assigned group and/or site, if any.\n>\n> Physical devices may be associated with clusters as hosts. This allows users to track on which host(s) a particular virtual machine may reside. However, NetBox does not support pinning a specific VM within a cluster to a particular host device.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_cluster_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/virtualization/#cluster-groups):\n\n> Cluster groups may be created for the purpose of organizing clusters. The arrangement of clusters into groups is optional.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_cluster_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/virtualization/#cluster-types):\n\n> A cluster type represents a technology or mechanism by which a cluster is formed. For example, you might create a cluster type named \"VMware vSphere\" for a locally hosted cluster or \"DigitalOcean NYC3\" for one hosted by a cloud provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_custom_field": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "choices": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "content_types": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "required": true
+          },
+          "default": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "required": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "validation_maximum": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "validation_minimum": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "validation_regex": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "weight": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Extras:From the [official documentation](https://docs.netbox.dev/en/stable/customization/custom-fields/#custom-fields):\n\n> Each model in NetBox is represented in the database as a discrete table, and each attribute of a model exists as a column within its table. For example, sites are stored in the dcim_site table, which has columns named name, facility, physical_address, and so on. As new attributes are added to objects throughout the development of NetBox, tables are expanded to include new rows.\n>\n> However, some users might want to store additional object attributes that are somewhat esoteric in nature, and that would not make sense to include in the core NetBox database schema. For instance, suppose your organization needs to associate each device with a ticket number correlating it with an internal support system record. This is certainly a legitimate use for NetBox, but it's not a common enough need to warrant including a field for every NetBox installation. Instead, you can create a custom field to hold this data.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "comments": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "device_type_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "location_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "primary_ipv4": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "serial": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/devices/#devices):\n\n> Every piece of hardware which is installed within a site or rack exists in NetBox as a device. Devices are measured in rack units (U) and can be half depth or full depth. A device may have a height of 0U: These devices do not consume vertical rack space and cannot be assigned to a particular rack unit. A common example of a 0U device is a vertically-mounted PDU.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_device_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color_hex": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "vm_role": {
+            "type": "bool",
+            "description": "Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/devices/#device-roles):\n\n> Devices can be organized by functional roles, which are fully customizable by the user. For example, you might create roles for core switches, distribution switches, and access switches within your network.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_device_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "manufacturer_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "model": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "part_number": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/device-types/#device-types_1):\n\n> A device type represents a particular make and model of hardware that exists in the real world. Device types define the physical attributes of a device (rack height and depth) and its individual components (console, power, network interfaces, and so on).",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_interface": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mtu": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tagged_vlans": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "untagged_vlan": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "virtual_machine_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/virtualization/#interfaces):\n\n> Virtual machine interfaces behave similarly to device interfaces, and can be assigned to VRFs, and may have IP addresses, VLANs, and services attached to them. However, given their virtual nature, they lack properties pertaining to physical attributes. For example, VM interfaces do not have a physical type and cannot have cables attached to them.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_ip_address": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dns_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "interface_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ip_address": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#ip-addresses):\n\n> An IP address comprises a single host address (either IPv4 or IPv6) and its subnet mask. Its mask should match exactly how the IP address is configured on an interface in the real world.\n>\n> Like a prefix, an IP address can optionally be assigned to a VRF (otherwise, it will appear in the \"global\" table). IP addresses are automatically arranged under parent prefixes within their respective VRFs according to the IP hierarchy.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_ip_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "end_address": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "start_address": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Defaults to `active`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#ip-ranges):\n\n> This model represents an arbitrary range of individual IPv4 or IPv6 addresses, inclusive of its starting and ending addresses. For instance, the range 192.0.2.10 to 192.0.2.20 has eleven members. (The total member count is available as the size property on an IPRange instance.) Like prefixes and IP addresses, each IP range may optionally be assigned to a VRF and/or tenant.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_ipam_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "weight": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#prefixvlan-roles):\n\n> A role indicates the function of a prefix or VLAN. For example, you might define Data, Voice, and Security roles. Generally, a prefix will be assigned the same functional role as the VLAN to which it is assigned (if any).",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_location": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_field": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the existing custom field (text, integer, boolean, url, selection, multiple).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Existing custom fields to associate to this prefix (ipam module).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/sites-and-racks/#locations):\n\n> Racks and devices can be grouped by location within a site. A location may represent a floor, room, cage, or similar organizational unit. Locations can be nested to form a hierarchy. For example, you may have floors within a site, and rooms within a floor.\n\nEach location must have a name that is unique within its parent site and location, if any.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_manufacturer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/device-types/#manufacturers):\n\n> A manufacturer represents the \"make\" of a device; e.g. Cisco or Dell. Each device type must be assigned to a manufacturer. (Inventory items and platforms may also be associated with manufacturers.) Each manufacturer must have a unique name and may have a description assigned to it.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_platform": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/devices/#platforms):\n\n> A platform defines the type of software running on a device or virtual machine. This can be helpful to model when it is necessary to distinguish between different versions or feature sets. Note that two devices of the same type may be assigned different platforms: For example, one Juniper MX240 might run Junos 14 while another runs Junos 15.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_prefix": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_pool": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "mark_utilized": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "prefix": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vlan_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_field": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the existing custom field (text, integer, boolean, url, selection, multiple).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Existing custom fields to associate to this prefix (ipam module).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#prefixes):\n\n> A prefix is an IPv4 or IPv6 network and mask expressed in CIDR notation (e.g. 192.0.2.0/24). A prefix entails only the \"network portion\" of an IP address: All bits in the address not covered by the mask must be zero. (In other words, a prefix cannot be a specific IP address.)\n>\n> Prefixes are automatically organized by their parent aggregates. Additionally, each prefix can be assigned to a particular site and virtual routing and forwarding instance (VRF). Each VRF represents a separate IP space or routing table. All prefixes not assigned to a VRF are considered to be in the \"global\" table.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_primary_ip": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_address_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ip_address_version": {
+            "type": "number",
+            "description": "Defaults to `4`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "virtual_machine_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:This resource is used to define the primary IP for a given virtual machine. The primary IP is reflected in the Virtual machine Netbox UI, which identifies the Primary IPv4 and IPv6 addresses.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_region": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_region_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/sites-and-racks/#regions):\n\n> Sites can be arranged geographically using regions. A region might represent a continent, country, city, campus, or other area depending on your use case. Regions can be nested recursively to construct a hierarchy. For example, you might define several country regions, and within each of those several state or city regions to which sites are assigned.\n>\n> Each region must have a name that is unique within its parent region, if any.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_rir": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#regional-internet-registries-rirs):\n\n> Regional Internet registries are responsible for the allocation of globally-routable address space. The five RIRs are ARIN, RIPE, APNIC, LACNIC, and AFRINIC. However, some address space has been set aside for internal use, such as defined in RFCs 1918 and 6598. NetBox considers these RFCs as a sort of RIR as well; that is, an authority which \"owns\" certain address space. There also exist lower-tier registries which serve particular geographic areas.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_service": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "ports": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "protocol": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "virtual_machine_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/services/#services):\n\n> A service represents a layer four TCP or UDP service available on a device or virtual machine. For example, you might want to document that an HTTP service is running on a device. Each service includes a name, protocol, and port number; for example, \"SSH (TCP/22)\" or \"DNS (UDP/53).\"\n>\n> A service may optionally be bound to one or more specific IP addresses belonging to its parent device or VM. (If no IP addresses are bound, the service is assumed to be reachable via any assigned IP address.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_site": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "asn_ids": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "facility": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "latitude": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "longitude": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "region_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Defaults to `active`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timezone": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_field": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the existing custom field (text, integer, boolean, url, selection, multiple).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Existing custom fields to associate to this prefix (ipam module).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/sites-and-racks/#sites):\n\n> How you choose to employ sites when modeling your network may vary depending on the nature of your organization, but generally a site will equate to a building or campus. For example, a chain of banks might create a site to represent each of its branches, a site for its corporate headquarters, and two additional sites for its presence in two colocation facilities.\n>\n> Each site must be assigned a unique name and may optionally be assigned to a region and/or tenant.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color_hex": {
+            "type": "string",
+            "description": "Defaults to `9e9e9e`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Extras:From the [official documentation](https://docs.netbox.dev/en/stable/models/extras/tag/):\n> Tags are user-defined labels which can be applied to a variety of objects within NetBox. They can be used to establish dimensions of organization beyond the relationships built into NetBox. For example, you might create a tag to identify a particular ownership or condition across several types of objects.\n>\n> Each tag has a label, color, and a URL-friendly slug. For example, the slug for a tag named \"Dunder Mifflin, Inc.\" would be dunder-mifflin-inc. The slug is generated automatically and makes tags easier to work with as URL parameters. Each tag can also be assigned a description indicating its purpose.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tenant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:Tenancy:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/tenancy/#tenants):\n\n> A tenant represents a discrete grouping of resources used for administrative purposes. Typically, tenants are used to represent individual customers or internal departments within an organization. \n>\n> Tenant assignment is used to signify the ownership of an object in NetBox. As such, each object may only be owned by a single tenant. For example, if you have a firewall dedicated to a particular customer, you would assign it to the tenant which represents that customer. However, if the firewall serves multiple customers, it doesn't belong to any particular customer, so tenant assignment would not be appropriate.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tenant_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Tenancy:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/tenancy/#tenant-groups):\n\n> Tenants can be organized by custom groups. For instance, you might create one group called \"Customers\" and one called \"Departments.\" The assignment of a tenant to a group is optional.\n>\n> Tenant groups may be nested recursively to achieve a multi-level hierarchy. For example, you might have a group called \"Customers\" containing subgroups of individual tenants grouped by product or account team.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "user_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Authentication:From the [official documentation](https://docs.netbox.dev/en/stable/rest-api/authentication/#tokens):\n\n> A token is a unique identifier mapped to a NetBox user account. Each user may have one or more tokens which he or she can use for authentication when making REST API requests. To create a token, navigate to the API tokens page under your user profile.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description": "Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "staff": {
+            "type": "bool",
+            "description": "Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "username": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Authentication:This resource is used to manage users.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_virtual_machine": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "comments": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "disk_size_gb": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "memory_mb": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "primary_ipv4": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vcpus": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "custom_field": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the existing custom field (text, integer, boolean, url, selection, multiple).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the existing custom field.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Existing custom fields to associate to this prefix (ipam module).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/virtualization/#virtual-machines):\n\n> A virtual machine represents a virtual compute instance hosted within a cluster. Each VM must be assigned to exactly one cluster.\n>\n> Like devices, each VM can be assigned a platform and/or functional role",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_vlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Defaults to `\"\"`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Defaults to `active`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vid": {
+            "type": "number",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/vlans/#vlans):\n\n> A VLAN represents an isolated layer two domain, identified by a name and a numeric ID (1-4094) as defined in IEEE 802.1Q. VLANs are arranged into VLAN groups to define scope and to enforce uniqueness.",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_vrf": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):From the [official documentation](https://docs.netbox.dev/en/stable/core-functionality/ipam/#virtual-routing-and-forwarding-vrf):\n\n> A VRF object in NetBox represents a virtual routing and forwarding (VRF) domain. Each VRF is essentially a separate routing table. VRFs are commonly used to isolate customers or organizations from one another within a network, or to route overlapping address space (e.g. multiple instances of the 10.0.0.0/8 space). Each VRF may be assigned to a specific tenant to aid in organizing the available IP space by customer or internal user.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "netbox_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_cluster_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_cluster_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_type_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_device_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color_hex": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_device_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_full_depth": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "manufacturer": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "manufacturer_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "model": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "part_number": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "u_height": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_interfaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "interfaces": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "description": "string",
+                  "enabled": "bool",
+                  "mac_address": "string",
+                  "mode": [
+                    "map",
+                    "string"
+                  ],
+                  "mtu": "number",
+                  "name": "string",
+                  "tag_ids": [
+                    "list",
+                    "number"
+                  ],
+                  "tagged_vlans": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "id": "number",
+                        "name": "string",
+                        "vid": "number"
+                      }
+                    ]
+                  ],
+                  "untagged_vlan": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "id": "number",
+                        "name": "string",
+                        "vid": "number"
+                      }
+                    ]
+                  ],
+                  "vm_id": "number"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name_regex": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "filter": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_ip_addresses": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_addresses": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "address_family": "string",
+                  "created": "string",
+                  "custom_fields": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "string",
+                  "dns_name": "string",
+                  "id": "number",
+                  "ip_address": "string",
+                  "last_updated": "string",
+                  "role": "string",
+                  "status": "string",
+                  "tenant": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "id": "number",
+                        "name": "string",
+                        "slug": "string"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "filter": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_ip_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "contains": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_platform": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_prefix": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cidr": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vrf_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_region": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_region_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "filter": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_site": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "asn_ids": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description_kind": "plain",
+            "optional": true
+          },
+          "comments": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "region_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "time_zone": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Data Center Inventory Management (DCIM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Extras:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tenant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Tenancy:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tenant_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": ":meta:subcategory:Tenancy:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_tenants": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tenants": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "circuit_count": "number",
+                  "cluster_count": "number",
+                  "comments": "string",
+                  "created": "string",
+                  "custom_fields": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "string",
+                  "device_count": "number",
+                  "id": "number",
+                  "ip_address_count": "number",
+                  "last_updated": "string",
+                  "name": "string",
+                  "prefix_count": "number",
+                  "rack_count": "number",
+                  "site_count": "number",
+                  "slug": "string",
+                  "tenant_group": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "id": "number",
+                        "name": "string",
+                        "slug": "string",
+                        "tenant_count": "number"
+                      }
+                    ]
+                  ],
+                  "vlan_count": "number",
+                  "vm_count": "number",
+                  "vrf_count": "number"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "filter": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Tenancy:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_virtual_machines": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "limit": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name_regex": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vms": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "cluster_id": "number",
+                  "comments": "string",
+                  "config_context": "string",
+                  "custom_fields": [
+                    "map",
+                    "string"
+                  ],
+                  "disk_size_gb": "number",
+                  "local_context_data": "string",
+                  "memory_mb": "number",
+                  "name": "string",
+                  "platform_id": "number",
+                  "primary_ip": "string",
+                  "primary_ip4": "string",
+                  "primary_ip6": "string",
+                  "role_id": "number",
+                  "site_id": "number",
+                  "status": "string",
+                  "tag_ids": [
+                    "list",
+                    "number"
+                  ],
+                  "tenant_id": "number",
+                  "vcpus": "number",
+                  "vm_id": "number"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "filter": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": ":meta:subcategory:Virtualization:",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_vlan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "role": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "site": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tenant": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "vid": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    },
+    "netbox_vrf": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": ":meta:subcategory:IP Address Management (IPAM):",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

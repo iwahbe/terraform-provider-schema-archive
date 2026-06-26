@@ -1,0 +1,432 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "convention": {
+          "type": "string",
+          "description": "Define the convention for naming results. Possible values are 'default' and 'passthrough'. Default 'default'",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "environment": {
+          "type": "string",
+          "description": "Define the environment for the naming schema. Normally this is the name of the environment, e.g. 'prod', 'dev', 'test'.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "hash_length": {
+          "type": "number",
+          "description": "Default hash length. Overrides all schema configurations.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "lowercase": {
+          "type": "bool",
+          "description": "Control if the resulting name should be lower case. Default 'false'",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "random_seed": {
+          "type": "number",
+          "description": "A random seed used by the random number generator. This is used to generate a random name for the naming schema. The default value is 1337. Make sure to update this value to avoid collisions for globally unique names.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "schema_reference": {
+          "nested_type": {
+            "attributes": {
+              "custom_url": {
+                "type": "string",
+                "description": "A custom path/URL to the schema reference to use. Conflicts with `path` and `ref`. For supported protocols, see [go-getter](https://pkg.go.dev/github.com/hashicorp/go-getter/v2). Value is marked sensitive as may contain secrets.",
+                "description_kind": "markdown",
+                "optional": true,
+                "sensitive": true
+              },
+              "path": {
+                "type": "string",
+                "description": "The path in the default schema library, e.g. `azure/caf`. Also requires `ref`. Conflicts with `custom_url`.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "ref": {
+                "type": "string",
+                "description": "This is the version of the schema reference to use, e.g. `2025.04`. Also requires `path`. Conflicts with `custom_url`.",
+                "description_kind": "markdown",
+                "optional": true
+              }
+            },
+            "nesting_mode": "single"
+          },
+          "description": "A reference to a Naming schema library to use. The reference should either contain a `path` (e.g. `azure/caf`) and the `ref` (e.g. `2026.01`), or a `custom_url` to be supplied to go-getter.\n    If this value is not specified, the default value will be used, which is:\n\n    ```terraform\n\n    schema_reference = {\n      path = \"azure/caf\",\n      ref = \"2026.01\"\n    }\n\n    ```\n\n    The reference is using the [default standesamt library](https://github.com/glueckkanja/standesamt-schema-library).\n    See the [Schema v2 Format](../guides/schema-v2) guide for details on the versioned schema file format.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "separator": {
+          "type": "string",
+          "description": "The separator to use for generating the resulting name. Default '-'",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "uppercase": {
+          "type": "bool",
+          "description": "Control if the resulting name should be upper case. Default 'false'",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "data_source_schemas": {
+    "standesamt_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration": {
+            "type": [
+              "object",
+              {
+                "convention": "string",
+                "environment": "string",
+                "hash_length": "number",
+                "location": "string",
+                "lowercase": "bool",
+                "prefixes": [
+                  "list",
+                  "string"
+                ],
+                "random_seed": "number",
+                "separator": "string",
+                "suffixes": [
+                  "list",
+                  "string"
+                ],
+                "uppercase": "bool"
+              }
+            ],
+            "description": "Configuration object that contains the resulting configuration for the naming schema. This is used to pass the configuration to the naming function.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "convention": {
+            "type": "string",
+            "description": "Define the convention for naming results. Possible values are 'default' and 'passthrough'. Will override the convention defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "Define the environment for the naming schema. Normally this is the name of the environment, e.g. 'prod', 'dev', 'test'. Will override the environment defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hash_length": {
+            "type": "number",
+            "description": "Default hash length. Overrides all schema configurations. Overrides the default hash length defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "location": {
+            "type": "string",
+            "description": "A location string used to lookup in the locations schema. In the default schema library this is a list of locations for Azure. If you set the location to 'westeurope' the resulting name will be 'we'.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "lowercase": {
+            "type": "bool",
+            "description": "Control if the resulting name should be lower case. Overrides all schema configurations. Overrides the default lowercase setting defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "prefixes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of strings used as prefixes for the resulting name. Each prefix will be used in order and separated by the separator. Default '[]'",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "random_seed": {
+            "type": "number",
+            "description": "A random seed used by the random number generator. This is used to generate a random name for the naming schema. The default value is 1337. Make sure to update this value to avoid collisions for globally unique names. Will override the random seed defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "schema": {
+            "type": [
+              "map",
+              [
+                "object",
+                {
+                  "abbreviation": "string",
+                  "configuration": [
+                    "object",
+                    {
+                      "deny_double_hyphens": "bool",
+                      "hash_length": "number",
+                      "name_precedence": [
+                        "list",
+                        "string"
+                      ],
+                      "separator": "string",
+                      "use_environment": "bool",
+                      "use_lower_case": "bool",
+                      "use_separator": "bool",
+                      "use_upper_case": "bool"
+                    }
+                  ],
+                  "max_length": "number",
+                  "min_length": "number",
+                  "resource_type": "string",
+                  "validation_regex": "string"
+                }
+              ]
+            ],
+            "description": "A map of naming schema objects that is generated from the schema library file schema.naming.json. This attribute is used to get passed to the naming function.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "separator": {
+            "type": "string",
+            "description": "The separator to use for generating the resulting name. Will override the separator defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "suffixes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of strings used as suffixes for the resulting name. Each suffix will be used in order and separated by the separator. Default '[]'",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "uppercase": {
+            "type": "bool",
+            "description": "Control if the resulting name should be upper case. Overrides all schema configurations. Overrides the default uppercase setting defined in the provider settings.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Data source to generate the naming schema and configuration for the Standesamt provider.",
+        "description_kind": "markdown"
+      }
+    },
+    "standesamt_locations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "locations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "You can use this map to pass to the name function and use the location in the name.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Data source to build a map of the locations schema file.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "name": {
+      "description": "Build a resource name based on the provided configuration and name type.",
+      "summary": "Provide a valid resource name",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "configurations",
+          "description": "A configuration object that contains the variables and formats to use for the name.",
+          "type": [
+            "object",
+            {
+              "configuration": [
+                "object",
+                {
+                  "convention": "string",
+                  "environment": "string",
+                  "hash_length": "number",
+                  "location": "string",
+                  "lowercase": "bool",
+                  "prefixes": [
+                    "list",
+                    "string"
+                  ],
+                  "random_seed": "number",
+                  "separator": "string",
+                  "suffixes": [
+                    "list",
+                    "string"
+                  ],
+                  "uppercase": "bool"
+                }
+              ],
+              "locations": [
+                "map",
+                "string"
+              ],
+              "schema": [
+                "map",
+                [
+                  "object",
+                  {
+                    "abbreviation": "string",
+                    "configuration": [
+                      "object",
+                      {
+                        "deny_double_hyphens": "bool",
+                        "hash_length": "number",
+                        "name_precedence": [
+                          "list",
+                          "string"
+                        ],
+                        "separator": "string",
+                        "use_environment": "bool",
+                        "use_lower_case": "bool",
+                        "use_separator": "bool",
+                        "use_upper_case": "bool"
+                      }
+                    ],
+                    "max_length": "number",
+                    "min_length": "number",
+                    "resource_type": "string",
+                    "validation_regex": "string"
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "name": "name_type",
+          "description": "The resource type to use for the name.",
+          "type": "string"
+        },
+        {
+          "name": "settings",
+          "description": "An optional map of per-call overrides. All keys are optional and take precedence over the provider-level configuration.\n\nSupported keys:\n\n| Key | Type | Description |\n|---|---|---|\n| `convention` | `string` | Naming convention (`default` or `passthrough`). |\n| `environment` | `string` | Environment abbreviation (e.g. `prd`, `tst`). |\n| `location` | `string` | Azure location key resolved via the `locations` map. |\n| `separator` | `string` | Separator between name parts \u2014 overrides the schema default on a per-call basis. |\n| `prefixes` | `list(string)` | Prefix segments to prepend. |\n| `suffixes` | `list(string)` | Suffix segments to append. |\n| `name_precedence` | `list(string)` | Order of name segments. |\n| `hash_length` | `number` | Length of the random hash segment (0 = disabled). |\n| `random_seed` | `number` | Seed for the hash generator (for reproducible names). |\n| `lowercase` | `bool` | Convert the final name to lowercase. |\n| `uppercase` | `bool` | Convert the final name to uppercase. |\n\nPass `{}` or `null` to use provider defaults for all settings.",
+          "type": "dynamic"
+        },
+        {
+          "name": "name",
+          "description": "Name to parse",
+          "type": "string"
+        }
+      ]
+    },
+    "validate": {
+      "description": "Build a resource name based on the provided configuration and name type, then return detailed validation results as a map containing regex validation, length validation, and resource type information.",
+      "summary": "Validate a resource name and return detailed validation results",
+      "return_type": [
+        "object",
+        {
+          "double_hyphens_denied": "bool",
+          "double_hyphens_found": "bool",
+          "length": [
+            "object",
+            {
+              "is": "number",
+              "max": "number",
+              "min": "number",
+              "valid": "bool"
+            }
+          ],
+          "name": "string",
+          "regex": [
+            "object",
+            {
+              "match": "string",
+              "valid": "bool"
+            }
+          ],
+          "type": "string"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "configurations",
+          "description": "A configuration object that contains the variables and formats to use for the name.",
+          "type": [
+            "object",
+            {
+              "configuration": [
+                "object",
+                {
+                  "convention": "string",
+                  "environment": "string",
+                  "hash_length": "number",
+                  "location": "string",
+                  "lowercase": "bool",
+                  "prefixes": [
+                    "list",
+                    "string"
+                  ],
+                  "random_seed": "number",
+                  "separator": "string",
+                  "suffixes": [
+                    "list",
+                    "string"
+                  ],
+                  "uppercase": "bool"
+                }
+              ],
+              "locations": [
+                "map",
+                "string"
+              ],
+              "schema": [
+                "map",
+                [
+                  "object",
+                  {
+                    "abbreviation": "string",
+                    "configuration": [
+                      "object",
+                      {
+                        "deny_double_hyphens": "bool",
+                        "hash_length": "number",
+                        "name_precedence": [
+                          "list",
+                          "string"
+                        ],
+                        "separator": "string",
+                        "use_environment": "bool",
+                        "use_lower_case": "bool",
+                        "use_separator": "bool",
+                        "use_upper_case": "bool"
+                      }
+                    ],
+                    "max_length": "number",
+                    "min_length": "number",
+                    "resource_type": "string",
+                    "validation_regex": "string"
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "name": "name_type",
+          "description": "The resource type to use for the name.",
+          "type": "string"
+        },
+        {
+          "name": "settings",
+          "description": "An optional map of per-call overrides. All keys are optional and take precedence over the provider-level configuration.\n\nSupported keys:\n\n| Key | Type | Description |\n|---|---|---|\n| `convention` | `string` | Naming convention (`default` or `passthrough`). |\n| `environment` | `string` | Environment abbreviation (e.g. `prd`, `tst`). |\n| `location` | `string` | Azure location key resolved via the `locations` map. |\n| `separator` | `string` | Separator between name parts \u2014 overrides the schema default on a per-call basis. |\n| `prefixes` | `list(string)` | Prefix segments to prepend. |\n| `suffixes` | `list(string)` | Suffix segments to append. |\n| `name_precedence` | `list(string)` | Order of name segments. |\n| `hash_length` | `number` | Length of the random hash segment (0 = disabled). |\n| `random_seed` | `number` | Seed for the hash generator (for reproducible names). |\n| `lowercase` | `bool` | Convert the final name to lowercase. |\n| `uppercase` | `bool` | Convert the final name to uppercase. |\n\nPass `{}` or `null` to use provider defaults for all settings.",
+          "type": "dynamic"
+        },
+        {
+          "name": "name",
+          "description": "Name to parse",
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

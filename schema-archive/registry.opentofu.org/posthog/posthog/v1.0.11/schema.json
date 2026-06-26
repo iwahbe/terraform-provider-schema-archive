@@ -1,0 +1,1404 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "PostHog personal API key. Can be set via `POSTHOG_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "host": {
+          "type": "string",
+          "description": "Base URL for the PostHog API. Defaults to `https://us.posthog.com`. Can be set via `POSTHOG_HOST`",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "organization_id": {
+          "type": "string",
+          "description": "Default organization ID. Can be set via `POSTHOG_ORGANIZATION_ID` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "project_id": {
+          "type": "string",
+          "description": "Default project ID (environment) to target. Can be set via `POSTHOG_PROJECT_ID` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "posthog_access_control": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "The access level to grant. Common values are `none`, `viewer`, `editor`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the access control was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier for the access control.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_member": {
+            "type": "string",
+            "description": "The organization member ID to grant access to (either `organization_member_id` from `posthog_user` data source, or `posthog_organization_member.<name>.id`). Mutually exclusive with `role`. If neither `role` nor `organization_member` is set, this becomes the project default for the resource type.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "resource": {
+            "type": "string",
+            "description": "The resource type to control access for. Valid values include: `action`, `alert`, `annotation`, `cohort`, `dashboard`, `experiment`, `feature_flag`, `insight`, `notebook`, `session_recording`, `survey`, etc.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource_id": {
+            "type": "string",
+            "description": "The ID of a specific resource to control access for. If omitted, the access control applies to all resources of the specified type.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The UUID of the role to grant access to. Mutually exclusive with `organization_member`. If neither `role` nor `organization_member` is set, this becomes the project default for the resource type.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the access control was last updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages access control for resources within a PostHog project.\n\nThis resource allows you to set access levels for resource types (like feature flags, dashboards, etc.).\n\nYou can set permissions at three levels:\n- **Project default**: Applies to everyone in the project for this resource type. Omit both `role` and `organization_member`.\n- **Role-specific**: Applies to members of a specific role. Set `role`.\n- **Member-specific**: Applies to a specific organization member. Set `organization_member`.\n\nAdditionally, you can scope to:\n- **Resource-type level**: Applies to all resources of a type (e.g., all dashboards). Omit `resource_id`.\n- **Resource-instance level**: Applies to a specific resource (e.g., one dashboard). Set `resource_id`.\n\nYou can combine these: set a project default for all dashboards, or set a project default for a specific dashboard.\n\n~> **Note:** `role` and `organization_member` are mutually exclusive - you cannot specify both. Omit both for project defaults.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_action": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the action was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deleted": {
+            "type": "bool",
+            "description": "Whether the action is soft-deleted. Terraform will restore soft-deleted actions on apply.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Action description",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Action ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Action name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "post_to_slack": {
+            "type": "bool",
+            "description": "Whether to post to Slack when the action is triggered",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "slack_message_format": {
+            "type": "string",
+            "description": "Slack message format string",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "steps_json": {
+            "type": "string",
+            "description": "JSON-encoded array of action step objects. See the [ActionStep schema](https://posthog.com/docs/api/actions) for available fields.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of tags for the action",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "PostHog Action resource",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_alert": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "calculation_interval": {
+            "type": "string",
+            "description": "How often to check the alert: `hourly`, `daily`, `weekly`, or `monthly`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "check_ongoing_interval": {
+            "type": "bool",
+            "description": "Whether to check the ongoing (incomplete) interval. When false, only completed intervals are checked.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "condition_type": {
+            "type": "string",
+            "description": "Condition type: `absolute_value`, `relative_increase`, or `relative_decrease`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the alert is enabled. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the alert.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "insight": {
+            "type": "number",
+            "description": "ID of the insight this alert monitors.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the alert.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "series_index": {
+            "type": "number",
+            "description": "Index of the trend series to monitor (0-based). Used for trends alerts.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "skip_weekend": {
+            "type": "bool",
+            "description": "Whether to skip checking the alert on weekends.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subscribed_users": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "List of user IDs to notify when the alert fires.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "threshold_lower": {
+            "type": "number",
+            "description": "Lower bound of the threshold. Alert fires when value goes below this.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "threshold_type": {
+            "type": "string",
+            "description": "Type of threshold: `absolute` for fixed values, `percentage` for relative changes.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "threshold_upper": {
+            "type": "number",
+            "description": "Upper bound of the threshold. Alert fires when value goes above this.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manage PostHog alerts. Alerts notify you when an insight's value crosses a threshold.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "deleted": {
+            "type": "bool",
+            "description": "Whether the dashboard is deleted (soft delete)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Dashboard description",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Dashboard ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Dashboard name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pinned": {
+            "type": "bool",
+            "description": "Whether the dashboard is pinned",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of tags for the dashboard",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "PostHog Dashboard resource",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_dashboard_layout": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dashboard_id": {
+            "type": "number",
+            "description": "PostHog dashboard ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Resource ID (same value as dashboard_id).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tiles": {
+            "nested_type": {
+              "attributes": {
+                "color": {
+                  "type": "string",
+                  "description": "Background color of the tile. Valid values are defined by the PostHog API; see [InsightColor in types.ts](https://github.com/PostHog/posthog/blob/master/frontend/src/types.ts#L2154) for the current list.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "insight_id": {
+                  "type": "number",
+                  "description": "ID of the insight to display. Exactly one of insight_id or text_body must be set.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "layouts_json": {
+                  "type": "string",
+                  "description": "JSON object with breakpoint keys `sm` and/or `xs`, each containing position properties: `x`, `y`, `w`, `h` (required), and optionally `minW`, `minH` (e.g. `{\"sm\":{\"x\":0,\"y\":0,\"w\":6,\"h\":5},\"xs\":{\"x\":0,\"y\":0,\"w\":1,\"h\":5}}`). Semantic JSON equality is used to suppress phantom diffs.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "show_description": {
+                  "type": "bool",
+                  "description": "Whether to show the insight description on the tile. Omit the field to clear it back to the PostHog API default (`null`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "text_body": {
+                  "type": "string",
+                  "description": "Markdown body for a text tile (max 4000 characters). Exactly one of insight_id or text_body must be set.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tile_id": {
+                  "type": "number",
+                  "description": "Server-assigned tile ID. Populated after the first apply.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Ordered list of tiles to manage on the dashboard.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the tile layout of a PostHog dashboard. This resource is fully authoritative: it manages all tiles on the dashboard. Unmanaged insight tiles will have their layouts cleared; unmanaged text tiles will be deleted. On destroy, all text tiles are removed and insight tile layouts are cleared.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_external_data_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the source was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "External data source ID (UUID).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "job_inputs_json": {
+            "type": "string",
+            "description": "JSON-encoded connection configuration for the source. Shape depends on `source_type`. For example Postgres expects `{host, port, database, user, password, schema}`; Stripe expects `{stripe_account_id, stripe_secret_key}`. PostHog redacts secret values when reading, so the plan value is preserved in state. On import, redacted secrets will appear in state until the next apply with real values.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "last_run_at": {
+            "type": "string",
+            "description": "Timestamp of the most recent sync run.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Optional prefix for synced table names (e.g. `stripe_prod_`). Useful when connecting multiple sources of the same type. The PostHog update endpoint silently ignores prefix changes for non-direct-postgres sources, so this resource treats it as RequiresReplace.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "schemas": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of table names to sync from the source (e.g. `[\"users\", \"orders\"]`). PostHog discovers available tables from the source; these must match discovered table names. The source-level update endpoint cannot edit the schema list, so changes force destroy+recreate.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_type": {
+            "type": "string",
+            "description": "Source type recognised by the PostHog data warehouse (e.g. `Stripe`, `Postgres`, `Snowflake`, `BigQuery`, `Hubspot`). PostHog defines the set of accepted values and may add new types over time; see the PostHog data warehouse docs for the current list. Cannot be changed after creation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status reported by PostHog (e.g. `Running`, `Completed`, `Error`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "sync_frequency": {
+            "type": "string",
+            "description": "Sync cadence reported by PostHog. Defaults to 6 hours (5 minutes for CDC schemas) and is not configurable on this resource \u2014 the create endpoint does not accept a sync frequency. Reports the value of the first schema; sources with mixed schedules will see this flap. Modify per-schema cadence via the PostHog UI or schemas API.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "PostHog external data warehouse source (e.g. Stripe, Hubspot, Postgres, MySQL, MSSQL, Snowflake, BigQuery, Salesforce, Zendesk, Vitally, Chargebee). `source_type`, `prefix`, and `schemas` are immutable: changes trigger replacement. Sync cadence is managed by PostHog (per-schema) and is not configurable on this resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_feature_flag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active": {
+            "type": "bool",
+            "description": "Whether the feature flag is active",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "deleted": {
+            "type": "bool",
+            "description": "Whether the feature flag is soft-deleted. Terraform will restore soft-deleted flags on apply.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "filters": {
+            "type": "string",
+            "description": "Feature flag filters as JSON",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Feature Flag ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Feature flag key (unique identifier)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Feature flag name/description (PostHog's UI labels this as 'Description'). The API does not expose a separate dedicated description field for feature flags.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rollout_percentage": {
+            "type": "number",
+            "description": "Rollout percentage (0-100)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of tags for the feature flag",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "PostHog Feature Flag resource",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_hog_function": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the Hog function.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the Hog function is enabled. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "execution_order": {
+            "type": "number",
+            "description": "Order in which this Hog function executes relative to others (0-32767).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "filters_json": {
+            "type": "string",
+            "description": "JSON object defining filters for when the Hog function should execute. Includes `events`, `actions`, `properties`, and `filter_test_accounts` options.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hog": {
+            "type": "string",
+            "description": "The Hog code to execute. Not required when using a template - the template provides the code.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "icon_url": {
+            "type": "string",
+            "description": "URL of the icon for this Hog function.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the Hog function.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inputs_json": {
+            "type": "string",
+            "description": "JSON object containing the input values for the Hog function. Keys correspond to the input schema, values contain `value` and optional `templating` properties. For inputs containing secrets, use `sensitive_inputs_json` instead.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "inputs_schema_json": {
+            "type": "string",
+            "description": "JSON array defining custom input schema entries for the Hog function. Each entry is an object with `key`, `type`, `secret`, `required`, and other properties. Sent directly as `inputs_schema` in the API request. When using a template, this replaces the template's default schema.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mappings_json": {
+            "type": "string",
+            "description": "JSON array of mapping configurations. Each mapping can have its own `name`, `inputs_schema`, `inputs`, and `filters`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "masking_json": {
+            "type": "string",
+            "description": "JSON object configuring PII masking for the Hog function. Includes `ttl`, `threshold`, and `hash` properties.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Hog function.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "sensitive_inputs_json": {
+            "type": "string",
+            "description": "JSON object containing sensitive input values (e.g. API keys, tokens, credentials) for the Hog function. Same format as `inputs_json`. Values are merged with `inputs_json` at apply time and redacted from plan/apply output. If the same key appears in both, `sensitive_inputs_json` takes precedence.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "template_id": {
+            "type": "string",
+            "description": "ID of a template to use as the basis for this Hog function. The template provides default code, inputs schema, and configuration.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of Hog function: `destination`, `site_destination`, `internal_destination`, `source_webhook`, `site_app`, or `transformation`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manage PostHog Hog functions. Hog functions enable destinations, webhooks, and transformations triggered by events or alerts.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_insight": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_in_folder": {
+            "type": "string",
+            "description": "The folder where the insight is created.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dashboard_ids": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "List of dashboard ids which should contain the insight.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "deleted": {
+            "type": "bool",
+            "description": "Whether the insight is deleted (soft delete)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "derived_name": {
+            "type": "string",
+            "description": "Insight derived name. This is auto-generated by PostHog when the name is not set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Insight description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Numeric ID of the insight.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Insight name.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "query_json": {
+            "type": "string",
+            "description": "Raw JSON serialized query payload accepted by PostHog (for example an `InsightVizNode` with a `TrendsQuery`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of tags to apply to the insight.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manage PostHog insights via the insights endpoints.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_organization_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "The first name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The member ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_2fa_enabled": {
+            "type": "bool",
+            "description": "Whether two-factor authentication is enabled for the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "joined_at": {
+            "type": "string",
+            "description": "Timestamp when the user joined the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The last name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "level": {
+            "type": "string",
+            "description": "The access level for the member. Valid values are 'member', 'admin', or 'owner'. Defaults to 'member'.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID for this resource. Overrides the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "retain_on_destroy": {
+            "type": "bool",
+            "description": "If true, the user will remain in the organization when this resource is destroyed. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "The UUID of the user. Use the posthog_user data source to look up users by email.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a user's membership in a PostHog organization.\n\n~> **Warning:** By default, destroying this resource will **remove the user from the organization entirely**.\nSet `retain_on_destroy = true` to keep the user in the organization when the resource is destroyed.\nUsers must already be members of the organization (e.g., via invite) before this resource can manage them.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_token": {
+            "type": "string",
+            "description": "The API token for this project. This is used to send events to PostHog.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The numeric identifier of the project.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID for this resource. Overrides the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "The timezone for this project (e.g., 'UTC', 'America/New_York', 'Europe/London'). Defaults to 'UTC'.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a PostHog project within an organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_project_default_access": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "The default access level for the project. Valid values are `none`, `member`, or `admin`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The project ID (used as the resource identifier).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Sets the default access level for a PostHog project.\n\nThis determines the baseline access level for all organization members who don't have explicit access granted via roles or direct membership.\n\n~> **Note:** There is only one default access level per project. This resource is a singleton - creating multiple instances for the same project will cause conflicts.\n\n~> **Destroy Behavior:** Destroying this resource resets the default access level to `none` (most restrictive). It does not restore the previous value.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_project_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_level": {
+            "type": "string",
+            "description": "The access level to grant. Valid values are `none`, `member`, or `admin`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the access was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier for the project member access.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_member": {
+            "type": "string",
+            "description": "The UUID of the organization member to grant project access to. Mutually exclusive with `role`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The UUID of the role to grant project access to. Mutually exclusive with `organization_member`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the access was last updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a role or organization member's access to a PostHog project.\n\nThis resource grants a specific role or organization member access to a project with a defined access level.\n\n~> **Note:** You must specify either `role` or `organization_member`, but not both.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_proxy_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the proxy record was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": "number",
+            "description": "Numeric identifier of the user who created the proxy record.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The custom domain to provision in PostHog. Configured values are normalised to lowercase with no trailing dot, so `Example.COM.` and `example.com` plan as the same value.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the proxy record.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Additional status detail returned by PostHog, when present.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID for this resource. Overrides the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current provisioning status reported by PostHog.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "target_cname": {
+            "type": "string",
+            "description": "The PostHog-managed CNAME target that your DNS record must point to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the proxy record was last updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an organization-scoped PostHog custom domain proxy record. The resource is immutable \u2014 changing the `domain` triggers replacement, and there is no in-place update path. `Create` returns immediately with a `target_cname`; converging to `status = \"valid\"` requires DNS to point at that target and is driven outside Terraform.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the role was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "UUID of the user who created the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID for this resource. Overrides the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a role within a PostHog organization.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_role_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The UUID of the role membership.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "joined_at": {
+            "type": "string",
+            "description": "Timestamp when the user joined the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID for this resource. Overrides the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "The UUID of the role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_email": {
+            "type": "string",
+            "description": "The email address of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "The UUID of the user to add to the role.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a user's membership in a role within a PostHog organization.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_survey": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "appearance_json": {
+            "type": "string",
+            "description": "JSON object describing survey appearance settings.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "archived": {
+            "type": "bool",
+            "description": "Whether the survey is archived.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "conditions_json": {
+            "type": "string",
+            "description": "JSON object describing survey display and targeting conditions.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "create_in_folder": {
+            "type": "string",
+            "description": "Folder identifier used only during survey creation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "RFC3339 creation timestamp of the survey.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by_json": {
+            "type": "string",
+            "description": "JSON object describing the survey creator.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Survey description.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "enable_iframe_embedding": {
+            "type": "bool",
+            "description": "Whether the survey is embeddable in an iframe.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_partial_responses": {
+            "type": "bool",
+            "description": "Whether partial responses are stored when a respondent exits early.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "end_date": {
+            "type": "string",
+            "description": "RFC3339 end date for the survey.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "form_content_json": {
+            "type": "string",
+            "description": "JSON object describing custom form content.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the survey.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "internal_targeting_flag_json": {
+            "type": "string",
+            "description": "JSON object describing the internal targeting feature flag returned by the API.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "iteration_count": {
+            "type": "number",
+            "description": "Number of survey recurrences when `schedule` is `recurring`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "iteration_frequency_days": {
+            "type": "number",
+            "description": "Number of days between recurrences when `schedule` is `recurring`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "linked_flag_id": {
+            "type": "number",
+            "description": "Feature flag ID linked to the survey. Remove this attribute to unlink the flag from the survey.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "linked_flag_json": {
+            "type": "string",
+            "description": "JSON object describing the linked feature flag returned by the API.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "linked_insight_id": {
+            "type": "number",
+            "description": "Insight ID linked to the survey. This field is write-only in the PostHog API and is preserved from Terraform state when configured.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Survey name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "Project ID (environment) for this resource. Overrides the provider-level project_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "questions_json": {
+            "type": "string",
+            "description": "JSON array describing the survey questions.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "response_sampling_daily_limits_json": {
+            "type": "string",
+            "description": "JSON object describing daily response sampling limits.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "response_sampling_interval": {
+            "type": "number",
+            "description": "Response sampling interval value.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "response_sampling_interval_type": {
+            "type": "string",
+            "description": "Response sampling interval type. Supported values are `day`, `week`, and `month`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "response_sampling_limit": {
+            "type": "number",
+            "description": "Maximum responses allowed during each sampling interval.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "response_sampling_start_date": {
+            "type": "string",
+            "description": "RFC3339 date when response sampling starts.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "responses_limit": {
+            "type": "number",
+            "description": "Maximum number of responses allowed for the survey.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Survey schedule. Supported values are `once`, `recurring`, and `always`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "start_date": {
+            "type": "string",
+            "description": "RFC3339 start date for the survey.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "targeting_flag_filters_json": {
+            "type": "string",
+            "description": "JSON object describing targeting flag filters. This input is write-only in the PostHog API and is preserved from Terraform state when configured.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "targeting_flag_id": {
+            "type": "number",
+            "description": "Existing targeting feature flag ID to use for this survey. Remove this attribute to detach the targeting flag.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "targeting_flag_json": {
+            "type": "string",
+            "description": "JSON object describing the targeting feature flag returned by the API.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "translations_json": {
+            "type": "string",
+            "description": "JSON object describing translated survey content.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Survey type. Supported values are `popover`, `widget`, `external_survey`, and `api`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage PostHog surveys via the project-scoped surveys API.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "posthog_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the role was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "UUID of the user who created the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role to look up. Matching is case-insensitive.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The organization ID to search for the role in. Defaults to the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Look up a role by name within an organization.\n\n~> **Enterprise Feature:** Role-based access control (RBAC) requires a PostHog Enterprise plan. See [Access Control documentation](https://posthog.com/docs/settings/access-control) for more details.",
+        "description_kind": "markdown"
+      }
+    },
+    "posthog_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "The first name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_email_verified": {
+            "type": "bool",
+            "description": "Whether the user's email address has been verified.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The last name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The organization ID to search for the user in. Defaults to the provider-level organization_id.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organization_member_id": {
+            "type": "string",
+            "description": "The organization membership ID. Use this for `organization_member` in access controls.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up a user by email within an organization. The user must be a member of the organization.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

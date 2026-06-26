@@ -1,0 +1,1761 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "base_url": {
+          "type": "string",
+          "description": "Base URL for WarpStream API. May also be provided via WARPSTREAM_API_URL environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Token for WarpStream API. May also be provided via WARPSTREAM_API_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "warpstream_acl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "Host from which the principal will have access. Use * to allow access from any host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ACL ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "operation": {
+            "type": "string",
+            "description": "The operation type for the ACL. Accepted values are: `ALL`, `READ`, `WRITE`, `CREATE`, `DELETE`, `ALTER`, `DESCRIBE`, `CLUSTER_ACTION`, `DESCRIBE_CONFIGS`, `ALTER_CONFIGS` or `IDEMPOTENT_WRITE`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pattern_type": {
+            "type": "string",
+            "description": "The pattern type for the ACL. Accepted values are `LITERAL` or `PREFIXED`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permission_type": {
+            "type": "string",
+            "description": "The permission for the ACL. Accepted values are: `ALLOW` or `DENY`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "principal": {
+            "type": "string",
+            "description": "The principal for the ACL.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_name": {
+            "type": "string",
+            "description": "The resource name for the ACL",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "The type of the resource. Accepted values are:  `ANY`, `TOPIC`, `GROUP`, `CLUSTER`, `TRANSACTIONAL_ID` or `DELEGATION_TOKEN`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "The ID of the Virtual Cluster that the ACL applies to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create, read and delete ACLs related to a Virtual Cluster.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_agent_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Agent Key Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Agent Key ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Agent Key Secret Value.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Agent Key Name. Must be unique across WarpStream account. Must start with 'akn_' and contain underscores and alphanumeric characters only. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "read_only": {
+            "type": "bool",
+            "description": "Whether the Agent Key is read-only. Read-only keys have limited permissions and cannot perform write operations. Read-only keys cannot be used to deploy Agents, they can only be used to interact with read-only APIs in WarpStream's external API, like hitting the hosted Prometheus endpoint for example. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "Virtual Cluster ID associated with the Agent Key.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete agent keys.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_application_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Application Key Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Application Key ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Application Key Secret Value.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application Key Name. Must be unique across WarpStream account. Must start with 'akn_' and contain underscores and alphanumeric characters only. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "read_only": {
+            "type": "bool",
+            "description": "Whether the Application Key is read-only. Read-only keys have limited permissions and cannot perform write operations. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace in which the application key is authorized to manage resources Must be a valid workspace ID starting with 'wi_'. If empty, defaults to the oldest workspace that the provided WarpStream API key is authorized to access. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete application keys.\n\nIf the WarpStream provider is authenticated with an application key, this resource can access application keys in that key's workspace only.\nIf the WarpStream provider is authenticated with an account key, it can access application keys in any workspace.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_client_metrics_subscription": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Composite identifier in the form `<virtual_cluster_id>/<name>`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "interval_ms": {
+            "type": "number",
+            "description": "Push interval in milliseconds. Must be between 100 and 3600000 (inclusive).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "match": {
+            "type": "string",
+            "description": "Comma-separated list of `<key>=<regex>` pairs identifying which clients are subscribed (for example `client_id=^app-.*`). Valid keys are `client_instance_id`, `client_id`, `client_software_name`, `client_software_version`, `client_source_address`, `client_source_port`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "metrics": {
+            "type": "string",
+            "description": "Comma-separated list of metric name prefixes that subscribed clients should push (for example `org.apache.kafka.producer.`), or `*` to subscribe to all metrics.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the subscription. Unique within a Virtual Cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "ID of the Virtual Cluster the subscription belongs to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource manages a client metrics subscription on a WarpStream Virtual Cluster.\n\nA subscription tells WarpStream which Kafka clients should push metrics, which metric prefixes to collect, and how often to push them. Subscriptions are cluster-scoped and identified by `name`; at least one of `interval_ms`, `metrics`, or `match` must be set. The WarpStream API performs a whole-subscription replace on update, so removing a field from the Terraform configuration clears it on the server.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_pipeline": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "configuration_id": {
+            "type": "string",
+            "description": "The unique identifier of the pipeline configuration, automatically generated by WarpStream upon creation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "configuration_inputs": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of named YAML configuration parts that are merged server-side into a single configuration. Map keys are part names (supporting '/' for tree hierarchy, e.g. 'analytics/tables'). Map values are YAML strings. Only supported for tableflow pipelines. Mutually exclusive with configuration_yaml.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "configuration_yaml": {
+            "type": "string",
+            "description": "The YAML content defining the complete pipeline configuration. Mutually exclusive with configuration_inputs. Required for non-tableflow pipeline types.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the pipeline, automatically generated by WarpStream upon creation. Format is 'virtual_cluster_id/pipeline_id'",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique human-readable name of the pipeline within the virtual cluster. This cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "The desired operational state of the pipeline. Valid values are 'running' or 'paused'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Pipeline type. Valid types are: `bento` (default), `orbit`, `schema_linking`, `tableflow`",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "The ID of the virtual cluster associated with the pipeline.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create pipelines (Bento, Orbit, and Schema Linking).\nFor more details, take a look at: https://docs.warpstream.com/warpstream/configuration/bento, https://docs.warpstream.com/warpstream/byoc/orbit and https://docs.warpstream.com/warpstream/byoc/schema-registry/warpstream-schema-linking.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_schema_registry": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bootstrap_url": {
+            "type": "string",
+            "description": "Bootstrap URL to connect to the Schema Registry.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description": "Cloud Provider. Valid providers are: `aws` (default), `gcp`, and `azure`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Cloud Region. Defaults to `us-east-1`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Virtual Cluster Cloud Location.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Virtual Cluster Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Schema Registry ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Schema Registry Name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete schema registries.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_sso_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_role_id": {
+            "type": "string",
+            "description": "Default Role ID. The Default Role of a user when they login to SSO for the first time. You can use https://docs.warpstream.com/warpstream/reference/api-reference/user-roles/list to get the Role IDs.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "enable_sso_role_mapping": {
+            "type": "bool",
+            "description": "Enable SSO Role Mapping.When enabled, user roles will be automatically assigned or unassigned based on SSO group membership.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "SAML Entity ID. The Entity ID for your SAML Protocol provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "SSO configuration ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "saml_url": {
+            "type": "string",
+            "description": "SAML Sign In URL. The SSO SAML Protocol URL for your SAML provider..",
+            "description_kind": "plain",
+            "required": true
+          },
+          "signing_certificate": {
+            "type": "string",
+            "description": "X509 Signing Certificate. SAML Protocol server public key encoded in PEM format.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sso_identifier": {
+            "type": "string",
+            "description": "SSO Identifier. The unique SSO identifier that will be used to identify your team.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete sso configurations.\n\nThe WarpStream provider must be authenticated with an account key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_tableflow_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description": "Cloud Provider. Valid providers are: `aws` (default), `gcp`, and `azure`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Cloud Region. Defaults to `us-east-1`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Virtual Cluster Cloud Location.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Virtual Cluster Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "TableFlow ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "TableFlow Cluster Name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Virtual Cluster Tier. Currently, the valid virtual cluster tiers are `dev`, `pro`, `fundamentals`, and `enterprise`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete TableFlow clusters.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_topic": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enable_deletion_protection": {
+            "type": "bool",
+            "description": "If enabled, WarpStream will refuse to delete this topic.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Topic ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "partition_count": {
+            "type": "number",
+            "description": "Partition Count of the topic.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "topic_name": {
+            "type": "string",
+            "description": "Topic Name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "Virtual Cluster ID associated with the Topic.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "config": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Configuration of the topic. See [WarpStream Topic Configuration](https://docs.warpstream.com/warpstream/kafka/reference/protocol-and-feature-support/topic-configuration-reference) for a list of supported configurations.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete a topic.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_user_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_grants": {
+            "nested_type": {
+              "attributes": {
+                "grant_type": {
+                  "type": "string",
+                  "description": "Level of access inside the workspace. Current options are: admin, read_only, billing.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description": "ID of a workspace that the role has access to. The billing grant type can only be associated with the empty workspace ID '-' and vice-versa.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of grants defining the role's access level inside each workspace.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "User Role Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "User Role ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User Role Name. Must be unique across WarpStream account. Must contain spaces, hyphens, underscores and alphanumeric characters only. Must be between 3 and 60 characters in length.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create and delete user roles.\n\nThe WarpStream provider must be authenticated with an account key to consume this resource.\n\nNot all customers have the user roles feature enabled. Please contact Support for details.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_virtual_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_pool_id": {
+            "type": "string",
+            "description": "Agent Pool ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "agent_pool_name": {
+            "type": "string",
+            "description": "Agent Pool Name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "bootstrap_url": {
+            "type": "string",
+            "description": "Bootstrap URL to connect to the Virtual Cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description": "Cloud Provider. Valid providers are: `aws` (default), `gcp`, and `azure`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Cloud Region. Defaults to null. Can't be set if `region_group` is set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "region_group": {
+                  "type": "string",
+                  "description": "Cloud Region Group. Defaults to null. Can't be set if `region` is set.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Virtual Cluster Cloud Location.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "configuration": {
+            "nested_type": {
+              "attributes": {
+                "auto_create_topic": {
+                  "type": "bool",
+                  "description": "Enable topic autocreation feature, defaults to `true`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "default_num_partitions": {
+                  "type": "number",
+                  "description": "Number of partitions created by default.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "default_retention_millis": {
+                  "type": "number",
+                  "description": "Default retention for topics that are created automatically using Kafka's topic auto-creation feature.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "default_topic_type": {
+                  "type": "string",
+                  "description": "Default topic type for new topics. Valid values are `classic` or `lightning`. If not specified, the WarpStream API defaults to `classic`. See [Lightning Topics](https://docs.warpstream.com/warpstream/kafka/advanced-agent-deployment-options/low-latency-clusters/lightning-topics)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enable_acl_shadowing": {
+                  "type": "bool",
+                  "description": "Enable ACL shadowing, defaults to `false`. See [ACL Shadowing](https://docs.warpstream.com/warpstream/kafka/manage-security/configure-acls#acl-shadowing)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enable_acls": {
+                  "type": "bool",
+                  "description": "Enable ACLs, defaults to `false`. See [Configure ACLs](https://docs.warpstream.com/warpstream/configuration/configure-acls)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enable_deletion_protection": {
+                  "type": "bool",
+                  "description": "Enable deletion protection, defaults to `false`. If set to true, it is impossible to delete this cluster. enable_deletion_protection needs to be set to false before deleting the cluster.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enable_soft_topic_deletion": {
+                  "type": "bool",
+                  "description": "Enable soft deletion for topics. Defaults to `true`. If true, topic deletion will be a soft deletion. For clusters with the Fundamentals tier or above, it will be possible to restore topics for some time after deletion. If false, deleting a topic will immediately delete of all of its data, with no way to recover it.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "soft_topic_deletion_ttl_millis": {
+                  "type": "number",
+                  "description": "If enable_soft_topic_deletion is true, a deleted topic's data will be kept for this many milliseconds before being irrecoverably deleted. Defaults to 24 hours.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Virtual Cluster Configuration.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Virtual Cluster Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "default": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "events": {
+            "nested_type": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable events for this virtual cluster. Defaults to `false`.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "event_types": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether this event type is enabled.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "retention_period_nanos": {
+                        "type": "number",
+                        "description": "Retention period in nanoseconds for this event type.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "map"
+                  },
+                  "description": "Per event type configuration. Map keys are event type names. Refer to the Events tab of the WarpStream web console for the list of valid event types.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Virtual Cluster Events Configuration.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Virtual Cluster ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Virtual Cluster Name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Tags associated with the virtual cluster.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Virtual Cluster Tier. Currently, the valid virtual cluster tiers are `dev`, `pro`, `fundamentals`, and `enterprise`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Virtual Cluster Type. Currently, the only valid virtual cluster types is `byoc` (default).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis resource allows you to create, update and delete virtual clusters.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_virtual_cluster_credentials": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_pool": {
+            "type": "string",
+            "description": "Deprecated.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "cluster_superuser": {
+            "type": "bool",
+            "description": "Whether the user is cluster superuser. If `true`, the credentials will be created with superuser privileges which enables ACL management via the Kafka Admin APIs. If `false`, and cluster ACLs are enabled, and no `ALLOW` ACLs are set, then these credentials will not be able to access the cluster.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Virtual Cluster Credentials Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Virtual Cluster Credentials ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Virtual Cluster Credentials Name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Generated password from credential creation. If terraform importing, this value will be unset.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "read_only": {
+            "type": "bool",
+            "description": "Whether the credentials are restricted to read-only operations. If `true`, any write or admin operation will be rejected. Only supported for Schema Registry clusters. Cannot be combined with `cluster_superuser = true`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "virtual_cluster": {
+            "type": "string",
+            "description": "Virtual Cluster ID. Deprecated in favor of `virtual_cluster_id`.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "Virtual Cluster ID. Required unless `virtual_cluster` is set.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "\nThis resource allows you to create and delete virtual cluster credentials.\n\nThe WarpStream provider must be authenticated with an application key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Workspace Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Workspace ID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Workspace Name. Must be unique across WarpStream account. Must contain spaces, hyphens, underscores and alphanumeric characters only. Must be between 3 and 128 characters in length.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis resource allows you to create and delete workspaces.\n\nThe WarpStream provider must be authenticated with an account key to consume this resource.\n",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "warpstream_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "\nUse this data source to get the effective account API KEY in which Terraform is authorized.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_agent_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "virtual_cluster_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source lists agent keys.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_application_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source lists application keys.\n\nIf the WarpStream provider is authenticated with an application key, this data source lists application keys in that key's workspace only.\nIf the WarpStream provider is authenticated with an account key, it lists application keys in all workspaces.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_client_metrics_subscriptions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "subscriptions": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Composite identifier in the form `<virtual_cluster_id>/<name>`.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "interval_ms": {
+                  "type": "number",
+                  "description": "Push interval in milliseconds, or null if not set on the subscription.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "match": {
+                  "type": "string",
+                  "description": "Comma-separated list of `<key>=<regex>` client match selectors, or null if not set on the subscription.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metrics": {
+                  "type": "string",
+                  "description": "Comma-separated list of metric name prefixes, or null if not set on the subscription.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the subscription.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All client metrics subscriptions in the Virtual Cluster, sorted by `name`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "virtual_cluster_id": {
+            "type": "string",
+            "description": "ID of the Virtual Cluster whose subscriptions to list.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "\nThis data source lists all client metrics subscriptions on a WarpStream Virtual Cluster.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_schema_registry": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "virtual_cluster_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of keys to authenticate an agent with this cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "bootstrap_url": {
+            "type": "string",
+            "description": "Bootstrap URL to connect to the Schema Registry.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source lists schema registries and their respective agent keys.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_sso_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_role_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "enable_sso_role_mapping": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "entity_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "saml_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "signing_certificate": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sso_identifier": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source reads the tenant SSO Configuration.\n\nThe WarpStream provider must be authenticated with an account key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_tableflow_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "virtual_cluster_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of keys to authenticate an agent with this cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Virtual Cluster Tier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source lists TableFlow clusters and their respective agent keys.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_user_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_grants": {
+            "nested_type": {
+              "attributes": {
+                "grant_type": {
+                  "type": "string",
+                  "description": "Level of access inside the workspace. Current options are: admin, read_only, billing.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description": "ID of a workspace that the role has access to.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of grants defining the role's access level inside each workspace.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "User Role Creation Timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "User Role ID. Exactly one of id or name must be provided.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User Role Name. Exactly one of id or name must be provided. Unique across WarpStream account. Contains spaces, hyphens, underscores or alphanumeric characters only. Between 3 and 60 characters in length.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nThis data source reads individual User Roles and their respective grants.\n\nThe WarpStream provider must be authenticated with an account key to read this data source.\n\nNot all customers have the User Roles feature enabled. Please contact Support for details.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_virtual_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "virtual_cluster_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of keys to authenticate an agent with this cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "agent_pool_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "agent_pool_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "bootstrap_url": {
+            "type": "string",
+            "description": "Bootstrap URL to connect to the Virtual Cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud": {
+            "nested_type": {
+              "attributes": {
+                "provider": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_group": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "configuration": {
+            "nested_type": {
+              "attributes": {
+                "auto_create_topic": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "default_num_partitions": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "default_retention_millis": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "default_topic_type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enable_acl_shadowing": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enable_acls": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enable_deletion_protection": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "enable_soft_topic_deletion": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "soft_topic_deletion_ttl_millis": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "default": {
+            "type": "bool",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "events": {
+            "nested_type": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "event_types": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether this event type is enabled.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "retention_period_nanos": {
+                        "type": "number",
+                        "description": "Retention period in nanoseconds for this event type.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "map"
+                  },
+                  "description": "Per-event-type configuration. Map keys are event type names.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Tags associated with the virtual cluster.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tier": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "workspace_id": {
+            "type": "string",
+            "description": "Workspace ID. ID of the workspace to which the virtual cluster belongs. Assigned based on the workspace of the application key used to authenticate the WarpStream provider. Cannot be changed after creation.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source allows you to look up a virtual cluster and its agent keys.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_virtual_clusters": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "virtual_clusters": {
+            "nested_type": {
+              "attributes": {
+                "agent_keys": {
+                  "nested_type": {
+                    "attributes": {
+                      "created_at": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "key": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true,
+                        "sensitive": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "read_only": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "virtual_cluster_id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of keys to authenticate an agent with this cluster.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agent_pool_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "agent_pool_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "bootstrap_url": {
+                  "type": "string",
+                  "description": "Bootstrap URL to connect to the Virtual Cluster.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description": "ID of the workspace this Virtual Cluster belongs to. Identical for all clusters that were read using the same application key.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source allows you to list virtual clusters and their respective agent keys.\n\nThe WarpStream provider must be authenticated with an application key to read this data source.\n",
+        "description_kind": "plain"
+      }
+    },
+    "warpstream_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_keys": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nThis data source reads individual Workspaces and their respective application keys.\n\nThe WarpStream provider must be authenticated with an account key to read this data source.\n\nNot all customers have the Workspaces feature enabled. Please contact Support for details.\n",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

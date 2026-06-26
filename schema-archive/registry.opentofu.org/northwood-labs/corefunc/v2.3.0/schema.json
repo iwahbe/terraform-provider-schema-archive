@@ -1,0 +1,1913 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "description": "Utilities that should have been Terraform/OpenTofu _core functions_.\n\nWhile some of these _can_ be implemented in HCL, some of them begin to\npush up against the limits of Terraform and the HCL2 configuration\nlanguage. We also perform testing using the\n[Terratest](https://terratest.gruntwork.io) framework on a regular basis.\nExposing these functions as both a Go library as well as a Terraform/OpenTofu\nprovider enables us to use the same functionality in both our Terraform/OpenTofu\napplies as well as while using a testing framework.\n\nSince earlier versions of Terraform/OpenTofu didn't have the concept of\nuser-defined functions, the next step to open up the possibilities was\nto write a custom Provider which has the functions built-in, using\nexisting support for inputs and outputs.\n\n**This does not add new syntax or constructs.** Instead it uses the\n_existing_ concepts around Providers, Resources, Data Sources,\nVariables, Outputs, and Functions to expose new custom-built\nfunctionality.\n\nThe goal of this provider is not to call any APIs, but to provide\npre-built functions in the form of _Data Sources_ or _Provider\nFunctions_.",
+      "description_kind": "markdown"
+    }
+  },
+  "data_source_schemas": {
+    "corefunc_env_ensure": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "The name of the environment variable to check.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pattern": {
+            "type": "string",
+            "description": "A valid Go ([re2](https://github.com/google/re2/wiki/Syntax)) regular expression pattern.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the environment variable, if it exists.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Ensures that a given environment variable is set to a non-empty value.\nIf the environment variable is unset or if it is set to an empty string,\nit will trigger a Terraform-level error.\n\n-> Not every Terraform provider checks to ensure that the environment variables it\nrequires are properly set before performing work, leading to late-stage errors.\nThis will force an error to occur early in the execution if the environment\nvariable is not set, or if its value doesn't match the expected patttern.\n\nMaps to the [`corefunc.EnvEnsure()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#EnvEnsure) Go method, which can be used in\n[Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_argon2id": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the Argon2id hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "salt": {
+            "type": "string",
+            "description": "A random value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the Argon2id hash of a string with its associated salt value.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nTime    = 1\nMemory  = 64 MB\nThreads = All\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashArgon2id()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashArgon2id) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_argon2id_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the Argon2id hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "salt": {
+            "type": "string",
+            "description": "A random value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the Argon2id hash of a string with its associated salt value. Returns a Base64\nvalue instead of a hexadecimal string.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nTime    = 1\nMemory  = 64 MB\nThreads = All\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.Base64HashArgon2id()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashArgon2id) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_bcrypt": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cost": {
+            "type": "number",
+            "description": "How much effort to spend generating a value. Common values are 10-14. The default value is 10.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "input": {
+            "type": "string",
+            "description": "The string to generate the Bcrypt hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the Bcrypt hash of a string with its associated key value.\n\nMaps to the [`corefunc.HashBcrypt()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashBcrypt) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_hmac_base64sha256": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the SHA-2/256-bit HMAC hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "key": {
+            "type": "string",
+            "description": "A secret value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/256-bit HMAC hash of a string with its associated key value. Returns a\nBase64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashHMACSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashHMACSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_hmac_sha256": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the SHA-2/256-bit HMAC hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "key": {
+            "type": "string",
+            "description": "A secret value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/256-bit HMAC hash of a string with its associated key value.\n\nMaps to the [`corefunc.HashHMACSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashHMACSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_md5": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an MD5 hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the MD5 hash of a string.\n\n-> This is identical to the built-in `md5` function, but is\navailable as a Go function for Terratest.\n\nMaps to the [`corefunc.HashMD5()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashMD5) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_md5_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an MD5 hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the MD5 hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.HashMD5()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashMD5) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_scrypt": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the Scrypt hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "salt": {
+            "type": "string",
+            "description": "A random value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the Scrypt hash of a string with its associated salt value.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nN = 32768 (CPU/memory cost parameter)\nr = 8     (block size parameter)\np = 1     (parallelization parameter)\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashScrypt()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashScrypt) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_scrypt_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate the Scrypt hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "salt": {
+            "type": "string",
+            "description": "A random value to provide additional entropy in the calculation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the Scrypt hash of a string with its associated salt value. Returns a Base64 value\ninstead of a hexadecimal string.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nN = 32768 (CPU/memory cost parameter)\nr = 8     (block size parameter)\np = 1     (parallelization parameter)\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashScryptBase64()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashScryptBase64) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha1": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-1 hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-1 hash of a string.\n\nMaps to the [`corefunc.HashSHA1()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA1) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha1_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-1 hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-1 hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA1()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA1) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha256": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-2/256-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/256-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha256_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-2/256-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/256-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha384": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-2/384-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/384-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha384_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-2/384-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/384-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x256": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-3/256-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/256-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA3x256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x256_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-3/256-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/256-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x384": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-3/384-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/384-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA3x384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x384_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-3/384-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/384-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x512": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-3/512-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/512-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA3x512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha3x512_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-3/512-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-3/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha512": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate an SHA-2/512-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/512-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_hash_sha512_base64": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to generate a SHA-2/512-bit hash for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The result of the hashing function.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Generates the SHA-2/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_homedir_expand": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "path": {
+            "type": "string",
+            "description": "The path to expand.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The path with the home directory expanded.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Replaces the ~ character in a path with the current user's home directory.\n\nMaps to the [`corefunc.HomedirExpand()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HomedirExpand) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_homedir_get": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "value": {
+            "type": "string",
+            "description": "The value of the home directory.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Returns the path to the home directory of the current user.\n\nMaps to the [`corefunc.Homedir()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Homedir) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_int_leftpad": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "num": {
+            "type": "number",
+            "description": "The integer to pad with zeroes.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pad_width": {
+            "type": "number",
+            "description": "The max number of zeroes to pad the integer with.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts an integer to a string, and then pads it with zeroes on the left.\n\n-> If the integer is NOT in base10 (decimal), it will be converted to base10 (decimal) _before_ being padded.\n\nMaps to the [`corefunc.IntLeftPad()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#IntLeftPad) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_json_to_toml": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "json": {
+            "type": "string",
+            "description": "The JSON string to convert to TOML.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "toml": {
+            "type": "string",
+            "description": "The equivalent TOML value.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a JSON string into an equivalent TOML string.\n\nMaps to the [`corefunc.JSONtoTOML()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#JSONtoTOML) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_net_cidr_contains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "contained_ip_or_cidr": {
+            "type": "string",
+            "description": "An IP address or CIDR range to check as a contained range.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "containing_cidr": {
+            "type": "string",
+            "description": "A CIDR range to check as a containing range.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "bool",
+            "description": "Whether or not the IP address or CIDR range is contained within the container CIDR range.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "CIDRContains determines whether or not a given IP address, or an address prefix\ngiven in CIDR notation, is within a given IP network address prefix.\n\nBoth arguments must belong to the same address family, either IPv4 or IPv6. A\nfamily mismatch will result in an error.\n\n~> This functionality is built into OpenTofu 1.8, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.CIDRContains()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#CIDRContains) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_runtime_cpuarch": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "value": {
+            "type": "string",
+            "description": "Returns the CPU architecture for which the provider was compiled.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Returns the CPU architecture for which the provider was compiled.\nGenerally, this represents the current system.\n\n-> If you are running the provider via Rosetta on an Apple Silicon\nmachine, using QEMU, or similar CPU emulation software, this will return\nthe architecture of the emulated CPU, not the host CPU.\n\nMaps to the [`runtime.GOARCH`](https://pkg.go.dev/runtime#GOARCH)\nGo property, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_runtime_numcpus": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "value": {
+            "type": "number",
+            "description": "The number of CPU cores (logical CPUs) for the current system.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Returns the number of CPU cores (logical CPUs) for the current system.\n\n-> This counts the number of CPU cores, which may differ from the number\nof physical CPUs.\n\nMaps to the [`runtime.NumCPU()`](https://pkg.go.dev/runtime#NumCPU)\nGo method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_runtime_os": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "value": {
+            "type": "string",
+            "description": "Returns the operating system for which the provider was compiled.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Returns the operating system for which the provider was compiled.\nGenerally, this represents the current system.\n\nMaps to the [`runtime.GOOS`](https://pkg.go.dev/runtime#GOOS)\nGo property, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_base64_gunzip": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "gzipped_base64": {
+            "type": "string",
+            "description": "A string of gzipped then Base64-encoded data.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The Base64-decoded, then un-gzipped data.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Base64Gunzip is a function that decodes a Base64-encoded string, then\ndecompresses the result with gzip. Supports both padded and non-padded Base64\nstrings.\n\nUses the \"standard\" Base64 alphabet as defined in\n[RFC 4648 \u00a74](https://datatracker.ietf.org/doc/html/rfc4648#section-4).\n\n~> There is a data limit of 10 MiB (10485760 bytes) for the decompressed data. This\nis to avoid \"decompression bomb\" vulnerabilities.\n\n~> This functionality is built into OpenTofu 1.8, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.Base64Gunzip()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64Gunzip) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_byte_length": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "string": {
+            "type": "string",
+            "description": "The input string to count bytes for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The number of bytes in the input string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Counts the number of bytes in a string.\n\nThis is different from the length of a string in characters, as some\ncharacters may be represented by multiple bytes in UTF-8 encoding.\n\nMaps to the [`corefunc.StrByteLength()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrByteLength) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_camel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "string": {
+            "type": "string",
+            "description": "The string to convert to `camelCase`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a string to `camelCase`, removing any non-alphanumeric characters.\n\n-> Some acronyms are maintained as uppercase. See\n[caps: pkg-variables](https://pkg.go.dev/github.com/chanced/caps#pkg-variables) for a complete list.\n\nMaps to the [`corefunc.StrCamel()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrCamel) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_constant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "string": {
+            "type": "string",
+            "description": "The string to convert to `CONSTANT_CASE`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a string to `CONSTANT_CASE`, removing any non-alphanumeric characters.\nAlso known as `SCREAMING_SNAKE_CASE`.\n\nMaps to the [`corefunc.StrConstant()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrConstant) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_contains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to check.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "substr": {
+            "type": "string",
+            "description": "The substring to look for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "bool",
+            "description": "Whether or not the string contains the specified substring. A value of `true` indicates that it does. A value of `false` indicates that it does not.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Checks if a string contains a given substring.\n\n-> This is identical to the built-in `strcontains` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrContains()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrContains) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_endswith": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": " The string to check.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "suffix": {
+            "type": "string",
+            "description": "The suffix to check for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "bool",
+            "description": "Whether or not the string ends with the specified suffix. A value of `true` indicates that it does. A value of `false` indicates that it does not.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Takes a string to check and a suffix string, and returns true if the\nstring ends with that exact suffix.\n\n-> This is identical to the built-in `endswith` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrEndsWith()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrEndsWith) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_iterative_replace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "replacements": {
+            "nested_type": {
+              "attributes": {
+                "new": {
+                  "type": "string",
+                  "description": "The replacement substring.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "old": {
+                  "type": "string",
+                  "description": "The substring to be replaced.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of maps. Each map has an `old` and `new` key. `old` represents the existing string to be replaced, and `new` represents the replacement string.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "string": {
+            "type": "string",
+            "description": "The string upon which replacements should be applied.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Performs a series of replacements against a string. Allows a Terraform\nmodule to accept a set of replacements from a user.\n\nMaps to the [`corefunc.StrIterativeReplace()`](URL)\nGo method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_kebab": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "string": {
+            "type": "string",
+            "description": "The string to convert to `kebab-case`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a string to `kebab-case`, removing any non-alphanumeric characters.\n\nMaps to the [`corefunc.StrKebab()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrKebab) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_leftpad": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "pad_char": {
+            "type": "string",
+            "description": "The padding character to use. Only supports a single byte. If more than one byte is provided, only the first byte will be used. The default value is a space character.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "pad_width": {
+            "type": "number",
+            "description": "The max number of padding characters to pad the string with.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "string": {
+            "type": "string",
+            "description": "The string to pad with padding characters.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Pads a string with additional characters on the left.\n\nMaps to the [`corefunc.StrLeftPad()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrLeftPad) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_pascal": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acronym_caps": {
+            "type": "bool",
+            "description": "Whether or not to keep acronyms as uppercase. A value of `true` means that acronyms will be converted to uppercase. A value of `false` means that acronyms will using typical casing. The default value is `false`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "string": {
+            "type": "string",
+            "description": "The string to convert to `PascalCase`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a string to `PascalCase`, removing any non-alphanumeric characters.\n\n-> Some acronyms are maintained as uppercase. See\n[caps: pkg-variables](https://pkg.go.dev/github.com/chanced/caps#pkg-variables) for a complete list.\n\nMaps to the [`corefunc.StrPascal()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrPascal) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_snake": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "string": {
+            "type": "string",
+            "description": "The string to convert to `snake_case`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the string.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Converts a string to `snake_case`, removing any non-alphanumeric characters.\n\nMaps to the [`corefunc.StrSnake()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrSnake) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_str_startswith": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string to check.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "prefix": {
+            "type": "string",
+            "description": "The prefix to look for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "bool",
+            "description": "Whether or not the string begins with the specified prefix. A value of `true` indicates that it does. A value of `false` indicates that it does not.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Takes a string to check and a prefix string, and returns true if the\nstring begins with that exact prefix.\n\n-> This is identical to the built-in `startswith` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrStartsWith()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrStartsWith) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_time_compare": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "timestamp_a": {
+            "type": "string",
+            "description": "The first timestamp value to compare.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "timestamp_b": {
+            "type": "string",
+            "description": "The second timestamp value to compare.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "number",
+            "description": "An integer indicating the comparison result. A value of `-1` indicates that `timestamp_a` is less than `timestamp_b`, `0` indicates that they are equal, and `1` indicates that `timestamp_a` is greater than `timestamp_b`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Compares two timestamps and returns a number which represents the\nordering of those timestamps.\n\nWhen comparing timestamps, it takes into account the UTC offsets. For\nexample, `06:00:00+0200` and `04:00:00Z` are\nthe same moment after taking into account the `+0200`\noffset on the first timestamp.\n\n-> This is backwards compatible with the built-in `timecmp`\nfunction which was added in Terraform 1.3. While Terraform and OpenTofu\nboth support the RFC3339 format for timestamps, this function supports a\nwider range of timestamp formats for compatibility with various systems.\n\nMaps to the [`corefunc.TimeCompare()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TimeCompare) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_time_parse": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "input": {
+            "type": "string",
+            "description": "The string timestamp to parse",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "number",
+            "description": "The parsed timestamp as the number of seconds since Unix epoch.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Parses a timestamp string and converts it into the number of seconds since Unix epoch.\n\nSupports a wide variety of formats: ISO8601, RFC822, RFC850, RFC1036,\nRFC1123, RFC3339, RFC5322, and similar.\n\nMaps to the [`corefunc.TimeParse()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TimeParse) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_toml_to_json": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "json": {
+            "type": "string",
+            "description": "The equivalent JSON value.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "toml": {
+            "type": "string",
+            "description": "The TOML string to convert to JSON.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Converts a TOML string into an equivalent JSON string.\n\nMaps to the [`corefunc.TOMLtoJSON()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TOMLtoJSON) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_url_decode": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "encoded_url": {
+            "type": "string",
+            "description": "An encoded URL.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The decoded URL.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "URLDecode decodes a URL-encoded string.\n\nIt can decode a wide range of characters, including those beyond the ASCII set.\nNon-ASCII characters are first interpreted as UTF-8 bytes, then percent-decoded\nbyte-by-byte, ensuring correct decoding of multibyte characters.\n\n~> This functionality is built into OpenTofu 1.7, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.URLDecode()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#URLDecode) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    },
+    "corefunc_url_parse": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "canonicalizer": {
+            "type": "string",
+            "description": "The method by which the URL should be canonicalized. Allowed values: `standard`, `google_safe_browsing`. The default value is `standard`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "decoded_port": {
+            "type": "number",
+            "description": "The port of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "fragment": {
+            "type": "string",
+            "description": "The fragment string of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hash": {
+            "type": "string",
+            "description": "The fragment string of the URL, including the preceding `#`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The host of the URL, including the port if web browsers typically show the port in the URL bar.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The hostname of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "normalized": {
+            "type": "string",
+            "description": "The normalized form of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "normalized_nofrag": {
+            "type": "string",
+            "description": "The normalized form of the URL, without the fragment.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password that was passed to the URL as basic authentication.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "port": {
+            "type": "string",
+            "description": "The port of the URL. May be blank if web browsers typically hide the port in the URL bar.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "The protocol of the URL, including the final `:`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "query": {
+            "type": "string",
+            "description": "The query string of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scheme": {
+            "type": "string",
+            "description": "The scheme of the URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "search": {
+            "type": "string",
+            "description": "The query string of the URL, including the preceding `?`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The absolute URL to parse according to the [WHATWG URL API](https://url.spec.whatwg.org/#api).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username that was passed to the URL as basic authentication.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "URLParse is a [WHATWG spec-compliant](https://url.spec.whatwg.org/#url-parsing) URL parser returns a struct\nrepresenting a parsed absolute URL.\n\nWill not resolve relative URLs. The parser is up to date as of\n[2023-05-24](https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/)\nand passes all relevant tests from\n[web-platform-tests](https://github.com/web-platform-tests/wpt/tree/master/url). Its API is similar to Chapter 6\nin [WHATWG URL Standard](https://url.spec.whatwg.org/#api).\n\nMaps to the [`corefunc.URLParse()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#URLParse) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "env_ensure": {
+      "description": "Ensures that a given environment variable is set to a non-empty value.\nIf the environment variable is unset or if it is set to an empty string,\nit will trigger a Terraform-level error.\n\n-> Not every Terraform provider checks to ensure that the environment variables it\nrequires are properly set before performing work, leading to late-stage errors.\nThis will force an error to occur early in the execution if the environment\nvariable is not set, or if its value doesn't match the expected patttern.\n\nMaps to the [`corefunc.EnvEnsure()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#EnvEnsure) Go method, which can be used in\n[Terratest](https://terratest.gruntwork.io).",
+      "summary": "Ensures that a given environment variable is set to a non-empty value.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "The name of the environment variable to check.",
+          "type": "string"
+        }
+      ],
+      "variadic_parameter": {
+        "name": "pattern",
+        "description": "A valid Go ([re2](https://github.com/google/re2/wiki/Syntax)) regular expression pattern.",
+        "type": "string",
+        "is_nullable": true
+      }
+    },
+    "hash_argon2id": {
+      "description": "Generates the Argon2id hash of a string with its associated salt value.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nTime    = 1\nMemory  = 64 MB\nThreads = All\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashArgon2id()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashArgon2id) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the Argon2id hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the Argon2id hash for.",
+          "type": "string"
+        },
+        {
+          "name": "salt",
+          "description": "A random value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_argon2id_base64": {
+      "description": "Generates the Argon2id hash of a string with its associated salt value. Returns a Base64\nvalue instead of a hexadecimal string.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nTime    = 1\nMemory  = 64 MB\nThreads = All\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashArgon2idBase64()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashArgon2idBase64) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the Argon2idBase64 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the Argon2id hash for.",
+          "type": "string"
+        },
+        {
+          "name": "salt",
+          "description": "A random value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_bcrypt": {
+      "description": "Generates the Bcrypt hash of a string with its associated salt value.\n\nMaps to the [`corefunc.HashBcrypt()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashBcrypt) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the Bcrypt hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the Bcrypt hash for.",
+          "type": "string"
+        },
+        {
+          "name": "cost",
+          "description": "How much effort to spend generating a value. Common values are 10-14. The default value is 10.",
+          "type": "number"
+        }
+      ]
+    },
+    "hash_hmac_base64sha256": {
+      "description": "Generates the SHA-2/256-bit HMAC hash of a string with its associated key value. Returns a\nBase64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashHMACSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashHMACSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/256-bit HMAC hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the SHA-2/256-bit HMAC hash for.",
+          "type": "string"
+        },
+        {
+          "name": "key",
+          "description": "A secret value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_hmac_sha256": {
+      "description": "Generates the HmacSha256 hash of a string with its associated salt value.\n\nMaps to the [`corefunc.HashHmacSha256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashHmacSha256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the HmacSha256 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the HmacSha256 hash for.",
+          "type": "string"
+        },
+        {
+          "name": "key",
+          "description": "A secret value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_md5": {
+      "description": "Generates the MD5 hash of a string.\n\n-> This is identical to the built-in `md5` function, but is\navailable as a Go function for Terratest.\n\nMaps to the [`corefunc.HashMD5()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashMD5) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the MD5 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an MD5 hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_md5_base64": {
+      "description": "Generates the MD5 hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashMD5()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashMD5) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the MD5 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an MD5 hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_scrypt": {
+      "description": "Generates the Scrypt hash of a string with its associated salt value.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nN = 32768 (CPU/memory cost parameter)\nr = 8     (block size parameter)\np = 1     (parallelization parameter)\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashScrypt()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashScrypt) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the Scrypt hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the Scrypt hash for.",
+          "type": "string"
+        },
+        {
+          "name": "salt",
+          "description": "A random value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_scrypt_base64": {
+      "description": "Generates the Scrypt hash of a string with its associated salt value. Returns a Base64 value\ninstead of a hexadecimal string.\n\nFor the algorithm\u2019s configuration, we\u2019ve chosen parameters that balance security and performance.\n\n```text\nN = 32768 (CPU/memory cost parameter)\nr = 8     (block size parameter)\np = 1     (parallelization parameter)\nKey Length = 32 bytes\n```\n\nMaps to the [`corefunc.HashScryptBase64()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashScryptBase64) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the Scrypt hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the Scrypt hash for.",
+          "type": "string"
+        },
+        {
+          "name": "salt",
+          "description": "A random value to provide additional entropy in the calculation.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha1": {
+      "description": "Generates the SHA-1 hash of a string.\n\nMaps to the [`corefunc.HashSHA1()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA1) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-1 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-1 hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha1_base64": {
+      "description": "Generates the SHA-1 hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA1()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA1) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-1 hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-1 hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha256": {
+      "description": "Generates the SHA-2/256-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/256-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-2/256-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha256_base64": {
+      "description": "Generates the SHA-2/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/512-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate the SHA-2/512-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha384": {
+      "description": "Generates the SHA-2/384-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/384-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-2/384-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha384_base64": {
+      "description": "Generates the SHA-2/384-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/384-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-2/384-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x256": {
+      "description": "Generates the SHA-3/256-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA3x256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/256-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-3/256-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x256_base64": {
+      "description": "Generates the SHA-3/256-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x256()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x256) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/256-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-3/256-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x384": {
+      "description": "Generates the SHA-3/384-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.HashSHA3x384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/384-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-3/384-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x384_base64": {
+      "description": "Generates the SHA-3/384-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x384()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x384) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/384-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-3/384-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x512": {
+      "description": "Generates the SHA-3/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.HashSHA3x512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA3x512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/512-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-3/512-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha3x512_base64": {
+      "description": "Generates the SHA-3/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.Base64HashSHA3x512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64HashSHA3x512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-3/512-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate an SHA-3/512-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha512": {
+      "description": "Generates the SHA-2/512-bit hash of a string.\n\nMaps to the [`corefunc.HashSHA512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/512-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-2/512-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "hash_sha512_base64": {
+      "description": "Generates the SHA-2/512-bit hash of a string. Returns a Base64 value instead of a hexadecimal string.\n\nMaps to the [`corefunc.HashSHA512()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HashSHA512) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Generates the SHA-2/512-bit hash of a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to generate a SHA-2/512-bit hash for.",
+          "type": "string"
+        }
+      ]
+    },
+    "homedir_expand": {
+      "description": "Replaces the ~ character in a path with the current user's home directory.\n\nMaps to the [`corefunc.HomedirExpand()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#HomedirExpand) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Replaces the ~ character in a path with the current user's home directory.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "The path to expand.",
+          "type": "string"
+        }
+      ]
+    },
+    "homedir_get": {
+      "description": "Returns the path to the home directory of the current user.\n\nMaps to the [`corefunc.Homedir()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Homedir) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Returns the path to the home directory of the current user.",
+      "return_type": "string"
+    },
+    "int_leftpad": {
+      "description": "Converts an integer to a string, and then pads it with zeroes on the left.\n\n-> If the integer is NOT in base10 (decimal), it will be converted to base10 (decimal) _before_ being padded.\n\nMaps to the [`corefunc.IntLeftPad()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#IntLeftPad) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts an integer to a string, and then pads it with zeroes on the left.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "num",
+          "description": "The integer to pad with zeroes.",
+          "type": "number"
+        },
+        {
+          "name": "pad_width",
+          "description": "The max number of zeroes to pad the integer with.",
+          "type": "number"
+        }
+      ]
+    },
+    "json_to_toml": {
+      "description": "Converts a JSON string into an equivalent TOML string.\n\nMaps to the [`corefunc.JSONtoTOML()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#JSONtoTOML) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a JSON string into an equivalent TOML string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "toml",
+          "description": "The JSON string to convert to TOML.",
+          "type": "string"
+        }
+      ]
+    },
+    "net_cidr_contains": {
+      "description": "CIDRContains determines whether or not a given IP address, or an address prefix\ngiven in CIDR notation, is within a given IP network address prefix.\n\nBoth arguments must belong to the same address family, either IPv4 or IPv6. A\nfamily mismatch will result in an error.\n\n~> This functionality is built into OpenTofu 1.8, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.CIDRContains()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#CIDRContains) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "CIDRContains checks to see if an IP address or CIDR block is contained within another CIDR block.",
+      "return_type": "bool",
+      "parameters": [
+        {
+          "name": "containing_cidr",
+          "description": "A CIDR range to check as a containing range.",
+          "type": "string"
+        },
+        {
+          "name": "contained_ip_or_cidr",
+          "description": "An IP address or CIDR range to check as a contained range.",
+          "type": "string"
+        }
+      ]
+    },
+    "runtime_cpuarch": {
+      "description": "Returns the CPU architecture for which the provider was compiled.\nGenerally, this represents the current system.\n\n-> If you are running the provider via Rosetta on an Apple Silicon\nmachine, using QEMU, or similar CPU emulation software, this will return\nthe architecture of the emulated CPU, not the host CPU.\n\nMaps to the [`runtime.GOARCH`](https://pkg.go.dev/runtime#GOARCH)\nGo property, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Returns the CPU architecture for which the provider was compiled.",
+      "return_type": "string"
+    },
+    "runtime_numcpus": {
+      "description": "Returns the number of CPU cores (logical CPUs) for the current system.\n\n-> This counts the number of CPU cores, which may differ from the number\nof physical CPUs.\n\nMaps to the [`runtime.NumCPU()`](https://pkg.go.dev/runtime#NumCPU)\nGo method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Returns the number of CPU cores (logical CPUs) for the current system.",
+      "return_type": "number"
+    },
+    "runtime_os": {
+      "description": "Returns the operating system for which the provider was compiled.\nGenerally, this represents the current system.\n\nMaps to the [`runtime.GOOS`](https://pkg.go.dev/runtime#GOOS)\nGo property, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Returns the operating system for which the provider was compiled.",
+      "return_type": "string"
+    },
+    "str_base64_gunzip": {
+      "description": "Base64Gunzip is a function that decodes a Base64-encoded string, then\ndecompresses the result with gzip. Supports both padded and non-padded Base64\nstrings.\n\nUses the \"standard\" Base64 alphabet as defined in\n[RFC 4648 \u00a74](https://datatracker.ietf.org/doc/html/rfc4648#section-4).\n\n~> There is a data limit of 10 MiB (10485760 bytes) for the decompressed data. This\nis to avoid \"decompression bomb\" vulnerabilities.\n\n~> This functionality is built into OpenTofu 1.8, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.Base64Gunzip()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#Base64Gunzip) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Base64Gunzip is a function that decodes a Base64-encoded string, then decompresses the result with gzip.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "gzipped_base64",
+          "description": "A string of gzipped then Base64-encoded data.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_byte_length": {
+      "description": "Counts the number of bytes in a string.\n\nThis is different from the length of a string in characters, as some\ncharacters may be represented by multiple bytes in UTF-8 encoding.\n\nMaps to the [`corefunc.StrByteLength()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrByteLength) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Counts the number of bytes in a string.",
+      "return_type": "number",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The input string to count bytes for.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_camel": {
+      "description": "Converts a string to `camelCase`, removing any non-alphanumeric characters.\n\n-> Some acronyms are maintained as uppercase. See\n[caps: pkg-variables](https://pkg.go.dev/github.com/chanced/caps#pkg-variables) for a complete list.\n\nMaps to the [`corefunc.StrCamel()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrCamel) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a string to `camelCase`, removing any non-alphanumeric characters.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to convert to `camelCase`.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_constant": {
+      "description": "Converts a string to `CONSTANT_CASE`, removing any non-alphanumeric characters.\nAlso known as `SCREAMING_SNAKE_CASE`.\n\nMaps to the [`corefunc.StrConstant()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrConstant) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a string to `CONSTANT_CASE`, removing any non-alphanumeric characters.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to convert to `CONSTANT_CASE`.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_contains": {
+      "description": "Checks if a string contains a given substring.\n\n-> This is identical to the built-in `strcontains` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrContains()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrContains) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Checks if a string contains a given substring.",
+      "return_type": "bool",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to check.",
+          "type": "string"
+        },
+        {
+          "name": "substr",
+          "description": "The substring to look for.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_endswith": {
+      "description": "Takes a string to check and a suffix string, and returns true if the\nstring ends with that exact suffix.\n\n-> This is identical to the built-in `endswith` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrEndsWith()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrEndsWith) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Takes a string to check and a suffix string, and returns true if the string ends with that exact suffix.",
+      "return_type": "bool",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to check.",
+          "type": "string"
+        },
+        {
+          "name": "suffix",
+          "description": "The suffix to check for.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_iterative_replace": {
+      "description": "Performs a series of replacements against a string. Allows a Terraform\nmodule to accept a set of replacements from a user.\n\nMaps to the [`corefunc.StrIterativeReplace()`](URL)\nGo method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Performs a series of replacements against a string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string upon which replacements should be applied.",
+          "type": "string"
+        },
+        {
+          "name": "replacements",
+          "description": "A list of maps. Each map has an `old` and `new` key. `old` represents the existing string to be replaced, and `new` represents the replacement string.",
+          "type": [
+            "list",
+            [
+              "map",
+              "string"
+            ]
+          ]
+        }
+      ]
+    },
+    "str_kebab": {
+      "description": "Converts a string to `kebab-case`, removing any non-alphanumeric characters.\n\nMaps to the [`corefunc.StrKebab()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrKebab) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a string to `kebab-case` removing any non-alphanumeric characters.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to convert to `kebab-case`.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_leftpad": {
+      "description": "Pads a string with additional characters on the left.\n\nMaps to the [`corefunc.StrLeftPad()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrLeftPad) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Pads a string with additional characters on the left.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to pad with padding characters.",
+          "type": "string"
+        },
+        {
+          "name": "pad_width",
+          "description": "The max number of padding characters to pad the string with.",
+          "type": "number"
+        }
+      ],
+      "variadic_parameter": {
+        "name": "pad_char",
+        "description": "The padding character to use. Only supports a single byte. If more than one byte is provided, only the first byte will be used. The default value is a space character.",
+        "type": "string"
+      }
+    },
+    "str_pascal": {
+      "description": "Converts a string to `PascalCase`, removing any non-alphanumeric characters.\n\n-> Some acronyms are maintained as uppercase. See\n[caps: pkg-variables](https://pkg.go.dev/github.com/chanced/caps#pkg-variables) for a complete list.\n\nMaps to the [`corefunc.StrPascal()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrPascal) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a string to `PascalCase` removing any non-alphanumeric characters.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to convert to `PascalCase`.",
+          "type": "string"
+        },
+        {
+          "name": "use_acronym_caps",
+          "description": "Whether or not to keep acronyms as uppercase. A value of `true` means that acronyms will be converted to uppercase. A value of `false` means that acronyms will using typical casing.",
+          "type": "bool"
+        }
+      ]
+    },
+    "str_snake": {
+      "description": "Converts a string to `snake_case`, removing any non-alphanumeric characters.\n\nMaps to the [`corefunc.StrSnake()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrSnake) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a string to `snake_case` removing any non-alphanumeric characters.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "str",
+          "description": "The string to convert to `snake_case`.",
+          "type": "string"
+        }
+      ]
+    },
+    "str_startswith": {
+      "description": "Takes a string to check and a prefix string, and returns true if the\nstring begins with that exact prefix.\n\n-> This is identical to the built-in `startswith` function\nwhich was added in Terraform 1.3. This provides a 1:1 implementation\nthat can be used with Terratest or other Go code, as well as with\nOpenTofu and Terraform going all the way back to v1.0.\n\nMaps to the [`corefunc.StrStartsWith()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#StrStartsWith) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Takes a string to check and a prefix string, and returns true if the string begins with that exact prefix.",
+      "return_type": "bool",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string to check.",
+          "type": "string"
+        },
+        {
+          "name": "prefix",
+          "description": "The prefix to check for.",
+          "type": "string"
+        }
+      ]
+    },
+    "time_compare": {
+      "description": "Compares two timestamps and returns a number which represents the\nordering of those timestamps.\n\nWhen comparing timestamps, it takes into account the UTC offsets. For\nexample, `06:00:00+0200` and `04:00:00Z` are\nthe same moment after taking into account the `+0200`\noffset on the first timestamp.\n\n-> This is backwards compatible with the built-in `timecmp`\nfunction which was added in Terraform 1.3. While Terraform and OpenTofu\nboth support the RFC3339 format for timestamps, this function supports a\nwider range of timestamp formats for compatibility with various systems.\n\nMaps to the [`corefunc.TimeCompare()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TimeCompare) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Compares two timestamps and returns a number which represents the ordering of those timestamps.",
+      "return_type": "number",
+      "parameters": [
+        {
+          "name": "timestamp_a",
+          "description": "The first timestamp value to compare.",
+          "type": "string"
+        },
+        {
+          "name": "timestamp_b",
+          "description": "The second timestamp value to compare.",
+          "type": "string"
+        }
+      ]
+    },
+    "time_parse": {
+      "description": "Parses a timestamp string and converts it into the number of seconds\nsince Unix epoch.\n\nSupports a wide variety of formats: ISO8601, RFC822, RFC850, RFC1036,\nRFC1123, RFC3339, RFC5322, and similar.\n\nMaps to the [`corefunc.TimeParse()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TimeParse) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Parses a timestamp string and converts it into the number of seconds since Unix epoch.",
+      "return_type": "number",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The string timestamp to parse.",
+          "type": "string"
+        }
+      ]
+    },
+    "toml_to_json": {
+      "description": "Converts a TOML string into an equivalent JSON string.\n\nMaps to the [`corefunc.TOMLtoJSON()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#TOMLtoJSON) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "Converts a TOML string into an equivalent JSON string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "toml",
+          "description": "The TOML string to convert to JSON.",
+          "type": "string"
+        }
+      ]
+    },
+    "url_decode": {
+      "description": "URLDecode decodes a URL-encoded string.\n\nIt can decode a wide range of characters, including those beyond the ASCII set.\nNon-ASCII characters are first interpreted as UTF-8 bytes, then percent-decoded\nbyte-by-byte, ensuring correct decoding of multibyte characters.\n\n~> This functionality is built into OpenTofu 1.7, but has not been implemented\nin Terraform (as of version 1.15).\n\n-> This port from OpenTofu provides a 1:1 implementation that can be used with\nTerratest or other Go code, as well as with OpenTofu and Terraform going all\nthe way back to v1.0.\n\nMaps to the [`corefunc.URLDecode()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#URLDecode) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "URLDecode decodes a URL-encoded string.",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "encoded_url",
+          "description": "An encoded URL.",
+          "type": "string"
+        }
+      ]
+    },
+    "url_parse": {
+      "description": "URLParse is a [WHATWG spec-compliant](https://url.spec.whatwg.org/#url-parsing) URL parser returns a struct\nrepresenting a parsed absolute URL.\n\nWill not resolve relative URLs. The parser is up to date as of\n[2023-05-24](https://url.spec.whatwg.org/commit-snapshots/eee49fdf4f99d59f717cbeb0bce29fda930196d4/)\nand passes all relevant tests from\n[web-platform-tests](https://github.com/web-platform-tests/wpt/tree/master/url). Its API is similar to Chapter 6\nin [WHATWG URL Standard](https://url.spec.whatwg.org/#api).\n\nMaps to the [`corefunc.URLParse()`](https://pkg.go.dev/github.com/northwood-labs/terraform-provider-corefunc/v2/corefunc#URLParse) Go method, which can be used in [Terratest](https://terratest.gruntwork.io).",
+      "summary": "URLParse is a [WHATWG spec-compliant](https://url.spec.whatwg.org/#url-parsing) URL parser returns a struct representing a parsed absolute URL.",
+      "return_type": [
+        "object",
+        {
+          "decoded_port": "number",
+          "fragment": "string",
+          "hash": "string",
+          "host": "string",
+          "hostname": "string",
+          "normalized": "string",
+          "normalized_nofrag": "string",
+          "password": "string",
+          "path": "string",
+          "port": "string",
+          "protocol": "string",
+          "query": "string",
+          "scheme": "string",
+          "search": "string",
+          "username": "string"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "url",
+          "description": "The absolute URL to parse according to the [WHATWG URL API](https://url.spec.whatwg.org/#api).",
+          "type": "string"
+        }
+      ],
+      "variadic_parameter": {
+        "name": "canonicalizer",
+        "description": "The method by which the URL should be canonicalized. Allowed values: `standard`, `google_safe_browsing`. The default value is `standard`.",
+        "type": "string"
+      }
+    }
+  }
+}

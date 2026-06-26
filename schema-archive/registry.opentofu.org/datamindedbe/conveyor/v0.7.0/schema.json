@@ -1,0 +1,1186 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "allowed_tenant_id": {
+          "type": "string",
+          "description": "The tenant against which you want to perform operations. Prevents you from mistakenly using an incorrect one.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "auth_key": {
+          "type": "string",
+          "description": "The key of the cicd token for a given tenant.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "auth_secret": {
+          "type": "string",
+          "description": "The secret of the cicd token for a given tenant.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "profile": {
+          "type": "string",
+          "description": "The conveyor profile to use for credentials.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "conveyor_alert_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dag_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of DAG IDs to send alerts for when they fail. You can use '\\*' as a wildcard, like 'dag-\\*' to match all DAGs starting with 'dag-' or '\\*' to match all DAGs.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "emails": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of emails to send alerts to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of the environment that the alert config belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the alert config.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The ID of the project that the alert config belongs to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The alert config resource allows you to create, update, and delete alert configs.\nAlert configs are used to send alerts to a list of email addresses when an Airflow task fails.",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "airflow_version": {
+            "type": "string",
+            "description": "The Airflow version of the environment. Defaults to `3`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The cluster id of the environment.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "Whether to protect your environment from deletion. Defaults to `false`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "iam_identity": {
+            "type": "string",
+            "description": "The IAM identity attached to the airflow processes. This is required when configuring secrets in the airflow_configuration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the environment.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "instance_lifecycle": {
+            "type": "string",
+            "description": "The instance lifecycle for the environment, either spot or on-demand. Defaults to `spot`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the environment.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "airflow_configuration": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "core": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "max_active_task_per_dag": {
+                        "type": "number",
+                        "description": "Sets the parallelism configuration in Airflow. Defaults to `32`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "parallelism": {
+                        "type": "number",
+                        "description": "Sets the parallelism configuration in Airflow. Defaults to `128`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Allows you to configure the core Airflow settings.",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                },
+                "secret": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Enables the Airflow secrets backend integration.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "block_types": {
+                      "connection": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "keyvault": {
+                              "type": "string",
+                              "description": "The name of the Azure keyvault in which the secret is stored.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the secret containing the connection information.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "Allows you to configure the Airflow connections using a secret.",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      },
+                      "variable": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "keyvault": {
+                              "type": "string",
+                              "description": "The name of the Azure keyvault in which the secret is stored.",
+                              "description_kind": "plain",
+                              "optional": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the secret containing the Airflow variables.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "Allows you to configure the Airflow variables using a secret.",
+                          "description_kind": "plain"
+                        },
+                        "max_items": 1
+                      }
+                    },
+                    "description": "Allows you to configure the Airflow secrets backend.",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                },
+                "webserver": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "navbar_color": {
+                        "type": "string",
+                        "description": "Sets the color of the navbar in Airflow. Defaults to `#fff`.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Allows you to configure the core webserver settings.",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Allows you to configure Airflow.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "datahub_integration": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "capture_ownership_info": {
+                  "type": "bool",
+                  "description": "(Deprecated) Configures capture ownership info for the Airflow DataHub integration. Defaults to `true`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "capture_tags_info": {
+                  "type": "bool",
+                  "description": "(Deprecated) Configures capture tags info for the Airflow DataHub integration. Defaults to `true`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "cluster": {
+                  "type": "string",
+                  "description": "Sets the cluster used by the Airflow DataHub integration. Defaults to `prod`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "conn_id": {
+                  "type": "string",
+                  "description": "Sets the connection used by the Airflow DataHub integration. Defaults to `datahub_rest_default`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enables the Airflow DataHub integration.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "graceful_exceptions": {
+                  "type": "bool",
+                  "description": "(Deprecated) When graceful exceptions is set for the Airflow DataHub integration, exceptions will not result in failures in Airflow. Defaults to `true`.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Allows you to configure the Airflow DataHub integration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Provides a Conveyor environment.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_environment_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "The id of the environment to add the team to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role the team should have on the environment, either `admin`, `contributor` or `operator`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The id of the team to add.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a team to a Conveyor environment.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_environment_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "The id of the environment to add the user to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role the user should have on the environment, either `admin`, `contributor` or `operator`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The email address of the user to add using only lowercase letters.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a user to a Conveyor environment.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_ide_base_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "nested_type": {
+              "attributes": {
+                "build_steps": {
+                  "nested_type": {
+                    "attributes": {
+                      "cmd": {
+                        "type": "string",
+                        "description": "The command that needs to be executed. Can contain multiple commands, separated by newlines.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the build step",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Additional commands that customize the IDE environment",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "vscode_config": {
+                  "nested_type": {
+                    "attributes": {
+                      "extensions": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Enable user specific extensions",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "VS Code configuration of the IDE base image",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The configuration that defines this IDE base image",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the IDE base image",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "iam_identity": {
+            "type": "string",
+            "description": "The iam identity of the IDE base image",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the IDE base image",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the IDE base image",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "IDE base image resource",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_package": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the package",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "git_repo": {
+            "type": "string",
+            "description": "The git repo of the package",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the package",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the package",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Package resource",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_iam_identity": {
+            "type": "string",
+            "description": "The default IAM role of the project, can be templated.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "default_ide_base_image_id": {
+            "type": "string",
+            "description": "The ID of the base image that will be set as default when starting a new IDE for this project.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "default_ide_environment_id": {
+            "type": "string",
+            "description": "The ID of the environment that will be set as default when starting a new IDE for this project.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the project, you can input markdown here.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "git_repo": {
+            "type": "string",
+            "description": "The link to the git repo for this project.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "git_sub_folder": {
+            "type": "string",
+            "description": "Configures that the project is using a sub folder of your git repo, this makes the IDE open that sub folder automatically.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "default_ide_config": {
+            "nesting_mode": "list",
+            "block": {
+              "block_types": {
+                "build_steps": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "cmd": {
+                        "type": "string",
+                        "description": "The command that needs to be executed. Can contain multiple commands, separated by newlines.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the buildstep.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "Additional commands that customize the IDE environment.",
+                    "description_kind": "plain"
+                  }
+                },
+                "vscode_config": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "extensions": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Enable user specific extensions.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "VS Code configuration of the ide.",
+                    "description_kind": "plain"
+                  },
+                  "max_items": 1
+                }
+              },
+              "description": "Allows you to configure the default IDE configuration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Provides a Conveyor project.\n\nAfter creating a project with the terraform provider you can generate the `.datafy/project.yaml` file with the command:\n\n```bash\nconveyor project generate-config --name YOUR_PROJECT_NAME\n```\n",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_project_links": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the resource",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "links": {
+            "nested_type": {
+              "attributes": {
+                "color": {
+                  "type": "string",
+                  "description": "The color of the link, possible values are: BLUE, CYAN, GEEKBLUE, GOLD, GREEN, LIME, MAGENTA, ORANGE, PURPLE, RED, VOLCANO",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "The icon of the link, possible values are: API, AWS, AWS_ATHENA, AWS_CLOUDWATCH, AWS_GLUE, AWS_LAKE_FORMATION, AWS_REDSHIFT, AZURE, DATABRICKS, DATAHUB, DATA_PRODUCT_PORTAL, DOLLAR, EURO, GRAFANA, JIRA, SNOWFLAKE, SODA, TRINO",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the link, must be unique in the list",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The url the link should point to",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The links to add to the project",
+            "description_kind": "plain",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The project id of the project we want to change the links of",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Project links resource",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_project_tags": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The id of the project to add the tags to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of tags for the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Assigns tags to a project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_project_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The id of the project to add the team to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role the team should have on the project, either `admin` or `contributor`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The id of the team to add.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a team to a Conveyor project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_project_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The id of the project to add the user to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role the user should have on the project, either `admin` or `contributor`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The email address of the user to add using only lowercase letters.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a user to a Conveyor project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "string",
+            "description": "The color of the tag. Should be one of: blue, cyan, geekblue, gold, green, lime, magenta, orange, purple, red, volcano.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the tag.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the tag (max 24 characters).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a Conveyor tag.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the team.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sso_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The SSO Group mapping to add to the team.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a Conveyor team.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_team_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "member_type": {
+            "type": "string",
+            "description": "The membership type the user should have on the team, either `admin` or `member`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The id of the team to add the user to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The email address of the user to add using only lowercase letters.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Links a user to a Conveyor team.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the user.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "skip_invitation_email": {
+            "type": "bool",
+            "description": "Skip sending an invitation email to the user, defaults to false. Only has an effect when user resources is created.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "The user object allows you to invite users via terraform.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "conveyor_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default": {
+            "type": "bool",
+            "description": "Whether this is the default cluster",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of cluster",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the cluster",
+            "description_kind": "plain",
+            "required": true
+          },
+          "oidc_url": {
+            "type": "string",
+            "description": "The oidc provider url associate to the kubernetes cluster",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the id of a cluster.",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the environment",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the environment",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Can be used to find the id of an environment.",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_environment_teams": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the environment to find the teams for.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the environment to find the teams for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "teams": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "name": "string",
+                  "role": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the teams connected to a project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_environment_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the environment to find the users for.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the environment to find the users for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "role": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the direct users of an environment.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_ide_base_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the IDE base image",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the IDE base image",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Can be used to retrieve the id of an IDE base image.",
+        "description_kind": "markdown"
+      }
+    },
+    "conveyor_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Can be used to find the id of a project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_project_teams": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the project to find the teams for.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project to find the teams for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "teams": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "name": "string",
+                  "role": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the teams connected to a project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_project_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the project to find the users for.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project to find the users for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "role": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the direct users of a project.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "string",
+            "description": "The color of the tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the tag.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Can be used to find the full tag description for a given tag name.",
+        "description_kind": "plain"
+      }
+    },
+    "conveyor_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the team.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sso_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The SSO Group mapping to add to the team.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "member_type": "string"
+                }
+              ]
+            ],
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Can be used to find the id of a team.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
