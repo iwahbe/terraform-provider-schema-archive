@@ -7,14 +7,20 @@ Structure:
 ```
 archive.json                    # Metadata about which registries are tracked and how they have progressed
 maintain-archive/               # The function that maintains archive.json & the archive
-  maintain.py                   # The maintence engine
-  registry-opentofu.py          # The driver for the OpenTofu registry
+  run.py                        # The maintenance engine
+  registry.py                   # The registry interface
+  registry_opentofu.py          # The driver for the OpenTofu registry
+  dump.py                       # Sandboxed schema dumping in Docker
+  duration.py                   # Parser for --timeout durations
+  Dockerfile                    # The image used to download providers & dump schemas
+  pyproject.toml                # Python project & dependencies (managed with uv)
+  uv.lock                       # Pinned dependency lockfile
 schema-archive/                 # The full archive
   <registry>/                   # The registry of the provider
     <org>/                      # The org of the provider
       <provider>/               # The name of the provider
         <version>/              # The version of the provider
-          schema.json           # The schema, as dumped by `terraform providers schema -json`
+          schema.json           # The schema, as dumped by `tofu providers schema -json`
           stdout.txt            # The stdout of the schema dump
           stderr.txt            # The stderr of the schema dump
           metadata.json         # Metadata about how the schema was generated
@@ -25,7 +31,7 @@ schema-latest/                  # A simplified view of schema-archive, containin
 .github/workflows/maintain.yaml # The workflow that maintains the archive via a chron
 ```
 
-For each invocation: `maintain-archive.py` reads `archive.json` for the list of Terraform Regestries tracked to determine the list of versions that have yet to be processed.
+For each invocation: `maintain-archive/run.py` reads `archive.json` for the list of Terraform registries tracked to determine the list of versions that have yet to be processed.
 
 
 `archive.json` follows:
@@ -33,23 +39,25 @@ For each invocation: `maintain-archive.py` reads `archive.json` for the list of 
 ```json
 {
   "crawl-state": {
-    "<registry>": <registry-defined-state>,
-  }
+    "<registry>": <registry-defined-state>
+  },
   "status": [
-    "registry": "<registry>",
-    "org": "<org>",
-    "name": "<name>",
-    "versions": [
-      { 
-        "version": "<version>", 
-        "status": "pending" | "done" | "retry" | "failure"
-      },
-    ]
-  ],
+    {
+      "registry": "<registry>",
+      "org": "<org>",
+      "name": "<name>",
+      "versions": [
+        {
+          "version": "<version>",
+          "status": "pending" | "done" | "retry" | "failure"
+        }
+      ]
+    }
+  ]
 }
 ```
 
-Because the Terraform provider registry API doesn't define an API for listing all providers, each registry needs it's own adapter to populate the list of providers. `maintain-archive/maintain.py` is responsible for:
+Because the Terraform provider registry API doesn't define an API for listing all providers, each registry needs it's own adapter to populate the list of providers. `maintain-archive/run.py` is responsible for:
 
 1. Driving each registry engine to populate the crawl status.
 2. Dumping the schemas of uncrawled providers.
@@ -66,3 +74,45 @@ For each provider, in addition to the schema, we write `metadata.json`:
 ```
 
 We write `stdout.txt` & `stderr.txt` for all attempts, regardless of success or failure. "retry" means a transient failure. "failure" implies a perminent failure.
+
+## Orchestration and ordering
+
+A run proceeds in three steps: discover providers, dump schemas, then rebuild the
+`schema-latest/` view.
+
+Discovery drives every registry adapter. Each adapter calls back for every provider
+version it finds. The engine records previously unseen versions as `pending` and
+never downgrades a version that already carries a terminal status, so discovery is
+idempotent.
+
+The work queue is every version whose status is `pending` or `retry`. It is ordered
+so that the **latest version of each provider is dumped first**: the engine randomly
+samples among providers whose latest version is still undumped. Only once every
+provider's latest version has been sampled does it back-fill older versions, again by
+random sampling.
+
+A run stops at the first of these to occur:
+
+- `--timeout <duration>` elapses (e.g. `1h30m`, `2m15s`).
+- `--max <n>` provider versions have been dumped.
+- The work queue drains.
+- Too many consecutive retryable errors occur (the run pauses so the registry is not
+  hammered).
+
+Both `--timeout` and `--max` may be passed; the first to trigger wins. With neither
+flag the run continues until the queue drains.
+
+Interrupts are honored between and during dumps:
+
+- One `Ctrl-C` finishes the in-flight dump, checkpoints, and exits.
+- A second `Ctrl-C` aborts the in-flight dump immediately.
+
+Repeated retryable (e.g. rate-limit) errors trigger exponential backoff so the
+registry's download limits are respected.
+
+`archive.json` is rewritten after every dump, so an interrupted or timed-out run never
+loses progress and the next run resumes from where it left off. A provider's
+`schema-latest/` symlink is updated as soon as a dump succeeds, pointing at the highest
+version of that provider that has been dumped successfully. Because the latest version
+is dumped first, the symlink tracks the newest working schema immediately; later
+back-filled older versions never downgrade it.

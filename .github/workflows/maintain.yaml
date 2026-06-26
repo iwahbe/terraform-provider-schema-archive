@@ -1,0 +1,51 @@
+name: maintain
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      timeout:
+        description: "Run budget, e.g. 50m"
+        default: "50m"
+      max:
+        description: "Max provider versions to dump (optional)"
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maintain
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Maintain archive
+        working-directory: maintain-archive
+        run: |
+          uv run run.py --timeout "${{ github.event.inputs.timeout || '50m' }}" \
+            ${{ github.event.inputs.max && format('--max {0}', github.event.inputs.max) || '' }}
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for path in archive.json schema-archive schema-latest; do
+            [ -e "$path" ] && git add "$path"
+          done
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "Update schema archive"
+            git push
+          fi
