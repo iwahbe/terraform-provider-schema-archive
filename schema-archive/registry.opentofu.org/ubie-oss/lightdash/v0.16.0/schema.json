@@ -1,0 +1,1901 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "host": {
+          "type": "string",
+          "description": "Lightdash Host",
+          "description_kind": "markdown",
+          "required": true
+        },
+        "max_concurrent_requests": {
+          "type": "number",
+          "description": "Maximum number of concurrent requests to the Lightdash API. Defaults to 10.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Personal access token for Lightdash",
+          "description_kind": "markdown",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      "description": "A Terraform provider for Lightdash",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "lightdash_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/groups/<group_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "A set of user UUIDs who are members of the group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Lightdash group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a Lightdash group within an organization. Groups are used to manage access and permissions for multiple users collectively. This resource allows you to create, update, and delete groups by specifying a name and the organization UUID. You can then use this group in other resources like `lightdash_project_role_group` to assign project-level roles.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_oauth_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The OAuth client ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "client_name": {
+            "type": "string",
+            "description": "The display name of the OAuth application.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The OAuth client secret. Returned only at creation; not refreshed on read.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the client was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by_user_uuid": {
+            "type": "string",
+            "description": "UUID of the user who created the client, if known.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "When set to `true`, prevents the destruction of the OAuth application resource by Terraform.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/oauth_applications/<client_id>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization. Must match the organization for the configured API token.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "redirect_uris": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Allowed OAuth redirect URIs. Updates replace the entire list in Lightdash.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scopes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "OAuth scopes stored on the client.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an OAuth 2.0 application (client) at the organization level. These are the same clients shown under **Organization settings \u2192 OAuth applications** in the Lightdash UI.\n\nRequires an organization admin personal access token. The `client_secret` is returned only once at creation and is not refreshed on read. Import does not populate `client_secret`; create a new application to rotate credentials.\n\n`redirect_uris` is a full replacement list on update (the Lightdash API PATCH replaces the entire array).\n\n`deletion_protection` is required. When set to `true`, Terraform will not destroy the resource. Imported resources default to `deletion_protection = true`.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_role_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the Lightdash user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/users/<user_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The timestamp of the last Terraform update applied to the organization role member.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The organization role assigned to the user.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash user.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the assignment of a Lightdash organization role to a specific member. This resource allows you to control the organization-level permissions for a user within Lightdash. You need to specify the organization UUID, the user UUID, and the desired organization role (e.g., `member`, `admin`). This resource is essential for managing user access at the organization scope.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash agent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of creation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "When set to `true`, prevents the destruction of the project agent resource by Terraform. Defaults to `false`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Agent description. Omit for empty (matches Lightdash default).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_data_access": {
+            "type": "bool",
+            "description": "Whether the agent can access underlying project data.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enable_self_improvement": {
+            "type": "bool",
+            "description": "Whether the agent can improve itself based on user interactions.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "group_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "UUIDs of user groups with access.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/agents/<agent_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_url": {
+            "type": "string",
+            "description": "URL for the agent's icon/image.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Custom instruction (system prompt) for the agent (max 8192 chars).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "integrations": {
+            "nested_type": {
+              "attributes": {
+                "channel_id": {
+                  "type": "string",
+                  "description": "The channel ID for the integration.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of integration (e.g., `slack`).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of integrations for the agent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Lightdash agent.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "UUIDs of spaces the agent may access. An empty list means unrestricted access to all spaces (Lightdash default).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tags associated with the agent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp of the last update.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "UUIDs of individual users with access.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "The version of the agent.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a Lightdash project AI agent (`lightdash_project_agent`): create, read, update, and delete agents via the Lightdash API. Optional `description` defaults to empty; optional `space_access` defaults to an empty list meaning unrestricted access to all project spaces (set explicit space UUIDs to restrict).\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_agent_evaluations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash agent.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of creation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "When set to `true`, prevents the destruction of the project agent evaluation resource by Terraform. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the evaluation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "evaluation_uuid": {
+            "type": "string",
+            "description": "The UUID of the evaluation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/agents/<agent_uuid>/evaluations/<evaluation_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "prompts": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp of creation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "eval_prompt_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the evaluation prompt.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "expected_response": {
+                  "type": "string",
+                  "description": "The expected response for the prompt. This is required by the API.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "prompt": {
+                  "type": "string",
+                  "description": "The prompt text.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "prompt_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the prompt.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "thread_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the thread.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the prompt.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of evaluation prompts.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the evaluation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp of the last update.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a Lightdash project agent evaluations. This resource allows you to create, read, update, and delete evaluations for AI agents within a Lightdash project. Evaluations contain prompts used to test and grade agent responses.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_role_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `projects/<project_uuid>/groups/<group_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The timestamp of the last Terraform update applied to the project role group resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role assigned to the group within the project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the assignment of a Lightdash group to a specific role within a project. This resource allows you to control the permissions granted to an entire group for a given project. You need to specify the project UUID, the group UUID, and the desired role (e.g., `viewer`, `editor`, `developer`). Using this resource ensures that group access is managed declaratively.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_role_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "Lightdash user email.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource identifier.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Last updated time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "Lightdash project UUID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "Lightdash user's role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "send_email": {
+            "type": "bool",
+            "description": "Send email to the user.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "Lightdash user UUID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the assignment of a Lightdash member to a specific role within a project. This resource allows you to control the permissions granted to an individual user for a given project. You need to specify the project UUID, the user UUID, and the desired role (e.g., `viewer`, `editor`, `developer`, `admin`). Using this resource ensures that individual user access is managed declaratively at the project level.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_scheduler_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The resource identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/scheduler_settings`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scheduler_timezone": {
+            "type": "string",
+            "description": "The timezone setting for the project's scheduler.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the scheduler settings for a specific Lightdash project. Currently, this resource allows you to configure the timezone used for scheduling reports and other time-based operations within the project. By managing the timezone through this resource, you can ensure consistency in scheduled tasks across your Lightdash projects. You need to provide the project UUID and the desired timezone.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the space was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "When set to `true`, prevents the destruction of the space resource by Terraform. Defaults to `false`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The Terraform resource identifier. It is computed as `projects/<project_uuid>/spaces/<space_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_private": {
+            "type": "bool",
+            "description": "Whether the space is private (`true`) or public (`false`). This maps to Lightdash `inheritParentPermissions` on the API: public spaces inherit project permissions (`inheritParentPermissions=true`); private (restricted) spaces do not (`inheritParentPermissions=false`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The timestamp of the last Terraform update applied to the space.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human-readable name of the space.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_space_uuid": {
+            "type": "string",
+            "description": "The UUID of the parent space. Setting this creates a nested space. Leave empty for a root space.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project this space belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_uuid": {
+            "type": "string",
+            "description": "The UUID of the space assigned by Lightdash.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "access": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "space_role": {
+                  "type": "string",
+                  "description": "The role assigned to the user within the space. Valid roles are `admin` (Full Access), `editor` (Can Edit), or `viewer` (Can View).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Manages direct user access to the space. Specify user UUIDs and their assigned roles. Note: Organization administrators have implicit access.",
+              "description_kind": "markdown"
+            }
+          },
+          "group_access": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "group_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash group.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "space_role": {
+                  "type": "string",
+                  "description": "The role assigned to the group within the space. Valid roles are `admin` (Full Access), `editor` (Can Edit), or `viewer` (Can View).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Manages access to the space for groups. Specify group UUIDs and their assigned roles within the space.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "A Lightdash space resource manages spaces within a Lightdash project. This resource allows for the creation, reading, updating, and deletion of spaces, including setting their name, visibility (private/public), and managing deletion protection. It also supports configuring access for individual members and groups within the space.\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "lightdash_authenticated_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/authenticated-users/<user_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "Lightdash organization UUID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "Lightdash authenticated user UUID",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about the Lightdash organization associated with the authenticated user. This data source is useful for obtaining the organization UUID, which is often required for other resources and data sources within the provider. It provides a simple way to get the organization context for subsequent operations without needing to specify the organization UUID explicitly in the provider configuration itself.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the Lightdash group was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/groups/<group_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Lightdash group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "This data source retrieves details about a specific Lightdash group using its UUID. It provides access to the group's name and creation timestamp. You need to provide the organization UUID and the group UUID to fetch the group details. This is helpful when you need to reference an existing group in your Terraform configurations.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_group_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/groups/<group_uuid>/members`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user who is a member of the group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of the group members.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "This data source fetches the list of members belonging to a specific Lightdash group. It returns the user UUID for each member in the specified group. To use this data source, you must provide the organization UUID and the group UUID. This allows you to inspect the current membership of a group within your Lightdash organization.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_oauth_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The OAuth client ID to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_name": {
+            "type": "string",
+            "description": "The display name of the OAuth application.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when the client was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by_user_uuid": {
+            "type": "string",
+            "description": "UUID of the user who created the client, if known.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/oauth_applications/<client_id>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization for the authenticated token.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "redirect_uris": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Allowed OAuth redirect URIs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "scopes": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "OAuth scopes stored on the client.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Reads a single OAuth application by `client_id`. Requires an organization admin personal access token. The client secret is not available from the API after creation.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_oauth_applications": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "applications": {
+            "nested_type": {
+              "attributes": {
+                "client_id": {
+                  "type": "string",
+                  "description": "The OAuth client ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "client_name": {
+                  "type": "string",
+                  "description": "The display name of the OAuth application.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "ISO 8601 timestamp when the client was created.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_by_user_uuid": {
+                  "type": "string",
+                  "description": "UUID of the user who created the client, if known.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "redirect_uris": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Allowed OAuth redirect URIs.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "scopes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "OAuth scopes stored on the client.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "OAuth applications registered in the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/oauth_applications`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Lists all OAuth applications registered for a Lightdash organization. Requires an organization admin personal access token.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about the Lightdash organization associated with the authenticated user. This data source is useful for obtaining the organization UUID, which is often required for other resources and data sources within the provider. It provides a simple way to get the organization context for subsequent operations without needing to specify the organization UUID explicitly in the provider configuration itself.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_agents": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agents": {
+            "nested_type": {
+              "attributes": {
+                "agent_uuid": {
+                  "type": "string",
+                  "description": "Agent UUID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp of creation.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "enable_data_access": {
+                  "type": "bool",
+                  "description": "Whether the agent can access underlying project data.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "group_access": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "UUIDs of user groups with access.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "image_url": {
+                  "type": "string",
+                  "description": "URL for the agent's icon/image.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Agent name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "organization_uuid": {
+                  "type": "string",
+                  "description": "Organization UUID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "project_uuid": {
+                  "type": "string",
+                  "description": "Project UUID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Tags associated with the agent.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp of the last update.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_access": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "UUIDs of individual users with access.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of agents.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Data source ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "Organization UUID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Lightdash organization agents data source",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "The timestamp when the group was created.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "group_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the Lightdash group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of organization groups.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/groups`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves a list of all groups within a Lightdash organization. This data source provides details for each group, including its UUID, name, and creation timestamp. It requires the organization UUID as input and returns a list of groups sorted by their UUID. This is useful for discovering existing groups to use in other resources like `lightdash_project_role_group`.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "The email address of the Lightdash user.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/users/<user_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The organization role of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash user.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves details for a specific member within a Lightdash organization by their email address. This data source provides information such as the user's UUID and their organization role. It requires the email address as input and returns the member's details.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/users`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email address of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The organization role of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of organization members.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a list of all members within a Lightdash organization. This data source provides details for each member, including their user UUID, email, and organization role. It returns a list of members sorted by their UUID. This is useful for obtaining information about all users in the organization.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_organization_members_by_emails": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "emails": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of email addresses to filter the organization members by. Only members with an email in this list will be returned.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier of the data source, computed as `organizations/<organization_uuid>/users`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email address of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The organization role of the Lightdash user (e.g., `viewer`, `editor`, `admin`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of organization members matching the provided emails, sorted by user UUID.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the organization the members belong to.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches Lightdash organization members filtered by a list of emails. This data source retrieves a list of members within a Lightdash organization whose email addresses are included in the provided list. It is useful for obtaining details (user UUID, email, and organization role) for a specific subset of organization members. The results are returned as a list of members, sorted by user UUID.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Lightdash project.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "project_type": {
+            "type": "string",
+            "description": "The type of the Lightdash project.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves details for a specific Lightdash project by its UUID. This data source provides information such as the project's organization UUID, name, and type. It is useful for fetching project details when the UUID is known, allowing you to reference project attributes in your Terraform configuration.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_agent": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "agent_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash agent.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of creation.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "enable_data_access": {
+            "type": "bool",
+            "description": "Whether the agent can access underlying project data.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "enable_self_improvement": {
+            "type": "bool",
+            "description": "Whether the agent can improve itself based on user interactions.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "UUIDs of user groups with access.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/agents/<agent_uuid>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_url": {
+            "type": "string",
+            "description": "URL for the agent's icon/image.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Custom instruction (system prompt) for the agent.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the Lightdash agent.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Tags associated with the agent.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp of the last update.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_access": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "UUIDs of individual users with access.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Version of the agent.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves details for a specific Lightdash project agent by its project UUID and agent UUID. This data source provides information about the agent's configuration, including its name, instruction, access controls, and other attributes. It is useful for fetching agent details when the UUIDs are known, allowing you to reference agent attributes in your Terraform configuration.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_group_accesses": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "group_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "project_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The role assigned to the group within the project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of groups and their assigned roles within the project.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/groups`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves a list of groups and their assigned roles for a specific Lightdash project. This data source provides insights into how groups are permissioned within a project, showing the project UUID, group UUID, and the role assigned to the group. It is useful for auditing project access granted to different groups.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `projects/<project_uuid>/access`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "The email address of the Lightdash user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The project role of the user within the Lightdash project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash user who is a member of the project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of project members.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieves a list of members and their assigned roles for a specific Lightdash project. This data source provides insights into how users are permissioned within a project, showing the user UUID, email, and the role assigned to the member. The list of members is sorted by user UUID. It is useful for auditing project access granted to different users.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_project_scheduler_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/scheduler_settings`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scheduler_timezone": {
+            "type": "string",
+            "description": "The timezone for the Lightdash project scheduler.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "This data source retrieves the scheduler settings for a specific Lightdash project. It allows you to fetch the currently configured timezone for project-level scheduling. This information is useful for aligning automation and reporting tasks with the project's designated timezone. You must provide the organization UUID and the project UUID to retrieve the settings.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_projects": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "projects": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the Lightdash project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "project_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the Lightdash project.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of Lightdash projects.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a list of all projects within a Lightdash organization. This data source provides details for each project, including its UUID, name, and type. It returns a list of projects sorted by their UUID. This is useful for discovering existing projects to use in other parts of your Terraform configuration.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access": {
+            "nested_type": {
+              "attributes": {
+                "has_direct_access": {
+                  "type": "bool",
+                  "description": "Whether the user has direct access to the space.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "inherited_from": {
+                  "type": "string",
+                  "description": "Inherited from of the Lightdash space member.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "inherited_role": {
+                  "type": "string",
+                  "description": "Inherited role of the Lightdash space member.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project_role": {
+                  "type": "string",
+                  "description": "Project role of the Lightdash space member.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "space_role": {
+                  "type": "string",
+                  "description": "Role of the Lightdash space member.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "user_uuid": {
+                  "type": "string",
+                  "description": "User UUID of the Lightdash space member.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of members of the Lightdash space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "access_groups": {
+            "nested_type": {
+              "attributes": {
+                "group_uuid": {
+                  "type": "string",
+                  "description": "Group UUID of the Lightdash space group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "space_role": {
+                  "type": "string",
+                  "description": "Role of the Lightdash space group.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of groups of the Lightdash space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Data source identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_private": {
+            "type": "bool",
+            "description": "Is the Lightdash space private.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Lightdash space.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "Organization UUID of the Lightdash project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_space_uuid": {
+            "type": "string",
+            "description": "Parent space UUID of the Lightdash space. This attribute is nullable and will be empty if the space has no parent.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "Organization UUID of the Lightdash project.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "space_uuid": {
+            "type": "string",
+            "description": "Space UUID of the Lightdash space.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Retrieves detailed information for a specific Lightdash space by its UUID within a project. This data source provides extensive details including the space's parent space (if any), name, visibility (private/public), and detailed access information for both individual members and groups. It requires the project UUID and space UUID as input. This data source is useful for fetching the current state and access configurations of a space.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "lightdash_spaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The data source identifier. It is computed as `organizations/<organization_uuid>/projects/<project_uuid>/spaces`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The UUID of the Lightdash project.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "spaces": {
+            "nested_type": {
+              "attributes": {
+                "is_private": {
+                  "type": "bool",
+                  "description": "Whether the space is private (`true`) or public (`false`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The human-readable name of the space.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "parent_space_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the parent space. This attribute is null if the space has no parent.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "space_uuid": {
+                  "type": "string",
+                  "description": "The UUID of the Lightdash space.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of spaces within the specified project.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a list of all spaces within a specific Lightdash project. This data source provides details for each space, including its UUID, name, visibility (private/public), and parent space (if any). The list of spaces is sorted by space UUID. It is useful for discovering existing spaces to use in other resources or data sources.\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "normalize_project_members": {
+      "description": "This function normalizes the members of a Lightdash project by role. If a user is assigned multiple roles within the project, they will only be listed under the single highest role they possess. The roles are ordered from highest to lowest precedence as admin, developer, editor, interactive viewer, and viewer. This function takes lists of user UUIDs for each role as input and returns lists of user UUIDs for each role after normalization, ensuring each user appears only once under their highest effective role.\n",
+      "summary": "Normalize the members of a project by role.",
+      "return_type": [
+        "object",
+        {
+          "admins": [
+            "list",
+            "string"
+          ],
+          "developers": [
+            "list",
+            "string"
+          ],
+          "editors": [
+            "list",
+            "string"
+          ],
+          "interactive_viewers": [
+            "list",
+            "string"
+          ],
+          "viewers": [
+            "list",
+            "string"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "name": "admins",
+          "description": "List of admin member UUIDs.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "developers",
+          "description": "List of developer member UUIDs.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "editors",
+          "description": "List of editor member UUIDs.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "interactive_viewers",
+          "description": "List of interactive viewer member UUIDs.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "viewers",
+          "description": "List of viewer member UUIDs.",
+          "type": [
+            "list",
+            "string"
+          ]
+        }
+      ]
+    }
+  }
+}

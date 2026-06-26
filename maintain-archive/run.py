@@ -5,6 +5,7 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 from collections import deque
 from datetime import datetime, timezone
@@ -32,6 +33,7 @@ BACKOFF_BASE = 30
 BACKOFF_CAP = 1800
 MAX_CONSECUTIVE_RETRIES = 10
 
+TICK_SECONDS = 30
 RESULT_COLUMN = 72
 SYMBOLS = {"done": "✅", "retry": "🕐", "failure": "☠️"}
 
@@ -158,9 +160,11 @@ def _interleave_random(queues: List[deque]) -> List[tuple]:
 
 
 class Signals:
-    def __init__(self):
+    def __init__(self, display: "Display"):
         self.count = 0
-        self.container: Optional[str] = None
+        self.__display = display
+        self.__containers: set = set()
+        self.__lock = threading.Lock()
 
     def install(self):
         signal.signal(signal.SIGINT, self.__handle)
@@ -168,18 +172,21 @@ class Signals:
     def __handle(self, signum, frame):
         self.count += 1
         if self.count == 1:
-            self.__notice("finishing current dump; press Ctrl-C again to abort now")
-        elif self.container is not None:
-            self.__notice("aborting current dump")
-            subprocess.run(["docker", "kill", self.container], capture_output=True)
-
-    def __notice(self, text: str):
-        "Print a message two lines below the in-progress line, then restore the cursor so it can finish."
-        if sys.stderr.isatty():
-            sys.stderr.write("\x1b7\x1b[2B\r\x1b[2K" + text + "\x1b8")
+            self.__display.message("finishing current dumps; press Ctrl-C again to abort now")
         else:
-            sys.stderr.write("\n" + text + "\n")
-        sys.stderr.flush()
+            self.__display.message("aborting current dumps")
+            with self.__lock:
+                containers = list(self.__containers)
+            for name in containers:
+                subprocess.run(["docker", "kill", name], capture_output=True)
+
+    def add_container(self, name: str):
+        with self.__lock:
+            self.__containers.add(name)
+
+    def remove_container(self, name: str):
+        with self.__lock:
+            self.__containers.discard(name)
 
     def stop_requested(self) -> bool:
         return self.count >= 1
@@ -199,11 +206,11 @@ def per_dump_timeout(deadline: Optional[float]) -> float:
     return max(1, min(DEFAULT_DUMP_TIMEOUT, deadline - monotonic()))
 
 
-def backoff(attempt: int, signals: Signals, deadline: Optional[float]):
+def backoff(attempt: int, stop):
     delay = min(BACKOFF_BASE * (2 ** (attempt - 1)), BACKOFF_CAP)
     waited = 0
     while waited < delay:
-        if signals.stop_requested() or (deadline is not None and monotonic() >= deadline):
+        if stop():
             return
         time.sleep(1)
         waited += 1
@@ -228,63 +235,157 @@ def write_outputs(provider: Provider, version: Version, result: dump.DumpResult)
         f.write("\n")
 
 
-class ProgressLine:
-    "Emits one stderr line per dump: `Archiving <addr>....<symbol>`, a dot per tick, result right-aligned."
+class Display:
+    "A live region drawn at the bottom: in-progress `Archiving …` lines, then any sticky footer messages, with the cursor resting at the start of the line below it. Completed dumps flush into permanent scrollback above the region; footer messages stay last. Each update redraws in place: cursor up to the top, rewrite, back down."
 
-    def __init__(self, text: str):
-        self.width = len(text)
-        print(text, end="", file=sys.stderr, flush=True)
+    def __init__(self, enabled: bool):
+        self.enabled = enabled
+        self.__lock = threading.Lock()
+        self.__active: Dict[int, dict] = {}
+        self.__footer: List[str] = []
+        self.__region = 0
+        self.__next = 0
+        self.__last: List[str] = []
 
-    def tick(self):
-        print(".", end="", file=sys.stderr, flush=True)
-        self.width += 1
+    def start(self, prefix: str) -> int:
+        with self.__lock:
+            slot = self.__next
+            self.__next += 1
+            self.__active[slot] = {"prefix": prefix, "start": monotonic()}
+            self.__redraw([])
+            return slot
 
-    def finish(self, symbol: str):
-        print(" " * max(1, RESULT_COLUMN - self.width) + symbol, file=sys.stderr, flush=True)
+    def finish(self, slot: int, symbol: str):
+        with self.__lock:
+            info = self.__active.pop(slot, None)
+            if info is not None:
+                self.__redraw([self.__line(info, symbol)])
+
+    def message(self, text: str):
+        with self.__lock:
+            if self.enabled:
+                self.__footer.append(text)
+                self.__redraw([])
+            else:
+                sys.stderr.write(text + "\n")
+                sys.stderr.flush()
+
+    def refresh(self):
+        with self.__lock:
+            if self.__active_lines() != self.__last:
+                self.__redraw([])
+
+    def __line(self, info: dict, symbol: Optional[str]) -> str:
+        text = info["prefix"] + "." * int((monotonic() - info["start"]) // TICK_SECONDS)
+        if symbol is None:
+            return text
+        return text + " " * max(1, RESULT_COLUMN - len(text)) + symbol
+
+    def __active_lines(self) -> List[str]:
+        return [self.__line(info, None) for info in self.__active.values()]
+
+    def __redraw(self, committed: List[str]):
+        active_lines = self.__active_lines()
+        if not self.enabled:
+            for line in committed:
+                sys.stderr.write(line + "\n")
+            if committed:
+                sys.stderr.flush()
+            self.__last = active_lines
+            return
+        drawn = active_lines + self.__footer
+        out = []
+        if self.__region:
+            out.append(f"\x1b[{self.__region}A")
+        for line in committed + drawn:
+            out.append("\r\x1b[2K" + line + "\n")
+        leftover = self.__region - (len(committed) + len(drawn))
+        if leftover > 0:
+            out.append("\r\x1b[2K\n" * leftover)
+            out.append(f"\x1b[{leftover}A")
+        out.append("\r")
+        sys.stderr.write("".join(out))
+        sys.stderr.flush()
+        self.__region = len(drawn)
+        self.__last = active_lines
 
 
-def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[int], signals: Signals):
+def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[int],
+              jobs: int, signals: Signals, display: Display):
     queue = build_queue(archive)
     if not queue:
         return
     dump.build_image()
-    dumped = 0
-    consecutive_retries = 0
-    for provider, version in queue:
-        if signals.stop_requested():
-            break
-        if deadline is not None and monotonic() >= deadline:
-            break
-        if max_count is not None and dumped >= max_count:
-            break
-        name = container_name(provider, version)
-        signals.container = name
-        line = ProgressLine(f"Archiving {provider.registry}/{provider.org}/{provider.name}@{version.version}")
-        result = dump.dump(
-            ProviderVersion(provider.registry, provider.org, provider.name, version.version),
-            name,
-            per_dump_timeout(deadline),
-            line.tick,
-        )
-        signals.container = None
-        if signals.aborted():
-            print(file=sys.stderr)
-            break
-        line.finish(SYMBOLS[result.status])
-        write_outputs(provider, version, result)
-        version.status = Status(result.status)
-        if version.status == Status.done:
-            update_latest_symlink(provider)
-        save_archive(archive)
-        dumped += 1
-        if result.status == "retry":
-            consecutive_retries += 1
-            if consecutive_retries >= MAX_CONSECUTIVE_RETRIES:
-                print("too many consecutive retryable errors; pausing", file=sys.stderr)
-                break
-            backoff(consecutive_retries, signals, deadline)
-        else:
-            consecutive_retries = 0
+
+    work = deque(queue)
+    state_lock = threading.Lock()
+    state = {"claimed": 0, "retries": 0, "stop": False}
+
+    def should_stop() -> bool:
+        return (signals.stop_requested() or state["stop"]
+                or (deadline is not None and monotonic() >= deadline))
+
+    def claim():
+        with state_lock:
+            if should_stop() or not work:
+                return None
+            if max_count is not None and state["claimed"] >= max_count:
+                return None
+            state["claimed"] += 1
+            return work.popleft()
+
+    def worker():
+        while True:
+            item = claim()
+            if item is None:
+                return
+            provider, version = item
+            pv = ProviderVersion(provider.registry, provider.org, provider.name, version.version)
+            name = container_name(provider, version)
+            slot = display.start(f"Archiving {provider.registry}/{provider.org}/{provider.name}@{version.version}")
+            signals.add_container(name)
+            result = dump.dump(pv, name, per_dump_timeout(deadline))
+            signals.remove_container(name)
+            if signals.aborted():
+                return
+            display.finish(slot, SYMBOLS[result.status])
+            with state_lock:
+                write_outputs(provider, version, result)
+                version.status = Status(result.status)
+                if version.status == Status.done:
+                    update_latest_symlink(provider)
+                save_archive(archive)
+                if result.status == "retry":
+                    state["retries"] += 1
+                    attempt = state["retries"]
+                    paused = attempt >= MAX_CONSECUTIVE_RETRIES
+                    state["stop"] = state["stop"] or paused
+                else:
+                    state["retries"] = 0
+                    attempt = 0
+                    paused = False
+            if paused:
+                display.message("too many consecutive retryable errors; pausing")
+            elif attempt and not should_stop():
+                backoff(attempt, should_stop)
+
+    ticker_stop = threading.Event()
+
+    def ticker():
+        while not ticker_stop.wait(1):
+            display.refresh()
+
+    ticker_thread = threading.Thread(target=ticker, name="ticker", daemon=True)
+    threads = [threading.Thread(target=worker, name=f"dump-{i}") for i in range(jobs)]
+    ticker_thread.start()
+    try:
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    finally:
+        ticker_stop.set()
+        ticker_thread.join()
 
 
 def update_latest_symlink(provider: Provider):
@@ -301,25 +402,35 @@ def update_latest_symlink(provider: Provider):
     os.symlink(os.path.relpath(target, os.path.dirname(link)), link)
 
 
+def positive_int(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be >= 1")
+    return value
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Maintain the Terraform provider schema archive.")
     parser.add_argument("--timeout", type=parse_duration, default=None,
                         help="stop after this long, e.g. 1h30m or 2m15s")
     parser.add_argument("--max", type=int, default=None,
                         help="stop after dumping this many provider versions")
+    parser.add_argument("--jobs", "-j", type=positive_int, default=1,
+                        help="number of dumps to run in parallel")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    signals = Signals()
+    display = Display(sys.stderr.isatty())
+    signals = Signals(display)
     signals.install()
     deadline = monotonic() + args.timeout if args.timeout is not None else None
 
     archive = load_archive()
     populate(archive)
     save_archive(archive)
-    run_dumps(archive, deadline, args.max, signals)
+    run_dumps(archive, deadline, args.max, args.jobs, signals, display)
 
 
 if __name__ == "__main__":

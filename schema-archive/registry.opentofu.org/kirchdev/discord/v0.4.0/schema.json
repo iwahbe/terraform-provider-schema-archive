@@ -1,0 +1,3252 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "audit_log_reason": {
+          "type": "string",
+          "description": "Reason recorded in the guild audit log (`X-Audit-Log-Reason`) for every change this provider makes. Defaults to `Managed by OpenTofu (terraform-provider-discord)`. Set to an empty string to disable. May also be set via `DISCORD_AUDIT_LOG_REASON`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Base URL of the Discord REST API. Defaults to `https://discord.com/api/v10`. May also be set via `DISCORD_ENDPOINT` (mainly for testing).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Discord bot token. The provider authenticates as `Bot <token>`. May also be set via the `DISCORD_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Manage [Discord](https://discord.com) guild infrastructure \u2014 servers, roles, channels, permissions, members, webhooks, events and moderation \u2014 as code. One bot token manages every guild the bot is a member of.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "discord_application_command": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_id": {
+            "type": "string",
+            "description": "Snowflake ID of the application (bot).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "contexts": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "Interaction contexts the command is available in (`0` guild, `1` bot DM, `2` private channel).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_member_permissions": {
+            "type": "string",
+            "description": "Permission bitfield (decimal string) a member needs to use the command. See the `discord_permission` data source.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Command description (required for CHAT_INPUT commands).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description_localizations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Localized command descriptions keyed by locale. Write-only \u2014 not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dm_permission": {
+            "type": "bool",
+            "description": "Whether the command is usable in DMs (global commands only).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild to scope the command to. Omit for a global command. Changing it replaces the command.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the command.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_types": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "Installation contexts where the command is available (`0` guild install, `1` user install).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Command name (1\u201332 chars).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name_localizations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Localized command names keyed by locale (e.g. `de`, `fr`). Write-only \u2014 not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the command is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "options_json": {
+            "type": "string",
+            "description": "Command options as a raw JSON array (Discord's `options` field). Write-only \u2014 sent on apply but not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "number",
+            "description": "Command type (`1` chat input, `2` user, `3` message). Changing it replaces the command.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages an application (slash) command. With `guild_id` set the command is registered to that guild; without it the command is registered globally.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_application_emoji": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "animated": {
+            "type": "bool",
+            "description": "Whether the emoji is animated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "application_id": {
+            "type": "string",
+            "description": "Snowflake ID of the application the emoji belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "available": {
+            "type": "bool",
+            "description": "Whether the emoji is available for use.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the emoji.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_data_uri": {
+            "type": "string",
+            "description": "Base64 image data URI for the emoji. Write-only: applied at creation and not refreshed from the API.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "managed": {
+            "type": "bool",
+            "description": "Whether the emoji is managed by an integration (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Emoji name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles allowed to use this emoji. Only settable on creation; changing it forces replacement.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages an emoji owned by a Discord application (bot).",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_auto_moderation_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "actions": {
+            "nested_type": {
+              "attributes": {
+                "channel_id": {
+                  "type": "string",
+                  "description": "Channel to log alerts to (action type send alert).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "custom_message": {
+                  "type": "string",
+                  "description": "Custom message shown when a message is blocked.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "duration_seconds": {
+                  "type": "number",
+                  "description": "Timeout duration in seconds (action type timeout).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "number",
+                  "description": "Action type (`1` block message, `2` send alert, `3` timeout).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Actions taken when the rule triggers.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "allow_list": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Substrings exempt from the trigger.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the rule is enabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "event_type": {
+            "type": "number",
+            "description": "Event that triggers the rule (`1` message send, `2` member update).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "exempt_channels": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Channel ids exempt from the rule.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "exempt_roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Role ids exempt from the rule.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the rule.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "keyword_filter": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Substrings to match (trigger type keyword).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mention_raid_protection_enabled": {
+            "type": "bool",
+            "description": "Whether to automatically detect and block mention raids (trigger type `5`, mention spam). Because Discord replaces `trigger_metadata` wholesale on every update, this provider always re-sends the managed value so the setting is never silently cleared.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mention_total_limit": {
+            "type": "number",
+            "description": "Max unique mentions per message (trigger type mention spam).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "presets": {
+            "type": [
+              "set",
+              "number"
+            ],
+            "description": "Keyword preset ids (`1` profanity, `2` sexual content, `3` slurs).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "regex_patterns": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Regular expressions to match (trigger type keyword).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "trigger_type": {
+            "type": "number",
+            "description": "Trigger type (`1` keyword, `3` spam, `4` keyword preset, `5` mention spam). Changing it replaces the rule.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an auto-moderation rule in a Discord guild. The `trigger_metadata` fields (`keyword_filter`, `regex_patterns`, `presets`, `allow_list`, `mention_total_limit`, `mention_raid_protection_enabled`) apply only to the relevant `trigger_type`.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_category_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a category channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_channel_order": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Snowflake IDs of the channels in the desired order (top to bottom). They should be siblings (share the same category, or all be top-level).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Snowflake ID of the category whose children are ordered. Omit to order the top level (categories and channels without a category). Used for import discovery.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Declaratively orders a list of sibling channels via Discord's bulk modify-channel-positions endpoint \u2014 the robust alternative to per-channel `position`. List the channels in the order you want; the resource assigns their relative positions and re-applies them on drift. Use one per category (its children) and one without `parent_id` for the top level (categories and uncategorised channels). Only the listed channels are touched, so it coexists with bot-managed channels.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_channel_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow": {
+            "type": "string",
+            "description": "Allowed permission bitfield as a decimal string. See the `discord_permission` data source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "deny": {
+            "type": "string",
+            "description": "Denied permission bitfield as a decimal string. See the `discord_permission` data source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "overwrite_id": {
+            "type": "string",
+            "description": "Snowflake ID of the target role or member.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Overwrite target type: `role` or `member`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a single permission overwrite on a Discord channel for one role or member.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_emoji": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "animated": {
+            "type": "bool",
+            "description": "Whether the emoji is animated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "available": {
+            "type": "bool",
+            "description": "Whether the emoji is available for use (may be false if the guild lost boosts).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the emoji.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_data_uri": {
+            "type": "string",
+            "description": "Base64 image data URI for the emoji. Write-only: applied at creation and not refreshed from the API.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Emoji name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles allowed to use this emoji.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a custom emoji within a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_forum_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "available_tags": {
+            "nested_type": {
+              "attributes": {
+                "emoji_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the tag's custom emoji.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "emoji_name": {
+                  "type": "string",
+                  "description": "Unicode emoji for the tag.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the tag (assigned by Discord).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "moderated": {
+                  "type": "bool",
+                  "description": "Whether only moderators can apply the tag.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Tag name.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Tags that can be applied to posts in the forum. Managed by value; Discord assigns the ids.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_forum_layout": {
+            "type": "number",
+            "description": "Default layout (`0` not set, `1` list, `2` gallery).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_reaction_emoji_id": {
+            "type": "string",
+            "description": "Snowflake ID of the default reaction emoji (custom emoji).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_reaction_emoji_name": {
+            "type": "string",
+            "description": "Unicode emoji used as the default reaction.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_sort_order": {
+            "type": "number",
+            "description": "Default sort order of posts (`0` latest activity, `1` creation date).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_thread_rate_limit_per_user": {
+            "type": "number",
+            "description": "Default slowmode (seconds) for new posts in the forum.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Forum guidelines (the channel topic).",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a forum channel (`GUILD_FORUM`) in a Discord guild, including its tags, default reaction, sort order and layout.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_forum_post": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived": {
+            "type": "bool",
+            "description": "Whether the post is archived.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_archive_duration": {
+            "type": "number",
+            "description": "Minutes of inactivity before the post is archived (60, 1440, 4320 or 10080).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the forum or media channel.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Body of the starting message.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the post (its thread, and starting message).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "locked": {
+            "type": "bool",
+            "description": "Whether the post is locked.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Post title (the thread name).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pinned": {
+            "type": "bool",
+            "description": "Whether the post is pinned in the forum.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rate_limit_per_user": {
+            "type": "number",
+            "description": "Slowmode in seconds within the post.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the forum tags applied to the post.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a post (a thread with a starting message) in a forum or media channel \u2014 for a fixed, declarative post such as a pinned info or guidelines thread. This is the only resource that manages message content; the bot needs `Read Message History` to refresh the content.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_guild_ban": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "delete_message_seconds": {
+            "type": "number",
+            "description": "Number of seconds of the user's recent messages to delete on ban (0\u2013604800). Applied only at creation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "reason": {
+            "type": "string",
+            "description": "Audit log reason for the ban. Applied only at creation and not refreshed from the API.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the user to ban.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Bans a user from a Discord guild. Destroying the resource unbans the user.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_guild_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "code": {
+            "type": "string",
+            "description": "Short template code used to share the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Template description.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Template name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the source guild the template is created from.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "usage_count": {
+            "type": "number",
+            "description": "Number of times the template has been used.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a guild template \u2014 a reusable snapshot of a Discord guild's structure.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_guild_widget": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the widget generates invites for.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the widget is enabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the widget settings of a Discord guild. The widget is a singleton on the guild; destroying this resource disables the widget.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_invite": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the invite points to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "code": {
+            "type": "string",
+            "description": "The invite code.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_age": {
+            "type": "number",
+            "description": "Duration of the invite in seconds before expiry (0 never expires).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "max_uses": {
+            "type": "number",
+            "description": "Maximum number of uses (0 is unlimited).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "temporary": {
+            "type": "bool",
+            "description": "Whether the invite grants temporary membership.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "unique": {
+            "type": "bool",
+            "description": "Whether to always create a new unique invite rather than reusing a similar one.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The full invite URL.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Creates an invite to a Discord channel. Invites are immutable: any change forces a new invite to be created.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_managed_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "afk_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the AFK voice channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "afk_timeout": {
+            "type": "number",
+            "description": "AFK timeout in seconds (60, 300, 900, 1800 or 3600).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "banner_data_uri": {
+            "type": "string",
+            "description": "Guild banner image as a base64 data URI (e.g. from `discord_local_file`). Write-only; see `icon_data_uri`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "banner_hash": {
+            "type": "string",
+            "description": "Current guild banner hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_message_notifications": {
+            "type": "number",
+            "description": "Default message notification level (`0` = all messages, `1` = only mentions).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Guild description (Community guilds).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "discovery_splash_data_uri": {
+            "type": "string",
+            "description": "Discovery splash image as a base64 data URI (Discoverable guilds). Write-only; see `icon_data_uri`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "discovery_splash_hash": {
+            "type": "string",
+            "description": "Current discovery splash hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "explicit_content_filter": {
+            "type": "number",
+            "description": "Explicit content filter level (`0` disabled, `1` members without roles, `2` all members).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "features": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Enabled guild feature flags (e.g. `COMMUNITY`, `NEWS`, `BANNER`). Read-only \u2014 Discord mixes mutable and immutable features, so toggling them (e.g. enabling Community) is not exposed here.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "icon_data_uri": {
+            "type": "string",
+            "description": "Guild icon as a base64 data URI (e.g. from `discord_local_image`). Write-only input; Discord stores it and returns a hash in `icon_hash`. Not refreshed from the API, so it never drifts.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "icon_hash": {
+            "type": "string",
+            "description": "Current guild icon hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Guild ID (equal to `server_id`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Guild name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild owner. Changing it transfers ownership (only possible if the bot is the current owner).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "preferred_locale": {
+            "type": "string",
+            "description": "Preferred locale of a Community guild (e.g. `en-US`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "premium_progress_bar_enabled": {
+            "type": "bool",
+            "description": "Whether the boost progress bar is shown.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "public_updates_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the public updates channel (Community guilds).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Voice region id (deprecated by Discord; channel-level now).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rules_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the rules channel (Community guilds).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "safety_alerts_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the safety alerts channel (Community guilds).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild to manage.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "splash_data_uri": {
+            "type": "string",
+            "description": "Invite splash image as a base64 data URI. Write-only input; see `icon_data_uri`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "splash_hash": {
+            "type": "string",
+            "description": "Current invite splash hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "system_channel_flags": {
+            "type": "number",
+            "description": "System channel flags bitfield (e.g. suppress join / boost notifications).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "system_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the system message channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "vanity_url_code": {
+            "type": "string",
+            "description": "The guild's vanity invite code (Boost level 3). Read-only \u2014 Discord has no API to set it; surfaced here so it can be referenced.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "verification_level": {
+            "type": "number",
+            "description": "Verification level (`0` none \u2026 `4` highest).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the settings of an **existing** Discord guild (server). A bot cannot create or delete a guild, so this resource adopts a live guild: import it first, then manage its settings. Destroying the resource only removes it from state \u2014 the guild is left intact. Use `prevent_destroy`.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_media_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category channel.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_thread_rate_limit_per_user": {
+            "type": "number",
+            "description": "Initial slowmode (in seconds) for newly created threads in the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update. Conflicts with explicit `discord_channel_permission` overwrites on the same channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Channel topic.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a media channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_member_nickname": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "nick": {
+            "type": "string",
+            "description": "Nickname to set for the member.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the member's user.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the nickname of a guild member. Applying sets the member's nickname; destroying clears it back to the user's default name.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_member_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "role_id": {
+            "type": "string",
+            "description": "Snowflake ID of the role to assign.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the member's user.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Assigns a single role to a guild member, non-authoritatively. It manages only this one `(member, role)` pair and leaves the member's other roles alone \u2014 so it coexists with bots that also grant roles. For exclusive ownership of a member's entire role set, use `discord_member_roles` instead.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_member_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles the member should have (excluding `@everyone`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the member's user.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Authoritatively manages the set of roles assigned to a guild member. This resource owns the member's full role set (excluding the implicit `@everyone` role): it sets exactly the listed roles and clears them on destroy. Roles not listed here are **removed** from the member.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_member_verification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Server description shown on the screening form.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the membership screening gate is enabled. Write-only \u2014 Discord does not return it, so it is not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "form_fields": {
+            "nested_type": {
+              "attributes": {
+                "field_type": {
+                  "type": "string",
+                  "description": "Field type (currently only `TERMS` is supported by Discord). Defaults to `TERMS`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Title of the field (e.g. \"Read and agree to the server rules\").",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the member has to agree to this field. Defaults to `true`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Ordered list of rule strings shown for a `TERMS` field.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Ordered fields of the screening form. The classic rules gate is a single field of type `TERMS` whose `values` are the rules.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the membership screening (\"Server Rules\") of a Community Discord guild (a singleton per guild) \u2014 the gate where new members must agree to the rules before they can chat. The rules are the `values` of a `TERMS` form field. The bot needs the **Manage Server** permission, and screening only applies to Community guilds.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_news_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category channel.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_auto_archive_duration": {
+            "type": "number",
+            "description": "Default minutes of inactivity before threads in this channel are archived (60, 1440, 4320 or 10080).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update. Conflicts with explicit `discord_channel_permission` overwrites on the same channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Channel topic.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a news channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "number",
+            "description": "Role color as a decimal RGB integer (`0` leaves the color unset). See the `discord_color` data source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Role description.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hoist": {
+            "type": "bool",
+            "description": "Whether the role is shown separately in the member list.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "icon_data_uri": {
+            "type": "string",
+            "description": "Role icon image as a base64 data URI (needs the `ROLE_ICONS` guild feature; mutually exclusive with `unicode_emoji`). Write-only; Discord returns a hash in `icon_hash`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "icon_hash": {
+            "type": "string",
+            "description": "Current role icon hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "managed": {
+            "type": "bool",
+            "description": "Whether the role is managed by an integration (read-only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mentionable": {
+            "type": "bool",
+            "description": "Whether the role can be mentioned by anyone.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "permissions": {
+            "type": "string",
+            "description": "Permission bitfield as a decimal string. See the `discord_permission` data source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Position of the role in the hierarchy (higher is more senior). Discord assigns one on create; set this to enforce a position.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the role belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "unicode_emoji": {
+            "type": "string",
+            "description": "Standard unicode emoji shown as the role's icon (needs the `ROLE_ICONS` guild feature).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a role within a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_role_everyone": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Role ID (equal to `server_id`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "type": "string",
+            "description": "Permission bitfield as a decimal string. See the `discord_permission` data source.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild. Also the id of the `@everyone` role.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the `@everyone` base role of a Discord guild. This role always exists and cannot be created or deleted \u2014 its id equals the guild id. Destroying the resource only removes it from state; the role's permissions are left as they are.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_role_order": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "role_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles from highest to lowest in the hierarchy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Declaratively orders roles in the guild hierarchy via Discord's modify-role-positions endpoint \u2014 the robust alternative to per-role `position`. List the roles from **highest to lowest** (top to bottom, as the role list reads); the resource sets their relative positions and re-applies on drift. Only the listed roles are touched. The bot can only reorder roles **below its own highest role**, and the `@everyone` role cannot be moved \u2014 do not list it. Leave per-role `position` unset and order here.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_scheduled_event": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the event is hosted in (required for stage and voice events).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the event.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "entity_type": {
+            "type": "number",
+            "description": "Type of the event: 1 (stage instance), 2 (voice), or 3 (external).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the scheduled event.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_data_uri": {
+            "type": "string",
+            "description": "Cover image as a base64 data URI (e.g. from `discord_local_file`). Write-only; Discord returns a hash in `image_hash`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "image_hash": {
+            "type": "string",
+            "description": "Current cover image hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "Location of an external event (maps to `entity_metadata.location`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the event.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "privacy_level": {
+            "type": "number",
+            "description": "Privacy level of the event (2 = guild only).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "recurrence_rule_json": {
+            "type": "string",
+            "description": "Recurrence rule for a recurring event, as a raw JSON object (Discord's `recurrence_rule`). Write-only \u2014 sent on apply but not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scheduled_end_time": {
+            "type": "string",
+            "description": "ISO 8601 timestamp at which the event ends (required for external events).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scheduled_start_time": {
+            "type": "string",
+            "description": "ISO 8601 timestamp at which the event starts.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "number",
+            "description": "Status of the event: 1 (scheduled), 2 (active), 3 (completed), 4 (cancelled).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a scheduled event within a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_server_onboarding": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_channel_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Channel ids members are opted into by default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether onboarding is enabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mode": {
+            "type": "number",
+            "description": "Onboarding mode (`0` default, `1` advanced).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "prompts": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the prompt, assigned by Discord.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "in_onboarding": {
+                  "type": "bool",
+                  "description": "Whether the prompt appears in the onboarding flow (vs. only in Channels & Roles).",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "options": {
+                  "nested_type": {
+                    "attributes": {
+                      "channel_ids": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "Channel ids a member is opted into when selecting this option.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Option description.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "emoji_id": {
+                        "type": "string",
+                        "description": "Snowflake ID of a custom emoji shown next to the option.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "emoji_name": {
+                        "type": "string",
+                        "description": "Unicode emoji (or the name of a custom emoji) shown next to the option.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Snowflake ID of the option, assigned by Discord.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "role_ids": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description": "Role ids granted when selecting this option.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Option title.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Selectable options for the prompt.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "required": {
+                  "type": "bool",
+                  "description": "Whether the prompt must be answered to finish onboarding.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "single_select": {
+                  "type": "bool",
+                  "description": "Whether only a single option may be selected.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Prompt title.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "number",
+                  "description": "Prompt type (`0` multiple choice, `1` dropdown).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Ordered onboarding prompts shown to new members.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the onboarding configuration of a Community Discord guild (a singleton per guild). The `prompts` tree, `enabled`, `mode` and `default_channel_ids` are all refreshed from the API so drift is detected.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_soundboard_sound": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "available": {
+            "type": "bool",
+            "description": "Whether the sound is available for use (may be false if the guild lost boosts).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "emoji_id": {
+            "type": "string",
+            "description": "Snowflake ID of a custom emoji shown for the sound.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "emoji_name": {
+            "type": "string",
+            "description": "Unicode emoji shown for the sound.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the soundboard sound.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Sound name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the sound belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sound_data_uri": {
+            "type": "string",
+            "description": "Base64 data URI of the sound file (mp3 or ogg). Write-only: uploaded at creation and not refreshed from the API.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "volume": {
+            "type": "number",
+            "description": "Playback volume of the sound, between 0 and 1.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a soundboard sound within a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_stage_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitrate": {
+            "type": "number",
+            "description": "Bitrate (in bits) of the stage channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category channel.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rtc_region": {
+            "type": "string",
+            "description": "Voice region id for the channel; null sets it to automatic.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update. Conflicts with explicit `discord_channel_permission` overwrites on the same channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user_limit": {
+            "type": "number",
+            "description": "Maximum number of users allowed in the stage channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "video_quality_mode": {
+            "type": "number",
+            "description": "Camera video quality mode (`1` auto, `2` full 720p).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a stage channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_stage_instance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the stage channel the stage instance lives on.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the stage instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "privacy_level": {
+            "type": "number",
+            "description": "Privacy level of the stage instance (`1` public, `2` guild-only). Defaults to `2`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Topic of the stage instance (the headline shown to listeners).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a live stage instance on a Discord stage channel.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_sticker": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "available": {
+            "type": "bool",
+            "description": "Whether the sticker is available for use (may be false if the guild lost boosts).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Sticker description (may be empty).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "file_data_uri": {
+            "type": "string",
+            "description": "Base64 data URI of the sticker file. Write-only: uploaded at creation and not refreshed from the API. The API cannot change the file after create.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "format_type": {
+            "type": "number",
+            "description": "Format of the sticker (`1` PNG, `2` APNG, `3` Lottie, `4` GIF).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the sticker.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Sticker name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the sticker belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tags": {
+            "type": "string",
+            "description": "Autocomplete/suggestion tags for the sticker.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a custom sticker within a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_text_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category channel.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_auto_archive_duration": {
+            "type": "number",
+            "description": "Default minutes of inactivity before threads in this channel are archived (60, 1440, 4320 or 10080).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rate_limit_per_user": {
+            "type": "number",
+            "description": "Slowmode in seconds (0\u201321600).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update. Conflicts with explicit `discord_channel_permission` overwrites on the same channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Channel topic.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a text channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_thread": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archived": {
+            "type": "bool",
+            "description": "Whether the thread is archived.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_archive_duration": {
+            "type": "number",
+            "description": "Minutes of inactivity before the thread is archived (60, 1440, 4320, or 10080).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the parent channel the thread is created in.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the thread.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "invitable": {
+            "type": "bool",
+            "description": "Whether non-moderators can add other members to a private thread.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "locked": {
+            "type": "bool",
+            "description": "Whether the thread is locked (only moderators can unarchive it).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Thread name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "rate_limit_per_user": {
+            "type": "number",
+            "description": "Slowmode in seconds (0\u201321600).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a thread within a Discord text or announcement channel.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_voice_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bitrate": {
+            "type": "number",
+            "description": "Bitrate (in bits) of the voice channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category channel.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is age-restricted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Sorting position of the channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "rtc_region": {
+            "type": "string",
+            "description": "Voice region id for the channel; null sets it to automatic.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "sync_perms_with_category": {
+            "type": "bool",
+            "description": "When true, the channel's permission overwrites are synced to its parent category on create/update. Conflicts with explicit `discord_channel_permission` overwrites on the same channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user_limit": {
+            "type": "number",
+            "description": "Maximum number of users allowed in the voice channel.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "video_quality_mode": {
+            "type": "number",
+            "description": "Camera video quality mode (`1` auto, `2` full 720p).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a voice channel in a Discord guild.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_data_uri": {
+            "type": "string",
+            "description": "Base64 image data URI for the webhook avatar. Write-only: not refreshed from the API.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the webhook posts to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the webhook's channel belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the webhook.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the webhook.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Secret token used to execute the webhook.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The full webhook execution URL.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages a webhook attached to a Discord channel.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_welcome_screen": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Server description shown on the welcome screen.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the welcome screen is shown. Write-only \u2014 Discord does not return it, so it is not refreshed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "welcome_channels": {
+            "nested_type": {
+              "attributes": {
+                "channel_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the channel.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description shown for the channel.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "emoji_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of a custom emoji.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "emoji_name": {
+                  "type": "string",
+                  "description": "Unicode emoji.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Channels highlighted on the welcome screen (max 5).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages the welcome screen of a Community Discord guild (a singleton per guild).",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "discord_application": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bot_id": {
+            "type": "string",
+            "description": "Snowflake ID of the application's bot user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Application description.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID of the application.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Application name.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Reads the bot's own Discord application. Use its `id` for `discord_application_command` instead of hardcoding the application id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_application_command": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "application_id": {
+            "type": "string",
+            "description": "Snowflake ID of the application that owns the command.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "command_id": {
+            "type": "string",
+            "description": "Snowflake ID of the command.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Command description.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild for a guild-scoped command. Leave null for a global command.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Command name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "number",
+            "description": "Command type.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single application (slash) command by id. With `guild_id` set the guild-scoped command is read; otherwise the global command is read.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_bans": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bans": {
+            "nested_type": {
+              "attributes": {
+                "reason": {
+                  "type": "string",
+                  "description": "Reason the user was banned.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the banned user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Bans of the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches the bans of a Discord guild (server). Returns a single page of up to 1000 bans; it does not paginate further.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": "string",
+            "description": "Snowflake ID of the parent category, if any.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "nsfw": {
+            "type": "bool",
+            "description": "Whether the channel is marked NSFW.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Position of the channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the channel belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Channel topic.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "number",
+            "description": "Channel type id.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Discord channel by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_channels": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channels": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the channel.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Channel name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "nsfw": {
+                  "type": "bool",
+                  "description": "Whether the channel is age-restricted.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "parent_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the parent category.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "position": {
+                  "type": "number",
+                  "description": "Sorting position of the channel.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "topic": {
+                  "type": "string",
+                  "description": "Channel topic.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "number",
+                  "description": "Channel type.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Channels of the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches all channels of a Discord guild (server).",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_color": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dec": {
+            "type": "number",
+            "description": "Decimal RGB integer.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hex": {
+            "type": "string",
+            "description": "Hex color string, e.g. `#5865F2` or `5865F2`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "rgb": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "RGB triple as `[r, g, b]`, each 0\u2013255.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Converts a color into the decimal RGB integer Discord uses (e.g. for `discord_role.color`). Provide exactly one of `hex` or `rgb`.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_emoji": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "animated": {
+            "type": "bool",
+            "description": "Whether the emoji is animated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "available": {
+            "type": "bool",
+            "description": "Whether the emoji is available for use.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "emoji_id": {
+            "type": "string",
+            "description": "Snowflake ID of the emoji.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "managed": {
+            "type": "bool",
+            "description": "Whether the emoji is managed by an integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Emoji name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles allowed to use the emoji.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the emoji belongs to.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches a single custom emoji from a Discord guild by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_emojis": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "emojis": {
+            "nested_type": {
+              "attributes": {
+                "animated": {
+                  "type": "bool",
+                  "description": "Whether the emoji is animated.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "available": {
+                  "type": "bool",
+                  "description": "Whether the emoji is available for use.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the emoji.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "managed": {
+                  "type": "bool",
+                  "description": "Whether the emoji is managed by an integration.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Emoji name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Custom emojis of the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches all custom emojis of a Discord guild (server).",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_invite": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the invite points to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Invite code.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the invite belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_age": {
+            "type": "number",
+            "description": "Duration in seconds after which the invite expires (0 never expires).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_uses": {
+            "type": "number",
+            "description": "Maximum number of uses (0 is unlimited).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "temporary": {
+            "type": "bool",
+            "description": "Whether the invite grants temporary membership.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Full invite URL.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "uses": {
+            "type": "number",
+            "description": "Number of times the invite has been used.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Discord invite by its code.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_local_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_uri": {
+            "type": "string",
+            "description": "The file as a `data:<mime>;base64,...` URI.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mime": {
+            "type": "string",
+            "description": "Mime type to use. Defaults to one detected from the file extension.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to the local file.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Reads a local file into a base64 data URI for the provider's `*_data_uri` attributes (images, audio, sticker files). The mime type is detected from the file extension unless `mime` is set.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_local_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_uri": {
+            "type": "string",
+            "description": "Base64 data URI of the image, e.g. `data:image/png;base64,...`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to a local image file (`.png`, `.jpg`/`.jpeg`, or `.gif`).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Reads a local image file and produces the base64 data URI the icon/avatar/emoji `*_data_uri` attributes expect.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "global_name": {
+            "type": "string",
+            "description": "Account display (global) name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "nick": {
+            "type": "string",
+            "description": "Member nickname in the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Snowflake IDs of the roles assigned to the member.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the user.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Account username.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Discord guild member by user id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_members": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "nick": {
+                  "type": "string",
+                  "description": "Guild-specific nickname of the member.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "roles": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Snowflake IDs of the roles assigned to the member.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the member's user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Members of the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches the members of a Discord guild (server). This requires the `GUILD_MEMBERS` privileged intent to be enabled for the bot. Returns a single page of up to 1000 members; it does not paginate further.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Permission keys to set in the allow bitfield.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "allow_bits": {
+            "type": "string",
+            "description": "Decimal bitfield of the `allow` permission keys. `0` when `allow` is empty.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deny": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Permission keys to set in the deny bitfield.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "deny_bits": {
+            "type": "string",
+            "description": "Decimal bitfield of the `deny` permission keys. `0` when `deny` is empty.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Computes Discord permission bitfields from named permission keys. Set `allow` and/or `deny` to lists of permission keys and read back the decimal `allow_bits` / `deny_bits` to feed into `discord_role.permissions`, `discord_role_everyone.permissions` or a `discord_channel_permission` overwrite \u2014 no magic decimal masks.\n\nSupported permission keys: `add_reactions`, `administrator`, `attach_files`, `ban_members`, `bypass_slowmode`, `change_nickname`, `connect`, `create_events`, `create_expressions`, `create_instant_invite`, `create_private_threads`, `create_public_threads`, `deafen_members`, `embed_links`, `kick_members`, `manage_channels`, `manage_emojis`, `manage_events`, `manage_guild`, `manage_messages`, `manage_nicknames`, `manage_roles`, `manage_threads`, `manage_webhooks`, `mention_everyone`, `moderate_members`, `move_members`, `mute_members`, `pin_messages`, `priority_speaker`, `read_message_history`, `request_to_speak`, `send_messages`, `send_polls`, `send_thread_messages`, `send_tts_messages`, `send_voice_messages`, `set_voice_channel_status`, `speak`, `start_embedded_activities`, `stream`, `use_application_commands`, `use_external_apps`, `use_external_emojis`, `use_external_sounds`, `use_external_stickers`, `use_soundboard`, `use_vad`, `view_audit_log`, `view_channel`, `view_guild_insights`, `view_monetization_analytics`.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "number",
+            "description": "Decimal RGB color of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "hoist": {
+            "type": "bool",
+            "description": "Whether the role is displayed separately in the member list.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "managed": {
+            "type": "bool",
+            "description": "Whether the role is managed by an integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mentionable": {
+            "type": "bool",
+            "description": "Whether the role is mentionable.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "type": "string",
+            "description": "Permission bitfield as a decimal string.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "position": {
+            "type": "number",
+            "description": "Position of the role in the hierarchy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "Snowflake ID of the role.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches a single Discord role within a guild by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "color": {
+                  "type": "number",
+                  "description": "Integer representation of the role color.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "hoist": {
+                  "type": "bool",
+                  "description": "Whether the role is displayed separately in the member list.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Snowflake ID of the role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "managed": {
+                  "type": "bool",
+                  "description": "Whether the role is managed by an integration.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mentionable": {
+                  "type": "bool",
+                  "description": "Whether the role can be mentioned.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Role name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": "string",
+                  "description": "Permission bit set as a string.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "position": {
+                  "type": "number",
+                  "description": "Sorting position of the role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Roles of the guild.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches all roles of a Discord guild (server).",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_server": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "afk_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the AFK channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "afk_timeout": {
+            "type": "number",
+            "description": "AFK timeout in seconds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Guild description.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "icon_hash": {
+            "type": "string",
+            "description": "Guild icon hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Guild name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "Snowflake ID of the owner.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "preferred_locale": {
+            "type": "string",
+            "description": "Preferred locale.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "premium_progress_bar_enabled": {
+            "type": "bool",
+            "description": "Whether the boost progress bar is enabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "rules_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the rules channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "splash_hash": {
+            "type": "string",
+            "description": "Invite splash hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "system_channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the system channel.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "verification_level": {
+            "type": "number",
+            "description": "Verification level.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Discord guild (server) by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_hash": {
+            "type": "string",
+            "description": "Avatar hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "bot": {
+            "type": "bool",
+            "description": "Whether the user is a bot.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "discriminator": {
+            "type": "string",
+            "description": "Legacy four-digit discriminator.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "global_name": {
+            "type": "string",
+            "description": "Account display (global) name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Snowflake ID of the user.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Account username.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single Discord user by id.",
+        "description_kind": "markdown"
+      }
+    },
+    "discord_webhook": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_hash": {
+            "type": "string",
+            "description": "Webhook avatar hash.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Snowflake ID of the channel the webhook posts to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "guild_id": {
+            "type": "string",
+            "description": "Snowflake ID of the guild the webhook belongs to.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Webhook name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "type": {
+            "type": "number",
+            "description": "Webhook type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Webhook execution URL (only available for incoming webhooks with a token).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "webhook_id": {
+            "type": "string",
+            "description": "Snowflake ID of the webhook.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Fetches a single Discord webhook by id.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

@@ -80,8 +80,8 @@ We write `stdout.txt` & `stderr.txt` for all attempts, regardless of success or 
 
 ## Orchestration and ordering
 
-A run proceeds in three steps: discover providers, dump schemas, then rebuild the
-`schema-latest/` view.
+A run proceeds in two steps: discover providers, then dump schemas (updating the
+`schema-latest/` view as each dump succeeds).
 
 Discovery drives every registry adapter. Each adapter calls back for every provider
 version it finds. The engine records previously unseen versions as `pending` and
@@ -102,6 +102,12 @@ always outranks a pre-release (a version with a `-` segment, like `v4.5.0-beta.1
 pre-releases falls back to its highest pre-release. The same rule chooses the
 `schema-latest/` symlink target.
 
+`--jobs <n>` (`-j`, default 1) runs up to `n` dumps in parallel. Workers pull from the
+shared queue in the order above, so the latest-released-first / random-provider
+semantics are preserved; the shared archive, checkpoint, symlinks, and `--max` counter
+are guarded by a lock. Each in-flight dump occupies its own live line, and the cursor
+rests at the start of the line below the live region.
+
 A run stops at the first of these to occur:
 
 - `--timeout <duration>` elapses (e.g. `1h30m`, `2m15s`).
@@ -115,8 +121,8 @@ flag the run continues until the queue drains.
 
 Interrupts are honored between and during dumps:
 
-- One `Ctrl-C` finishes the in-flight dump, checkpoints, and exits.
-- A second `Ctrl-C` aborts the in-flight dump immediately.
+- One `Ctrl-C` lets the in-flight dumps finish and checkpoint, then exits.
+- A second `Ctrl-C` aborts all in-flight dumps immediately.
 
 Repeated retryable (e.g. rate-limit) errors trigger exponential backoff so the
 registry's download limits are respected.

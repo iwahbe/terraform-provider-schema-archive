@@ -3,14 +3,12 @@ import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
-from time import monotonic
-from typing import Callable, Optional
+from typing import Optional
 
 from registry import ProviderVersion
 
 IMAGE = "terraform-schema-archive-dump"
 _DOCKERFILE_DIR = os.path.dirname(__file__)
-TICK_SECONDS = 30
 
 _RETRYABLE_MARKERS = (
     "429",
@@ -57,8 +55,7 @@ def build_image():
     )
 
 
-def dump(pv: ProviderVersion, container_name: str, timeout: float,
-         on_tick: Optional[Callable[[], None]] = None) -> DumpResult:
+def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult:
     source = f"{pv.registry}/{pv.org}/{pv.provider}"
     version = pv.version[1:] if pv.version.startswith("v") else pv.version
     with tempfile.TemporaryDirectory() as work:
@@ -77,18 +74,12 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float,
         timed_out = False
         with open(out_path, "w") as out, open(err_path, "w") as err:
             proc = subprocess.Popen(cmd, stdout=out, stderr=err, start_new_session=True)
-            deadline = monotonic() + timeout
-            while proc.poll() is None:
-                if monotonic() >= deadline:
-                    subprocess.run(["docker", "kill", container_name], capture_output=True)
-                    proc.wait()
-                    timed_out = True
-                    break
-                try:
-                    proc.wait(timeout=min(TICK_SECONDS, deadline - monotonic()))
-                except subprocess.TimeoutExpired:
-                    if on_tick is not None:
-                        on_tick()
+            try:
+                proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                subprocess.run(["docker", "kill", container_name], capture_output=True)
+                proc.wait()
+                timed_out = True
 
         stdout, stderr = _read(out_path), _read(err_path)
         if timed_out:
