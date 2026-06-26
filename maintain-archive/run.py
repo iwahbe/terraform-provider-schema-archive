@@ -6,9 +6,10 @@ import signal
 import subprocess
 import sys
 import time
+from collections import deque
 from datetime import datetime, timezone
 from enum import Enum
-from random import shuffle
+from random import randrange, shuffle
 from time import monotonic
 from typing import Annotated, Dict, List, Optional
 
@@ -73,6 +74,16 @@ def version_key(version: str):
         return (0, text)
 
 
+def is_prerelease(version: str) -> bool:
+    text = version[1:] if version.startswith("v") else version
+    return "-" in text.split("+", 1)[0]
+
+
+def latest_key(version: str):
+    "OpenTofu's notion of latest: released versions outrank pre-releases, then by version."
+    return (not is_prerelease(version), version_key(version))
+
+
 def load_archive() -> Archive:
     if not os.path.exists(ARCHIVE_JSON):
         return Archive(crawl_state={}, status=[])
@@ -116,17 +127,34 @@ def populate(archive: Archive):
 
 
 def build_queue(archive: Archive) -> List[tuple]:
-    "Latest undumped version of each provider first (randomly sampled), then older versions."
+    "Each provider's latest released version first, then older versions backfilled latest-first; the provider worked on is random throughout."
     latest: List[tuple] = []
-    older: List[tuple] = []
+    backfill: List[deque] = []
     for provider in archive.status:
-        ordered = sorted(provider.versions, key=lambda v: version_key(v.version), reverse=True)
-        for i, version in enumerate(ordered):
-            if version.status in (Status.pending, Status.retry):
-                (latest if i == 0 else older).append((provider, version))
+        if not provider.versions:
+            continue
+        top = max(provider.versions, key=lambda v: latest_key(v.version))
+        if top.status in (Status.pending, Status.retry):
+            latest.append((provider, top))
+        rest = [v for v in provider.versions
+                if v is not top and v.status in (Status.pending, Status.retry)]
+        rest.sort(key=lambda v: latest_key(v.version), reverse=True)
+        if rest:
+            backfill.append(deque((provider, v) for v in rest))
     shuffle(latest)
-    shuffle(older)
-    return latest + older
+    return latest + _interleave_random(backfill)
+
+
+def _interleave_random(queues: List[deque]) -> List[tuple]:
+    "Drain per-provider latest-first queues, taking from a random provider at each step."
+    queues = [q for q in queues if q]
+    result: List[tuple] = []
+    while queues:
+        i = randrange(len(queues))
+        result.append(queues[i].popleft())
+        if not queues[i]:
+            queues.pop(i)
+    return result
 
 
 class Signals:
@@ -264,7 +292,7 @@ def update_latest_symlink(provider: Provider):
     done = [v for v in provider.versions if v.status == Status.done]
     if not done:
         return
-    latest = max(done, key=lambda v: version_key(v.version))
+    latest = max(done, key=lambda v: latest_key(v.version))
     link = os.path.join(SCHEMA_LATEST, provider.registry, provider.org, provider.name)
     target = os.path.join(SCHEMA_ARCHIVE, provider.registry, provider.org, provider.name, latest.version)
     os.makedirs(os.path.dirname(link), exist_ok=True)

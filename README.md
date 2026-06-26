@@ -89,10 +89,18 @@ never downgrades a version that already carries a terminal status, so discovery 
 idempotent.
 
 The work queue is every version whose status is `pending` or `retry`. It is ordered
-so that the **latest version of each provider is dumped first**: the engine randomly
-samples among providers whose latest version is still undumped. Only once every
-provider's latest version has been sampled does it back-fill older versions, again by
-random sampling.
+so that the **latest released version of each provider is dumped first**: the engine
+randomly samples among providers whose latest released version is still undumped. Only
+once every provider's latest released version has been sampled does it back-fill older
+versions. Back-fill is **latest-first within each provider**, but the provider worked on
+at each step is chosen at random, so newer versions are archived before older ones
+without hammering a single provider's releases back-to-back.
+
+"Latest released" copies OpenTofu's default version selection: a released version
+always outranks a pre-release (a version with a `-` segment, like `v4.5.0-beta.17`), so
+`v4.4.0` is treated as newer than `v4.5.0-beta.17`. A provider whose only versions are
+pre-releases falls back to its highest pre-release. The same rule chooses the
+`schema-latest/` symlink target.
 
 A run stops at the first of these to occur:
 
