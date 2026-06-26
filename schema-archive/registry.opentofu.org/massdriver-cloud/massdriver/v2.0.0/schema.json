@@ -1,0 +1,532 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Massdriver API key \u2014 a service account token or a personal access token (`mds_` / `md_` prefix). Overrides `MASSDRIVER_API_KEY`. Keep this out of version control; prefer the env var or `TF_VAR_*` for production setups.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "organization_id": {
+          "type": "string",
+          "description": "Massdriver organization ID this provider operates against. Overrides `MASSDRIVER_ORGANIZATION_ID`.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "url": {
+          "type": "string",
+          "description": "Massdriver API base URL. Overrides `MASSDRIVER_URL`. Only set when targeting a self-hosted instance.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "massdriver_component": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value attributes assigned to this component. Used by the platform to compute permissions and policy. Required keys are configured per-organization in the Massdriver console \u2014 missing or unknown keys surface as API errors at apply time. Drift is always surfaced; console edits are reverted on the next apply.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "bundle_name": {
+            "type": "string",
+            "description": "Name of the bundle (OCI repository) backing this component.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the component's purpose. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Short, immutable identifier for this component. Composed with parent identifiers to form the platform ID. Max 20 characters, lowercase alphanumeric (a-z, 0-9).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the component. Defaults to `identifier` if unset. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the project this component belongs to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A component slot in a project's blueprint, backed by a bundle (OCI repository).",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_component_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "from_component_id": {
+            "type": "string",
+            "description": "ID of the source (producer) component.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "from_field": {
+            "type": "string",
+            "description": "Output field name on the source component.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "from_version": {
+            "type": "string",
+            "description": "Bundle version constraint used **only at Create time** to validate that `from_field` exists on the source bundle. Once the API has validated the link, the version is discarded \u2014 the persisted link is versionless and applies to every deployed instance whose bundle exposes `from_field` under that name. Defaults to `latest+dev`, which is the right choice for almost every case; the only reason to set this explicitly is to validate against a historical bundle version that uses a field name no longer present in `latest`. Changes to this attribute after Create are ignored (no diff, no recreate).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the project this link lives in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "to_component_id": {
+            "type": "string",
+            "description": "ID of the destination (consumer) component.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "to_field": {
+            "type": "string",
+            "description": "Input field name on the destination component.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "to_version": {
+            "type": "string",
+            "description": "Bundle version constraint used **only at Create time** to validate that `to_field` exists on the destination bundle. Once the API has validated the link, the version is discarded \u2014 the persisted link is versionless and applies to every deployed instance whose bundle exposes `to_field` under that name. Defaults to `latest+dev`, which is the right choice for almost every case; the only reason to set this explicitly is to validate against a historical bundle version that uses a field name no longer present in `latest`. Changes to this attribute after Create are ignored (no diff, no recreate).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A link in a project's blueprint that connects one component's output field to another component's input field. Links are design-time wiring on the canvas \u2014 when the linked components are deployed in an environment, the platform automatically connects each producing instance's output to the corresponding consuming instance's input. Links are versionless: a single `massdriver_component_link` applies to every deployed bundle version that still exposes `from_field` and `to_field` under those names. If a future bundle version renames a field, declare a NEW `massdriver_component_link` for the new name (leaving the old one in place for environments still on the older bundle) rather than mutating this one.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value attributes assigned to this environment. Used by the platform to compute permissions and policy. Required keys are configured per-organization in the Massdriver console \u2014 missing or unknown keys surface as API errors at apply time. Drift is always surfaced; console edits are reverted on the next apply.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the environment's purpose. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Short, immutable identifier for this environment. Composed with parent identifiers to form the platform ID. Max 20 characters, lowercase alphanumeric (a-z, 0-9).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the environment. Defaults to `identifier` if unset. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "ID of the project this environment belongs to.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A Massdriver environment within a project (e.g., prod, staging).",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Optional description of the group's purpose. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the group. Must be unique within the organization.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A custom Massdriver group. Built-in groups (`organization_admin`, `organization_viewer`) are managed by the platform and cannot be created or destroyed via terraform.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_group_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "actions": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "One or more actions this policy applies to, each in `{entity}:{verb}` form (e.g., `project:view`, `instance:deploy`). Conditions apply to every action; entities that don't support a given condition simply never match.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "conditions": {
+            "type": "string",
+            "description": "Either the literal `\"*\"` (wildcard \u2014 matches every resource of the action's entity) or a JSON-encoded object of attribute conditions (e.g., `{\"team\":[\"eng\"]}`). Within one policy, conditions AND together; across policies on the same group, they OR together.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "effect": {
+            "type": "string",
+            "description": "Whether this policy grants (`ALLOW`) or blocks (`DENY`) the actions.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "ID of the group this policy is attached to. Immutable \u2014 re-targeting requires destroy + recreate.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "An ABAC policy attached to a group. Each policy grants (`ALLOW`) or blocks (`DENY`) one or more actions on resources whose attributes match the conditions. `DENY` always wins over `ALLOW`.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_imported_resource": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource": {
+            "type": "string",
+            "description": "JSON-encoded resource data conforming to the resource type's schema.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "ID of the resource type this resource is an instance of (e.g., `aws-iam-role`). Immutable after creation.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Registers an existing infrastructure or cloud asset with Massdriver as a connectable resource \u2014 for example credentials, or an existing cloud resource not managed by Massdriver. Use this when the underlying asset is **not** managed by a Massdriver bundle but you want other components to be able to connect to it.\n\nThis resource is usable anywhere, not just inside a Massdriver bundle deployment. To declare a resource produced by a Massdriver bundle, use `massdriver_resource` instead.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_instance_alarm": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_resource_id": {
+            "type": "string",
+            "description": "Cloud provider's unique identifier for the alarm (e.g., a CloudWatch AlarmArn). Used to correlate inbound webhooks back to this alarm. Must be unique within the instance.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "comparison_operator": {
+            "type": "string",
+            "description": "How the metric is compared against `threshold` (e.g., `GREATER_THAN`, `LESS_THAN`). May be empty for providers that don't expose this concept (Alertmanager, GCP).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable name shown in the Massdriver UI and notifications.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "instance_id": {
+            "type": "string",
+            "description": "ID of the instance this alarm is attached to. Defaults to `MASSDRIVER_INSTANCE_ID` if set, otherwise to `MASSDRIVER_PACKAGE_NAME` with the trailing deployment suffix stripped (so bundles get the right ID for free). Must be set explicitly when running outside a Massdriver deployment. Immutable after creation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "period": {
+            "type": "number",
+            "description": "Evaluation window in seconds over which the metric is aggregated.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Value crossed to trigger the alarm.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "metric": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "dimensions": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Key-value dimensions identifying the monitored resource. Empty when the provider doesn't expose structured dimensions.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Metric name within the namespace (e.g., `CPUUtilization`).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "namespace": {
+                  "type": "string",
+                  "description": "Cloud service namespace (e.g., `AWS/RDS`).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Cloud region the metric is scoped to, when applicable.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "statistic": {
+                  "type": "string",
+                  "description": "Aggregation function (e.g., `Average`). Empty for providers without it.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Cloud metric the alarm evaluates. Optional \u2014 providers like Alertmanager don't supply structured metric data.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "Registers a cloud metric alarm with a Massdriver instance. State updates arrive via webhooks from CloudWatch / Azure Monitor / GCP Cloud Monitoring / Alertmanager. Replaces the v1 `massdriver_package_alarm`.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_oci_repository": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "artifact_type": {
+            "type": "string",
+            "description": "OCI artifact type this repository holds (e.g., `BUNDLE`). Immutable \u2014 repositories cannot be retyped. The server is the source of truth for valid values; new types added platform-side become usable here immediately. Plan-time validation is intentionally not performed against a client-side allowlist so the provider doesn't lag behind the platform.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value attributes assigned to this OCI repository. Used by the platform to compute permissions and policy. Required keys are configured per-organization in the Massdriver console \u2014 missing or unknown keys surface as API errors at apply time. Drift is always surfaced; console edits are reverted on the next apply.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Unique repository name within your organization (e.g., `aws-aurora-postgres`). Lowercase letters, numbers, dashes, and underscores only. Max 53 characters. Immutable.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reference": {
+            "type": "string",
+            "description": "Bare OCI reference for this repository (e.g., `api.massdriver.cloud/<org>/<name>`). Append `:<tag>` or `@<digest>` to address a specific manifest with `oras` or any OCI-compliant client.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "An OCI repository in the Massdriver catalog. Repositories must exist before any version can be published; pushing to a non-existent repository returns 404. The `artifact_type` field selects what kind of artifact the repository holds \u2014 today the only supported value is `BUNDLE`, but additional types (e.g. resource-type definitions, provisioner images) are planned.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value attributes assigned to this project. Used by the platform to compute permissions and policy. Required keys are configured per-organization in the Massdriver console \u2014 missing or unknown keys surface as API errors at apply time. Drift is always surfaced; console edits are reverted on the next apply.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the project's purpose. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Short, immutable identifier for this project. Composed with parent identifiers to form the platform ID. Max 20 characters, lowercase alphanumeric (a-z, 0-9).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the project. Defaults to `identifier` if unset. When unset, drift on this field (e.g., a console edit) is ignored.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A Massdriver project \u2014 a logical grouping of environments and components.",
+        "description_kind": "plain"
+      }
+    },
+    "massdriver_resource": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field": {
+            "type": "string",
+            "description": "The resource's `field` name as declared under `resources.properties` (formerly `artifacts.properties`) in the bundle's `massdriver.yaml`. Immutable.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "resource": {
+            "type": "string",
+            "description": "JSON-encoded resource data. Validated locally against `schema-artifacts.json` (when present at `schema_path`) before being sent.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "Resource type identifier (e.g., `aws-iam-role`). This attribute is computed from the `massdriver.yaml` specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "schema_path": {
+            "type": "string",
+            "description": "Path to the `schema-artifacts.json` JSON Schema file used for client-side validation. Defaults to `../schema-artifacts.json` (the location bundle scaffolding produces). Override only for local provider testing.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "specification_path": {
+            "type": "string",
+            "description": "Path to `massdriver.yaml`, used to look up the resource type from `$ref` when `resource_type` is unset. Defaults to `../massdriver.yaml`. Override only for local provider testing.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Creates a provisioned resource produced by a Massdriver bundle. Use this **only** inside the IaC of a Massdriver bundle to satisfy a resource declared in the bundle's `massdriver.yaml`; outside a deployment it will fail.\n\nIf you need to create a resource that is not managed by a Massdriver bundle, use `massdriver_imported_resource` instead.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

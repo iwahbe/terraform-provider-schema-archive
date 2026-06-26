@@ -1,0 +1,325 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "password": {
+          "type": "string",
+          "description": "Password for digest authentication. Can be set via `ZOOKEEPER_PASSWORD` environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "servers": {
+          "type": "string",
+          "description": "A comma separated list of 'host:port' pairs, pointing at ZooKeeper Server(s). Can be set via `ZOOKEEPER_SERVERS` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "session_timeout": {
+          "type": "number",
+          "description": "How many seconds a session is considered valid after losing connectivity. More information about ZooKeeper sessions can be found [here](#zookeeper-sessions). Can be set via `ZOOKEEPER_SESSION` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_ca_file": {
+          "type": "string",
+          "description": "File path to the root CA certificate to use when connecting to the ZooKeeper server(s) using TLS. Can be set via `ZOOKEEPER_TLS_CA_FILE` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_cert_file": {
+          "type": "string",
+          "description": "File path to a client certificate to use when connecting to the ZooKeeper server(s) using TLS. Can be set via `ZOOKEEPER_TLS_CERT_FILE` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_enabled": {
+          "type": "bool",
+          "description": "Use secure TLS connection when connecting to the ZooKeeper server(s). Can be set via `ZOOKEEPER_TLS_ENABLED` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_key_file": {
+          "type": "string",
+          "description": "File path to a client key to use when connecting to the ZooKeeper server(s) using TLS. Can be set via `ZOOKEEPER_TLS_KEY_FILE` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "tls_skip_verify": {
+          "type": "bool",
+          "description": "Skip verification of server's certificate chain and host name. Can be set via `ZOOKEEPER_TLS_SKIP_VERIFY` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Username for digest authentication. Can be set via `ZOOKEEPER_USERNAME` environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "zookeeper_sequential_znode": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": "string",
+            "description": "Content to store in the ZNode, as a UTF-8 string. Mutually exclusive with `data_base64`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "data_base64": {
+            "type": "string",
+            "description": "Content to store in the ZNode, as Base64 encoded bytes. Mutually exclusive with `data`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the Sequential ZNode, once it is created. The prefix of this will match `path_prefix`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "path_prefix": {
+            "type": "string",
+            "description": "Absolute path to the Sequential ZNode to create. ZooKeeper will append a monotonically increasing counter to the end of path. This counter is unique to the parent znode, and its format is `%010d` (10 digits with `0` padding).For example, the first sequential node created with a given `path_prefix` will be: `<path-prefix>0000000001`.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stat": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "aversion": "number",
+                  "ctime": "number",
+                  "cversion": "number",
+                  "czxid": "number",
+                  "data_length": "number",
+                  "ephemeral_owner": "number",
+                  "mtime": "number",
+                  "mzxid": "number",
+                  "num_children": "number",
+                  "pzxid": "number",
+                  "version": "number"
+                }
+              ]
+            ],
+            "description": "[ZooKeeper Stat Structure](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkStatStructure) of the ZNode. More details about `stat` can be found [here](../../docs#the-stat-structure).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "acl": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The ID for the ACL entry. For example, user:hash in 'digest' scheme.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "permissions": {
+                  "type": "number",
+                  "description": "The permissions for the ACL entry, represented as an integer bitmask.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "scheme": {
+                  "type": "string",
+                  "description": "The ACL scheme, such as 'world', 'digest', 'ip', 'x509'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of ACL entries for the ZNode.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages the lifecycle of a [ZooKeeper ZNode](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkDataModel_znodes). This resource manages **Persistent Sequential ZNodes**. The data can be provided either as UTF-8 string, or as Base64 encoded bytes. The ability to create ZNodes is determined by ZooKeeper ACL.",
+        "description_kind": "plain"
+      }
+    },
+    "zookeeper_znode": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data": {
+            "type": "string",
+            "description": "Content to store in the ZNode, as a UTF-8 string. Mutually exclusive with `data_base64`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "data_base64": {
+            "type": "string",
+            "description": "Content to store in the ZNode, as Base64 encoded bytes. Mutually exclusive with `data`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the ZNode to create.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stat": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "aversion": "number",
+                  "ctime": "number",
+                  "cversion": "number",
+                  "czxid": "number",
+                  "data_length": "number",
+                  "ephemeral_owner": "number",
+                  "mtime": "number",
+                  "mzxid": "number",
+                  "num_children": "number",
+                  "pzxid": "number",
+                  "version": "number"
+                }
+              ]
+            ],
+            "description": "[ZooKeeper Stat Structure](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkStatStructure) of the ZNode. More details about `stat` can be found [here](../../docs#the-stat-structure).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "acl": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The ID for the ACL entry. For example, user:hash in 'digest' scheme.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "permissions": {
+                  "type": "number",
+                  "description": "The permissions for the ACL entry, represented as an integer bitmask.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "scheme": {
+                  "type": "string",
+                  "description": "The ACL scheme, such as 'world', 'digest', 'ip', 'x509'.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of ACL entries for the ZNode.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages the lifecycle of a [ZooKeeper ZNode](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkDataModel_znodes). This resource manages **Persistent ZNodes**. The data can be provided either as UTF-8 string, or as Base64 encoded bytes. The ability to create ZNodes is determined by ZooKeeper ACL.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "zookeeper_znode": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acl": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "id": "string",
+                  "permissions": "number",
+                  "scheme": "string"
+                }
+              ]
+            ],
+            "description": "List of ACL entries for the ZNode.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data": {
+            "type": "string",
+            "description": "Content of the ZNode. Use this if content is a UTF-8 string.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "data_base64": {
+            "type": "string",
+            "description": "Content of the ZNode, encoded in Base64. Use this if content is binary (i.e. sequence of bytes).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the ZNode to read.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "stat": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "aversion": "number",
+                  "ctime": "number",
+                  "cversion": "number",
+                  "czxid": "number",
+                  "data_length": "number",
+                  "ephemeral_owner": "number",
+                  "mtime": "number",
+                  "mzxid": "number",
+                  "num_children": "number",
+                  "pzxid": "number",
+                  "version": "number"
+                }
+              ]
+            ],
+            "description": "[ZooKeeper Stat Structure](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkStatStructure) of the ZNode. More details about `stat` can be found [here](../../docs#the-stat-structure).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides access to the content of a [ZooKeeper ZNode](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_zkDataModel_znodes). The data is loaded both as UTF-8 string, as well as Base64 encoded bytes. The ability to access ZNodes is determined by ZooKeeper ACL.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
