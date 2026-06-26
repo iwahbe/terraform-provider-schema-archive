@@ -1,0 +1,629 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "buildkit_address": {
+          "type": "string",
+          "description": "gRPC address of a running buildkitd (e.g. `unix:///run/buildkit/buildkitd.sock`, `tcp://127.0.0.1:1234`, or `docker-container://buildkitd`). When set, auto-discovery is skipped. When unset, the `BUILDKIT_HOST` environment variable is used, then auto-discovery (if enabled).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "buildkit_autodiscover": {
+          "type": "bool",
+          "description": "When `true` (default) and no explicit address or `BUILDKIT_HOST` is set, the provider attempts to discover a BuildKit endpoint: the Docker-engine embedded BuildKit via the daemon `/grpc` endpoint (OrbStack / Docker Desktop / Colima), then conventional local buildkitd sockets. Set to `false` to require an explicit address / `BUILDKIT_HOST` (recommended for hermetic CI).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "docker_config": {
+          "type": "bool",
+          "description": "When `true` (default), registry credentials are resolved from the host's Docker config (`~/.docker/config.json`) and its configured credential helpers (e.g. `osxkeychain`, `ecr-login`, `gcr`) as a fallback after explicit `registry_auth` blocks. Set to `false` for fully hermetic credential resolution from `registry_auth` only.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "embedded_buildkitd": {
+          "type": "bool",
+          "description": "Controls the embedded `buildkitd` (Linux only). Tri-state:\n\n- **unset (default)**: *auto* \u2014 if no endpoint is configured or discovered, the provider provisions and supervises a `buildkitd` for the lifetime of the provider. The `buildkitd` (and `rootlesskit` for unprivileged use) binaries are resolved from `BUILDKIT_EMBEDDED_BIN_DIR`, a provider-managed cache, the host `PATH`, or a pinned, checksum-verified download from the upstream GitHub releases (requires outbound network on first use; results are cached). On non-Linux hosts this fallback is unavailable.\n- **`true`**: *force* \u2014 always use the embedded `buildkitd` (after an explicit `buildkit_address` / `BUILDKIT_HOST`), skipping auto-discovery.\n- **`false`**: *never* \u2014 disable the embedded `buildkitd` entirely; resolution fails if no endpoint is configured or discovered.\n\nRootless use (non-root euid) requires user-namespace support and `/etc/subuid` + `/etc/subgid` entries for the user. Set `BUILDKIT_EMBEDDED_BIN_DIR` to a directory containing the binaries for fully air-gapped operation.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "block_types": {
+        "registry_auth": {
+          "nesting_mode": "set",
+          "block": {
+            "attributes": {
+              "address": {
+                "type": "string",
+                "description": "Registry host this credential applies to (e.g. `docker.io`, `ghcr.io`, `123.dkr.ecr.us-east-1.amazonaws.com`). Scheme and trailing slash are ignored; Docker Hub aliases normalize to `docker.io`.",
+                "description_kind": "markdown",
+                "required": true
+              },
+              "auth": {
+                "type": "string",
+                "description": "Base64-encoded `username:password`, as stored in Docker config.",
+                "description_kind": "markdown",
+                "optional": true,
+                "sensitive": true
+              },
+              "identity_token": {
+                "type": "string",
+                "description": "Identity token used to obtain a registry access token (OAuth2 flows).",
+                "description_kind": "markdown",
+                "optional": true,
+                "sensitive": true
+              },
+              "password": {
+                "type": "string",
+                "description": "Registry password or token.",
+                "description_kind": "markdown",
+                "optional": true,
+                "sensitive": true
+              },
+              "username": {
+                "type": "string",
+                "description": "Registry username.",
+                "description_kind": "markdown",
+                "optional": true
+              }
+            },
+            "description": "Explicit registry credentials. Each block authenticates to one registry host and takes precedence over Docker config for that host.",
+            "description_kind": "markdown"
+          }
+        }
+      },
+      "description": "Builds container images and filesystem artifacts from a Dockerfile using BuildKit, without requiring the Docker daemon as the build mechanism. Connects to a local or remote `buildkitd` gRPC endpoint (with optional auto-discovery), and on Linux can automatically provision and supervise an embedded `buildkitd` (downloading a pinned, checksum-verified release) so builds work on hosts with no Docker or BuildKit preinstalled. Authenticates to registries via explicit credentials and/or the host Docker config.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "buildkit_artifact": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "artifact_dst_path": {
+            "type": "string",
+            "description": "Destination path on the host for the extracted artifact.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "artifact_path": {
+            "type": "string",
+            "description": "Absolute host path of the produced artifact.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "description": "SHA256 of the produced artifact (file) used for drift detection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "artifact_src_path": {
+            "type": "string",
+            "description": "Path inside the built stage filesystem to extract.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "artifact_src_type": {
+            "type": "string",
+            "description": "Either `zip` (default) or `directory`. When `zip` and `artifact_src_path` is a single file, the file is copied through verbatim (it is assumed already packaged, e.g. a pre-built `package.zip`); when it is a directory, the directory's contents are zipped.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "build_args": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Build arguments passed to the build.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "build_context": {
+            "type": "string",
+            "description": "Path to the Docker build context directory.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "context_digest": {
+            "type": "string",
+            "description": "Dockerignore-aware sha256 of the build context at build time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dockerfile": {
+            "type": "string",
+            "description": "Dockerfile path relative to the build context. Defaults to `Dockerfile`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id (equals artifact_sha256).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "target": {
+            "type": "string",
+            "description": "Optional multi-stage build target whose filesystem is exported.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary map; any change forces the artifact to be rebuilt. Commonly wired to a `buildkit_context` digest.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Builds a Dockerfile via BuildKit and extracts an artifact (file as zip, or a directory) from the built stage onto the host filesystem.",
+        "description_kind": "markdown"
+      }
+    },
+    "buildkit_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "args": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Build args (values for `ARG` instructions).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "context": {
+            "type": "string",
+            "description": "Path to the build context directory.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "context_digest": {
+            "type": "string",
+            "description": "Dockerignore-aware sha256 of the build context at build time.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dockerfile": {
+            "type": "string",
+            "description": "Path to the Dockerfile, relative to `context`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "forward_ssh_agent_socket": {
+            "type": "bool",
+            "description": "Forward the host `SSH_AUTH_SOCK` as the `default` ssh mount (`RUN --mount=type=ssh`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic resource id (equals `image_digest`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_digest": {
+            "type": "string",
+            "description": "The sha256 digest of the built image manifest.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Image labels (equivalent to `LABEL` instructions).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "platforms": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Target platforms, e.g. `[\"linux/amd64\", \"linux/arm64\"]`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "published": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "digest_url": "string",
+                  "insecure": "bool",
+                  "registry": "string",
+                  "repository": "string",
+                  "tag": "string",
+                  "tag_url": "string"
+                }
+              ]
+            ],
+            "description": "Resolved publish coordinates, including digest URLs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "secrets": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Build secrets in `id => value` form, exposed via `RUN --mount=type=secret,id=...`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "secrets_base64": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Build secrets in `id => base64(value)` form, decoded before use.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "target": {
+            "type": "string",
+            "description": "Multi-stage build target to build.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Arbitrary map; any change forces the image to be rebuilt.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "attestations": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "provenance": {
+                  "type": "string",
+                  "description": "Provenance mode: `min` or `max`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "sbom": {
+                  "type": "bool",
+                  "description": "Generate an SBOM attestation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Attach SBOM and/or provenance attestations to the build output.",
+              "description_kind": "markdown"
+            }
+          },
+          "cache_from": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "attrs": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Type-specific attributes (e.g. `ref`, `mode`, `dest`, `src`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Cache type: `registry`, `local`, `gha`, `inline`, `s3`, or `azblob`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Cache import sources (`--import-cache`).",
+              "description_kind": "markdown"
+            }
+          },
+          "cache_to": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "attrs": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Type-specific attributes (e.g. `ref`, `mode`, `dest`, `src`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Cache type: `registry`, `local`, `gha`, `inline`, `s3`, or `azblob`.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Cache export targets (`--export-cache`).",
+              "description_kind": "markdown"
+            }
+          },
+          "publish": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "insecure": {
+                  "type": "bool",
+                  "description": "Allow pushing over plain HTTP / untrusted TLS (sets `registry.insecure=true`). Also used for digest lookups during refresh.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "push": {
+                  "type": "bool",
+                  "description": "Push to the registry. Defaults to `true`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "registry": {
+                  "type": "string",
+                  "description": "Registry host, e.g. `docker.io` or `ghcr.io`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "repository": {
+                  "type": "string",
+                  "description": "Repository name, e.g. `org/app`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Tags to publish.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "A registry/repository and the tags to publish. Multiple blocks publish to multiple targets in a single build. All publish blocks must agree on the `push` and `insecure` flags.",
+              "description_kind": "markdown"
+            }
+          },
+          "ssh": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "SSH mount id.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "paths": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Socket or key paths.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Explicit ssh agent/socket forwards (`RUN --mount=type=ssh,id=...`).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Builds a container image from a Dockerfile with BuildKit and optionally pushes it to one or more registries in a single build. Supports multi-platform builds, build args, labels, build secrets, SSH agent forwarding, cache import/export, and SBOM/provenance attestations. With no `publish` blocks the image is built (and a digest computed) but not pushed; with `publish` blocks all blocks must agree on the `push` and `insecure` flags.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "buildkit_context": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "digest": {
+            "type": "string",
+            "description": "`sha256:`-prefixed digest of the included context content.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "dockerignore": {
+            "type": "string",
+            "description": "Optional path to a `.dockerignore` file to use instead of `<path>/.dockerignore`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equals `digest`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to the build context directory.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Computes a deterministic, dockerignore-aware SHA256 of a build context directory. Useful as a stable idempotency key (e.g. wired into a `buildkit_image` `triggers` map) so plans only change when the context content changes.",
+        "description_kind": "markdown"
+      }
+    },
+    "buildkit_images": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Synthetic id derived from the query.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "images": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "created": "string",
+                  "digest": "string",
+                  "digest_url": "string",
+                  "labels": [
+                    "map",
+                    "string"
+                  ],
+                  "media_type": "string",
+                  "platforms": [
+                    "list",
+                    "string"
+                  ],
+                  "reference": "string"
+                }
+              ]
+            ],
+            "description": "Matching images.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "insecure": {
+            "type": "bool",
+            "description": "Allow plain-HTTP / untrusted TLS when contacting the registry.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Required label key/values; only images carrying all of them match.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "most_recent_only": {
+            "type": "bool",
+            "description": "When `true`, return only the most recently created matching image.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "platforms": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Required platforms; only images supporting all of them match.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "registry": {
+            "type": "string",
+            "description": "Registry host to query.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "Repository name to query.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tag_pattern": {
+            "type": "string",
+            "description": "Regular expression to filter tags. Empty matches all tags.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Queries a registry repository for images, filtered by a tag regex, required labels, and required platforms.",
+        "description_kind": "markdown"
+      }
+    },
+    "buildkit_registry_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created": {
+            "type": "string",
+            "description": "RFC3339 creation timestamp, if available.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "digest": {
+            "type": "string",
+            "description": "`sha256:`-prefixed manifest digest.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "digest_url": {
+            "type": "string",
+            "description": "Fully-qualified digest reference (`registry/repo@sha256:...`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Equals `digest_url`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "insecure": {
+            "type": "bool",
+            "description": "Allow plain-HTTP / untrusted TLS when contacting the registry.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "labels": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Image config labels (single-platform images only).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "media_type": {
+            "type": "string",
+            "description": "Manifest media type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "platforms": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Platforms present in the image (or index).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "reference": {
+            "type": "string",
+            "description": "Image reference, e.g. `ghcr.io/org/app:latest` or `ghcr.io/org/app@sha256:...`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Resolves an existing image reference in a registry to its digest, platforms, labels, and creation time. Uses the provider's registry credentials.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

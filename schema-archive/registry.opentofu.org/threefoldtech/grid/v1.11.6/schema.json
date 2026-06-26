@@ -1,0 +1,1351 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "key_type": {
+          "type": "string",
+          "description": "key type registered on substrate (ed25519 or sr25519)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "mnemonic": {
+          "type": "string",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "network": {
+          "type": "string",
+          "description": "grid network, one of: dev test qa main",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "proxy_url": {
+          "type": "string",
+          "description": "proxy url, example: https://gridproxy.dev.grid.tf",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "relay_url": {
+          "type": "string",
+          "description": "relay url, example: wss://relay.dev.grid.tf",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "rmb_timeout": {
+          "type": "number",
+          "description": "timeout duration in seconds for rmb calls",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "substrate_url": {
+          "type": "string",
+          "description": "substrate url, example: wss://tfchain.dev.grid.tf/ws",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "grid_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_range": {
+            "type": "string",
+            "description": "IP range of the node for the wireguard network (e.g. 10.1.2.0/24). Has to have a subnet mask of 24.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Solution name for created contract to be consistent across threefold tooling. Must contain only alphanumeric and underscore characters.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "network_name": {
+            "type": "string",
+            "description": "Network name of the deployed network resource to connect vms.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node id to place the deployment on.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "solution_provider": {
+            "type": "number",
+            "description": "Solution provider ID for the deployed solution which allows the creator of the solution to gain a percentage of the rewards.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "solution_type": {
+            "type": "string",
+            "description": "Solution type for created contract to be consistent across threefold tooling.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "disks": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Description of disk workload.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Disk workload name. This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Disk size in GBs. Must be between 1GB and 10240GBs (10TBs)",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of disk workloads configurations.",
+              "description_kind": "plain"
+            }
+          },
+          "qsfs": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "cache": {
+                  "type": "number",
+                  "description": "The size of the fuse mountpoint on the node in MBs (holds qsfs local data before pushing).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "compression_algorithm": {
+                  "type": "string",
+                  "description": "configuration to use for the compression stage. Currently only snappy is supported.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the qsfs workload.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "encryption_algorithm": {
+                  "type": "string",
+                  "description": "configuration to use for the encryption stage. Currently only AES is supported.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "encryption_key": {
+                  "type": "string",
+                  "description": "64 long hex encoded encryption key (e.g. 0000000000000000000000000000000000000000000000000000000000000000).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "expected_shards": {
+                  "type": "number",
+                  "description": "The amount of shards which are generated when the data is encoded. Essentially, this is the amount of shards which is needed to be able to recover the data, and some disposable shards which could be lost. The amount of disposable shards can be calculated as expected_shards - minimal_shards.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "max_zdb_data_dir_size": {
+                  "type": "number",
+                  "description": "Maximum size of the data dir in MiB, if this is set and the sum of the file sizes in the data dir gets higher than this value, the least used, already encoded file will be removed.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "metrics_endpoint": {
+                  "type": "string",
+                  "description": "QSFS exposed metrics endpoint.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "minimal_shards": {
+                  "type": "number",
+                  "description": "The minimum amount of shards which are needed to recover the original data.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Qsfs workload name. This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "redundant_groups": {
+                  "type": "number",
+                  "description": "The amount of groups which one should be able to loose while still being able to recover the original data.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "redundant_nodes": {
+                  "type": "number",
+                  "description": "The amount of nodes that can be lost in every group while still being able to recover the original data.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "groups": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "block_types": {
+                      "backends": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "address": {
+                              "type": "string",
+                              "description": "Address of backend ZDB (e.g. [300:a582:c60c:df75:f6da:8a92:d5ed:71ad]:9900 or 60.60.60.60:9900).",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "namespace": {
+                              "type": "string",
+                              "description": "ZDB namespace.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "Namespace password.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "List of ZDB backends configurations.",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description": "The backend groups to write the data to.",
+                    "description_kind": "plain"
+                  },
+                  "min_items": 1
+                },
+                "metadata": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "encryption_algorithm": {
+                        "type": "string",
+                        "description": "configuration to use for the encryption stage. Currently only AES is supported.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "encryption_key": {
+                        "type": "string",
+                        "description": "64 long hex encoded encryption key (e.g. 0000000000000000000000000000000000000000000000000000000000000000).",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "prefix": {
+                        "type": "string",
+                        "description": "Data stored on the remote metadata is prefixed with.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "configuration for the metadata store to use, currently only ZDB is supported.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "block_types": {
+                      "backends": {
+                        "nesting_mode": "list",
+                        "block": {
+                          "attributes": {
+                            "address": {
+                              "type": "string",
+                              "description": "Address of backend ZDB (e.g. [300:a582:c60c:df75:f6da:8a92:d5ed:71ad]:9900 or 60.60.60.60:9900).",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "namespace": {
+                              "type": "string",
+                              "description": "ZDB namespace.",
+                              "description_kind": "plain",
+                              "required": true
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "Namespace password.",
+                              "description_kind": "plain",
+                              "required": true
+                            }
+                          },
+                          "description": "List of ZDB backends configurations.",
+                          "description_kind": "plain"
+                        }
+                      }
+                    },
+                    "description_kind": "plain"
+                  },
+                  "min_items": 1,
+                  "max_items": 1
+                }
+              },
+              "description": "List of Qsfs workloads configurations. Qsfs is a quantum storage file system.\nYou can read more about it [here](https://github.com/threefoldtech/quantum-storage).",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          },
+          "vms": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "computedip": {
+                  "type": "string",
+                  "description": "The reserved public ipv4 if any.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "computedip6": {
+                  "type": "string",
+                  "description": "The reserved public ipv6 if any.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "console_url": {
+                  "type": "string",
+                  "description": "The url to access the vm via cloud console on private interface using wireguard.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "corex": {
+                  "type": "bool",
+                  "description": "Flag to enable corex. More information about corex could be found [here](https://github.com/threefoldtech/corex)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "cpu": {
+                  "type": "number",
+                  "description": "Number of virtual CPUs. Must be between 1 and 32.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the vm.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Command to execute as the ZMachine init.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "env_vars": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Environment variables to pass to the zmachine.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "flist": {
+                  "type": "string",
+                  "description": "Flist used on this vm, e.g. https://hub.grid.tf/tf-official-apps/base:latest.flist. All flists could be found in `https://hub.grid.tf/`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "flist_checksum": {
+                  "type": "string",
+                  "description": "if present, the flist is rejected if it has a different hash.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "gpus": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of the GPUs to be attached to the vm and must not be used by other vms",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "The private wireguard IP of the vm.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "Memory size in MB. Must be between 256MBs and 262144MBs (256GBs).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "mycelium_ip": {
+                  "type": "string",
+                  "description": "The allocated mycelium IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mycelium_ip_seed": {
+                  "type": "string",
+                  "description": "Mycelium seed used to get the same mycelium ip for the vm. Hex encoded 6 bytes (e.g. b60f2b7ec39c).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Vm (zmachine) workload name. This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "node": {
+                  "type": "number",
+                  "description": "Node id to place the vm on.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "planetary": {
+                  "type": "bool",
+                  "description": "Flag to enable Yggdrasil IP allocation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "planetary_ip": {
+                  "type": "string",
+                  "description": "The allocated Yggdrasil IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "publicip": {
+                  "type": "bool",
+                  "description": "Flag to enable public ipv4 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "publicip6": {
+                  "type": "bool",
+                  "description": "Flag to enable public ipv6 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "rootfs_size": {
+                  "type": "number",
+                  "description": "Root file system size in MB. Must be between 1024MBs and 10485760MBs (10TBs).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "zlogs": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of Zlogs workloads configurations (URLs). Zlogs is a utility workload that allows you to stream `ZMachine` logs to a remote location.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "mounts": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "mount_point": {
+                        "type": "string",
+                        "description": "Directory to mount the disk on inside the ZMachine.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of QSFS or Disk to mount.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "description": "List of vm (ZMachine) mounts. Can reference QSFSs and Disks.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "List of vm (ZMachine) workloads configurations.",
+              "description_kind": "plain"
+            }
+          },
+          "zdbs": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "ZDB workload description.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ips": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Computed IPs of the ZDB. Two IPs are returned: a public IPv6, and a YggIP, in this order",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mode": {
+                  "type": "string",
+                  "description": "Mode of the ZDB, `user` or `seq`. `user` is the default mode where a user can SET their own keys, like any key-value store. All keys are kept in memory. in `seq` mode, keys are sequential and autoincremented.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "ZDB workload name. This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "namespace": {
+                  "type": "string",
+                  "description": "Namespace of the ZDB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "password": {
+                  "type": "string",
+                  "description": "ZDB password.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Port of the ZDB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "public": {
+                  "type": "bool",
+                  "description": "Makes it read-only if password is set, writable if no password set.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Size of the ZDB in GBs.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of ZDB workloads configurations. You can read more about 0-db (ZDB) [here](https://github.com/threefoldtech/0-db/).",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Resource for deploying multiple workloads like vms (ZMachines), ZDBs, disks, Qsfss, and/or zlogs. A user should specify node id for this deployment, the (already) deployed network that this deployment should be a part of, and the desired workloads configurations.",
+        "description_kind": "plain"
+      }
+    },
+    "grid_fqdn_proxy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backends": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The backends of the gateway proxy. must be in the format ip:port if tls_passthrough is set, otherwise the format should be http://ip[:port]",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the gateway fqdn workload.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The fully qualified domain name of the deployed workload.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Gateway workload name.  This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "network": {
+            "type": "string",
+            "description": "Network name to join, if backend IP is private.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node": {
+            "type": "number",
+            "description": "The gateway's node id.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_deployment_id": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Mapping from each node to its deployment id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "solution_type": {
+            "type": "string",
+            "description": "Solution type for created contract to be consistent across threefold tooling.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tls_passthrough": {
+            "type": "bool",
+            "description": "TLS passthrough controls the TLS termination, if false, the gateway will terminate the TLS, if True, it will only be terminated by the backend service.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Resource for deploying a gateway with a fully qualified domain name.\nA user should have some fully qualified domain name (fqdn) (e.g. example.com), pointing to the specified node working as a gateway, then connect this gateway to whichever backend services they desire, making these backend services accessible through the computed fqdn.",
+        "description_kind": "plain"
+      }
+    },
+    "grid_kubernetes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "entrypoint": {
+            "type": "string",
+            "description": "Command to execute as the kubernetes node init.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "flist": {
+            "type": "string",
+            "description": "Flist used on all nodes, e.g. https://hub.grid.tf/tf-official-apps/threefolddev-k3s-v1.31.0.flist. All flists could be found in `https://hub.grid.tf/`",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "flist_checksum": {
+            "type": "string",
+            "description": "If present, the flist is rejected if it has a different hash.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Solution name for the created contracts to be consistent across threefold tooling. Must contain only alphanumeric and underscore characters.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "network_name": {
+            "type": "string",
+            "description": "The network name to deploy the cluster on.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node_deployment_id": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Mapping from each node to its deployment id (contract id).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes_ip_range": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Reserved network IP ranges for nodes in the cluster (this is assigned from grid_network.<network-resource-name>.nodes_ip_range).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "solution_type": {
+            "type": "string",
+            "description": "Solution type for the created contracts to be consistent across threefold tooling.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ssh_key": {
+            "type": "string",
+            "description": "SSH key to access the cluster nodes.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The cluster secret token. Each node has to have this token to be part of the cluster. This token should be an alphanumeric non-empty string.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "master": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "computedip": {
+                  "type": "string",
+                  "description": "The reserved public IPv4.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "computedip6": {
+                  "type": "string",
+                  "description": "The reserved public IPv6.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "console_url": {
+                  "type": "string",
+                  "description": "The url to access the vm via cloud console on private interface using wireguard.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cpu": {
+                  "type": "number",
+                  "description": "Number of virtual CPUs. Must be between 1 and 32.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "disk_size": {
+                  "type": "number",
+                  "description": "Disk size for master node in GBs. Must be between 1GB and 10240GBs (10TBs).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Command to execute as the kubernetes node init.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "flist": {
+                  "type": "string",
+                  "description": "Flist used on master node, e.g. https://hub.grid.tf/tf-official-apps/threefolddev-k3s-v1.31.0.flist. All flists could be found in `https://hub.grid.tf/`",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "flist_checksum": {
+                  "type": "string",
+                  "description": "if present, the flist is rejected if it has a different hash.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "The private wireguard IP of master node.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "Memory size in MB. Must be between 256MBs and 262144MBs (256GBs).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "mycelium_ip": {
+                  "type": "string",
+                  "description": "The allocated mycelium IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mycelium_ip_seed": {
+                  "type": "string",
+                  "description": "Mycelium seed used to get the same mycelium ip for k8s master. Hex encoded 6 bytes (e.g. b60f2b7ec39c).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Master node ZMachine workload name.  This has to be unique within the node. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "network_name": {
+                  "type": "string",
+                  "description": "Network name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "node": {
+                  "type": "number",
+                  "description": "Node ID to deploy master node on.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "planetary": {
+                  "type": "bool",
+                  "description": "Flag to enable Yggdrasil IP allocation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "planetary_ip": {
+                  "type": "string",
+                  "description": "The allocated Yggdrasil IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "publicip": {
+                  "type": "bool",
+                  "description": "Flag to enable/disable public ipv4 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "publicip6": {
+                  "type": "bool",
+                  "description": "Flag to enable/disable public ipv6 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ssh_key": {
+                  "type": "string",
+                  "description": "ssh key.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "token": {
+                  "type": "string",
+                  "description": "cluster token.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Master holds the configuration of master node in the kubernetes cluster.",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "workers": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "computedip": {
+                  "type": "string",
+                  "description": "The reserved public ipv4.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "computedip6": {
+                  "type": "string",
+                  "description": "The reserved public ipv6.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "console_url": {
+                  "type": "string",
+                  "description": "The url to access the vm via cloud console on private interface using wireguard.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cpu": {
+                  "type": "number",
+                  "description": "Number of virtual CPUs. Must be between 1 and 32.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "disk_size": {
+                  "type": "number",
+                  "description": "Data disk size in GBs. Must be between 1GB and 10240GBs (10TBs).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "description": "Command to execute as the kubernetes node init.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "flist": {
+                  "type": "string",
+                  "description": "Flist used on worker node, e.g. https://hub.grid.tf/tf-official-apps/threefolddev-k3s-v1.31.0.flist. All flists could be found in `https://hub.grid.tf/`.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "flist_checksum": {
+                  "type": "string",
+                  "description": "if present, the flist is rejected if it has a different hash.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "The private IP (computed from nodes_ip_range).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "Memory size in MB. Must be between 256MBs and 262144MBs (256GBs).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "mycelium_ip": {
+                  "type": "string",
+                  "description": "The allocated mycelium IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "mycelium_ip_seed": {
+                  "type": "string",
+                  "description": "Mycelium seed used to get the same mycelium ip for k8s worker. Hex encoded 6 bytes (e.g. b60f2b7ec39c).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Worker node ZMachine workload name. This has to be unique within the node. Must contain only alphanumeric and underscore characters.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "network_name": {
+                  "type": "string",
+                  "description": "Network name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "node": {
+                  "type": "number",
+                  "description": "Node ID to deploy worker node on.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "planetary": {
+                  "type": "bool",
+                  "description": "Flag to enable Yggdrasil IP allocation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "planetary_ip": {
+                  "type": "string",
+                  "description": "The allocated Yggdrasil IP.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "publicip": {
+                  "type": "bool",
+                  "description": "Flag to enable/disable public ipv4 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "publicip6": {
+                  "type": "bool",
+                  "description": "Flag to enable/disable public ipv6 reservation.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ssh_key": {
+                  "type": "string",
+                  "description": "ssh key.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "token": {
+                  "type": "string",
+                  "description": "cluster token.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Workers is a list holding the workers configuration for the kubernetes cluster.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Resource to deploy a kubernetes cluster. A cluster should consist of one master node, and a number (could be zero) of worker nodes.",
+        "description_kind": "plain"
+      }
+    },
+    "grid_name_proxy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "backends": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The backends of the gateway proxy. must be in the format ip:port if tls_passthrough is set, otherwise the format should be http://ip[:port]",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "fqdn": {
+            "type": "string",
+            "description": "The computed fully qualified domain name of the deployed workload.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Domain prefix. The fqdn will be <name>.<gateway-domain>.  This has to be unique within the deployment. Must contain only alphanumeric and underscore characters.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name_contract_id": {
+            "type": "number",
+            "description": "The id of the created name contract.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "network": {
+            "type": "string",
+            "description": "Network name to join, if backend IP is private.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node": {
+            "type": "number",
+            "description": "The gateway's node id.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_deployment_id": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Mapping from each node to its deployment id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "solution_type": {
+            "type": "string",
+            "description": "Solution type for created contract to be consistent across threefold tooling.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tls_passthrough": {
+            "type": "bool",
+            "description": "TLS passthrough controls the TLS termination, if false, the gateway will terminate the TLS, if True, it will only be terminated by the backend service.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Resource for deploying a gateway name workload. A user should specify some unique name, for example hamada, and a node working as a gateway that has the domain gent01.dev.grid.tf, and the grid generates a fully qualified domain name (fqdn) `hamada.getn01.dev.grid.tf`. Then, the user could connect this gateway workload to whichever backend services the user desires, making these backend services accessible through the computed fqdn.",
+        "description_kind": "plain"
+      }
+    },
+    "grid_network": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_wg_config": {
+            "type": "string",
+            "description": "Generated wireguard configuration for external user access to the network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "add_wg_access": {
+            "type": "bool",
+            "description": "Flag to generate wireguard configuration for external user access to the network.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the network workloads.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "external_ip": {
+            "type": "string",
+            "description": "Wireguard IP assigned for external user access.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "external_sk": {
+            "type": "string",
+            "description": "External user private key used in encryption while communicating through Wireguard network.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_range": {
+            "type": "string",
+            "description": "Network IP range (e.g. 10.1.2.0/16). Has to have a subnet mask of 16.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "mycelium_keys": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Network mycelium keys per node (e.g. 9751c596c7c951aedad1a5f78f18b59515064adf660e0d55abead65e6fbbd627). Hex encoded 32 bytes.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Network workloads Name.  This has to be unique within the node. Must contain only alphanumeric and underscore characters.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_deployment_id": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Mapping from each node to its deployment id.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of node ids to add to the network.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "nodes_ip_range": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Computed values of nodes' IP ranges after deployment.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "public_node_id": {
+            "type": "number",
+            "description": "Public node id (in case it's added). Used for wireguard access and supporting hidden nodes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "solution_type": {
+            "type": "string",
+            "description": "Solution type for created contract to be consistent across threefold tooling.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Resource to deploy a network on the grid. This is a private wireguard network. A user could specify that they want to have a user access endpoint to this network through the `add_wg_access` flag. A separate workload is deployed on each of the specified nodes, with the peers for each workload configured in a way making any pair of nodes in the network accessible to each other.",
+        "description_kind": "plain"
+      }
+    },
+    "grid_scheduler": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "nodes": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Mapping from the request name to the node id.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "requests": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "certified": {
+                  "type": "bool",
+                  "description": "Flag to pick only certified nodes (Not implemented).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "cru": {
+                  "type": "number",
+                  "description": "Number of required virtual CPUs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "dedicated": {
+                  "type": "bool",
+                  "description": "Flag to pick a rentable node",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "distinct": {
+                  "type": "bool",
+                  "description": "True to ensure this request returns a distinct node relative to this scheduler resource.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "farm_id": {
+                  "type": "number",
+                  "description": "Farm id to search for eligible nodes.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "hru": {
+                  "type": "number",
+                  "description": "Disk HDD size in MBs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "mru": {
+                  "type": "number",
+                  "description": "Memory size in MBs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Request name. Used as a reference in the `nodes` dict.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "node_exclude": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "List of node ids you want to exclude from the search.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "public_config": {
+                  "type": "bool",
+                  "description": "Flag to pick only nodes with public config containing domain.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "public_ips_count": {
+                  "type": "number",
+                  "description": "Required count of public ips.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "sru": {
+                  "type": "number",
+                  "description": "Disk SSD size in MBs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "wireguard": {
+                  "type": "bool",
+                  "description": "Flag to pick only nodes supporting wireguard.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "yggdrasil": {
+                  "type": "bool",
+                  "description": "Flag to pick only nodes supporting yggdrasil.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "List of requests. Here a user defines their required nodes configurations.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          }
+        },
+        "description": "Resource to dynamically assign resource requests to nodes. A user could specify their desired node configurations, and the scheduler searches the grid for eligible nodes.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "grid_gateway_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "fqdn": {
+            "type": "string",
+            "description": "Fully qualified domain name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the gateway name workload",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID of the gateway",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Data source for computing gateway name proxy fqdn.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
