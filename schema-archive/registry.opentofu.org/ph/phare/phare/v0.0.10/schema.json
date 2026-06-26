@@ -1,0 +1,2491 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Phare API key for authentication. Can also be set via PHARE_API_KEY environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Phare API base URL. Defaults to https://api.phare.io. Can be overridden via PHARE_BASE_URL environment variable for testing.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "project_scope": {
+          "type": "string",
+          "description": "Optional. Project scope for API requests when using an organization-scoped API key. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Can also be set via PHARE_PROJECT_ID or PHARE_PROJECT_SLUG environment variables.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "timeout": {
+          "type": "number",
+          "description": "HTTP client timeout in seconds. Defaults to 30.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Terraform provider for managing Phare uptime monitoring resources.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "phare_alert_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Date of creation",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "event": {
+            "type": "string",
+            "description": "Name of the event that will trigger the alert rule, [see docs](https://docs.phare.io/uptime/alerting#events)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "event_settings": {
+            "type": "string",
+            "description": "Additional settings for the event (JSON object as string)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Alert rule ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "number",
+            "description": "The ID of the integration used to send notifications",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "integration_settings": {
+            "type": "string",
+            "description": "Additional settings for the integration (JSON object as string)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "The ID of a project to use as a scope",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this resource. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rate_limit": {
+            "type": "number",
+            "description": "Minimum time in minutes between alert executions",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of the alert rule. Must be either 'organization' or 'project'. When set to 'project', the alert rule is scoped to the project specified by project_scope or the provider-level project. When set to 'organization', the alert rule applies to the entire organization.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date of last update",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages an alert rule in Phare. Alert rules define conditions that trigger notifications when events occur.",
+        "description_kind": "markdown"
+      }
+    },
+    "phare_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Date of creation",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Project ID",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of team member IDs (1-100 members)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name (1-25 characters)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Project slug (auto-generated from name)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date of last update",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "settings": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "incident_merging_time_window": {
+                  "type": "number",
+                  "description": "Time window for incident merging in minutes (5, 10, 30, 60, 120, or 180). Defaults to 60.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "use_incident_ai": {
+                  "type": "bool",
+                  "description": "Whether to generate AI summaries for incidents. Defaults to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "use_incident_merging": {
+                  "type": "bool",
+                  "description": "Whether to use incident merging. Defaults to true.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "Project settings",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a Phare project. Projects are used to organize and group monitoring resources.",
+        "description_kind": "markdown"
+      }
+    },
+    "phare_uptime_monitor_http": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Date of creation",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Monitor ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "incident_confirmations": {
+            "type": "number",
+            "description": "Number of uninterrupted failed checks required to create an incident (1-5)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "interval": {
+            "type": "number",
+            "description": "Monitoring interval in seconds (30, 60, 120, 180, 300, 600, 900, 1800, 3600)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Monitor name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the monitor is paused",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Parent project ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this resource. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "recovery_confirmations": {
+            "type": "number",
+            "description": "Number of uninterrupted successful checks required to resolve an incident (1-5)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region_threshold": {
+            "type": "number",
+            "description": "Number of regions that must fail before an incident is confirmed (1-10)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Regions to monitor from, see the full [region list](https://docs.phare.io/uptime/monitors#regions)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Monitor status",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Monitoring timeout in milliseconds",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date of last update",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "request": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "body": {
+                  "type": "string",
+                  "description": "Request body for POST, PUT, PATCH",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "follow_redirects": {
+                  "type": "bool",
+                  "description": "Follow HTTP redirects (default: true)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "method": {
+                  "type": "string",
+                  "description": "HTTP method (GET, POST, PUT, PATCH, HEAD, OPTIONS)",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "tls_skip_verify": {
+                  "type": "bool",
+                  "description": "Skip TLS certificate verification (default: false)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL to monitor",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "user_agent_secret": {
+                  "type": "string",
+                  "description": "Secret value in User-Agent header for authentication, [see docs](https://docs.phare.io/uptime/monitors#user-agent)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true,
+                  "sensitive": true
+                }
+              },
+              "block_types": {
+                "headers": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Header name",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Header value",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Additional HTTP headers (max 10), [see docs](https://docs.phare.io/uptime/monitors#headers)",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "HTTP/HTTPS request configuration",
+              "description_kind": "markdown"
+            }
+          },
+          "success_assertions": {
+            "nesting_mode": "single",
+            "block": {
+              "block_types": {
+                "response_body": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "operator": {
+                        "type": "string",
+                        "description": "Operator to use for the assertion (contains, not_contains)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "A word or sentence to check in the response body",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Response body assertions",
+                    "description_kind": "markdown"
+                  }
+                },
+                "response_header": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "operator": {
+                        "type": "string",
+                        "description": "Operator to use for the assertion (equals, not_equals)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "selector": {
+                        "type": "string",
+                        "description": "The name of the header to assert",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "The value of the header to assert",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Response header assertions",
+                    "description_kind": "markdown"
+                  }
+                },
+                "status_code": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "operator": {
+                        "type": "string",
+                        "description": "Operator to use for the assertion (in, not_in)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "A comma-separated list of status code values, you can use x as a wildcard for any digit",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Status code assertions",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "List of assertions that must be true for the check to be considered successful, [see docs](https://docs.phare.io/uptime/monitors#success-assertions)",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages an HTTP/HTTPS uptime monitor in Phare. Monitors website availability and performance using HTTP/HTTPS requests.",
+        "description_kind": "markdown"
+      }
+    },
+    "phare_uptime_monitor_tcp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Date of creation",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Monitor ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "incident_confirmations": {
+            "type": "number",
+            "description": "Number of uninterrupted failed checks required to create an incident (1-5)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "interval": {
+            "type": "number",
+            "description": "Monitoring interval in seconds (30, 60, 120, 180, 300, 600, 900, 1800, 3600)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Monitor name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the monitor is paused",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Parent project ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this resource. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "recovery_confirmations": {
+            "type": "number",
+            "description": "Number of uninterrupted successful checks required to resolve an incident (1-5)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region_threshold": {
+            "type": "number",
+            "description": "Number of regions that must fail before an incident is confirmed (1-10)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Regions to monitor from, see the full [region list](https://docs.phare.io/uptime/monitors#regions)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Monitor status",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Monitoring timeout in milliseconds",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date of last update",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "request": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "connection": {
+                  "type": "string",
+                  "description": "Connection type (plain or tls)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "Hostname or IP address",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Port number",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "tls_skip_verify": {
+                  "type": "bool",
+                  "description": "Skip TLS certificate verification (default: false)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "description": "TCP request configuration",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a TCP uptime monitor in Phare. Monitors service availability using TCP connections.",
+        "description_kind": "markdown"
+      }
+    },
+    "phare_uptime_status_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_ips": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of IP addresses or CIDR ranges allowed to access the status page. Requires an active Scale plan subscription.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "access_password": {
+            "type": "string",
+            "description": "Password required to access the status page. Requires an active Scale plan subscription.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "access_password_enabled": {
+            "type": "bool",
+            "description": "Whether a password is currently set on the status page.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "access_token": {
+            "type": "string",
+            "description": "Token required to access the status page. Requires an active Scale plan subscription.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "access_token_enabled": {
+            "type": "bool",
+            "description": "Whether an access token is currently set on the status page.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "color_scheme": {
+            "type": "string",
+            "description": "Available color schemes for the status page (all, dark, or light). Defaults to all.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "components": {
+            "nested_type": {
+              "attributes": {
+                "componentable_id": {
+                  "type": "number",
+                  "description": "ID of the monitor to display on the status page",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "componentable_type": {
+                  "type": "string",
+                  "description": "Type of component (uptime/monitor)",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of components (monitors) to show on the status page",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Date of creation",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Status page description",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Custom domain for the status page, [see docs](https://docs.phare.io/uptime/status-pages#custom-domain)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "favicon_dark": {
+            "type": "string",
+            "description": "Path to dark theme favicon file (png/svg). Remove attribute to delete favicon.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "favicon_light": {
+            "type": "string",
+            "description": "Path to light theme favicon file (png/svg). Remove attribute to delete favicon.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Status page ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "logo_dark": {
+            "type": "string",
+            "description": "Path to dark theme logo image file (jpeg/png/svg). Remove attribute to delete logo.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "logo_light": {
+            "type": "string",
+            "description": "Path to light theme logo image file (jpeg/png/svg). Remove attribute to delete logo.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Status page name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Parent project ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this resource. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "search_engine_indexed": {
+            "type": "bool",
+            "description": "Whether search engines can index the page",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "Subdomain for the status page, [see docs](https://docs.phare.io/uptime/status-pages#phare-domain)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "subscription_channels": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Subscription channels available (rss, atom)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "timeframe": {
+            "type": "number",
+            "description": "Number of days of status/incident history to display (30, 60, or 90)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Status page title",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Date of last update",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "website_url": {
+            "type": "string",
+            "description": "URL to redirect users from the status page",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "theme": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "border_width": {
+                  "type": "number",
+                  "description": "Border width (0-3)",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "rounded": {
+                  "type": "bool",
+                  "description": "Whether to use rounded corners",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "block_types": {
+                "dark": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "background": {
+                        "type": "string",
+                        "description": "Background color (e.g., #111111)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "background_card": {
+                        "type": "string",
+                        "description": "Card background color (e.g., #1a1a1a)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "degraded_performance": {
+                        "type": "string",
+                        "description": "Color for degraded performance status (e.g., #fbbf24)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "empty": {
+                        "type": "string",
+                        "description": "Color for empty/no data status (e.g., #d3d3d3)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "foreground": {
+                        "type": "string",
+                        "description": "Foreground/text color (e.g., #ffffff)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "foreground_muted": {
+                        "type": "string",
+                        "description": "Muted foreground/text color (e.g., #959595)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "maintenance": {
+                        "type": "string",
+                        "description": "Color for maintenance status (e.g., #6366f1)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "major_outage": {
+                        "type": "string",
+                        "description": "Color for major outage status (e.g., #ef4444)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "operational": {
+                        "type": "string",
+                        "description": "Color for operational status (e.g., #16a34a)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "partial_outage": {
+                        "type": "string",
+                        "description": "Color for partial outage status (e.g., #f59e0b)",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Dark theme colors",
+                    "description_kind": "markdown"
+                  }
+                },
+                "light": {
+                  "nesting_mode": "single",
+                  "block": {
+                    "attributes": {
+                      "background": {
+                        "type": "string",
+                        "description": "Background color (e.g., #ffffff)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "background_card": {
+                        "type": "string",
+                        "description": "Card background color (e.g., #fafafa)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "degraded_performance": {
+                        "type": "string",
+                        "description": "Color for degraded performance status (e.g., #fbbf24)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "empty": {
+                        "type": "string",
+                        "description": "Color for empty/no data status (e.g., #d3d3d3)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "foreground": {
+                        "type": "string",
+                        "description": "Foreground/text color (e.g., #000000)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "foreground_muted": {
+                        "type": "string",
+                        "description": "Muted foreground/text color (e.g., #737373)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "maintenance": {
+                        "type": "string",
+                        "description": "Color for maintenance status (e.g., #6366f1)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "major_outage": {
+                        "type": "string",
+                        "description": "Color for major outage status (e.g., #ef4444)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "operational": {
+                        "type": "string",
+                        "description": "Color for operational status (e.g., #16a34a)",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "partial_outage": {
+                        "type": "string",
+                        "description": "Color for partial outage status (e.g., #f59e0b)",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Light theme colors",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "Theme settings to customize the status page",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages a status page in Phare. Status pages provide visibility into system status and incidents.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "phare_alert_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "event": {
+            "type": "string",
+            "description": "Event name that triggers the alert rule",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "event_settings": {
+            "type": "string",
+            "description": "Event-specific settings as JSON",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Alert rule ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "integration_id": {
+            "type": "number",
+            "description": "Integration ID for notifications",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "integration_settings": {
+            "type": "string",
+            "description": "Integration-specific settings as JSON",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Project ID (optional scope)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rate_limit": {
+            "type": "number",
+            "description": "Rate limit in minutes",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a specific alert rule by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_alert_rules": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alert_rules": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "event": {
+                  "type": "string",
+                  "description": "Event name that triggers the alert rule",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "event_settings": {
+                  "type": "string",
+                  "description": "Event-specific settings as JSON",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Alert rule ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "integration_id": {
+                  "type": "number",
+                  "description": "Integration ID for notifications",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "integration_settings": {
+                  "type": "string",
+                  "description": "Integration-specific settings as JSON",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project_id": {
+                  "type": "number",
+                  "description": "Project ID (optional scope)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "rate_limit": {
+                  "type": "number",
+                  "description": "Rate limit in minutes",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of alert rules",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Fetches a list of alert rules.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app": {
+            "type": "string",
+            "description": "The app key to filter integrations. Valid values: sms, discord, email, ilert, ntfy, outgoing_webhook, pushover, slack, telegram",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the integration to fetch. Exactly one of 'id' or 'name' must be specified.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the integration to fetch. Exactly one of 'id' or 'name' must be specified.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the integration is paused",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single integration by app and either ID or name. Exactly one of 'id' or 'name' must be specified.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_integrations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app": {
+            "type": "string",
+            "description": "The app key to filter integrations. Valid values: sms, discord, email, ilert, ntfy, outgoing_webhook, pushover, slack, telegram",
+            "description_kind": "plain",
+            "required": true
+          },
+          "integrations": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Integration ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Integration name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "paused": {
+                  "type": "bool",
+                  "description": "Whether the integration is paused",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of integrations for the specified app",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of integrations for a specific app.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Project ID. Must specify either 'id' or 'slug'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of team member IDs",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "settings": {
+            "nested_type": {
+              "attributes": {
+                "incident_merging_time_window": {
+                  "type": "number",
+                  "description": "Time window for incident merging in minutes",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "use_incident_ai": {
+                  "type": "bool",
+                  "description": "Whether AI summaries are enabled for incidents",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "use_incident_merging": {
+                  "type": "bool",
+                  "description": "Whether incident merging is enabled",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Project settings",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "Project slug. Must specify either 'id' or 'slug'.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a specific project by ID or slug. You must specify either 'id' or 'slug' (not both).",
+        "description_kind": "plain"
+      }
+    },
+    "phare_projects": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "projects": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Project ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "members": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "List of team member IDs",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Project name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "settings": {
+                  "nested_type": {
+                    "attributes": {
+                      "incident_merging_time_window": {
+                        "type": "number",
+                        "description": "Time window for incident merging in minutes",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "use_incident_ai": {
+                        "type": "bool",
+                        "description": "Whether AI summaries are enabled for incidents",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "use_incident_merging": {
+                        "type": "bool",
+                        "description": "Whether incident merging is enabled",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Project settings",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "Project slug",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of projects",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of projects. Requires an organization-scoped API key.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_uptime_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Monitor ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "incident_confirmations": {
+            "type": "number",
+            "description": "Number of confirmations before creating an incident",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "interval": {
+            "type": "number",
+            "description": "Monitoring interval in seconds",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Monitor name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "one_day_availability": {
+            "type": "number",
+            "description": "Availability over the last 24 hours",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "paused": {
+            "type": "bool",
+            "description": "Whether the monitor is paused",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Parent project ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Monitoring protocol (http, tcp)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "recovery_confirmations": {
+            "type": "number",
+            "description": "Number of confirmations before marking as recovered",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region_threshold": {
+            "type": "number",
+            "description": "Number of regions that must fail before an incident is confirmed",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Regions where monitoring is performed",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "request": {
+            "nested_type": {
+              "attributes": {
+                "body": {
+                  "type": "string",
+                  "description": "HTTP request body (for HTTP monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "connection": {
+                  "type": "string",
+                  "description": "Connection type (for TCP monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "follow_redirects": {
+                  "type": "bool",
+                  "description": "Whether to follow HTTP redirects",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "headers": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description": "Header name",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Header value",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "HTTP headers to send with the request",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "Host to connect to (for TCP monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "method": {
+                  "type": "string",
+                  "description": "HTTP method (for HTTP monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "port": {
+                  "type": "number",
+                  "description": "Port to connect to (for TCP monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tls_skip_verify": {
+                  "type": "bool",
+                  "description": "Whether to skip TLS certificate verification",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL being monitored (for HTTP/HTTPS monitors)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "user_agent_secret": {
+                  "type": "string",
+                  "description": "User agent secret for request verification",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Monitor request configuration (varies by protocol)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "response_time": {
+            "type": "number",
+            "description": "Latest response time in milliseconds",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "seven_days_availability": {
+            "type": "number",
+            "description": "Availability over the last 7 days",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current monitor status",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "success_assertions": {
+            "type": "string",
+            "description": "Success assertions as JSON",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Monitoring timeout in milliseconds",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a specific uptime monitor by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_uptime_monitors": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "monitors": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Monitor ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "incident_confirmations": {
+                  "type": "number",
+                  "description": "Number of confirmations before creating an incident",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "interval": {
+                  "type": "number",
+                  "description": "Monitoring interval in seconds",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Monitor name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "one_day_availability": {
+                  "type": "number",
+                  "description": "Availability over the last 24 hours",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "paused": {
+                  "type": "bool",
+                  "description": "Whether the monitor is paused",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project_id": {
+                  "type": "number",
+                  "description": "Parent project ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "Monitoring protocol (http, tcp)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "recovery_confirmations": {
+                  "type": "number",
+                  "description": "Number of confirmations before marking as recovered",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region_threshold": {
+                  "type": "number",
+                  "description": "Number of regions that must fail before an incident is confirmed",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "regions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Regions where monitoring is performed",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "request": {
+                  "nested_type": {
+                    "attributes": {
+                      "body": {
+                        "type": "string",
+                        "description": "HTTP request body (for HTTP monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "connection": {
+                        "type": "string",
+                        "description": "Connection type (for TCP monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "follow_redirects": {
+                        "type": "bool",
+                        "description": "Whether to follow HTTP redirects",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "headers": {
+                        "nested_type": {
+                          "attributes": {
+                            "name": {
+                              "type": "string",
+                              "description": "Header name",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Header value",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "HTTP headers to send with the request",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "host": {
+                        "type": "string",
+                        "description": "Host to connect to (for TCP monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "method": {
+                        "type": "string",
+                        "description": "HTTP method (for HTTP monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "port": {
+                        "type": "number",
+                        "description": "Port to connect to (for TCP monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "tls_skip_verify": {
+                        "type": "bool",
+                        "description": "Whether to skip TLS certificate verification",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "URL being monitored (for HTTP/HTTPS monitors)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "user_agent_secret": {
+                        "type": "string",
+                        "description": "User agent secret for request verification",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Monitor request configuration (varies by protocol)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "response_time": {
+                  "type": "number",
+                  "description": "Latest response time in milliseconds",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "seven_days_availability": {
+                  "type": "number",
+                  "description": "Availability over the last 7 days",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current monitor status",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "success_assertions": {
+                  "type": "string",
+                  "description": "Success assertions as JSON",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "timeout": {
+                  "type": "number",
+                  "description": "Monitoring timeout in milliseconds",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of uptime monitors",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Fetches a list of uptime monitors.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_uptime_status_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_ips": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of IP addresses or CIDR ranges allowed to access the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "access_password_enabled": {
+            "type": "bool",
+            "description": "Whether a password is currently set on the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "access_token_enabled": {
+            "type": "bool",
+            "description": "Whether an access token is currently set on the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "color_scheme": {
+            "type": "string",
+            "description": "Available color schemes for the status page (all, dark, or light)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "components": {
+            "nested_type": {
+              "attributes": {
+                "componentable_id": {
+                  "type": "number",
+                  "description": "ID of the component",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "componentable_type": {
+                  "type": "string",
+                  "description": "Type of component",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of components (monitors) shown on the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Status page HTML description",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Custom domain for the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Status page ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Status page name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_id": {
+            "type": "number",
+            "description": "Parent project ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "search_engine_indexed": {
+            "type": "bool",
+            "description": "Whether search engines can index the page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "Subdomain for the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "theme": {
+            "nested_type": {
+              "attributes": {
+                "border_width": {
+                  "type": "number",
+                  "description": "Border width (0-3)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "dark": {
+                  "nested_type": {
+                    "attributes": {
+                      "background": {
+                        "type": "string",
+                        "description": "Background color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "background_card": {
+                        "type": "string",
+                        "description": "Card background color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "degraded_performance": {
+                        "type": "string",
+                        "description": "Color for degraded performance status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "empty": {
+                        "type": "string",
+                        "description": "Color for empty/no data status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "foreground": {
+                        "type": "string",
+                        "description": "Foreground/text color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "foreground_muted": {
+                        "type": "string",
+                        "description": "Muted foreground/text color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "maintenance": {
+                        "type": "string",
+                        "description": "Color for maintenance status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "major_outage": {
+                        "type": "string",
+                        "description": "Color for major outage status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "operational": {
+                        "type": "string",
+                        "description": "Color for operational status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "partial_outage": {
+                        "type": "string",
+                        "description": "Color for partial outage status",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Dark theme colors",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "light": {
+                  "nested_type": {
+                    "attributes": {
+                      "background": {
+                        "type": "string",
+                        "description": "Background color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "background_card": {
+                        "type": "string",
+                        "description": "Card background color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "degraded_performance": {
+                        "type": "string",
+                        "description": "Color for degraded performance status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "empty": {
+                        "type": "string",
+                        "description": "Color for empty/no data status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "foreground": {
+                        "type": "string",
+                        "description": "Foreground/text color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "foreground_muted": {
+                        "type": "string",
+                        "description": "Muted foreground/text color",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "maintenance": {
+                        "type": "string",
+                        "description": "Color for maintenance status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "major_outage": {
+                        "type": "string",
+                        "description": "Color for major outage status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "operational": {
+                        "type": "string",
+                        "description": "Color for operational status",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "partial_outage": {
+                        "type": "string",
+                        "description": "Color for partial outage status",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Light theme colors",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "rounded": {
+                  "type": "bool",
+                  "description": "Whether to use rounded corners",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Theme settings to customize the status page",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeframe": {
+            "type": "number",
+            "description": "Number of days of status/incident history to display",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Status page HTML title",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "website_url": {
+            "type": "string",
+            "description": "URL to redirect users from the status page",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a specific status page by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_uptime_status_pages": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project_scope": {
+            "type": "dynamic",
+            "description": "Optional. Project scope for this data source. Accepts either a numeric project ID (e.g., 123) or a string project slug (e.g., \"my-project\"). Overrides the provider-level project_scope if set. Required when using an organization-scoped API key (starting with pha_org_).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status_pages": {
+            "nested_type": {
+              "attributes": {
+                "access_ips": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of IP addresses or CIDR ranges allowed to access the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "access_password_enabled": {
+                  "type": "bool",
+                  "description": "Whether a password is currently set on the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "access_token_enabled": {
+                  "type": "bool",
+                  "description": "Whether an access token is currently set on the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "color_scheme": {
+                  "type": "string",
+                  "description": "Available color schemes for the status page (all, dark, or light)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "components": {
+                  "nested_type": {
+                    "attributes": {
+                      "componentable_id": {
+                        "type": "number",
+                        "description": "ID of the component",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "componentable_type": {
+                        "type": "string",
+                        "description": "Type of component",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of components (monitors) shown on the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Status page HTML description",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "domain": {
+                  "type": "string",
+                  "description": "Custom domain for the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Status page ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Status page name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project_id": {
+                  "type": "number",
+                  "description": "Parent project ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "search_engine_indexed": {
+                  "type": "bool",
+                  "description": "Whether search engines can index the page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subdomain": {
+                  "type": "string",
+                  "description": "Subdomain for the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "theme": {
+                  "nested_type": {
+                    "attributes": {
+                      "border_width": {
+                        "type": "number",
+                        "description": "Border width (0-3)",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "dark": {
+                        "nested_type": {
+                          "attributes": {
+                            "background": {
+                              "type": "string",
+                              "description": "Background color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "background_card": {
+                              "type": "string",
+                              "description": "Card background color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "degraded_performance": {
+                              "type": "string",
+                              "description": "Color for degraded performance status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "empty": {
+                              "type": "string",
+                              "description": "Color for empty/no data status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "foreground": {
+                              "type": "string",
+                              "description": "Foreground/text color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "foreground_muted": {
+                              "type": "string",
+                              "description": "Muted foreground/text color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "maintenance": {
+                              "type": "string",
+                              "description": "Color for maintenance status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "major_outage": {
+                              "type": "string",
+                              "description": "Color for major outage status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "operational": {
+                              "type": "string",
+                              "description": "Color for operational status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "partial_outage": {
+                              "type": "string",
+                              "description": "Color for partial outage status",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Dark theme colors",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "light": {
+                        "nested_type": {
+                          "attributes": {
+                            "background": {
+                              "type": "string",
+                              "description": "Background color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "background_card": {
+                              "type": "string",
+                              "description": "Card background color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "degraded_performance": {
+                              "type": "string",
+                              "description": "Color for degraded performance status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "empty": {
+                              "type": "string",
+                              "description": "Color for empty/no data status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "foreground": {
+                              "type": "string",
+                              "description": "Foreground/text color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "foreground_muted": {
+                              "type": "string",
+                              "description": "Muted foreground/text color",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "maintenance": {
+                              "type": "string",
+                              "description": "Color for maintenance status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "major_outage": {
+                              "type": "string",
+                              "description": "Color for major outage status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "operational": {
+                              "type": "string",
+                              "description": "Color for operational status",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "partial_outage": {
+                              "type": "string",
+                              "description": "Color for partial outage status",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "Light theme colors",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "rounded": {
+                        "type": "bool",
+                        "description": "Whether to use rounded corners",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Theme settings to customize the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "timeframe": {
+                  "type": "number",
+                  "description": "Number of days of status/incident history to display",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Status page HTML title",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "website_url": {
+                  "type": "string",
+                  "description": "URL to redirect users from the status page",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of status pages",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of status pages.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "User ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "User role (member or admin)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a single user by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "phare_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "emails": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of email addresses to filter users. If not specified, returns all users (first page, up to 100 users).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Creation timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "email": {
+                  "type": "string",
+                  "description": "User email address",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "number",
+                  "description": "User ID",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "role": {
+                  "type": "string",
+                  "description": "User role (member or admin)",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Last update timestamp",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of users",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches a list of users, optionally filtered by email addresses.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

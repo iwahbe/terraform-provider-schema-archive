@@ -1,0 +1,752 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "command_timeout": {
+          "type": "number",
+          "description": "Timeout for multipass commands in seconds (default: 600).",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "default_image": {
+          "type": "string",
+          "description": "Default image alias or name used when a resource omits an explicit image value.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "multipass_path": {
+          "type": "string",
+          "description": "Path to the `multipass` binary. Defaults to `multipass`, which requires the CLI to be available on the `PATH`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Provider for managing Canonical Multipass resources via the Multipass CLI.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "multipass_alias": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "command": {
+            "type": "string",
+            "description": "Command to execute inside the instance.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "instance": {
+            "type": "string",
+            "description": "Target Multipass instance.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Alias name accessible on the host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "Working directory inside the instance. The command is wrapped with `cd <dir> && exec <command>` automatically.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages Multipass CLI aliases.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_file_download": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content_hash": {
+            "type": "string",
+            "description": "SHA256 hash of the downloaded payload.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "create_parents": {
+            "type": "bool",
+            "description": "Create local parent directories as needed.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "Local path where the file or directory should be written.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier in the form `<instance>:<source>-><destination>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "instance": {
+            "type": "string",
+            "description": "Multipass instance to read from.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "Whether to overwrite existing files/directories at the destination.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "recursive": {
+            "type": "bool",
+            "description": "Set true when downloading directories (maps to `multipass transfer --recursive`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Path inside the instance to download.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of arbitrary values that, when changed, force the download to re-run (similar to `null_resource.triggers`).",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Downloads files or directories from Multipass instances to the host using `multipass transfer`.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_file_upload": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Inline file content to upload. Conflicts with `source`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "content_hash": {
+            "type": "string",
+            "description": "SHA256 hash of the payload sent to the instance. Changes trigger updates.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "create_parents": {
+            "type": "bool",
+            "description": "Create destination parent directories as needed (maps to `multipass transfer --parents`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "Absolute or relative path inside the instance where the file or directory will be written.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Canonical identifier in the form `<instance>:<destination>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "instance": {
+            "type": "string",
+            "description": "Target Multipass instance name that must already exist.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "recursive": {
+            "type": "bool",
+            "description": "Whether to copy directories recursively (maps to `multipass transfer --recursive`).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Local path to the file or directory that should be uploaded. Conflicts with `content`.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Uploads local files, inline content, or directories to Multipass instances via `multipass transfer`.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_instance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_recover": {
+            "type": "bool",
+            "description": "Attempt to recover the instance if it becomes deleted outside Terraform.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_start_on_recover": {
+            "type": "bool",
+            "description": "If true, automatically start the instance after a successful auto-recover when it was soft-deleted outside Terraform.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cloud_init": {
+            "type": "string",
+            "description": "Inline cloud-init YAML applied at launch. Mutually exclusive with `cloud_init_file`. Forces recreation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "cloud_init_file": {
+            "type": "string",
+            "description": "Path to a cloud-init YAML file applied at launch. Mutually exclusive with `cloud_init`. Forces recreation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cpus": {
+            "type": "number",
+            "description": "Number of virtual CPUs. Changing this value forces recreation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "disk": {
+            "type": "string",
+            "description": "Disk size (e.g., `5G`). Changing forces recreation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "Image alias or name (e.g., `lts`, `jammy`, `24.04`). Defaults to provider `default_image`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "image_release": {
+            "type": "string",
+            "description": "Release name pulled from the image metadata.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ipv4": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Assigned IPv4 addresses as reported by `multipass info`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Timestamp of the last information refresh in RFC3339 format.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "memory": {
+            "type": "string",
+            "description": "Memory size (e.g., `1G`, `512M`). Changing forces recreation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Instance name. Must be unique per Multipass host.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "primary": {
+            "type": "bool",
+            "description": "If true, mark this instance as the Multipass primary instance after creation.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "release": {
+            "type": "string",
+            "description": "Operating system release running in the instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "snapshot_count": {
+            "type": "number",
+            "description": "Number of snapshots recorded for this instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Current power state reported by Multipass.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "wait_for_cloud_init": {
+            "type": "bool",
+            "description": "Wait for cloud-init to finish after launch before marking the resource as created. Useful when downstream resources depend on packages or configuration applied by cloud-init.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "mounts": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host_path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "instance_path": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "read_only": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Host directory mounts to attach at launch.",
+              "description_kind": "plain"
+            }
+          },
+          "networks": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "mac": {
+                  "type": "string",
+                  "description": "Explicit MAC address to assign.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "mode": {
+                  "type": "string",
+                  "description": "Attachment mode (auto/manual).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Host network name (from `multipass networks`).",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Optional networks to attach during launch.",
+              "description_kind": "plain"
+            }
+          },
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages Canonical Multipass instances.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_snapshot": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "comment": {
+            "type": "string",
+            "description": "Optional comment associated with the snapshot. Changing forces recreation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Canonical identifier for the snapshot in the form `<instance>.<snapshot>`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "instance": {
+            "type": "string",
+            "description": "Name of the Multipass instance to snapshot. The instance must be stopped.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Snapshot name. If omitted, Multipass will auto-generate one (e.g., `snapshot1`). Changing forces recreation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Manages a named snapshot for a Multipass instance.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "multipass_images": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "alias": {
+            "type": "string",
+            "description": "Alias filter (matches any alias).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "images": {
+            "nested_type": {
+              "attributes": {
+                "aliases": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "kind": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "os": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "release": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "remote": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Filter by kind (`image` or `blueprint`).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Exact image name filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "query": {
+            "type": "string",
+            "description": "Case-insensitive substring filter applied to names and descriptions.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lists Multipass images and blueprints available via `multipass find`.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_instance": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cpu_count": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disk_total_bytes": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "disk_used_bytes": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image_release": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ipv4": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "memory_total_bytes": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "memory_used_bytes": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Instance name to inspect.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "release": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "snapshot_count": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads an existing Multipass instance.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_networks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "Exact network name filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "networks": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists host networks available for Multipass bridged attachments.",
+        "description_kind": "plain"
+      }
+    },
+    "multipass_snapshots": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "instance": {
+            "type": "string",
+            "description": "Instance name to list snapshots for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional snapshot name filter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "snapshots": {
+            "nested_type": {
+              "attributes": {
+                "comment": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "instance": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "parent": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lists snapshots for a given Multipass instance.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
