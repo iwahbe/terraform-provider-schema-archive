@@ -1,0 +1,1433 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "ACM API token (X-Auth-Token). Minted in the ACM UI under My Account -> Anywhere API Access. Falls back to the ALTINITYCLOUD_API_TOKEN environment variable when unset.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "ACM API base URL. Defaults to https://acm.altinity.cloud/api.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "Manage Altinity.Cloud ClickHouse clusters via the Altinity Cloud Manager (ACM) REST API.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "altinity_clickhouse_cluster": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "admin_password": {
+            "type": "string",
+            "description": "Admin user password. Write-only at the API (never returned on Read); preserved from prior state. Changing this updates the admin user's password in place via the DB user API.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "admin_user": {
+            "type": "string",
+            "description": "Cluster admin username. Required alongside admin_password (launching with a password but no user errors). Defaults to \"admin\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "adopt_existing": {
+            "type": "bool",
+            "description": "If true, Create will adopt an existing cluster of the same name in the target environment instead of erroring. Default false \u2014 a cluster created out-of-band (or by another team using the same ACM token) will NOT be silently placed under Terraform management. Set to true only when you intend to take over a pre-existing cluster, e.g. when migrating an ACM-UI-created cluster into IaC. Adoption still validates that immutable topology fields match the plan.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "alternate_endpoints": {
+            "type": "string",
+            "description": "Alternate endpoints (`alternateEndpoints`), supplied as a raw JSON string. Sensitive because it may carry credentials. Updated in place via the cluster edit API. Removing the attribute leaves the last-applied settings active at ACM (not read back; send `\"[]\"` to clear explicitly).",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "azlist": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Availability zones to place nodes in (e.g. from the altinity_zones data source). Mutable in place via rescale (changing the AZ set rebalances nodes; it does NOT destroy the cluster).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "backup_options": {
+            "type": "string",
+            "description": "Backup schedule configuration (`backupOptions`), supplied as a raw JSON string. Sensitive because it may carry credentials (e.g. object-storage keys).",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "data_path": {
+            "type": "string",
+            "description": "Data path (storage policy). Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "datadog": {
+            "type": "string",
+            "description": "Datadog integration settings (`datadogSettings`), supplied as a raw JSON string. Sensitive because it contains the Datadog API key when set. Updated in place via the cluster edit API. Removing the attribute leaves the last-applied settings active at ACM (not read back; send `\"{}\"` to clear explicitly).",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "disks": {
+            "type": "number",
+            "description": "Number of disks (default 1). Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "The native protocol endpoint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "endpoint_http": {
+            "type": "string",
+            "description": "The HTTP protocol endpoint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "The ACM environment id to launch the cluster in. Changing this forces replacement.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "iops": {
+            "type": "number",
+            "description": "Provisioned IOPS. Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_whitelist": {
+            "type": "string",
+            "description": "IP allow-list (comma-separated CIDRs). Updated in place via the cluster edit API; removing the attribute clears the allow-list (the endpoint becomes unrestricted \u2014 see `public_endpoint`).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "keeper_name": {
+            "type": "string",
+            "description": "Keeper name. Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "lb_type": {
+            "type": "string",
+            "description": "Load balancer type (default `\"ingress\"`). Updated in place via the cluster edit API.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "memory": {
+            "type": "string",
+            "description": "Memory request. Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mysql_port": {
+            "type": "number",
+            "description": "MySQL protocol port (ACM-UI default 9004 \u2014 matches upstream ClickHouse). Only relevant when `mysql_protocol = true`. Updated in place via the cluster edit API.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mysql_protocol": {
+            "type": "bool",
+            "description": "Enable the MySQL protocol (default false). Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The cluster name. Renamed in place via the cluster edit API. NOTE: ACM derives the cluster's endpoint hostnames from the name, so a rename changes `endpoint`/`endpoint_http` \u2014 update any consumers accordingly.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_count": {
+            "type": "number",
+            "description": "Number of nodes (maps to ACM `nodes`). Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node_type": {
+            "type": "string",
+            "description": "The node type code (e.g. n2d-standard-2). Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "public_endpoint": {
+            "type": "bool",
+            "description": "Expose a public endpoint (default `false`). When `true` the cluster endpoint is reachable from the internet unless `ip_whitelist` restricts it \u2014 set both deliberately. Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "replicas": {
+            "type": "number",
+            "description": "Number of replicas per shard. Mutable in place via rescale (scale-out adds redundancy; scale-in removes replicas).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "replicate_schema": {
+            "type": "bool",
+            "description": "Replicate schema across replicas (default true). Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "Cluster role \u2014 REQUIRED by ACM at launch (omitting it returns HTTP 500). Use the API codes \"prod\" or \"dev\" (shown as Production / Development in the ACM UI; the UI labels themselves are rejected). Defaults to \"prod\". Updated in place via the cluster edit API.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "secure": {
+            "type": "bool",
+            "description": "Enable TLS (default `true`). Changing this forces replacement of the cluster.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "shards": {
+            "type": "number",
+            "description": "Number of shards. Mutable in place via rescale \u2014 adding shards is a partition expansion; reducing shards is a data-loss operation that ACM may refuse server-side. Plan accordingly.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "size": {
+            "type": "string",
+            "description": "Storage size per node. Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Current cluster state.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Current cluster status (poll value).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "storage_class": {
+            "type": "string",
+            "description": "Storage class. Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "system_version": {
+            "type": "string",
+            "description": "The running ClickHouse system version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "throughput": {
+            "type": "number",
+            "description": "Provisioned throughput. Mutable in place via rescale.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "Create timeout (Go duration string). Default 30m.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description": "Delete timeout (Go duration string). Default 20m.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "Update timeout (Go duration string). Default 20m.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Operation timeouts as Go duration strings (e.g. \"30m\"). Defaults: create 30m, update 20m, delete 20m.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Cluster timezone. Updated in place via the cluster edit API.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The cluster type. Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "uptime": {
+            "type": "string",
+            "description": "Uptime schedule selector (Always On / Stop when inactive / On schedule \u2014 NOT the elapsed-runtime counter). Updated in place via the cluster edit API.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "uptime_settings": {
+            "type": "string",
+            "description": "Uptime window settings (`uptimeSettings`), supplied as a raw JSON string. Sensitive because it may carry secrets. Updated in place via the cluster edit API. Removing the attribute leaves the last-applied settings active at ACM (not read back; send `\"{}\"` to clear explicitly).",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "version": {
+            "type": "string",
+            "description": "ClickHouse version. Mutable in place via upgrade \u2014 forward-only; a downgrade is rejected at plan time (ClickHouse does not support in-place downgrades).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version_image": {
+            "type": "string",
+            "description": "Explicit version image. Mutable in place via upgrade.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "zone_awareness": {
+            "type": "bool",
+            "description": "Spread nodes across availability zones. Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "zookeeper": {
+            "type": "string",
+            "description": "ZooKeeper mode/selection (e.g. \"launch\"). Mutually exclusive with keeper_name. Changing this forces replacement.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manage an Altinity.Cloud ClickHouse cluster (launch, rescale, upgrade, backup, and terminate). This resource does not manage ClickHouse settings, profiles, or users \u2014 use the `altinity_clickhouse_cluster_setting`, `altinity_clickhouse_profile`, and `altinity_clickhouse_user` resources for those.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_cluster_setting": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string) that owns this setting. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite resource id \"<cluster_id>:<name>\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The setting name (the config-stable key). Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "setting_id": {
+            "type": "string",
+            "description": "The ACM-internal setting id (integer, stored as string). Populated automatically \u2014 on Create from the POST response, and on import via the first plan/refresh. Do not set manually.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The setting value.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manage a single cluster-level ClickHouse setting via /cluster/{cluster}/settings (GET/POST). Keyed by cluster_id + name.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_keeper": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "adopt_existing": {
+            "type": "bool",
+            "description": "If true, Create will adopt an existing keeper of the same name in the target environment instead of erroring. Default false \u2014 a keeper created out-of-band (or by another team using the same ACM token) will NOT be silently placed under Terraform management. Set to true when migrating an ACM-created keeper into IaC, or to resume a create that was interrupted after launch.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cpu_limits": {
+            "type": "string",
+            "description": "Read-back CPU limit (k8s quantity).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cpu_requests": {
+            "type": "string",
+            "description": "Read-back CPU request (k8s quantity).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id the keeper lives in.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ha": {
+            "type": "bool",
+            "description": "High availability (3-node) keeper when true; single-node otherwise. ACM-managed: the value is determined server-side from the bound cluster's replica count (any cluster with replicas > 1 forces HA) and reported back here. Cannot be set in config.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource id, \"<environment>:<name>\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "image": {
+            "type": "string",
+            "description": "Keeper image/version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "instance_type": {
+            "type": "string",
+            "description": "Node instance type \u2014 a zookeeper-scoped type (e.g. e2-standard-2); see the altinity_node_types data source.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Keeper name (unique within the environment). Used as a URL path segment, so must not contain `/`, `:`, or whitespace.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Operation timeouts (Go duration strings).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zone_topology_key": {
+            "type": "string",
+            "description": "Read-back zone topology key.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "zones": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Availability zones to spread keeper nodes across.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "A ClickHouse Keeper (CH Keeper) coordination cluster. Reference it from an altinity_clickhouse_cluster via keeper_name.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string) that owns this profile.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable description for the profile. Updatable in place via POST /profile/{id}.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier `<cluster_id>:<name>`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The settings profile name (the config-stable key). AVOID `default` and `readonly` \u2014 ACM auto-creates and auto-maintains profiles with those names at cluster launch; managing them from Terraform produces opaque ACM errors as ACM and Terraform fight over the same row.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "profile_id": {
+            "type": "string",
+            "description": "The ACM-internal profile id (integer, stored as string).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manage a single ClickHouse settings profile on an Altinity.Cloud cluster (/cluster/{cluster}/profiles).",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_profile_setting": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Composite resource id \"<profile_id>:<name>\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The setting name (the config-stable key, e.g. `readonly`, `max_memory_usage`). Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "profile_id": {
+            "type": "string",
+            "description": "The ACM profile id (integer, stored as string) that owns this setting. Typically a reference to `altinity_clickhouse_profile.<name>.profile_id`. Changing this forces a new resource.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "setting_id": {
+            "type": "string",
+            "description": "The ACM-internal profile-setting id (integer, stored as string). Populated automatically \u2014 on Create from the POST response, and on import via the first plan/refresh. Do not set manually.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The setting value, as a string.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manage a single setting attached to a ClickHouse settings profile via /profile/{profile}/settings (GET/POST). Keyed by profile_id + name. Attaching at least one setting to a profile is REQUIRED for ACM to push the profile to ClickHouse's user directories; an empty profile cannot be referenced by users.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_management": {
+            "type": "bool",
+            "description": "Whether the user has ClickHouse access-management (RBAC) privileges. Updatable in place.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string) that owns this user.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "databases": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of database NAMES the user may access (e.g. `[\"default\"]` for one database, `[\"default\", \"analytics\"]` for several). ACM expands each entry into a `GRANT ALL ON \\`<db>\\`.* TO <user>` statement server-side, so do NOT pre-qualify entries with `.*` or table names. Omit the attribute (or pass `[]`) to grant access to ALL databases (`*.*`). Updatable in place. The configured value is kept verbatim in state for round-trip stability against ACM's server-side canonicalization.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier `<cluster_id>:<name>`.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The user login (the config-stable key).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "networks": {
+            "type": "string",
+            "description": "Allowed source networks for the user (e.g. `::/0`). Updatable in place via /user/{id}. ACM canonicalizes this server-side (e.g. `0.0.0.0/0` becomes `::/0`), so the configured value is treated as authoritative and kept verbatim in state; out-of-band changes are not detected.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The user password. Write-only at the API: sent on create/update but never returned on read, so it is preserved from prior state and excluded from drift detection.",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "profile_id": {
+            "type": "string",
+            "description": "Optional ACM-internal settings profile id (integer, stored as string) to attach to the user. When omitted, the user is attached to the cluster's auto-maintained `default` profile, because ACM cannot create a user with no settings profile (it generates the invalid `SETTINGS PROFILE ''`, which ClickHouse rejects with a Code 62 syntax error). The `default` profile imposes no readonly restriction, matching a full-access user. The fallback is applied on the wire only; the configured value is kept verbatim in state, so omitting `profile_id` leaves it null (no spurious diff).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The ACM-internal user id (integer, stored as string). Empty for users ACM stores in ClickHouse's `replicated` access storage (created via SQL, `hasModel: false`), which carry no numeric id; such users are managed by login instead.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manage a single ClickHouse DB user on an Altinity.Cloud cluster (/cluster/{cluster}/users and /user/{id}).",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider to provision into: aws, gcp, azure, or hcloud.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "datadog": {
+            "nested_type": {
+              "attributes": {
+                "api_key": {
+                  "type": "string",
+                  "description": "Datadog API key. Write-only: sent on apply but never read back into Terraform state (the API returns it, but the provider deliberately drops it to keep the secret out of state and masks it in debug logs), and excluded from drift detection (an out-of-band change is not noticed). On import it comes in as null and must be re-supplied in config.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "apply_to_clusters": {
+                  "type": "bool",
+                  "description": "Push the Datadog config to the environment's clusters (applyToClusters). Defaults to true.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Whether the Datadog integration is enabled.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Datadog site, e.g. datadoghq.com (default) or datadoghq.eu.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "send_logs": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "send_metrics": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "send_table_stats": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Datadog integration for the environment (ship ClickHouse metrics/logs to Datadog). Omit the block to leave Datadog unmanaged.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable display name. The request endpoint cannot set it, so when specified the provider applies it via an edit immediately after the environment is ready. Defaults to the environment name.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Environment domain.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ACM environment id (integer, stored as string).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "maintenance_windows": {
+            "nested_type": {
+              "attributes": {
+                "days": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "Weekdays (uppercase): MONDAY\u2026SUNDAY. Unordered (set).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "hour": {
+                  "type": "number",
+                  "description": "Start hour, 0\u201323 (UTC).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "length_hours": {
+                  "type": "number",
+                  "description": "Window length in hours.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Maintenance windows for the environment. ACM requires the windows to provide at least 48h over any 32-day window (rejected server-side otherwise). Omit (null) to leave unmanaged; set `[]` to clear all windows.\n\nRead from the environment's acc-check endpoint (the plain environment GET returns them as null), so when you manage the block, out-of-band changes \u2014 including deleting a window \u2014 ARE refreshed and shown as drift. Leaving the block unset keeps it unmanaged (never probed or populated). Modeled as a set, so neither the order of the windows nor of each window's days matters for diffs (ACM may reorder both).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Environment name (unique within the organization). Must start with your organization slug \u2014 ACM rejects other names server-side with HTTP 400 (\"Invalid Environment Name prefix\"); the error names the exact required prefix. Create also fails if an environment with this name already exists \u2014 `terraform import` the existing one instead.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "normalized_name": {
+            "type": "string",
+            "description": "ACM's normalized form of the name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Region code to provision into (see the altinity_regions data source). Routed to the provider-specific request field based on cloud_provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Environment state.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Environment status (e.g. online once ready).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeouts": {
+            "nested_type": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Operation timeouts (Go duration strings). create defaults to 45m, delete to 30m.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Environment type (e.g. kubernetes).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "An Altinity.Cloud environment \u2014 the region-scoped unit that ClickHouse clusters are launched into. Created via the Altinity-hosted request flow (POST /environments/request) and polled until ready.\n\nCreate REFUSES to adopt a pre-existing environment: if an environment with the same `name` already exists in Altinity.Cloud (names are unique per organization), the apply fails and directs you to `terraform import` it instead \u2014 Terraform never silently takes over infrastructure it did not create. If the readiness poll exceeds the create timeout the apply also fails without recording state; because the environment was already requested, re-applying hits the same guard \u2014 raise the create timeout, or import the environment by id once it finishes provisioning.\n\nDestroy does NOT delete the environment in Altinity.Cloud: environment deletion requires an out-of-band email + MFA confirmation that cannot be automated, so `terraform destroy` removes the resource from state and warns \u2014 delete the environment manually in the ACM UI.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_node_type": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "capacity": {
+            "type": "number",
+            "description": "Maximum number of nodes of this type.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Instance type code (see the altinity_instance_types data source). Editable in place.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cpu": {
+            "type": "number",
+            "description": "vCPUs for this node type (from the altinity_instance_types catalog).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id the node type belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource id, \"<environment>:<node_type_id>\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_spot": {
+            "type": "bool",
+            "description": "Whether to use spot/preemptible instances.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "memory": {
+            "type": "number",
+            "description": "Memory in MB for this node type (from the altinity_instance_types catalog). Sent to ACM as the requested size; ACM uses its own code-derived allocatable internally, but Terraform tracks the value you declare here.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name. Ignored by ACM on create (defaults to the code); a custom name is applied via a follow-up edit when set.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node_type_id": {
+            "type": "string",
+            "description": "The ACM node type id (used by /nodetype/{id}).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Node type scope: clickhouse, zookeeper, or system.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "storage_class": {
+            "type": "string",
+            "description": "Storage class for this node type.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "used": {
+            "type": "bool",
+            "description": "True when a cluster currently uses this node type. Read-only.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "An Altinity.Cloud environment node type (instance shape) that clusters can be scheduled onto. Discover valid `code`/`cpu`/`memory` values with the altinity_instance_types data source.\n\nTolerations, nodeSelector, and extraSpec are NOT managed by this resource: on create it mirrors the ACM UI's per-scope default tolerations, and on update it preserves whatever ACM currently has. Managing them via Terraform is not supported.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "altinity_clickhouse_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string) the profile belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable description set on the profile.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The profile name to resolve.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "profile_id": {
+            "type": "string",
+            "description": "The ACM-internal profile id (integer, stored as string). Pass to `altinity_clickhouse_user.profile_id` or `altinity_clickhouse_profile_setting.profile_id`.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up a single settings profile on a cluster by name (GET /cluster/{cluster}/profiles, filtered to the matching name). Errors if no profile with that name exists. Use this to reference the ACM-bootstrapped `default` / `readonly` profiles or an ACM-UI-created profile without managing it from Terraform.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_profiles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_id": {
+            "type": "string",
+            "description": "The ACM cluster id (integer, stored as string) whose profiles to list.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "profiles": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "Optional human-readable description set on the profile.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Profile name. ACM auto-creates `default` and `readonly`; other names belong to terraform-managed or ACM-UI-created profiles.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "profile_id": {
+                  "type": "string",
+                  "description": "The ACM-internal profile id (integer, stored as string).",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All profiles on the cluster, in ACM's returned order.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the settings profiles on a cluster (GET /cluster/{cluster}/profiles). Returns both ACM-bootstrapped profiles (`default`, `readonly`) and any profiles created via `altinity_clickhouse_profile`. Use to look up bootstrap profile ids without hard-coding them.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_clickhouse_versions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id to list versions for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "latest": {
+            "type": "string",
+            "description": "The highest version `code` among the (filtered) results, by numeric component order.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "major": {
+            "type": "number",
+            "description": "Optional major-version filter (e.g. 25).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "minor": {
+            "type": "number",
+            "description": "Optional minor-version filter (e.g. 8). Requires major to be meaningful.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform to query (e.g. kubernetes). Strongly recommended \u2014 without it ACM returns a stale/older list. Pass the environment's `type`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "stream": {
+            "type": "string",
+            "description": "Optional build-stream filter \u2014 one of `altinity-stable` (Altinity Stable, *.altinitystable), `altinity-antalya` (Project Antalya, *.altinityantalya), or `upstream` (upstream ClickHouse). Unset returns all streams. Filtering by a single stream keeps `latest` within one build line (otherwise an Altinity Antalya build can outrank an Altinity Stable one).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "versions": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description": "Version code (use as cluster `version`).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_eol": {
+                  "type": "bool",
+                  "description": "True when the name is marked [EOL].",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "major": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "minor": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human label (may include LTS/Altinity Stable/[EOL]).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repo": {
+                  "type": "string",
+                  "description": "Image repo (altinity/clickhouse-server vs clickhouse/clickhouse-server).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "stream": {
+                  "type": "string",
+                  "description": "Build stream: altinity-stable | altinity-antalya | upstream.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The matching versions, in the API's order.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the ClickHouse versions available in an environment (GET /cloud/{environment}/options?type=versions). Filter by major/minor and/or build `stream`, and use `latest` to avoid hard-coding an unavailable version.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "display_name": {
+            "type": "string",
+            "description": "The environment's display name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The environment domain.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ACM environment id (integer, stored as string).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The environment name to resolve.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "normalized_name": {
+            "type": "string",
+            "description": "The environment's normalized name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "The ACM id of the environment owner (integer, stored as string). `null` if ACM does not return an owner.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The ACM id of the parent environment (integer, stored as string). `null` when there is no parent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "The environment state (e.g. running).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The environment status (e.g. online).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The environment type (e.g. kubernetes).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Look up an Altinity.Cloud environment by name (GET /environments).",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_instance_types": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider (e.g. gcp, aws).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "instance_types": {
+            "nested_type": {
+              "attributes": {
+                "cpu": {
+                  "type": "number",
+                  "description": "vCPUs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cpu_allocatable": {
+                  "type": "number",
+                  "description": "Allocatable vCPUs (after system overhead).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "Memory in GiB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory_allocatable": {
+                  "type": "number",
+                  "description": "Allocatable memory in GiB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Instance type name (use as a node type code).",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The available instance types.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Region code (see the altinity_regions data source).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "zones": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Availability zones in the region.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the instance types available for a cloud provider in a region (GET /cloud/options?platform=<cloud_provider>&region=<region>&type=*). Use an instance type's name as an altinity_node_type `code`, and its cpu/memory as the node type's cpu/memory.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_node_types": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id to list node types for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_types": {
+            "nested_type": {
+              "attributes": {
+                "capacity": {
+                  "type": "number",
+                  "description": "Max nodes of this type.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Instance type code (use as instance_type/node_type).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cpu": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "ACM node type id (use as altinity_node_type import id component).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_spot": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "memory": {
+                  "type": "number",
+                  "description": "Memory in MB.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "scope": {
+                  "type": "string",
+                  "description": "clickhouse | zookeeper | system.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "storage_class": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "used": {
+                  "type": "bool",
+                  "description": "True when a cluster currently uses this node type.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The matching node types.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "scope": {
+            "type": "string",
+            "description": "Optional scope filter (e.g. clickhouse, zookeeper, system). When unset, all scopes are returned.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "List the node (instance) types available in an environment (GET /environment/{environment}/nodetypes). Filter by scope to find valid instance_type values for clusters (clickhouse) or keepers (zookeeper).",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_regions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider to list regions for (e.g. aws, gcp).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description": "Region code (use as an environment's region).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable region name.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The available regions for the provider.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the regions available for a cloud provider (GET /cloud/options?type=regions&provider=<cloud_provider>). Use a region code as an altinity_environment's `region`.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_storage_classes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id to list storage classes for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform to query (e.g. kubernetes). Pass the environment's `type`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "storage_classes": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description": "Storage class code (use as cluster storage_class).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The available storage classes.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the storage classes available in an environment (GET /cloud/{environment}/options?type=storageClasses). Use a code as a cluster's storage_class.",
+        "description_kind": "plain"
+      }
+    },
+    "altinity_zones": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "environment": {
+            "type": "string",
+            "description": "ACM environment id to list zones for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform to query (e.g. kubernetes). Pass the environment's `type`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "zones": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The available availability-zone names.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "List the availability zones available in an environment (GET /cloud/{environment}/options?type=zones). Use for a cluster azlist or a keeper's zones.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

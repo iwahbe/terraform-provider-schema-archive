@@ -1,0 +1,435 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "API key for authentication. Can also be set using the `PORKBUN_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "ipv4_only": {
+          "type": "bool",
+          "description": "Use IPv4 only for API requests. Defaults to false.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "max_retries": {
+          "type": "number",
+          "description": "Maximum number of retries for API requests. Defaults to 3.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "secret_api_key": {
+          "type": "string",
+          "description": "Secret API key for authentication. Can also be set using the `PORKBUN_SECRET_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Provider for managing domains, DNS records, URL forwarding, and nameserver configurations for domains registered with Porkbun.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "porkbun_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "The answer content for the record. Please see the DNS management popup from the domain management console for proper formatting of each record type.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name for which to create the DNS record (e.g., example.com).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the DNS record. This is assigned by Porkbun and used for record management.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes for the DNS record. This is read-only and can only be set from the Porkbun web interface.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "prio": {
+            "type": "number",
+            "description": "The priority of the record for those that support it.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "The subdomain for the record being created, not including the domain itself. Leave blank to create a record on the root domain. Use * to create a wildcard record.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "The time to live in seconds for the record. The minimum and the default is 600 seconds.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of DNS record to create (A, AAAA, CNAME, MX, TXT, NS, ALIAS, SRV, TLSA, CAA, HTTPS, SVCB).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage DNS records for domains registered through Porkbun.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_dnssec_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "Fully\u2011qualified domain name (FQDN) whose DNSSEC settings will be managed, for example `example.com`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ds_data": {
+            "nested_type": {
+              "attributes": {
+                "algorithm": {
+                  "type": "number",
+                  "description": "DNSSEC algorithm identifier, as defined in RFC 8624.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "digest": {
+                  "type": "string",
+                  "description": "Digest (hash) of the DNSKEY record, encoded in hexadecimal. Length and contents depend on `digest_type`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "digest_type": {
+                  "type": "number",
+                  "description": "Hash algorithm identifier used to create the DS digest.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "key_tag": {
+                  "type": "string",
+                  "description": "Key tag (key ID) calculated from the public key. Provided as a decimal string.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Delegation\u2011Signer (DS) record parameters. Many registries require DS data to enable DNSSEC, while some ignore or reject it. If your registry returns an error, omit this block and provide `key_data` instead. **At least one of `ds_data` or `key_data` must be supplied.**",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "key_data": {
+            "nested_type": {
+              "attributes": {
+                "algorithm": {
+                  "type": "number",
+                  "description": "DNSSEC algorithm identifier, as defined in RFC 8624.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "flags": {
+                  "type": "number",
+                  "description": "DNSKEY flags field (RFC 4034 \u00a72.1). Common values are `256` (ZSK) and `257` (KSK).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "protocol": {
+                  "type": "number",
+                  "description": "DNSSEC protocol value. Must be `3` (DNSSEC).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "public_key": {
+                  "type": "string",
+                  "description": "Base64\u2011encoded public key material of the DNSKEY record.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "DNSKEY record data. Some registries accept `key_data` instead of, or in addition to, `ds_data`. If DS records are rejected, try creating DNSSEC with `key_data` only. **At least one of `ds_data` or `key_data` must be supplied.**",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "max_sig_life": {
+            "type": "number",
+            "description": "Maximum lifetime of a DNSSEC signature (RRSIG), in seconds. **Note:** The Porkbun API does not return this value, so it cannot be read back and drift detection for this argument is disabled.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages DNSSEC settings (DS/DNSKEY) for a domain registered with Porkbun.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_nameservers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name to manage nameservers for. Must be a domain registered with Porkbun.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nameservers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of name server host names.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage custom nameservers for domains registered through Porkbun.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_url_forward": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name for which to configure URL forwarding (e.g., example.com).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the URL forward. Automatically generated by Porkbun.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "include_path": {
+            "type": "bool",
+            "description": "Whether or not to include the URI path in the redirection.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "location": {
+            "type": "string",
+            "description": "Where you'd like to forward the domain to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "A subdomain that you would like to add URL forwarding for. Leave this blank to forward the root domain.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of forward (temporary, permanent).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "wildcard": {
+            "type": "bool",
+            "description": "Also forward all subdomains of the domain.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage URL forwarding rules for domains registered through Porkbun.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "porkbun_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_renew": {
+            "type": "bool",
+            "description": "Indicates whether automatic renewal is enabled for the domain. When enabled, the domain will be automatically renewed before expiration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name to retrieve information for. Must be a domain registered with or managed through Porkbun.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "labels": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "color": "string",
+                  "id": "string",
+                  "title": "string"
+                }
+              ]
+            ],
+            "description": "A list of labels associated with the domain. Labels are used to categorize and organize domains within your Porkbun account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "not_local": {
+            "type": "bool",
+            "description": "Indicates if the domain is registered elsewhere but using Porkbun's DNS (true) or if it's registered with Porkbun (false).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "security_lock": {
+            "type": "bool",
+            "description": "Indicates whether the domain transfer lock is enabled, which prevents unauthorized domain transfers to other registrars.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the domain (e.g., 'ACTIVE', 'EXPIRED', etc.).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tld": {
+            "type": "string",
+            "description": "The top-level domain (TLD) of the domain (e.g., 'com', 'org', 'net').",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "whois_privacy": {
+            "type": "bool",
+            "description": "Indicates whether WHOIS privacy protection is enabled for the domain, which hides personal contact information in public WHOIS records.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve information about a specific domain.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_domains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domains": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "auto_renew": "bool",
+                  "domain": "string",
+                  "labels": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "color": "string",
+                        "id": "string",
+                        "title": "string"
+                      }
+                    ]
+                  ],
+                  "not_local": "bool",
+                  "security_lock": "bool",
+                  "status": "string",
+                  "tld": "string",
+                  "whois_privacy": "bool"
+                }
+              ]
+            ],
+            "description": "A list of domains registered with Porkbun.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "include_labels": {
+            "type": "bool",
+            "description": "Whether to include labels in the response. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Retrieves information about all domains registered with Porkbun.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_nameservers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name to retrieve nameserver information for. Must be a domain registered with or managed through Porkbun.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nameservers": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of name server host names.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve the current nameservers for a domain registered with Porkbun.",
+        "description_kind": "markdown"
+      }
+    },
+    "porkbun_ssl": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "certificate_chain": {
+            "type": "string",
+            "description": "The complete certificate chain.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name for which to retrieve SSL certificate information.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "private_key": {
+            "type": "string",
+            "description": "The private key.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The public key.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve SSL certificate information for domains using Porkbun's free SSL certificates.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

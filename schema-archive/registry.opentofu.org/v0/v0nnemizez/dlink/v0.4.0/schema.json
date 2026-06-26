@@ -1,0 +1,536 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "Full base URL to the SOAP API, e.g. \"http://192.168.0.1/DHMAPI/\". Defaults to http://<host>/DHMAPI/.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "Router hostname or IP address (e.g. 192.168.0.1).",
+          "description_kind": "plain",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Router admin password.",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Router admin username.",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description": "Provider for managing D-Link DIR-X1530 routers via SOAP API.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "dlink_adv_network_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Always \"adv_network_settings\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "multicast_ipv4": {
+            "type": "bool",
+            "description": "Whether IPv4 multicast is enabled. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "multicast_ipv6": {
+            "type": "bool",
+            "description": "Whether IPv6 multicast is enabled. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "upnp": {
+            "type": "bool",
+            "description": "Whether UPnP is enabled. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "wan_port_speed": {
+            "type": "string",
+            "description": "WAN port speed. Defaults to \"Auto\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages advanced network settings on the D-Link router (UPnP, multicast, WAN port speed).",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_firewall_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dest_interface": {
+            "type": "string",
+            "description": "Destination interface: \"LAN\" or \"WAN\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dest_ip_end": {
+            "type": "string",
+            "description": "End of the destination IP address range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dest_ip_start": {
+            "type": "string",
+            "description": "Start of the destination IP address range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the rule is active.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Rule ID (same as name).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule name (must be unique on the router).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port_end": {
+            "type": "number",
+            "description": "End of the port range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "port_start": {
+            "type": "number",
+            "description": "Start of the port range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol: \"TCP\", \"UDP\", \"TCP/UDP\", \"ICMP\", etc.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Schedule name. Defaults to \"Always\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "src_interface": {
+            "type": "string",
+            "description": "Source interface: \"WAN\" or \"LAN\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "src_ip_end": {
+            "type": "string",
+            "description": "End of the source IP address range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "src_ip_start": {
+            "type": "string",
+            "description": "Start of the source IP address range.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a single IPv4 firewall rule on the D-Link router.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_lan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "dhcp_enabled": {
+            "type": "bool",
+            "description": "Whether the DHCP server is enabled. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always \"lan\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "Router LAN MAC address (read-only, assigned by hardware).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "router_ip": {
+            "type": "string",
+            "description": "Router LAN IP address (e.g. \"192.168.0.1\").",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subnet_mask": {
+            "type": "string",
+            "description": "LAN subnet mask. Defaults to \"255.255.255.0\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages LAN settings on the D-Link router (IP address, subnet mask, DHCP). WARNING: changing router_ip will disconnect the current session. Update the provider host accordingly.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_network_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "broadcast": {
+            "type": "bool",
+            "description": "Whether to enable broadcast. Defaults to false.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "device_name": {
+            "type": "string",
+            "description": "Router hostname (e.g. \"R15-D105\").",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "dns_relay": {
+            "type": "bool",
+            "description": "Whether to enable DNS relay. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always \"network_settings\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ip_address": {
+            "type": "string",
+            "description": "Router LAN IP address. Should match dlink_lan.router_ip if both resources are used.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ip_range_end": {
+            "type": "number",
+            "description": "Last octet of the DHCP range end address (e.g. 254 \u2192 192.168.0.254).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ip_range_start": {
+            "type": "number",
+            "description": "Last octet of the DHCP range start address (e.g. 1 \u2192 192.168.0.1).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "lease_time": {
+            "type": "number",
+            "description": "DHCP lease time in minutes. Defaults to 10080 (7 days).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "local_domain_name": {
+            "type": "string",
+            "description": "Local domain name suffix for DHCP clients.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "Router LAN MAC address (read-only).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "subnet_mask": {
+            "type": "string",
+            "description": "LAN subnet mask.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages DHCP and network settings on the D-Link router. Note: ip_address and subnet_mask overlap with dlink_lan \u2014 keep them in sync.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_parental_profile": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_slow_access": {
+            "type": "bool",
+            "description": "Whether to allow slow (throttled) access for this profile.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "blocked_domains": {
+            "nested_type": {
+              "attributes": {
+                "domain": {
+                  "type": "string",
+                  "description": "Domain name to block (e.g. youtube.com).",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Human-readable label for the blocked domain entry.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of domains blocked by this profile.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "devices": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "MAC addresses of devices assigned to this profile (e.g. \"8a:5b:39:45:2c:19\").",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "filter_enabled": {
+            "type": "bool",
+            "description": "Whether the domain filter is active for this profile.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UUID assigned to the profile by this provider.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name for the parental profile.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a parental control profile on the D-Link router.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_port_forward": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the rule is active.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite ID: <name>/<port>.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "local_ip": {
+            "type": "string",
+            "description": "LAN IP address of the destination host.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule description (must be unique on the router).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "port": {
+            "type": "number",
+            "description": "Port number (same on WAN and LAN sides).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol: \"TCP\", \"UDP\", or \"TCP/UDP\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Schedule name. Defaults to \"Always\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a single port forwarding rule on the D-Link router. Note: this router maps the same port on both WAN and LAN sides.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_quick_vpn": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auth_protocol": {
+            "type": "string",
+            "description": "Authentication protocol. Defaults to \"MSCHAPv2\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether QuickVPN is enabled. Defaults to false.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Always \"quick_vpn\".",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "mppe": {
+            "type": "string",
+            "description": "MPPE encryption setting. Defaults to \"None\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "VPN password.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "psk": {
+            "type": "string",
+            "description": "Pre-Shared Key (PSK) for L2TP/IPsec authentication.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "username": {
+            "type": "string",
+            "description": "VPN username.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages the D-Link QuickVPN (L2TP/IPsec) configuration.",
+        "description_kind": "plain"
+      }
+    },
+    "dlink_wifi": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "band": {
+            "type": "string",
+            "description": "Radio band to configure: \"2.4GHz\" or \"5GHz\".",
+            "description_kind": "plain",
+            "required": true
+          },
+          "channel": {
+            "type": "number",
+            "description": "WiFi channel. Use 0 for auto.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Whether the radio is enabled.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier equal to the band value.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "WiFi password (pre-shared key).",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "security_mode": {
+            "type": "string",
+            "description": "Security mode, e.g. \"WPA2-PSK\" or \"WPA3\".",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "ssid": {
+            "type": "string",
+            "description": "WiFi network name (SSID).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages WiFi settings for a specific radio band on the D-Link router.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

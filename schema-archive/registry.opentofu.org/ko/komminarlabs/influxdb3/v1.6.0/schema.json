@@ -1,0 +1,481 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "account_id": {
+          "type": "string",
+          "description": "The ID of the account that the cluster belongs to",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "cluster_id": {
+          "type": "string",
+          "description": "The ID of the cluster that you want to manage",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The InfluxDB management token",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "InfluxDB provider to deploy and manage resources supported by InfluxDB V3.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "influxdb3_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the account that the database belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The ID of the cluster that the database belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_columns_per_table": {
+            "type": "number",
+            "description": "The maximum number of columns per table for the cluster database. The default is `200`",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "max_tables": {
+            "type": "number",
+            "description": "The maximum number of tables for the cluster database. The default is `500`",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the cluster database. The Length should be between `[ 1 .. 64 ]` characters. See the full naming restrictions [here](https://docs.influxdata.com/influxdb3/cloud-dedicated/admin/databases/create/#database-naming-restrictions). <br> **Note:** [Renaming](https://docs.influxdata.com/influxdb3/cloud-dedicated/admin/databases/rename/) a database does not change the database ID, modify data in the database, or update database tokens. After renaming a database, any existing database tokens will stop working and you must create new tokens with permissions for the renamed database. If you create a new database using the previous database name, tokens associated with that database name will grant access to the newly created database.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "partition_template": {
+            "nested_type": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of template part. Valid values are `bucket`, `tag` or `time`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value of template part. **Note:** For `bucket` partition template type use `jsonencode()` function to encode the value to a string.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A template for [partitioning](https://docs.influxdata.com/influxdb/cloud-dedicated/admin/custom-partitions/partition-templates/) a cluster database. **Note:** A partition template can include up to 7 total tag and tag bucket parts and only 1 time part. You can only apply a partition template when creating a database. You [can't update a partition template](https://docs.influxdata.com/influxdb/cloud-dedicated/admin/databases/create/#partition-templates-can-only-be-applied-on-create) on an existing database. An update will result in resource replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "retention_period": {
+            "type": "number",
+            "description": "The retention period of the cluster database in nanoseconds. The default is `0`. If the retention period is not set or is set to `0`, the database will have infinite retention.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Creates and manages a database.",
+        "description_kind": "markdown"
+      }
+    },
+    "influxdb3_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token that can be used to authenticate query and write requests to the cluster. The access token is never stored by InfluxDB and is only returned once when the token is created. If the access token is lost, a new token must be created.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the account that the database token belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The ID of the cluster that the database token belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date and time that the database token was created. Uses RFC3339 format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the database token.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "The date and time that the database token expires, if applicable. Uses RFC3339 format(for example: 2020-01-01T00:00:00Z).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the database token.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "The action the database token permission allows. Valid values are `read` or `write`.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "The resource the database token permission applies to. `*` refers to all databases.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of permissions the database token allows.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Creates and manages a token and returns the generated database token. Use this resource to create/manage a token, which generates an database token with permissions to read or write to a specific database.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "influxdb3_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the account that the database belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The ID of the cluster that the database belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_columns_per_table": {
+            "type": "number",
+            "description": "The maximum number of columns per table for the cluster database.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_tables": {
+            "type": "number",
+            "description": "The maximum number of tables for the cluster database.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the cluster database.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "partition_template": {
+            "nested_type": {
+              "attributes": {
+                "type": {
+                  "type": "string",
+                  "description": "The type of template part.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "The value of template part.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The template partitioning of the cluster database.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "retention_period": {
+            "type": "number",
+            "description": "The retention period of the cluster database in nanoseconds.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a database. Use this data source to retrieve information for a specific database.",
+        "description_kind": "plain"
+      }
+    },
+    "influxdb3_databases": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "databases": {
+            "nested_type": {
+              "attributes": {
+                "account_id": {
+                  "type": "string",
+                  "description": "The ID of the account that the database belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cluster_id": {
+                  "type": "string",
+                  "description": "The ID of the cluster that the database belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_columns_per_table": {
+                  "type": "number",
+                  "description": "The maximum number of columns per table for the cluster database.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_tables": {
+                  "type": "number",
+                  "description": "The maximum number of tables for the cluster database.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the cluster database.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "partition_template": {
+                  "nested_type": {
+                    "attributes": {
+                      "type": {
+                        "type": "string",
+                        "description": "The type of template part.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "The value of template part.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The template partitioning of the cluster database.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "retention_period": {
+                  "type": "number",
+                  "description": "The retention period of the cluster database in nanoseconds.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Gets all databases for a cluster.",
+        "description_kind": "plain"
+      }
+    },
+    "influxdb3_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token that can be used to authenticate query and write requests to the cluster. The access token is never stored by InfluxDB and is only returned once when the token is created. If the access token is lost, a new token must be created.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "The ID of the account that the database token belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_id": {
+            "type": "string",
+            "description": "The ID of the cluster that the database token belongs to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date and time that the database token was created. Uses RFC3339 format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the database token.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "The date and time that the database token expires, if applicable. Uses RFC3339 format.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the database token.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "The action the database token permission allows.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "resource": {
+                  "type": "string",
+                  "description": "The resource the database token permission applies to. `*` refers to all databases.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of permissions the database token allows.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Gets a database token. Use this data source to retrieve information about a database token, including the token's permissions.",
+        "description_kind": "plain"
+      }
+    },
+    "influxdb3_tokens": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "tokens": {
+            "nested_type": {
+              "attributes": {
+                "access_token": {
+                  "type": "string",
+                  "description": "The access token that can be used to authenticate query and write requests to the cluster. The access token is never stored by InfluxDB and is only returned once when the token is created. If the access token is lost, a new token must be created.",
+                  "description_kind": "plain",
+                  "computed": true,
+                  "sensitive": true
+                },
+                "account_id": {
+                  "type": "string",
+                  "description": "The ID of the account that the database token belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cluster_id": {
+                  "type": "string",
+                  "description": "The ID of the cluster that the database token belongs to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "The date and time that the database token was created. Uses RFC3339 format.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the database token.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "expires_at": {
+                  "type": "string",
+                  "description": "The date and time that the database token expires, if applicable. Uses RFC3339 format.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the database token.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "permissions": {
+                  "nested_type": {
+                    "attributes": {
+                      "action": {
+                        "type": "string",
+                        "description": "The action the database token permission allows.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "resource": {
+                        "type": "string",
+                        "description": "The resource the database token permission applies to. `*` refers to all databases.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The list of permissions the database token allows.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Gets all database tokens for a cluster.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
