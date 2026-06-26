@@ -1,0 +1,1427 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "azure_auth": {
+          "nested_type": {
+            "attributes": {
+              "client_id": {
+                "type": "string",
+                "description": "Service Principal client (application) ID. When omitted, default, chained set of credentials will be used.",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "client_secret": {
+                "type": "string",
+                "description": "Service Principal secret. When omitted, default, chained set of credentials will be used.",
+                "description_kind": "plain",
+                "optional": true,
+                "sensitive": true
+              },
+              "tenant_id": {
+                "type": "string",
+                "description": "Azure AD tenant ID. Required only if Azure SQL Server's tenant is different than Service Principal's.",
+                "description_kind": "plain",
+                "optional": true
+              }
+            },
+            "nesting_mode": "single"
+          },
+          "description": "When provided, Azure AD authentication will be used when connecting.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "hostname": {
+          "type": "string",
+          "description": "FQDN or IP address of the SQL endpoint. Can be also set using `MSSQL_HOSTNAME` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "port": {
+          "type": "number",
+          "description": "TCP port of SQL endpoint. Defaults to `1433`. Can be also set using `MSSQL_PORT` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "sql_auth": {
+          "nested_type": {
+            "attributes": {
+              "password": {
+                "type": "string",
+                "description": "Password for SQL authentication.",
+                "description_kind": "plain",
+                "required": true,
+                "sensitive": true
+              },
+              "username": {
+                "type": "string",
+                "description": "User name for SQL authentication.",
+                "description_kind": "plain",
+                "required": true
+              }
+            },
+            "nesting_mode": "single"
+          },
+          "description": "When provided, SQL authentication will be used when connecting.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "mssql_azuread_service_principal": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure AD client_id of the Service Principal. This can be either regular Service Principal or Managed Service Identity.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `sys.database_principals` view.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nManaged database-level user mapped to Azure AD identity (service principal or managed identity).\n\n-> **Note** When using this resource, Azure SQL server managed identity does not need any [AzureAD role assignments](https://docs.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-service-principal?view=azuresql).\n",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_azuread_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `sys.database_principals` view.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user_object_id": {
+            "type": "string",
+            "description": "Azure AD object_id of the user. This can be either regular user or a group.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nManaged database-level user mapped to Azure AD identity (user or group).\n\n-> **Note** When using this resource, Azure SQL server managed identity does not need any [AzureAD role assignments](https://docs.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-service-principal?view=azuresql).\n",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collation": {
+            "type": "string",
+            "description": "Default collation name. Can be either a Windows collation name or a SQL collation name. Defaults to SQL Server instance's default collation.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Database ID. Can be retrieved using `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Database name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages single database.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_database_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>/<permission>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permission": {
+            "type": "string",
+            "description": "Name of database-level SQL permission. For full list of supported permissions, see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-database-permissions-transact-sql?view=azuresqldb-current#remarks)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>`. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "with_grant_option": {
+            "type": "bool",
+            "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Grants database-level permission.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_database_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<role_id>`. Role ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<role_name>')`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of another database role or user owning this role. Can be retrieved using `mssql_database_role` or `mssql_sql_user`. Defaults to ID of current user, used to authorize the Terraform provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages database-level role.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_database_role_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<role_id>/<member_id>`. Role and member IDs can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<name>')`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_id": {
+            "type": "string",
+            "description": "Can be either user or role ID in format `<database_id>/<member_id>`. Can be retrieved using `mssql_sql_user` or `mssql_database_member`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "`<database_id>/<role_id>`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages database role membership.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_schema": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>`. Schema ID can be retrieved using `SELECT SCHEMA_ID('<schema_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Schema name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of database role or user owning this schema. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages single DB schema.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_schema_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>/<principal_id>/<permission>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permission": {
+            "type": "string",
+            "description": "Name of schema SQL permission. For full list of supported permissions, see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=azuresqldb-current#remarks)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>`. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "schema_id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>`. Can be retrieved using `mssql_schema`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "with_grant_option": {
+            "type": "bool",
+            "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals. Defaults to `false`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Grants database-level permission.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_script": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "create_script": {
+            "type": "string",
+            "description": "SQL script executed when the resource does not exist in Terraform state. When not provided, `update_script` will be used to create the resource.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "delete_script": {
+            "type": "string",
+            "description": "SQL script executed when the resource is being destroyed. When not provided, no action will be taken during resource destruction.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Used only internally by Terraform. Always set to `script`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "read_script": {
+            "type": "string",
+            "description": "SQL script returning current state of the DB. It must return single-row result set where column names match the keys of `state` map and all values are strings that will be compared against `state` to determine if the resource state matches DB state.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Desired state of the DB. It is arbitrary map of string values that will be compared against the values returned by the `read_script`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "update_script": {
+            "type": "string",
+            "description": "SQL script executed when the desired state specified in `state` attribute does not match the state returned by `read_script`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Allows execution of arbitrary SQL scripts to check state and apply desired state. \n\n-> **Note** This resource is meant to be an escape hatch for all cases not supported by the provider's resources. Whenever possible, use dedicated resources, which offer better plan, validation and error reporting.  \n",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_server_permission": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<principal_id>/<permission>`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permission": {
+            "type": "string",
+            "description": "Name of server-level SQL permission. For full list of supported permissions see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-server-permissions-transact-sql?view=azuresqldb-current#remarks)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "ID of the principal who will be granted `permission`. Can be retrieved using `mssql_server_role` or `mssql_sql_login`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "with_grant_option": {
+            "type": "bool",
+            "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals. Defaults to `false`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Grants server-level permission.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_server_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Role principal ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of another server role or login owning this role. Can be retrieved using `mssql_server_role` or `mssql_sql_login`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages server-level role.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_server_role_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<role_id>/<member_id>`. Role and member IDs can be retrieved using `mssql_server_role` or `mssql_sql_login`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "member_id": {
+            "type": "string",
+            "description": "ID of the member. Can be retrieved using `mssql_server_role` or `mssql_sql_login`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "ID of the server role. Can be retrieved using `mssql_server_role`",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages server role membership.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_sql_login": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "check_password_expiration": {
+            "type": "bool",
+            "description": "When `true`, password expiration policy is enforced for this login. Defaults to `false`.\n\n-> **Note** In case of Azure SQL, which does not support this feature, the flag will be ignored. ",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "check_password_policy": {
+            "type": "bool",
+            "description": "When `true`, the Windows password policies of the computer on which SQL Server is running are enforced on this login. Defaults to `true`.\n\n-> **Note** In case of Azure SQL, which does not support this feature, the flag will be ignored. ",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_database_id": {
+            "type": "string",
+            "description": "ID of login's default DB. The ID can be retrieved using `mssql_database` data resource. Defaults to ID of `master`.\n\n-> **Note** In case of Azure SQL, which does not support this feature, the flag will be ignored. ",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "default_language": {
+            "type": "string",
+            "description": "Default language assigned to login. Defaults to current default language of the server. If the default language of the server is later changed, the default language of the login remains unchanged.\n\n-> **Note** In case of Azure SQL, which does not support this feature, the flag will be ignored. ",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Login SID. Can be retrieved using `SELECT SUSER_SID('<login_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "must_change_password": {
+            "type": "bool",
+            "description": "When true, password change will be forced on first logon. Defaults to `false`. \n\n-> **Note** After password is changed, this flag is being reset to `false`, which will show as changes in Terraform plan. Use `ignore_changes` block to prevent this behavior.\n\n-> **Note** In case of Azure SQL, which does not support this feature, the flag will be ignored. ",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Login name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot contain `\\ `",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for the login. Must follow strong password policies defined for SQL server. Passwords are case-sensitive, length must be 8-128 chars, can include all characters except `'` or `name`.\n\n~> **Note** Password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/language/state/sensitive-data).",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "ID used to reference SQL Login in other resources, e.g. `server_role`. Can be retrieved from `sys.sql_logins`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages single login.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_sql_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<user_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "login_id": {
+            "type": "string",
+            "description": "SID of SQL login. Can be retrieved using `mssql_sql_login` or `SELECT SUSER_SID('<login_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages database-level user, based on SQL login.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "mssql_azuread_service_principal": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure AD client_id of the Service Principal. This can be either regular Service Principal or Managed Service Identity.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `sys.database_principals` view.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Obtains information about single Azure AD Service Principal database user.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_azuread_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `sys.database_principals` view.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user_object_id": {
+            "type": "string",
+            "description": "Azure AD object_id of the user. This can be either regular user or a group.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Obtains information about single Azure AD database user.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "collation": {
+            "type": "string",
+            "description": "Default collation name. Can be either a Windows collation name or a SQL collation name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Database ID. Can be retrieved using `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Database name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Obtains information about single database.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_database_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "permission": {
+                  "type": "string",
+                  "description": "Name of database-level SQL permission. For full list of supported permissions, see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-database-permissions-transact-sql?view=azuresqldb-current#remarks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "with_grant_option": {
+                  "type": "bool",
+                  "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of permissions granted to the principal",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>`. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Returns all permissions granted in a DB to given principal",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_database_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<role_id>`. Role ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<role_name>')`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "`<database_id>/<member_id>`. Member ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<member_name>')",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the database principal.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "One of: `SQL_USER`, `DATABASE_ROLE`, `AZUREAD_USER`",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of role members",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of another database role or user owning this role. Can be retrieved using `mssql_database_role` or `mssql_sql_user`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about single database role.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_database_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource, equals to database ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "database_id": {
+                  "type": "string",
+                  "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "`<database_id>/<role_id>`. Role ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<role_name>')`",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "owner_id": {
+                  "type": "string",
+                  "description": "ID of another database role or user owning this role. Can be retrieved using `mssql_database_role` or `mssql_sql_user`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of database role objects",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all roles defined in a database.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_databases": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "databases": {
+            "nested_type": {
+              "attributes": {
+                "collation": {
+                  "type": "string",
+                  "description": "Default collation name. Can be either a Windows collation name or a SQL collation name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Database ID. Can be retrieved using `SELECT DB_ID('<db_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Database name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of database objects",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource used only internally by the provider.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all databases found in SQL Server instance.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_query": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Used only internally by Terraform. Always set to `query`",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "query": {
+            "type": "string",
+            "description": "SQL query returning single result set, with any number of rows, where all columns are strings",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "result": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "Results of the SQL query, represented as list of maps, where the map key corresponds to column name and the value is the value of column in given row.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "\nRetrieves arbitrary SQL query result.\n\n-> **Note** This data source is meant to be an escape hatch for all cases not supported by the provider's data sources. Whenever possible, use dedicated data sources, which offer better plan, validation and error reporting.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_schema": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>`. Schema ID can be retrieved using `SELECT SCHEMA_ID('<schema_name>')`. Either `id` or `name` must be provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Schema name. Either `id` or `name` must be provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of database role or user owning this schema. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about DB schema.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_schema_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>/<principal_id>`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "permission": {
+                  "type": "string",
+                  "description": "Name of schema SQL permission. For full list of supported permissions, see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=azuresqldb-current#remarks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "with_grant_option": {
+                  "type": "bool",
+                  "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of permissions granted to the principal",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "`<database_id>/<principal_id>`. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "schema_id": {
+            "type": "string",
+            "description": "`<database_id>/<schema_id>`. Can be retrieved using `mssql_schema`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Returns all permissions granted in a schema to given principal",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_schemas": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the data source, equals to database ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "schemas": {
+            "nested_type": {
+              "attributes": {
+                "database_id": {
+                  "type": "string",
+                  "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "`<database_id>/<schema_id>`. Schema ID can be retrieved using `SELECT SCHEMA_ID('<schema_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Schema name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "owner_id": {
+                  "type": "string",
+                  "description": "ID of database role or user owning this schema. Can be retrieved using `mssql_database_role`, `mssql_sql_user`, `mssql_azuread_user` or `mssql_azuread_service_principal`",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of schemas found in the DB.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all schemas found in SQL database.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_server_permissions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Equals to `principal_id`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "nested_type": {
+              "attributes": {
+                "permission": {
+                  "type": "string",
+                  "description": "Name of server-level SQL permission. For full list of supported permissions see [docs](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-server-permissions-transact-sql?view=azuresqldb-current#remarks)",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "with_grant_option": {
+                  "type": "bool",
+                  "description": "When set to `true`, `principal_id` will be allowed to grant the `permission` to other principals.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of permissions granted to the principal",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "ID of the principal who will be granted `permission`. Can be retrieved using `mssql_server_role` or `mssql_sql_login`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Returns all permissions grated to given principal",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_server_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Role principal ID. Either `name` or `id` must be provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the member principal",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the server principal",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "One of: `SQL_LOGIN`, `SERVER_ROLE`",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of role members",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars. Either `name` or `id` must be provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "ID of another server role or login owning this role. Can be retrieved using `mssql_server_role` or `mssql_sql_login`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about single server role.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_server_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Only used internally in Terraform. Always set to `server_roles`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Role principal ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Role name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot be longer than 128 chars.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "owner_id": {
+                  "type": "string",
+                  "description": "ID of another server role or login owning this role. Can be retrieved using `mssql_server_role` or `mssql_sql_login`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of all roles found in the server",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all roles defined in the server.",
+        "description_kind": "markdown"
+      }
+    },
+    "mssql_sql_login": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "check_password_expiration": {
+            "type": "bool",
+            "description": "When `true`, password expiration policy is enforced for this login.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "check_password_policy": {
+            "type": "bool",
+            "description": "When `true`, the Windows password policies of the computer on which SQL Server is running are enforced on this login.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_database_id": {
+            "type": "string",
+            "description": "ID of login's default DB. The ID can be retrieved using `mssql_database` data resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_language": {
+            "type": "string",
+            "description": "Default language assigned to login.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Login SID. Can be retrieved using `SELECT SUSER_SID('<login_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "must_change_password": {
+            "type": "bool",
+            "description": "When true, password change will be forced on first logon.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Login name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot contain `\\ `",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "principal_id": {
+            "type": "string",
+            "description": "ID used to reference SQL Login in other resources, e.g. `server_role`. Can be retrieved from `sys.sql_logins`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about single SQL login.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_sql_logins": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "ID of the resource used only internally by the provider.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "logins": {
+            "nested_type": {
+              "attributes": {
+                "check_password_expiration": {
+                  "type": "bool",
+                  "description": "When `true`, password expiration policy is enforced for this login.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "check_password_policy": {
+                  "type": "bool",
+                  "description": "When `true`, the Windows password policies of the computer on which SQL Server is running are enforced on this login.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "default_database_id": {
+                  "type": "string",
+                  "description": "ID of login's default DB. The ID can be retrieved using `mssql_database` data resource.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "default_language": {
+                  "type": "string",
+                  "description": "Default language assigned to login.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Login SID. Can be retrieved using `SELECT SUSER_SID('<login_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "must_change_password": {
+                  "type": "bool",
+                  "description": "When true, password change will be forced on first logon.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Login name. Must follow [Regular Identifiers rules](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers#rules-for-regular-identifiers) and cannot contain `\\ `",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "principal_id": {
+                  "type": "string",
+                  "description": "ID used to reference SQL Login in other resources, e.g. `server_role`. Can be retrieved from `sys.sql_logins`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of SQL login objects",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all SQL logins found in SQL Server instance.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_sql_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "`<database_id>/<user_id>`. User ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<user_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "login_id": {
+            "type": "string",
+            "description": "SID of SQL login. Can be retrieved using `mssql_sql_login` or `SELECT SUSER_SID('<login_name>')`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "User name. Cannot be longer than 128 chars.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Obtains information about single SQL database user.",
+        "description_kind": "plain"
+      }
+    },
+    "mssql_sql_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`. Defaults to ID of `master`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource, equals to database ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "database_id": {
+                  "type": "string",
+                  "description": "ID of database. Can be retrieved using `mssql_database` or `SELECT DB_ID('<db_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "`<database_id>/<user_id>`. User ID can be retrieved using `SELECT DATABASE_PRINCIPAL_ID('<user_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "login_id": {
+                  "type": "string",
+                  "description": "SID of SQL login. Can be retrieved using `mssql_sql_login` or `SELECT SUSER_SID('<login_name>')`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "User name. Cannot be longer than 128 chars.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Set of SQL user objects",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Obtains information about all SQL users found in a database",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
