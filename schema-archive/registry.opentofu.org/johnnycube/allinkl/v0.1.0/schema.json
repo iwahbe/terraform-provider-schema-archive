@@ -1,0 +1,298 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "auth_type": {
+          "type": "string",
+          "description": "How credentials are sent when creating the API session: `sha1` (default) or `plain`. Can also be set via `KAS_AUTH_TYPE`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "login": {
+          "type": "string",
+          "description": "KAS login (e.g. `w0123456`). Can also be set via the `KAS_LOGIN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "KAS account or API password. Can also be set via the `KAS_PASSWORD` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "session_lifetime": {
+          "type": "number",
+          "description": "API session lifetime in seconds (max 3600, default 1800).",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "Manage all-inkl.com (KAS) resources via the KAS SOAP API. Unofficial, community-maintained provider; not affiliated with, endorsed by, or supported by all-inkl.com (Neue Medien M\u00fcnnich GmbH).",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "allinkl_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "aux": {
+            "type": "number",
+            "description": "Auxiliary value: MX priority or SRV priority. 0 for other types.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "data": {
+            "type": "string",
+            "description": "Record payload, e.g. an IP address, hostname or TXT content.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Record id assigned by KAS.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record name relative to the zone (e.g. `www`). Empty string for the zone apex.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Record type: A, AAAA, CNAME, MX, TXT, SRV, NS, CAA, ... The KAS API cannot change the type in place, so changing it forces a new record.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone host, e.g. `example.com`. Changing it forces a new record.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a single DNS record in a zone hosted at all-inkl.com (KAS).",
+        "description_kind": "markdown"
+      }
+    },
+    "allinkl_mail_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "Full primary address (`local_part@domain`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "copy_addresses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Addresses that receive a copy of every incoming mail.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain part of the address. Must be hosted in the KAS account. Changing it forces a new mailbox.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "KAS-assigned mail login, e.g. `m1234567`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "local_part": {
+            "type": "string",
+            "description": "Part of the address before the `@`. Changing it forces a new mailbox.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Mailbox password. Write-only: the KAS API never returns passwords, so drift in the password is not detectable; changing the value here updates it. Prefer passing it via a variable with `sensitive = true` and note that, as with all Terraform secrets, the value is stored in the state file \u2014 protect your state accordingly.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a mailbox hosted at all-inkl.com (KAS).",
+        "description_kind": "markdown"
+      }
+    },
+    "allinkl_mail_forward": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "Domain part of the source address. Changing it forces a new forward.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The source address (`local_part@domain`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "local_part": {
+            "type": "string",
+            "description": "Part of the source address before the `@`. Changing it forces a new forward.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "targets": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Destination addresses (1-10).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a mail forward (redirect) at all-inkl.com (KAS). The source address must not collide with an existing mailbox.",
+        "description_kind": "markdown"
+      }
+    },
+    "allinkl_subdomain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "Parent domain hosted in the KAS account. Changing it forces a new subdomain.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Full host name (`name.domain`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Subdomain label, e.g. `blog`. Changing it forces a new subdomain.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Document root path relative to the account root, e.g. `/blog/`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages a subdomain at all-inkl.com (KAS).",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "allinkl_dns_records": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "aux": {
+                  "type": "number",
+                  "description": "Auxiliary value (MX/SRV priority).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "changeable": {
+                  "type": "bool",
+                  "description": "Whether KAS allows modifying this record.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "data": {
+                  "type": "string",
+                  "description": "Record payload (IP, hostname or text content).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Record id assigned by KAS.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Record name relative to the zone; empty for the zone apex.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Record type, e.g. `A`, `MX`, `TXT`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "All records in the zone, including system records.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone host, e.g. `example.com`.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Reads all DNS records of a KAS-hosted zone.",
+        "description_kind": "markdown"
+      }
+    },
+    "allinkl_domains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domains": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Domain name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Document root path relative to the account root.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Every domain hosted in the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Reads all domains hosted in the KAS account. Domain management itself is intentionally not exposed as a resource, since add/delete touch registration; use this to reference existing domains.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
