@@ -45,6 +45,7 @@ class DumpResult:
     stdout: str
     stderr: str
     schema: Optional[bytes]
+    format_version: Optional[str]
 
 
 def build_image():
@@ -76,11 +77,13 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
             stdout, stderr, returncode = proc.stdout, proc.stderr, proc.returncode
         except subprocess.TimeoutExpired as e:
             subprocess.run(["docker", "kill", container_name], capture_output=True)
-            return DumpResult("retry", _text(e.stdout), _text(e.stderr) + "\ndump timed out", None)
+            return DumpResult("retry", _text(e.stdout), _text(e.stderr) + "\ndump timed out", None, None)
 
-        schema = _read_schema(os.path.join(work, "schema.json"))
+        format_version, schema = _extract(os.path.join(work, "schema.json"), source)
         status = _classify(returncode, stderr, schema)
-        return DumpResult(status, stdout, stderr, schema if status == "done" else None)
+        if status != "done":
+            return DumpResult(status, stdout, stderr, None, None)
+        return DumpResult(status, stdout, stderr, schema, format_version)
 
 
 def _classify(returncode: int, stderr: str, schema: Optional[bytes]) -> str:
@@ -91,16 +94,21 @@ def _classify(returncode: int, stderr: str, schema: Optional[bytes]) -> str:
     return "failure"
 
 
-def _read_schema(path: str) -> Optional[bytes]:
+def _extract(path: str, source: str) -> tuple[Optional[str], Optional[bytes]]:
+    "Pull format_version and the schema of `source` out of the full dump."
     if not os.path.exists(path):
-        return None
+        return None, None
     with open(path, "rb") as f:
         data = f.read()
     try:
-        json.loads(data)
+        document = json.loads(data)
     except json.JSONDecodeError:
-        return None
-    return data
+        return None, None
+    schemas = document.get("provider_schemas") if isinstance(document, dict) else None
+    if not isinstance(schemas, dict) or source not in schemas:
+        return None, None
+    schema = json.dumps(schemas[source], indent=2).encode() + b"\n"
+    return document.get("format_version"), schema
 
 
 def _text(value) -> str:

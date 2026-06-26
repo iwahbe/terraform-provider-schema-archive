@@ -182,6 +182,8 @@ def write_outputs(provider: Provider, version: Version, result: dump.DumpResult)
             f.write(result.schema)
     metadata_status = "success" if result.status == "done" else result.status
     metadata = {"timestamp": datetime.now(timezone.utc).isoformat(), "status": metadata_status}
+    if result.format_version is not None:
+        metadata["format_version"] = result.format_version
     with open(os.path.join(directory, "metadata.json"), "w") as f:
         json.dump(metadata, f, indent=2)
         f.write("\n")

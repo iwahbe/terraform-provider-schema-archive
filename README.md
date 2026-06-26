@@ -20,7 +20,7 @@ schema-archive/                 # The full archive
     <org>/                      # The org of the provider
       <provider>/               # The name of the provider
         <version>/              # The version of the provider
-          schema.json           # The schema, as dumped by `tofu providers schema -json`
+          schema.json           # The provider's schema, indexed out of `tofu providers schema -json`
           stdout.txt            # The stdout of the schema dump
           stderr.txt            # The stderr of the schema dump
           metadata.json         # Metadata about how the schema was generated
@@ -69,9 +69,12 @@ For each provider, in addition to the schema, we write `metadata.json`:
 ```json
 {
   "timestamp": "<ISO 8601 timestamp>",
-  "status": "success" | "retry" | "failure"
+  "status": "success" | "retry" | "failure",
+  "format_version": "<schema format version>"
 }
 ```
+
+`format_version` is the `format_version` reported by `tofu providers schema -json`, lifted out of the schema so `schema.json` holds only the provider's schema. It is present only on success.
 
 We write `stdout.txt` & `stderr.txt` for all attempts, regardless of success or failure. "retry" means a transient failure. "failure" implies a perminent failure.
 
