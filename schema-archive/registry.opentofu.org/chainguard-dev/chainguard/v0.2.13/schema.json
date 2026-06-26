@@ -1,0 +1,1565 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "console_api": {
+          "type": "string",
+          "description": "URL of Chainguard console API.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "version_stream_allows": {
+          "type": [
+            "list",
+            "string"
+          ],
+          "description": "An allowlist of version streams. Can be either\nset in the provider or as the \"CHAINGUARD_VERSION_ALLOW\" environment\nvariable. When setting via an environment variable, the list must be\ncomma separated.\n\nFor example, if the resource returns the following versions:\n\n- foo-1.0\n- foo-1.1\n- foo-1.2\n\nAnd the allowlist is set to [\"foo-1.0\"], then the returned results will return\nonly the version stream \"foo-1.0\". This applies to both EOL and non EOL\nversion streams, and also affects the computed \"is_latest\" field to\nonly consider the filtered versions.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "block_types": {
+        "login_options": {
+          "nesting_mode": "single",
+          "block": {
+            "attributes": {
+              "auth0_connection": {
+                "type": "string",
+                "description": "Auth0 social connection to use by default for OIDC token. Must be one of: google-oauth2, gitlab, github",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "disabled": {
+                "type": "bool",
+                "description": "Disable automatic login when Chainguard token is expired.",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "enable_refresh_tokens": {
+                "type": "bool",
+                "description": "Enable to use of refresh tokens when authenticating with an IdP (not compatible with identity_token authentication).",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "identity_id": {
+                "type": "string",
+                "description": "UIDP of the identity to assume when exchanging OIDC token for Chainguard token.",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "identity_provider_id": {
+                "type": "string",
+                "description": "UIDP of the identity provider authenticate with for OIDC token.",
+                "description_kind": "plain",
+                "optional": true
+              },
+              "identity_token": {
+                "type": "string",
+                "description": "A path to an OIDC identity token, or explicit identity token.",
+                "description_kind": "plain",
+                "optional": true,
+                "sensitive": true
+              },
+              "organization_name": {
+                "type": "string",
+                "description": "Verified organization name for determining identity provider to obtain OIDC token.",
+                "description_kind": "plain",
+                "optional": true
+              }
+            },
+            "description": "Options to configure automatic login when Chainguard token is expired.",
+            "description_kind": "plain"
+          }
+        }
+      },
+      "description": "Manage resources on the Chainguard platform.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "chainguard_account_associations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the account association.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group": {
+            "type": "string",
+            "description": "The UIDP of the IAM group to associate to cloud accounts.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the account association.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the account association.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "amazon": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "account": {
+                  "type": "string",
+                  "description": "AWS account ID",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Amazon account configuration",
+              "description_kind": "plain"
+            }
+          },
+          "azure": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "client_ids": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Azure compoment name to client id mapping",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tenant_id": {
+                  "type": "string",
+                  "description": "Azure tenant id",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Azure account association configuration",
+              "description_kind": "plain"
+            }
+          },
+          "chainguard": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "service_bindings": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "A map of service bindings where the key is the service name and the value is the Id of the service principal identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Association of Chainguard services to the service principals they should assume when talking to Chainguard APIs.",
+              "description_kind": "plain"
+            }
+          },
+          "github": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "app_id": {
+                  "type": "number",
+                  "description": "GitHub App ID.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "host": {
+                  "type": "string",
+                  "description": "Deprecated: no longer populated by the API.",
+                  "description_kind": "plain",
+                  "deprecated": true,
+                  "computed": true
+                },
+                "installation_id": {
+                  "type": "number",
+                  "description": "GitHub App Installation ID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "GitHub user/org name the installation is installed on.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "GitHub App installation configuration (deprecated: use github_installation instead).",
+              "description_kind": "plain",
+              "deprecated": true
+            }
+          },
+          "github_installation": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "app_id": {
+                  "type": "number",
+                  "description": "GitHub App ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "installation_id": {
+                  "type": "number",
+                  "description": "GitHub App Installation ID.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "GitHub user/org name the installation is installed on.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "GitHub App installation associations. Each block associates one (app_id, installation_id) pair with this group. Supports multiple installations.",
+              "description_kind": "plain"
+            }
+          },
+          "google": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "project_id": {
+                  "type": "string",
+                  "description": "GCP project id",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "project_number": {
+                  "type": "string",
+                  "description": "GCP project number",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Google Cloud Platform account association configuration",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Account associations for a Chainguard group.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_apko_build": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "config": {
+            "type": "string",
+            "description": "The apko configuration to build.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The build report UIDP for the most recent build.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_ref": {
+            "type": "string",
+            "description": "The resulting fully-qualified digest (e.g. {repo}@sha256:deadbeef).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "media_type": {
+            "type": "string",
+            "description": "The layer media type to build.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "repo": {
+            "type": "string",
+            "description": "The UIDP of the repository in which to build the image.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "This performs an apko build from the provided config file",
+        "description_kind": "markdown"
+      }
+    },
+    "chainguard_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of this IAM group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The exact UIDP of this IAM group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of this IAM group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Parent group (organization or folder) of this group. If not set, this group is an organization.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "resource_limits": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "Maximum number of resources allowed by type.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "verified": {
+            "type": "bool",
+            "description": "Whether the organization has been verified by a Chainguardian. Only applicable to organizations (top-level groups).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "verified_protection": {
+            "type": "bool",
+            "description": "Prevent the group from being unverified through Terraform. Null is treated as true.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "IAM Group on the Chainguard platform.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_group_invite": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "code": {
+            "type": "string",
+            "description": "A time-bounded token that may be used at registration to obtain access to a prespecified group with a prespecified role.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the identity that is allowed to accept this invite code.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "expiration": {
+            "type": "string",
+            "description": "The RFC3339 encoded date and time at which this invitation will no longer be valid.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group": {
+            "type": "string",
+            "description": "The Group to which this invite code grants access.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the group invite.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role that this invite code grants.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "IAM group invite on the Chainguard platform.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_identity": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "The RFC3339 encoded time this identity was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A longer description of the purpose of this identity.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of this identity.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_seen": {
+            "type": "string",
+            "description": "The RFC3339 encoded time this identity was last used to federate.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this identity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The id of the group containing this identity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "service_principal": {
+            "type": "string",
+            "description": "An identity that may be assumed by a particular Chainguard service.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The RFC3339 encoded time this identity was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "aws_identity": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "aws_account": {
+                  "type": "string",
+                  "description": "AWS Account ID of AWS user",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "aws_arn": {
+                  "type": "string",
+                  "description": "The exact Arn that must appear in GetCallerIdentity to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "aws_arn_pattern": {
+                  "type": "string",
+                  "description": "A pattern for matching acceptable Arn that must appear in GetCallerIdentity response to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "aws_user_id": {
+                  "type": "string",
+                  "description": "The exact UserId that must appear in GetCallerIdentity to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "aws_user_id_pattern": {
+                  "type": "string",
+                  "description": "A pattern for matching acceptable UserID that must appear in GetCallerIdentity response to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "An identity that may be assumed by an AWS identity satisfying the following contains on its GetCallerIdentity values",
+              "description_kind": "plain"
+            }
+          },
+          "claim_match": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "audience": {
+                  "type": "string",
+                  "description": "The exact audience that must appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "audience_pattern": {
+                  "type": "string",
+                  "description": "A pattern for matching acceptable audiences that appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "claim_patterns": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "The custom claim patterns for matching acceptable custom claims that appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "claims": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "The exact custom claims that appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "issuer": {
+                  "type": "string",
+                  "description": "The exact issuer that must appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "issuer_pattern": {
+                  "type": "string",
+                  "description": "A pattern for matching acceptable issuers that appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "The exact subject that must appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "subject_pattern": {
+                  "type": "string",
+                  "description": "A pattern for matching acceptable subjects that appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "An identity that may be assumed when its claims satisfy these constraints.",
+              "description_kind": "plain"
+            }
+          },
+          "static": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "expiration": {
+                  "type": "string",
+                  "description": "The RFC3339 encoded date and time at which this identity will no longer be valid.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "issuer": {
+                  "type": "string",
+                  "description": "The exact issuer that must appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "issuer_keys": {
+                  "type": "string",
+                  "description": "The JSON web key set (JWKS) of the OIDC issuer that should be used to verify tokens.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "The exact subject that must appear in tokens to assume this identity.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "An identity that is verified by OIDC, with pre-registered verification keys.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "IAM Identity in the Chainguard platform.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_identity_provider": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_role": {
+            "type": "string",
+            "description": "The id of the role new users are bound to on first login.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A longer description of the purpose of this identity provider.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the identity provider.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this identity provider.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The group containing this identity provider.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "oidc": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "additional_scopes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of scopes to request",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "client_id": {
+                  "type": "string",
+                  "description": "Client ID for OIDC identity provider",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "client_secret": {
+                  "type": "string",
+                  "description": "Client secret for OIDC identity provider",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "issuer": {
+                  "type": "string",
+                  "description": "Issuer URL",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "OIDC configuration of this identity provider",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "IAM Identity Provider.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_image_repo": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "active_tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of active tags for this repo.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "aliases": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Known aliases for a given image.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "bundles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of bundles associated with this repo. Allowed values are enforced by the Chainguard API.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "create_time": {
+            "type": "string",
+            "description": "The RFC3339 encoded time this repo was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The short description of this repo.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UIDP of this repo.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this repo.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The group that owns the repo.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "readme": {
+            "type": "string",
+            "description": "The README for this repo.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tier": {
+            "type": "string",
+            "description": "Image tier associated with this repo.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "sync_config": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "amazon": {
+                  "type": "string",
+                  "description": "The Amazon repository under which to create a new repository with the same name as the source repository.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "apko_overlay": {
+                  "type": "string",
+                  "description": "A json-encoded APKO configuration to overlay on rebuilds of images being synced.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "azure": {
+                  "type": "string",
+                  "description": "The Azure repository under which to create a new repository with the same name as the source repository.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "expiration": {
+                  "type": "string",
+                  "description": "The RFC3339 encoded date and time at which this entitlement will expire. Computed by API if not provided.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "google": {
+                  "type": "string",
+                  "description": "The Google repository under which to create a new repository with the same name as the source repository.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "grace_period": {
+                  "type": "bool",
+                  "description": "Controls whether the image grace period functionality is enabled or not. Defaults to false if not provided.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "source": {
+                  "type": "string",
+                  "description": "The source repository to sync images from.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "unique_tags": {
+                  "type": "bool",
+                  "description": "Whether each synchronized tag should be suffixed with the image timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "description": "Configuration for catalog syncing.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Image repo (note: delete is purposefully a no-op).",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_image_repo_deployment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "charts": {
+            "nested_type": {
+              "attributes": {
+                "chart": {
+                  "type": "string",
+                  "description": "Chart name or path within the repository.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "repo": {
+                  "type": "string",
+                  "description": "Repository URL of the chart (e.g., 'oci://ghcr.io/stefanprodan/charts/podinfo' or 'https://kyverno.github.io/kyverno/').",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "source": {
+                  "type": "string",
+                  "description": "Link to the Helm chart source code (e.g., 'https://github.com/kyverno/kyverno').",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of Helm charts for this deployment.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UIDP of the repository this deployment belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "ignore_errors": {
+            "type": "bool",
+            "description": "If true, read errors (e.g. permission denied) will be logged as warnings and the resource removed from state. Create, update, and delete errors are never ignored to prevent state corruption.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Deployment configuration for a repository, containing Helm chart sources.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_image_tag": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bundles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of bundles associated with this repo. Allowed values are enforced by the Chainguard API.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deprecated": {
+            "type": "bool",
+            "description": "Whether the tag is deprecated.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "digest": {
+            "type": "string",
+            "description": "The digest of the manifest with this tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UIDP of this tag.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The RFC3339 encoded time this tag was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this tag.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repo_id": {
+            "type": "string",
+            "description": "The repo that owns the repo.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Image tag (note: delete is purposefully a no-op).",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "capabilities": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of capabilities to grant this role",
+            "description_kind": "plain",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional longer description of this role.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UIDP of this role.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this role.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The group containing this role",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "IAM Role in the Chainguard platform.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_rolebinding": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group": {
+            "type": "string",
+            "description": "The id of the IAM group to grant the identity access to with the role's capabilities.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The UIDP of this rolebinding.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "identity": {
+            "type": "string",
+            "description": "The id of an identity to grant role's capabilities to at the scope of the IAM group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "The role to grant identity at the scope of the IAM group.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "IAM role-binding on the Chainguard platform.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_subscription": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The id of the subscription.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Parent IAM group of subscription. Sets the scope of the events subscribed to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sink": {
+            "type": "string",
+            "description": "Address to which events will be sent using the selected protocol",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Event subscription.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "chainguard_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the matched IAM group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The exact UIDP of the group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the group to lookup",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The UIDP of the group in which to lookup the named group.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lookup a group with the given name.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_identity": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The UIDP of this identity.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "issuer": {
+            "type": "string",
+            "description": "The exact issuer of the identity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "The exact subject of the identity.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Lookup an identity with the given issuer and subject.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_image_repo": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The exact UIDP of the repository to look up.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "items": {
+            "nested_type": {
+              "attributes": {
+                "active_tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of active tags for this repo.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "aliases": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Known aliases for a given image.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "bundles": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of bundles associated with this repo. Allowed values are enforced by the Chainguard API.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The short description of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The UIDP of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "readme": {
+                  "type": "string",
+                  "description": "The README for this repo.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "sync_config": {
+                  "type": [
+                    "object",
+                    {
+                      "amazon": "string",
+                      "apko_overlay": "string",
+                      "azure": "string",
+                      "expiration": "string",
+                      "google": "string",
+                      "grace_period": "bool",
+                      "source": "string",
+                      "unique_tags": "bool"
+                    }
+                  ],
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "tier": {
+                  "type": "string",
+                  "description": "Image tier associated with this repo.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Repos matched by the data source's filter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the repository to lookup.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "The UIDP of the group in which to lookup the repo.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lookup a repo/repos with the given name.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_image_repos": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Placeholder identifier for the data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "items": {
+            "nested_type": {
+              "attributes": {
+                "active_tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of active tags for this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "aliases": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Known aliases for a given image.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "bundles": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of bundles associated with this repo (a-z freeform keywords for sales purposes).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The short description of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The UIDP of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "readme": {
+                  "type": "string",
+                  "description": "The README for this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "sync_config": {
+                  "type": [
+                    "object",
+                    {
+                      "amazon": "string",
+                      "apko_overlay": "string",
+                      "azure": "string",
+                      "expiration": "string",
+                      "google": "string",
+                      "grace_period": "bool",
+                      "source": "string",
+                      "unique_tags": "bool"
+                    }
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tier": {
+                  "type": "string",
+                  "description": "Image tier associated with this repo.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of image repositories matching the filter criteria.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Filter repositories by name (supports partial matching).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Filter repositories by parent group UIDP.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lookup multiple image repositories with optional filtering. Returns zero or more repositories.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The exact UIDP of the role to lookup.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "items": {
+            "nested_type": {
+              "attributes": {
+                "capabilities": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The capabilities granted to this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The UIDP of this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of this role.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Roles matched by the data source's filter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the role to lookup.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "The UIDP of the group in which to lookup the named role.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Lookup a role with the given name.",
+        "description_kind": "plain"
+      }
+    },
+    "chainguard_versions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "ordered_keys": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of keys as they appear in the versions output, sorted semantically.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "package": {
+            "type": "string",
+            "description": "The name of the package to lookup.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "variant": {
+            "type": "string",
+            "description": "A package variant (e.g. fips).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "version_map": {
+            "nested_type": {
+              "attributes": {
+                "eol": {
+                  "type": "bool",
+                  "description": "Whether the version is eol.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "eol_date": {
+                  "type": "string",
+                  "description": "The eol date.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "exists": {
+                  "type": "bool",
+                  "description": "Whether the version exists.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "fips": {
+                  "type": "bool",
+                  "description": "Whether the version is fips.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_latest": {
+                  "type": "bool",
+                  "description": "Whether the version is the latest.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "lts": {
+                  "type": "string",
+                  "description": "The lts version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "main": {
+                  "type": "string",
+                  "description": "The main version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "release_date": {
+                  "type": "string",
+                  "description": "The release date.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "The version.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "The version map.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "versions": {
+            "nested_type": {
+              "attributes": {
+                "eol_versions": {
+                  "nested_type": {
+                    "attributes": {
+                      "eol_broken": {
+                        "type": "bool",
+                        "description": "Whether the EOL version is broken.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "eol_date": {
+                        "type": "string",
+                        "description": "The eol date.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "exists": {
+                        "type": "bool",
+                        "description": "Whether the version exists.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "fips": {
+                        "type": "bool",
+                        "description": "Whether the FIPS version exists.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "release_date": {
+                        "type": "string",
+                        "description": "The release date.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "version": {
+                        "type": "string",
+                        "description": "The version.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The eol versions.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "grace_period_months": {
+                  "type": "number",
+                  "description": "The grace period in months.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_updated_timestamp": {
+                  "type": "string",
+                  "description": "The last updated timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "latest_version": {
+                  "type": "string",
+                  "description": "The latest version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "versions": {
+                  "nested_type": {
+                    "attributes": {
+                      "exists": {
+                        "type": "bool",
+                        "description": "Whether the version exists.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "fips": {
+                        "type": "bool",
+                        "description": "Whether the FIPS version exists.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "release_date": {
+                        "type": "string",
+                        "description": "The release date.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "version": {
+                        "type": "string",
+                        "description": "The version.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The versions.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The versions output of the package.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Lookup a package version stream",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

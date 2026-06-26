@@ -1,0 +1,781 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "base_dn": {
+          "type": "string",
+          "description": "Base DN, defaults to `dc=example,dc=com`",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "http_url": {
+          "type": "string",
+          "description": "HTTP URL in the format `http[s]://(hostname)[:port]`, can be set using the `LLDAP_HTTP_URL` environment variable",
+          "description_kind": "plain",
+          "required": true
+        },
+        "insecure_skip_cert_check": {
+          "type": "bool",
+          "description": "Disable check for valid certificate chain for https/ldaps (default: `false`)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "ldap_url": {
+          "type": "string",
+          "description": "LDAP URL in the format `ldap[s]://(hostname)[:port]`, can be set using the `LLDAP_LDAP_URL` environment variable",
+          "description_kind": "plain",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "description": "admin account password, can be set using the `LLDAP_PASSWORD` environment variable",
+          "description_kind": "plain",
+          "required": true
+        },
+        "username": {
+          "type": "string",
+          "description": "admin account username, defaults to `admin`",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "lldap_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "value": [
+                    "set",
+                    "string"
+                  ]
+                }
+              ]
+            ],
+            "description": "Attributes for this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Metadata of group object creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of this group",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique group ID",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of users who are members of this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of group",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a LLDAP group, without memberships",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_group_attribute": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attribute_type": {
+            "type": "string",
+            "description": "The attribute type (one of: DATE_TIME, INTEGER, JPEG_PHOTO, STRING)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The attribute type",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_hardcoded": {
+            "type": "bool",
+            "description": "Is this attribute hardcoded (i.e. managed by LLDAP)?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_list": {
+            "type": "bool",
+            "description": "Does this represent a list?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_readonly": {
+            "type": "bool",
+            "description": "Is this attribute readonly (i.e. managed by LLDAP)?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_visible": {
+            "type": "bool",
+            "description": "Is this attribute visible in LDAP?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique attribute name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Defines a new custom attribute schema for groups",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_group_attribute_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attribute_id": {
+            "type": "string",
+            "description": "The attribute name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "group_id": {
+            "type": "number",
+            "description": "The unique group ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The assignment 'ID', constructed as group_id:attribute_name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "value": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The value(s) for this attribute",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manage a custom attribute assignment for a group",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_group_memberships": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "string",
+            "description": "The unique group id",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID representing this specific group memberships",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "User ids that must be members of this group",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Exclusively manages all LLDAP memberhips for this specific group",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_display_name": {
+            "type": "string",
+            "description": "Display name of this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "group_id": {
+            "type": "number",
+            "description": "The unique group ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The member 'ID', constructed as group_id:user_id",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The unique user ID",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a LLDAP memberhip, i.e. a group-user relationship",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "value": [
+                    "set",
+                    "string"
+                  ]
+                }
+              ]
+            ],
+            "description": "Attributes for this user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "avatar": {
+            "type": "string",
+            "description": "Base 64 encoded JPEG image",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Metadata of user object creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of this user",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The unique user email",
+            "description_kind": "plain",
+            "required": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name of this user",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "groups": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "creation_date": "string",
+                  "display_name": "string",
+                  "id": "string"
+                }
+              ]
+            ],
+            "description": "Groups where the user is a member",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID representing this specific user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name of this user",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for the user. Note that the provider cannot read the password from LLDAP, so if this value is not set, the password attribute will be entirely ignored by the provider",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The unique username",
+            "description_kind": "plain",
+            "required": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of user",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a LLDAP user",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user_attribute": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attribute_type": {
+            "type": "string",
+            "description": "The attribute type (one of: DATE_TIME, INTEGER, JPEG_PHOTO, STRING)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The attribute type",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_editable": {
+            "type": "bool",
+            "description": "Is this attribute user editable?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_hardcoded": {
+            "type": "bool",
+            "description": "Is this attribute hardcoded (i.e. managed by LLDAP)?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_list": {
+            "type": "bool",
+            "description": "Does this represent a list?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "is_readonly": {
+            "type": "bool",
+            "description": "Is this attribute readonly (i.e. managed by LLDAP)?",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_visible": {
+            "type": "bool",
+            "description": "Is this attribute visible in LDAP?",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique attribute name",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Defines a new custom attribute schema for users",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user_attribute_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attribute_id": {
+            "type": "string",
+            "description": "The attribute name",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The assignment 'ID', constructed as user_id:attribute_name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The unique user ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The value(s) for this attribute",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manage a custom attribute assignment for an user",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user_memberships": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Groups id where the user must be a member",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID representing this specific user memberships",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "The unique user id",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Exclusively manages all LLDAP memberhips for this specific user",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "lldap_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "value": [
+                    "set",
+                    "string"
+                  ]
+                }
+              ]
+            ],
+            "description": "Attributes for this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Metadata of group object creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of this group",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The unique group ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "display_name": "string",
+                  "id": "string"
+                }
+              ]
+            ],
+            "description": "Members of this group",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads a LLDAP group, including memberships",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_group_attributes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "attribute_type": "string",
+                  "is_hardcoded": "bool",
+                  "is_list": "bool",
+                  "is_readonly": "bool",
+                  "is_visible": "bool",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "Set of all group attributes",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Generated ID representing the attributes",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Schema definitions for group attributes",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "groups": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "creation_date": "string",
+                  "display_name": "string",
+                  "id": "string"
+                }
+              ]
+            ],
+            "description": "Set of all groups",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Generated ID representing the groups",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads all LLDAP groups, without memberships",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "name": "string",
+                  "value": [
+                    "set",
+                    "string"
+                  ]
+                }
+              ]
+            ],
+            "description": "Custom attributes for this user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "avatar": {
+            "type": "string",
+            "description": "Base 64 encoded JPEG image",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "creation_date": {
+            "type": "string",
+            "description": "Metadata of user object creation",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of this user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The unique user email",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "first_name": {
+            "type": "string",
+            "description": "First name of this user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "groups": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "creation_date": "string",
+                  "display_name": "string",
+                  "id": "string"
+                }
+              ]
+            ],
+            "description": "Groups where the user is a member",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique user ID",
+            "description_kind": "plain",
+            "required": true
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Last name of this user",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The unique username",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of user",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads a LLDAP user, with group memberships",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_user_attributes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "attributes": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "attribute_type": "string",
+                  "is_editable": "bool",
+                  "is_hardcoded": "bool",
+                  "is_list": "bool",
+                  "is_readonly": "bool",
+                  "is_visible": "bool",
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "Set of all user attributes",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Generated ID representing the attributes",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Schema definitions for user attributes",
+        "description_kind": "plain"
+      }
+    },
+    "lldap_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "users": {
+            "type": [
+              "set",
+              [
+                "object",
+                {
+                  "avatar": "string",
+                  "creation_date": "string",
+                  "display_name": "string",
+                  "email": "string",
+                  "first_name": "string",
+                  "id": "string",
+                  "last_name": "string",
+                  "username": "string",
+                  "uuid": "string"
+                }
+              ]
+            ],
+            "description": "Set of all users",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads all LLDAP users, without group memberships",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

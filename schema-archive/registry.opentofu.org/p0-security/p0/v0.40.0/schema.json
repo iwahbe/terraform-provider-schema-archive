@@ -1,0 +1,2510 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "Your P0 API token. If unset, falls back to the `P0_API_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "host": {
+          "type": "string",
+          "description": "Your P0 application API host (defaults to `https://api.p0.app`)",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "org": {
+          "type": "string",
+          "description": "Your P0 organization identifier",
+          "description_kind": "markdown",
+          "required": true
+        }
+      },
+      "description": "Configures a P0 organization. Requires a P0 account. Go to https://p0.app to create an account.\n\nYou must also configure a P0 API token (on your P0 app \"/settings\" page). Pass it via the `api_token` provider\nattribute, or by setting the `P0_API_TOKEN` environment variable. The `api_token` attribute takes\nprecedence when both are set.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "p0_aws_iam_write": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The AWS account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "login": {
+            "nested_type": {
+              "attributes": {
+                "identity": {
+                  "nested_type": {
+                    "attributes": {
+                      "tag_name": {
+                        "type": "string",
+                        "description": "The name of the AWS user tag that holds the user's email address",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "One of:\n    - 'email': IAM user names are user email addresses (IAM login), or user's IDC email is user's email (IDC login)\n    - 'tag': User email addresses appear in IAM user tag; 'tag_name' is required (IAM login only)\n    - 'user': Username is user's email (IDC login only)",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "How user identities are mapped. When login type is 'iam', valid identity types are 'email' and 'tag'.\n    When login type is 'idc', valid identity types are 'user' (default, username is email) and 'email' (match by IDC email).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "parent": {
+                  "type": "string",
+                  "description": "Identity Center parent account ID",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "provider": {
+                  "nested_type": {
+                    "attributes": {
+                      "app_id": {
+                        "type": "string",
+                        "description": "Okta AWS federation app ID",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "identity_provider": {
+                        "type": "string",
+                        "description": "AWS provider integration; this is the _name_ of the AWS integration that you use for federated login,\ndefined on the [\"Identity providers\" tab](https://console.aws.amazon.com/iam/home#/identity_providers) of your IAM dashboard",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "method": {
+                        "nested_type": {
+                          "attributes": {
+                            "account_count": {
+                              "nested_type": {
+                                "attributes": {
+                                  "parent": {
+                                    "type": "string",
+                                    "description": "The account ID of the federation app's parent AWS account",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "description_kind": "plain",
+                                    "optional": true,
+                                    "computed": true
+                                  }
+                                },
+                                "nesting_mode": "single"
+                              },
+                              "description": "Number of AWS accounts linked to the federation app:\n    - 'single': One account only\n    - 'multi': Multiple accounts, via a parent account",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "type": {
+                              "type": "string",
+                              "description": "Only 'saml' is supported at this time",
+                              "description_kind": "markdown",
+                              "optional": true,
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "The federation method used by your identity provider",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Only 'okta' is supported at this time",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Federated login provider details",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "One of:\n    - 'iam': Users log in as IAM users; 'identity' attribute is required\n    - 'idc': Users log in via Identity Center (formerly 'SSO'); 'parent' and 'identity' attributes are required\n    - 'federated': Users log in via a federated identity provider; 'provider' attribute is required",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "How users log in to this AWS account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "partition": {
+            "type": "string",
+            "description": "The AWS partition (aws or aws-us-gov). Defaults to aws if not specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An AWS installation.\n\n**Important**: This resource should be used together with the 'aws_iam_write_staged' resource, with a dependency chain\nrequiring this resource to be updated after the 'aws_iam_write_staged' resource.\n\nP0 recommends you use these resources according to the following pattern:\n\n```\nresource \"p0_aws_iam_write_staged\" \"staged_account\" {\n  id         = ...\n}\n\nresource \"aws_iam_role\" \"p0_iam_manager\" {\n  name               = p0_aws_iam_write_staged.staged_account.role.name\n  assume_role_policy = p0_aws_iam_write_staged.staged_account.role.trust_policy\n  inline_policy {\n    name   = p0_aws_iam_write_staged.staged_account.role.inline_policy_name\n    policy = p0_aws_iam_write_staged.staged_account.role.inline_policy\n  }\n}\n\nresource \"p0_aws_iam_write\" \"installed_account\" {\n  id         = p0_aws_staged.staged_account.id\n  depends_on = [aws_iam_role.p0_iam_manager]\n  ...\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_aws_iam_write_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The AWS account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "partition": {
+            "type": "string",
+            "description": "The AWS partition (aws or aws-us-gov). Defaults to aws if not specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "role": {
+            "nested_type": {
+              "attributes": {
+                "inline_policy": {
+                  "type": "string",
+                  "description": "The inline policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "inline_policy_name": {
+                  "type": "string",
+                  "description": "The name of the inline policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The AWS role name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "trust_policy": {
+                  "type": "string",
+                  "description": "The trust policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the AWS role that this P0 component uses to access AWS account infrastructure",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The audience ID of the service account to include in this AWS account's P0 role trust policies",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged AWS IAM-management installation. Staged resources are used to generate AWS trust policies.\n\n**Important** Before using this resource, please read the instructions for the 'aws_iam_write' resource.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_aws_inventory": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The AWS account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "partition": {
+            "type": "string",
+            "description": "The AWS partition (aws or aws-us-gov). Defaults to aws if not specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An AWS resource inventory installation.\n\nAllows P0 to inventory your AWS resources. Required for resource-level just-in-time access.\n\n**Important**: This resource should be used together with the p0_aws_inventory_staged resource, with a dependency chain\nrequiring this resource to be updated after the p0_aws_inventory_staged resource.\n\nCreate the AWS role using the attributes from p0_aws_inventory_staged, then create this resource with depends_on = [aws_iam_role.p0_inventory].",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_aws_inventory_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The AWS account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "partition": {
+            "type": "string",
+            "description": "The AWS partition (aws or aws-us-gov). Defaults to aws if not specified.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "role": {
+            "nested_type": {
+              "attributes": {
+                "inline_policy": {
+                  "type": "string",
+                  "description": "The inline policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "inline_policy_name": {
+                  "type": "string",
+                  "description": "The name of the inline policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The AWS role name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "trust_policy": {
+                  "type": "string",
+                  "description": "The trust policy that should be attached to the AWS role",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the AWS role that this P0 component uses to access AWS account infrastructure",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The audience ID of the service account to include in this AWS account's P0 role trust policies",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged AWS resource inventory installation. Staged resources are used to generate AWS trust policies and role configuration.\n\n**Important** Before using this resource, please read the instructions for the p0_aws_inventory resource. Create the AWS role using the attributes from this resource, then create the p0_aws_inventory resource with depends_on = [aws_iam_role.p0_inventory].",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_aws_rds": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The AWS account ID containing the RDS instances",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The VPC ID for the RDS installation",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region where the RDS instances are located",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An AWS RDS Installation.\n\nInstalling RDS allows you to manage access to your RDS database instances using IAM authentication.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_name": {
+            "type": "string",
+            "description": "The name of the Azure application P0 uses to communicate with your Microsoft Azure organization. This name is used to identify the app in the Azure portal.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "credential_info": {
+            "nested_type": {
+              "attributes": {
+                "audiences": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The audience of the Azure application federated credential. This is used to establish a connection with the P0 service account",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the Azure application federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "issuer": {
+                  "type": "string",
+                  "description": "The issuer of the Azure application federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The display name of the Azure application federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The credential information to setup Azure application federated credentials. This is used to authenticate P0 with your Microsoft Azure organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "directory_id": {
+            "type": "string",
+            "description": "The Microsoft Azure Directory ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account_email": {
+            "type": "string",
+            "description": "The service identity email that P0 uses to communicate with your Microsoft Azure organization",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "service_account_id": {
+            "type": "string",
+            "description": "The service identity ID that P0 uses to communicate with your Microsoft Azure organization",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Microsoft Azure installation.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_app": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "The Microsoft Azure service account client ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_service_principal_id": {
+            "type": "string",
+            "description": "The Microsoft Azure service principal ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on a single Azure tenant.\n\nComplete a prior `p0_azure_app_staged` apply, create the Azure AD application and federated identity credential using that resource's computed `app_name` and `credential_info` (see `examples/resources/p0_azure_app_staged/`), then set `client_id` here to the new application's client ID.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_app_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "app_name": {
+            "type": "string",
+            "description": "The display name to use when creating the Azure AD app registration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "credential_info": {
+            "nested_type": {
+              "attributes": {
+                "audiences": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Audiences for the federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description for the federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "issuer": {
+                  "type": "string",
+                  "description": "Issuer URL for the federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name for the federated credential.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Federated identity credential parameters for the Azure AD app (issuer, audiences, etc.). Use with p0_azure root service_account_id as subject.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Staged installation of the P0 Azure App Registration. After apply, read `app_name` and `credential_info` to create the Azure AD application and federated identity credential, then complete installation with `p0_azure_app` using the new app's client ID.\n\nUse `p0_azure.example.service_account_id` as the federated credential `subject` (see `credential_info` for issuer, audiences, and suggested name/description).\n\nTo use this resource, you must first install the `p0_azure` resource.\n\n\nExample:\n\n```terraform\nresource \"p0_azure_app_staged\" \"example\" {\n  depends_on = [p0_azure.example]\n}\n\nresource \"azuread_application_registration\" \"p0\" {\n  display_name = p0_azure_app_staged.example.app_name\n}\n\nresource \"azuread_application_federated_identity_credential\" \"p0\" {\n  application_id = azuread_application_registration.p0.id\n  display_name   = p0_azure_app_staged.example.credential_info.name\n  description    = p0_azure_app_staged.example.credential_info.description\n  issuer         = p0_azure_app_staged.example.credential_info.issuer\n  audiences      = p0_azure_app_staged.example.credential_info.audiences\n  subject        = p0_azure.example.service_account_id\n}\n\nresource \"p0_azure_app\" \"example\" {\n  depends_on = [azuread_application_federated_identity_credential.p0]\n  client_id  = azuread_application_registration.p0.client_id\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_bastion_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bastion_id": {
+            "type": "string",
+            "description": "The full Azure resource ID of the Bastion host (e.g. from azure_p0_bastion.bastion_resource_id).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The label of the subscription (computed from P0).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "role_definition_id": {
+            "type": "string",
+            "description": "The Azure role definition ID for the P0 Bastion Host Management role (e.g. from azure_p0_roles.bastion_role_definition_id).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "The Azure subscription ID where the bastion host is used.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Registers an Azure Bastion host with P0 for SSH access to VMs in a subscription.\n\nTo use this resource, you must also:\n- install the `p0_azure_bastion_host_staged` resource,\n- install the `p0_azure` resource,\n- install the `p0_azure_app` resource,\n- install the `p0_azure_iam_write` resource for the same subscription,\n- create an Azure Bastion host (e.g. via the `azure_p0_bastion` module),\n- create and assign the P0 Bastion Host Management role to the P0 app (e.g. via the `azure_p0_roles` module).\n\nUse `p0_azure_bastion_host_staged` computed `custom_role` when defining that Azure role. See `examples/resources/p0_azure_bastion_host/` for a full chain.\n\n\n\nExample (after creating the Bastion and role in Azure):\n\n```terraform\nresource \"p0_azure_bastion_host\" \"example\" {\n  subscription_id    = p0_azure_bastion_host_staged.example.subscription_id\n  bastion_id         = module.azure_p0_bastion.bastion_resource_id\n  role_definition_id = module.azure_p0_roles.bastion_role_definition_id\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_bastion_host_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role": {
+            "nested_type": {
+              "attributes": {
+                "actions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The actions allowed for the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "assignable_scope": {
+                  "type": "string",
+                  "description": "The assignable scope of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "condition": {
+                  "type": "string",
+                  "description": "The condition of the Azure custom role assignment, if any.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_custom": {
+                  "type": "bool",
+                  "description": "Indicates if the role is a custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The custom role spec for the P0 Bastion Host Management role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "The ID of the Azure Subscription.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Staged installation of the P0 Azure Bastion Host component. Returns the Bastion Host Management role spec so you can create the Azure role and assignment, then complete with `p0_azure_bastion_host`.\n\nTo use this resource, you must also:\n- install the `p0_azure` resource,\n- install the `p0_azure_app` resource,\n- install the `p0_azure_iam_write` resource for the same subscription.\n\nRead `custom_role` (name, description, actions, assignable_scope) when defining an `azurerm_role_definition` or equivalent, assign it to the P0 service principal, deploy Bastion, then pass the Bastion ARM ID and role definition ID to `p0_azure_bastion_host`.\n\n\nExample:\n\n```terraform\nresource \"p0_azure_bastion_host_staged\" \"example\" {\n  depends_on = [\n    p0_azure.example,\n    p0_azure_app.example,\n    p0_azure_iam_write.example,\n  ]\n\n  subscription_id = local.subscription_id\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_iam_write": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "label": {
+            "type": "string",
+            "description": "The label of the Azure Subscription.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "The ID of the Azure Subscription.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "An installation of P0, on a single Microsoft Azure Cloud Subscription, for IAM management.\n\nTo use this resource, you must also:\n- create an app registration in Azure for P0,\n- create federated credentials for P0 to communicate with Azure through the app registration,\n- create a custom role allowing IAM operations,\n- assign this custom role to P0's app registration at the subscription level,\n- (optional) constraint role assignment to specific roles or principals,\n- install the `p0_azure` resource,\n- install the `p0_azure_app` resource,\n- install the `p0_azure_iam_write_staged` resource,\n\nSee the example usage for the recommended pattern to define this infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_azure_iam_write_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role": {
+            "nested_type": {
+              "attributes": {
+                "actions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The actions allowed for the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "assignable_scope": {
+                  "type": "string",
+                  "description": "The assignable scope of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "condition": {
+                  "type": "string",
+                  "description": "The condition of the Azure custom role assignment, if any.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_custom": {
+                  "type": "bool",
+                  "description": "Indicates if the role is a custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the Azure custom role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The custom role created for the Azure IAM Management.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "The ID of the Azure Subscription.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "An installation of P0, on a single Azure subscription, for IAM management.\n\t\t\nTo use this resource, you must also:\n- create an app registration in Azure for P0,\n- create federated credentials for P0 to communicate with Azure through the app registration,\n- create a custom role allowing IAM operations,\n- assign this custom role to P0's app registration at the subscription level,\n- (optional) constraint role assignment to specific roles or principals,\n- install the `p0_azure` resource,\n- install the `p0_azure_app` resource,\n\nFor instructions on using this resource, see the documentation for `p0_azure_iam_write`.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_datadog_audit_logs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_key_cleartext": {
+            "type": "string",
+            "description": "Datadog API key for authentication",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "api_key_hash": {
+            "type": "string",
+            "description": "The hash of the API key",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "identifier": {
+            "type": "string",
+            "description": "A user-specified identifier for this Datadog audit logs configuration",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "intake_url": {
+            "type": "string",
+            "description": "Datadog logs intake URL (e.g., https://http-intake.logs.datadoghq.com)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service": {
+            "type": "string",
+            "description": "Service name for log attribution (optional). Defaults to 'p0'.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Allows P0 to send access events and security findings to Datadog Logs",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_file_transfer": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The AWS account ID. AWS SSH must already be installed for this account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "aws_partition": {
+            "type": "string",
+            "description": "The AWS partition the bucket resides in. Usually `aws`; use `aws-us-gov` for GovCloud or `aws-cn` for China",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "bucket_name": {
+            "type": "string",
+            "description": "The name of the S3 bucket used to broker fast file transfers (without the `s3://` prefix)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The label for this installation (defaults to the AWS account ID)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The AWS region of the S3 bucket (e.g. `us-east-1`)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A File Transfer installation for AWS.\n\nInstalling File Transfer allows P0 to broker temporary, audited file transfers to your AWS EC2 instances through a customer-owned S3 bucket.\n\n**Prerequisite:** AWS SSH (`p0_ssh_aws`) must be installed for the same AWS account before file transfer can be requested.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_logs": {
+            "nested_type": {
+              "attributes": {
+                "custom_role": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "The custom role expected identifier",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The custom role's expected title",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Describes the custom role that should be created and assigned to P0's service account",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Permissions that should be granted to P0 via the custom role, described in the 'role' attribute,\nin order to install projects for access logging",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Read-only attributes used to configure infrastructure and IAM grants for access-logs integrations",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "iam_assessment": {
+            "nested_type": {
+              "attributes": {
+                "permissions": {
+                  "nested_type": {
+                    "attributes": {
+                      "organization": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Permissions, in addition to 'project' permissions, required for organization-level IAM-assessment installs",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "project": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Permissions required for project-level IAM-assessment installs",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Permissions that must be granted to P0's service account",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Read-only attributes used to configure IAM grants for IAM-assessment integrations",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "org_wide_policy": {
+            "nested_type": {
+              "attributes": {
+                "custom_role": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "The custom role expected identifier",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The custom role's expected title",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Describes the custom role that should be created and assigned to P0's service account",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "permissions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Permissions that should be granted to P0 via the custom role, described in the 'role' attribute,\nin order to install projects for org-wide policy-read installation",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Read-only attributes used to configure IAM grants for org-wide policy-read installation",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Google Cloud organization ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account_email": {
+            "type": "string",
+            "description": "The identity that P0 uses to communicate with your Google Cloud organization",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Google Cloud installation.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_access_logs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on a single Google Cloud project, for access-log collection,\nwhich enhances IAM assessment.\n\nTo use this resource, you must also:\n- install the `p0_gcp_iam_assessment` resource, and\n- grant P0 the ability to create logging sinks in your project.\n\nUse the read-only attributes defined on `p0_gcp` to create the requisite Google Cloud infrastructure.\n\nP0 recommends defining this infrastructure according to the example usage pattern.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_iam_assessment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on a single Google Cloud project, for IAM assessment.\n\nTo use this resource, you must also:\n- install the `p0_gcp_iam_assessment_staged` resource,\n- create a custom role allowing IAM-assessment operations, and\n- grant this custom role to P0's service account.\n\nUse the read-only attributes defined on `p0_gcp_iam_assessment_staged` to create the requisite Google Cloud infrastructure.\n\nP0 recommends defining this infrastructure according to the pattern in the example usage.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_iam_assessment_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The custom role expected identifier",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The custom role's expected title",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the custom role that should be created and assigned to P0's service account",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Permissions that should be granted to P0 via the custom role, described in the 'role' attribute,\nin order to install projects for IAM assessment",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to assess with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged installation of P0, on a single Google Cloud project, for IAM assessment.\n\nFor instructions on using this resource, see the documentation for `p0_gcp_iam_assessment`.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_iam_write": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on a single Google Cloud project, for IAM management.\n\nTo use this resource, you must also:\n- install the `p0_gcp_iam_write_staged` resource\n- create a custom role allowing IAM-management operations,\n- grant this custom role to P0's service account,\n- grant the `iam.securityAdmin` role to P0's service account.\n\nUse the read-only attributes defined on `p0_gcp_iam_write_staged` to create the requisite Google Cloud infrastructure.\n\nSee the example usage for the recommended pattern to define this infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_iam_write_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "custom_role": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The custom role expected identifier",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The custom role's expected title",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the custom role that should be created and assigned to P0's service account",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Permissions that should be granted to P0 via the custom role, described in the 'role' attribute,\nin order to install projects for IAM management",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "predefined_role": {
+            "type": "string",
+            "description": "The predefined role that should be granted to P0, in order to install projects for IAM management",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on a single Google Cloud project, for IAM management.\n\nFor instructions on using this resource, see the documentation for `p0_gcp_iam_write`.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_organization_access_logs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "topic_project_id": {
+            "type": "string",
+            "description": "The project identifier where the access-logs Pub/Sub topic should reside",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "An installation of P0, on an entire Google Cloud organization, for access-log collection,\nwhich enhances IAM assessment. Note that P0 will have access to logs from all your projects, not just those\nconfigured for IAM assessment.\n\nTo use this resource, you must also:\n- grant P0 the ability to create logging sinks on your organization.\n\nUse the read-only attributes defined on `p0_gcp` to create the requisite Google Cloud infrastructure.\n\nP0 recommends defining this infrastructure according to the example usage pattern.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_organization_iam_assessment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of P0, on an entire Google Cloud organization, for IAM assessment.\n\nTo use this resource, you must also:\n- create a custom role allowing IAM-assessment operations, and\n- grant this custom role to P0's service account.\n\nUse the read-only attributes defined on `p0_gcp` to create the requisite Google Cloud infrastructure.\n\nP0 recommends defining this infrastructure according to the example usage pattern.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_security_perimeter": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_domains": {
+            "type": "string",
+            "description": "The list of domains that are allowed to access the Cloud Run service.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cloud_run_url": {
+            "type": "string",
+            "description": "The URL of the Cloud Run service that will be used to enforce the security perimeter.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "image_digest": {
+            "type": "string",
+            "description": "The hash value of the image that is deployed to the Cloud Run service.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The GCP region where the Cloud Run security perimeter service is deployed. Defaults to \"us-west1\".",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An installation of the P0 Security Perimeter, for a Google Cloud Project,\nwhich creates a security boundary for P0.\n\nTo use this resource, you must also:\n- Install the `p0_gcp_security_perimeter_staged` resource.\n- Install the `p0_gcp_iam_write` resource.\n- Deploy the P0 Security Perimeter cloud run service and the corresponding service account.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_security_perimeter_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_domains": {
+            "type": "string",
+            "description": "The list of domains that are allowed to access the Cloud Run service.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "custom_role": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "The custom role expected identifier",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The custom role's expected title",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the custom role that should be created and assigned to P0's service account",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "image_digest": {
+            "type": "string",
+            "description": "The hash value of the image that is deployed to the Cloud Run service.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_reader_role": {
+            "nested_type": {
+              "attributes": {
+                "custom_role": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description": "The custom role expected identifier",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The custom role's expected title",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Describes the custom role that should be created and assigned to P0's service account",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "required_permissions": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Described the permissions that the project reader role should contain.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Describes the project reader role that should be created and assigned to P0's service account",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The GCP region where the Cloud Run security perimeter service is deployed. Defaults to \"us-west1\".",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "required_permissions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of permissions required by the security perimeter invoker role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged installation of the P0 Security Perimeter, for a Google Cloud Project,\nwhich creates a security boundary for P0.\n\nTo use this resource, you must also:\n- Install the `p0_gcp_iam_write` resource.\n- Deploy the P0 Security Perimeter cloud run service and the corresponding service account.\n- install the `p0_gcp_security_perimeter` resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_gcp_sharing_restriction": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "project": {
+            "type": "string",
+            "description": "The ID of the Google Cloud project to manage with P0",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Validates installation of a domain-restricted sharing policy, preventing privilege\nescalation via the P0 IAM-management integration.\n\nTo use this resource, you must:\n- install the `p0_gcp_iam_write` resource, and\n- create a domain-restricted-sharing organization policy\n\nP0 recommends defining this infrastructure according to the pattern in the example usage.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_kubernetes": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_mode_enabled": {
+            "type": "bool",
+            "description": "Whether or not the EKS cluster has Auto-Mode enabled",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "certificate_authority": {
+            "type": "string",
+            "description": "The base-64 encoded certificate authority of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cluster_arn": {
+            "type": "string",
+            "description": "The ARN of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cluster_endpoint": {
+            "type": "string",
+            "description": "The server API endpoint of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "connectivity_type": {
+            "type": "string",
+            "description": "One of:\n\t- 'proxy' (default): The integration will connect to the cluster via P0's proxy service. \n\t- 'public': The integration will connect to the cluster via the public internet",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hosting_type": {
+            "type": "string",
+            "description": "The hosting type for the cluster",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The display name of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "public_jwk": {
+            "type": "string",
+            "description": "The public JWK token of the braekhus proxy service",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The value of the p0-service-account-secret",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "A fully installed K8s integration. This resource provides final configuration values for the installation and verifies integration setup. \n\n**Disclaimer**: This resource currently only supports installation against an AWS EKS cluster. Support for Azure, GCP, and self-hosted clusters will\nbe added in a future release.\n\n**Important**: This resource only completes the final steps of the installation process, and assumes that a corresponding 'p0_kubernetes_staged' resource has already\nbeen provisioned. Before using this resource, please read the instructions for the 'p0_kubernetes_staged' resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_kubernetes_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_mode_enabled": {
+            "type": "bool",
+            "description": "Whether or not the EKS cluster has Auto-Mode enabled",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ca_bundle": {
+            "type": "string",
+            "description": "The generated certificate authority bundle used by the admission controller",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "certificate_authority": {
+            "type": "string",
+            "description": "The base-64 encoded certificate authority of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cluster_arn": {
+            "type": "string",
+            "description": "The ARN of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cluster_endpoint": {
+            "type": "string",
+            "description": "The server API endpoint of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "connectivity_type": {
+            "type": "string",
+            "description": "One of:\n\t- 'proxy' (default): The integration will connect to the cluster via P0's proxy service. \n\t- 'public': The integration will connect to the cluster via the public internet",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "hosting_type": {
+            "type": "string",
+            "description": "The hosting type for the cluster",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The display name of the cluster",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "server_cert": {
+            "type": "string",
+            "description": "The generated certficate used by the admission controller",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "server_key": {
+            "type": "string",
+            "description": "The generated private key used by the admission controller",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged K8s integration. Staged resources are used to generate configurations and PKI values.\n\n**Disclaimer**: This resource currently only supports installation against an AWS EKS cluster. Support for Azure, GCP, and self-hosted clusters will\nbe added in a future release.\n\t\t\n**Important**: This resource only initiates the installation process for a k8s integration. It is intended to be used in conjunction with the \n'p0_kubernetes' resource, which completes the final steps of the installation. Before using this resource, please read the instructions \nfor the 'p0_kubernetes' resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_mysql": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_db": {
+            "type": "string",
+            "description": "Optional default database for access requests",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The hostname or IP address of the MySQL instance",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this MySQL installation (can be any string, e.g., \"production-db\" or \"staging-mysql\")",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "port": {
+            "type": "string",
+            "description": "The MySQL port number (defaults to 3306)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A MySQL Installation for AWS RDS.\n\nInstalling MySQL allows you to manage access to your MySQL database instances using IAM authentication.\n\n**Note:** This integration is currently experimental and only supports AWS RDS MySQL instances.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_mysql_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hosting": {
+            "nested_type": {
+              "attributes": {
+                "connector_arn": {
+                  "type": "string",
+                  "description": "The AWS Lambda connector ARN",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "instance_arn": {
+                  "type": "string",
+                  "description": "The AWS RDS instance ARN",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The hosing environment",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "vpc_id": {
+                  "type": "string",
+                  "description": "The AWS VPC ID where the RDS instance is located (must reference an existing aws-rds integration)",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "How this instance (or cluster) is hosted",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this MySQL installation (can be any string, e.g., \"production-db\" or \"staging-mysql\")",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged MySQL installation. Staged resources generate the infrastructure configuration needed to deploy P0's MySQL connector.\n\n**Important:** If using RDS hosting, you must first install the p0_aws_rds resource for the instance's VPC.\n\nUse the read-only attributes defined on this resource to get the shell commands or Terraform configuration needed to create the P0 connector infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_okta_directory_listing": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client": {
+            "type": "string",
+            "description": "The client ID for the Okta application, shown in the Okta admin console \"Applications\" page\nor as the `client_id` attribute of the `okta_app_oauth` resource",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain of the Okta organization",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "jwk": {
+            "type": [
+              "object",
+              {
+                "e": "string",
+                "kid": "string",
+                "kty": "string",
+                "n": "string"
+              }
+            ],
+            "description": "The JSON Web Key (JWK) for the Okta application",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Final installation of P0 for Okta directory listing.\n\nTo use this resource, you must also:\n- install the `p0_okta_directory_listing_staged` resource,\n- add the JWK from that resource to the Okta organization,\n\nSee the example usage for the recommended pattern to define this infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_okta_directory_listing_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain of the Okta organization",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "jwk": {
+            "type": [
+              "object",
+              {
+                "e": "string",
+                "kid": "string",
+                "kty": "string",
+                "n": "string"
+              }
+            ],
+            "description": "The public JSON Web Key (JWK) added to the Okta App",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged installation of P0, on an Okta organization for directory listing.\n\nFor instructions on using this resource, see the documentation for `p0_okta_directory_listing`.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_okta_group_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The Okta domain for group assignment",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Installation of P0 for Okta group assignment.\n\nTo use this resource, you must first:\n- Create the + `p0_okta_directory_listing` resource \n- Grant the P0 Okta application the \"Group Membership Administrator\" role assignment\n\nSee the example usage for the recommended pattern to define this infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_postgres": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "default_db": {
+            "type": "string",
+            "description": "Optional default database for access requests",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "hostname": {
+            "type": "string",
+            "description": "The hostname or IP address of the PostgreSQL instance",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this PostgreSQL installation (can be any string, e.g., \"production-db\" or \"staging-postgres\")",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "port": {
+            "type": "string",
+            "description": "The PostgreSQL port number (defaults to 5432)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A PostgreSQL Installation for AWS RDS.\n\nInstalling PostgreSQL allows you to manage access to your PostgreSQL database instances using IAM authentication.\n\n**Note:** This integration is currently experimental and only supports AWS RDS PostgreSQL instances.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_postgres_staged": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hosting": {
+            "nested_type": {
+              "attributes": {
+                "connector_arn": {
+                  "type": "string",
+                  "description": "The AWS Lambda connector ARN",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "instance_arn": {
+                  "type": "string",
+                  "description": "The AWS RDS instance ARN",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The hosting environment",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "vpc_id": {
+                  "type": "string",
+                  "description": "The AWS VPC ID where the RDS instance is located (must reference an existing aws-rds integration)",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "How this instance (or cluster) is hosted",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for this PostgreSQL installation (can be any string, e.g., \"production-db\" or \"staging-postgres\")",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A staged PostgreSQL installation. Staged resources generate the infrastructure configuration needed to deploy P0's PostgreSQL connector.\n\n**Important:** If using RDS hosting, you must first install the p0_aws_rds resource for the instance's VPC.\n\nUse the read-only attributes defined on this resource to get the shell commands or Terraform configuration needed to create the P0 connector infrastructure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_routing_rule": {
+      "version": 2,
+      "block": {
+        "attributes": {
+          "approval": {
+            "nested_type": {
+              "attributes": {
+                "directory": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'requestor-profile'. One of \"azure-ad\", \"okta\", or \"workspace\".",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "effect": {
+                  "type": "string",
+                  "description": "The filter effect. May be one of:\n\t - 'keep': Access rule only applies when a requestor is a member of any of the specified groups\n\t - 'remove': Access rule only applies when a requestor is _not_ a member of any of the specified groups",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "groups": {
+                  "nested_type": {
+                    "attributes": {
+                      "directory": {
+                        "type": "string",
+                        "description": "One of \"azure-ad\", \"okta\", or \"workspace\".",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "This is the directory's internal group identifier.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "This is any human-readable name for the directory group specified in the 'id' attribute.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "May only be used if 'type' is 'group'. If the user is a member of any of these groups, the rule will match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "integration": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'auto' or 'escalation'. Possible values:\n- 'pagerduty': Access is granted if the requestor is on-call.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "options": {
+                  "nested_type": {
+                    "attributes": {
+                      "allow_one_party": {
+                        "type": "bool",
+                        "description": "If true, allows requestors to approve their own requests.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "break_glass_approver": {
+                        "type": "bool",
+                        "description": "If true, allows the approver to approve break-glass requests.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "require_duration": {
+                        "type": "bool",
+                        "description": "If true, requires access requests to include a duration.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "require_preapproval": {
+                        "type": "bool",
+                        "description": "If true, requires access requests to be pre-approved.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "require_reason": {
+                        "type": "bool",
+                        "description": "If true, requires access requests to include a reason.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "If present, determines additional trust requirements.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "profile_property": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'requestor-profile'. This is the profile attribute that contains the manager's email.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "services": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "May only be used if 'type' is 'escalation'. Defines which services to page on escalation.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Determines trust requirements for access. If empty, access is disallowed. Except for 'deny', meeting any requirement is sufficient to grant access. Possible values:\n    - 'auto': Access is granted according to the requirements of the specified 'integration'\n    - 'deny': Access is always denied\n    - 'escalation': Access may be approved by on-call members of the specified services, who are paged when access is manually escalated by the requestor\n    - 'group': Access may be granted by any member of the defined directory group\n    - 'persistent': Access is always granted\n    - 'requestor-profile': Allows approval by a user specified by a field in the requestor's IDP profile\n    - 'p0': Access may be granted by any user with the P0 \"security reviewer\" role (defined in the P0 app)",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Determines access requirements. See [the Approval docs](https://docs.p0.dev/just-in-time-access/request-routing#approval).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "disabled": {
+            "type": "bool",
+            "description": "Whether or not the routing rule should be evaluated; if false or not defined, the rule will be evaluated",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the rule",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "requestor": {
+            "nested_type": {
+              "attributes": {
+                "effect": {
+                  "type": "string",
+                  "description": "The filter effect. May be one of:\n\t - 'keep': Access rule only applies when a requestor is a member of any of the specified groups\n\t - 'remove': Access rule only applies when a requestor is _not_ a member of any of the specified groups",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "groups": {
+                  "nested_type": {
+                    "attributes": {
+                      "directory": {
+                        "type": "string",
+                        "description": "One of \"azure-ad\", \"okta\", or \"workspace\".",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "This is the directory's internal group identifier.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "This is any human-readable name for the directory group specified in the 'id' attribute.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "May only be used if 'type' is 'group'. If the user is a member of any of these groups, the rule will match.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "How P0 matches requestors:\n    - 'any': Any requestor will match\n    - 'group': Members of a directory group will match\n    - 'user': Only match a single user",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "uid": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'user'. This is the user's email address.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Controls who has access. See [the Requestor docs](https://docs.p0.dev/just-in-time-access/request-routing#requestor).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource": {
+            "nested_type": {
+              "attributes": {
+                "access_type": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'integration' and must be a valid access type for a given service integration or 'any'. Defaults to 'any' if not specified.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "filters": {
+                  "nested_type": {
+                    "attributes": {
+                      "effect": {
+                        "type": "string",
+                        "description": "The filter effect. May be one of:\n    - 'keep': Access rule only applies to items matching this filter\n    - 'remove': Access rule only applies to items _not_ matching this filter\n    - 'removeAll': Access rule does not apply to any item with this filter key",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "The value being filtered. Required if the filter effect is 'keep' or 'remove'.\nSee [docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for available values.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "description": "Filter patterns. Patterns are unanchored.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "value": {
+                        "type": "bool",
+                        "description": "The value being filtered. Required if it's a boolean filter.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "map"
+                  },
+                  "description": "May only be used if 'type' is 'integration'. Available filters depend on the value of 'service'.\nSee [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for a list of available filters.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "service": {
+                  "type": "string",
+                  "description": "May only be used if 'type' is 'integration'.\nSee [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for a list of available services.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "How P0 matches resources:\n    - 'any': Any resource\n    - 'integration': Only resources within a specified integration",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Controls what is accessed. See [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource).",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A routing rule that controls who can request access to what, and access requirements.\nSee [the P0 request-routing docs](https://docs.p0.dev/just-in-time-access/request-routing).",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_routing_rules": {
+      "version": 2,
+      "block": {
+        "attributes": {
+          "version": {
+            "type": "string",
+            "description": "Rules-document static version",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "set",
+            "block": {
+              "attributes": {
+                "approval": {
+                  "nested_type": {
+                    "attributes": {
+                      "directory": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'requestor-profile'. One of \"azure-ad\", \"okta\", or \"workspace\".",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "effect": {
+                        "type": "string",
+                        "description": "The filter effect. May be one of:\n\t - 'keep': Access rule only applies when a requestor is a member of any of the specified groups\n\t - 'remove': Access rule only applies when a requestor is _not_ a member of any of the specified groups",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "groups": {
+                        "nested_type": {
+                          "attributes": {
+                            "directory": {
+                              "type": "string",
+                              "description": "One of \"azure-ad\", \"okta\", or \"workspace\".",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "This is the directory's internal group identifier.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "label": {
+                              "type": "string",
+                              "description": "This is any human-readable name for the directory group specified in the 'id' attribute.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "May only be used if 'type' is 'group'. If the user is a member of any of these groups, the rule will match.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "integration": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'auto' or 'escalation'. Possible values:\n- 'pagerduty': Access is granted if the requestor is on-call.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "options": {
+                        "nested_type": {
+                          "attributes": {
+                            "allow_one_party": {
+                              "type": "bool",
+                              "description": "If true, allows requestors to approve their own requests.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "break_glass_approver": {
+                              "type": "bool",
+                              "description": "If true, allows the approver to approve break-glass requests.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "require_duration": {
+                              "type": "bool",
+                              "description": "If true, requires access requests to include a duration.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "require_preapproval": {
+                              "type": "bool",
+                              "description": "If true, requires access requests to be pre-approved.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "require_reason": {
+                              "type": "bool",
+                              "description": "If true, requires access requests to include a reason.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "If present, determines additional trust requirements.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "profile_property": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'requestor-profile'. This is the profile attribute that contains the manager's email.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "services": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "May only be used if 'type' is 'escalation'. Defines which services to page on escalation.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Determines trust requirements for access. If empty, access is disallowed. Except for 'deny', meeting any requirement is sufficient to grant access. Possible values:\n    - 'auto': Access is granted according to the requirements of the specified 'integration'\n    - 'deny': Access is always denied\n    - 'escalation': Access may be approved by on-call members of the specified services, who are paged when access is manually escalated by the requestor\n    - 'group': Access may be granted by any member of the defined directory group\n    - 'persistent': Access is always granted\n    - 'requestor-profile': Allows approval by a user specified by a field in the requestor's IDP profile\n    - 'p0': Access may be granted by any user with the P0 \"security reviewer\" role (defined in the P0 app)",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Determines access requirements. See [the Approval docs](https://docs.p0.dev/just-in-time-access/request-routing#approval).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "disabled": {
+                  "type": "bool",
+                  "description": "Whether or not the routing rule should be evaluated; if false or not defined, the rule will be evaluated",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the rule",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "requestor": {
+                  "nested_type": {
+                    "attributes": {
+                      "effect": {
+                        "type": "string",
+                        "description": "The filter effect. May be one of:\n\t - 'keep': Access rule only applies when a requestor is a member of any of the specified groups\n\t - 'remove': Access rule only applies when a requestor is _not_ a member of any of the specified groups",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "groups": {
+                        "nested_type": {
+                          "attributes": {
+                            "directory": {
+                              "type": "string",
+                              "description": "One of \"azure-ad\", \"okta\", or \"workspace\".",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "This is the directory's internal group identifier.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "label": {
+                              "type": "string",
+                              "description": "This is any human-readable name for the directory group specified in the 'id' attribute.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "May only be used if 'type' is 'group'. If the user is a member of any of these groups, the rule will match.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "How P0 matches requestors:\n    - 'any': Any requestor will match\n    - 'group': Members of a directory group will match\n    - 'user': Only match a single user",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "uid": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'user'. This is the user's email address.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Controls who has access. See [the Requestor docs](https://docs.p0.dev/just-in-time-access/request-routing#requestor).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "resource": {
+                  "nested_type": {
+                    "attributes": {
+                      "access_type": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'integration' and must be a valid access type for a given service integration or 'any'. Defaults to 'any' if not specified.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "filters": {
+                        "nested_type": {
+                          "attributes": {
+                            "effect": {
+                              "type": "string",
+                              "description": "The filter effect. May be one of:\n    - 'keep': Access rule only applies to items matching this filter\n    - 'remove': Access rule only applies to items _not_ matching this filter\n    - 'removeAll': Access rule does not apply to any item with this filter key",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "key": {
+                              "type": "string",
+                              "description": "The value being filtered. Required if the filter effect is 'keep' or 'remove'.\nSee [docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for available values.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "pattern": {
+                              "type": "string",
+                              "description": "Filter patterns. Patterns are unanchored.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "value": {
+                              "type": "bool",
+                              "description": "The value being filtered. Required if it's a boolean filter.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "map"
+                        },
+                        "description": "May only be used if 'type' is 'integration'. Available filters depend on the value of 'service'.\nSee [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for a list of available filters.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "service": {
+                        "type": "string",
+                        "description": "May only be used if 'type' is 'integration'.\nSee [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource) for a list of available services.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "How P0 matches resources:\n    - 'any': Any resource\n    - 'integration': Only resources within a specified integration",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Controls what is accessed. See [the Resource docs](https://docs.p0.dev/just-in-time-access/request-routing#resource).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "All access rules",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "The rules that control who can request access to what, and access requirements.\nSee [the P0 request-routing docs](https://docs.p0.dev/just-in-time-access/request-routing).",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_splunk_audit_logs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "hec_endpoint": {
+            "type": "string",
+            "description": "The endpoint of the HTTP event collector",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "hec_token_cleartext": {
+            "type": "string",
+            "description": "The cleartext token of the HTTP event collector",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "hec_token_hash": {
+            "type": "string",
+            "description": "The hash of the token of the HTTP event collector",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "index": {
+            "type": "string",
+            "description": "The index of the HTTP event collector to use",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "token_id": {
+            "type": "string",
+            "description": "A user-specified token ID of the HTTP event collector",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "An installation of the Splunk HTTP Event Collector",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_ssh_aws": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_id": {
+            "type": "string",
+            "description": "The AWS account ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "group_key": {
+            "type": "string",
+            "description": "If present, AWS instances will be grouped by the value of this tag. Access can be requested, in one request, to all instances with a shared tag value",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_sudo_enabled": {
+            "type": "bool",
+            "description": "If true, users will be able to request sudo access to the instances",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The AWS account's alias (if available)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An AWS SSH Installation.\n\t\t\nInstalling SSH allows you to manage access to your servers on AWS.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_ssh_azure": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_access_role_id": {
+            "type": "string",
+            "description": "The ID of the Azure role that grants admin access to the virtual machines",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "bastion_id": {
+            "type": "string",
+            "description": "The ID of the Azure Bastion that provides secure RDP and SSH access to the virtual machines",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "group_key": {
+            "type": "string",
+            "description": "If present, virtual machines on Azure will be grouped by the value of this tag. Access can be requested, in one request, to all instances with a shared tag value",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_sudo_enabled": {
+            "type": "bool",
+            "description": "If true, users will be able to request sudo access to the instances",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The Azure Subscription label (if available)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "standard_access_role_id": {
+            "type": "string",
+            "description": "The ID of the Azure role that grants standard access to the virtual machines",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "subscription_id": {
+            "type": "string",
+            "description": "The Azure Subscription ID",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A Microsoft Azure SSH installation. \n\t\t\nInstalling SSH allows you to manage access to your virtual machines on Microsoft Azure.",
+        "description_kind": "markdown"
+      }
+    },
+    "p0_ssh_gcp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_key": {
+            "type": "string",
+            "description": "If present, Google Cloud instances will be grouped by the value of this tag. Access can be requested, in one request, to all instances with a shared tag value",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_sudo_enabled": {
+            "type": "bool",
+            "description": "If true, users will be able to request sudo access to the instances",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The Google Cloud project's alias (if available)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The Google Cloud project ID",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "This item's install progress in the P0 application:\n\t- 'stage': The item has been staged for installation\n\t- 'configure': The item is available to be added to P0, and may be configured\n\t- 'installed': The item is fully installed",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Google Cloud SSH installation. \n\t\t\nInstalling SSH allows you to manage access to your servers on Google Cloud.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
