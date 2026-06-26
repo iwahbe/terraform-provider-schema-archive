@@ -1,0 +1,145 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "description": "Persistent resources provider for Terraform. Currently implements sequential numerical counter and buckets with capacity.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "persistent_buckets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket_capacity": {
+            "type": "number",
+            "description": "Capacity of a single bucket.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "buckets": {
+            "type": [
+              "list",
+              [
+                "map",
+                [
+                  "object",
+                  {
+                    "item": "string",
+                    "weight": "number"
+                  }
+                ]
+              ]
+            ],
+            "description": "Ordered list of filled buckets.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier (always fixed)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "items": {
+            "nested_type": {
+              "attributes": {
+                "item": {
+                  "type": "string",
+                  "description": "Data for the item",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "weight": {
+                  "type": "number",
+                  "description": "Weight to the item in the bucket. Counts against the capacity of the bucket.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "map"
+            },
+            "description": "Items that are placed in the buckets.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "maximum_buckets": {
+            "type": "number",
+            "description": "Maximum number of buckets to provision.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "move_items": {
+            "type": "bool",
+            "description": "Allows moving items from one bucket to another (when weight of an item changes). If set to false, causes an error if an item needs moving.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "target_capacity": {
+            "type": "number",
+            "description": "Target capacity of a single bucket (fills bucket up to this capacity, allows room for items growing weight without needing to move).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "\n\t\t\tPersistent buckets. Provisions a number of buckets (lists) containing resources\n\t\t\tdefined according to bucket capacity and item size. Once a bucket's capacity\n\t\t\tis exhausted, new buckets are created up until `maximum_buckets`. If items are\n\t\t\tremoved, they are also removed from buckets and new items may be placed in \n\t\t\tthe freed space. If maximum buckets are reached, an error is raised.\n\t\t",
+        "description_kind": "markdown"
+      }
+    },
+    "persistent_counter": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Identifier (always fixed)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "initial_value": {
+            "type": "number",
+            "description": "The initial value to use for the counter.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keys": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of keys to generate counters for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "last_value": {
+            "type": "number",
+            "description": "The last value that was used for the counter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reuse": {
+            "type": "bool",
+            "description": "Allows reusing freed keys for new ones.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "values": {
+            "type": [
+              "map",
+              "number"
+            ],
+            "description": "A map of keys to counter values.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\n\t\t\tPersistent counter. Generates sequentially increasing number counters for the strings specified \n\t\t\tin the `keys` variable. As long as a specified key exist, it will always receive the same counter\n\t\t\tvalue. No counter value is re-used even if a new key is added and counter values will only ever\n\t\t\tincrease.\n\t\t",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
