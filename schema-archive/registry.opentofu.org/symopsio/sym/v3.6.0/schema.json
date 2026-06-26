@@ -1,0 +1,817 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "jwt_env_var": {
+          "type": "string",
+          "description": "Environment variable storing your Sym Bot Token",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "org": {
+          "type": "string",
+          "description": "Your Sym Org ID",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "sym_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_logger_id": {
+            "type": "string",
+            "description": "The ID of the Error Logger",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integrations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of Integrations available to this Environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "log_destination_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs for each Log Destination to funnel logs to",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for the Environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "runtime_id": {
+            "type": "string",
+            "description": "The ID of the Runtime associated with this Environment",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "The `sym_environment` resource provides an Environment to deploy one or more Flows. You may use multiple Environments such as 'sandbox' and 'prod' to safely test your flows in isolation before deploying them for production usage.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_error_logger": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "destination": {
+            "type": "string",
+            "description": "The destination channel to send error messages to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The ID for the Slack Integration associated with this error logger.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_error_logger` resource defines a Slack channel destination for error messages encountered while executing a Flow.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_flow": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "environment_id": {
+            "type": "string",
+            "description": "The ID of the Environment this Flow is associated with.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "implementation": {
+            "type": "string",
+            "description": "Python code defining custom logic for the Flow.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Flow.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for the Flow.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vars": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of variables and their string values to pass to `impl.py`. Useful for making IDs generated dynamically by Terraform available to your `impl.py`.\n\n~> **Note:** While you may pass in other primitives (e.g. bool, int) as a value to `sym_flow.vars`, they will be cast to strings when you apply your configuration. When accessing these values in your `impl.py`, you will need to recast them into the correct types before using them.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "params": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "additional_header_text": {
+                  "type": "string",
+                  "description": "Additional text to append to the header text displayed at the top of the Slack request modal, after the default header text. Supports Slack markdown.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "allow_guest_interaction": {
+                  "type": "bool",
+                  "description": "Whether to allow guest users to interact with this sym_flow. If true, guest users can click the \"Approve\", \"Deny\", and \"Revoke\" buttons in Slack. If false, guest users' interactions with this sym_flow's requests will be rejected.'",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "allow_revoke": {
+                  "type": "bool",
+                  "description": "Whether access granted by a sym_strategy may be revoked before the requested duration is over. If true, shows a \"Revoke\" button in Slack that allows both the requester and approver to instantly revoke access. At least one of \"schedule_deescalation\" or \"allow_revoke\" must be true.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "allowed_sources": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "A list of sources from which this sym_flow may be invoked. Valid sources are: \"slack\", \"api\". If unspecified, all sources will be enabled. If an empty list is specified, it will not be possible for this sym_flow to be invoked.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "include_decision_message": {
+                  "type": "bool",
+                  "description": "Whether users responding to requests may enter additional text as context for their decisions. If true, shows an input box on all open requests.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schedule_deescalation": {
+                  "type": "bool",
+                  "description": "Whether automatic access de-escalation will occur after a requested duration. If false, de-escalation will only occur when manually revoked. At least one of \"schedule_deescalation\" or \"allow_revoke\" must be true.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "strategy_id": {
+                  "type": "string",
+                  "description": "The ID of a sym_strategy with sym_targets that this sym_flow will be managing access to. If not defined, this sym_flow will be approval-only.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "block_types": {
+                "prompt_field": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "allowed_values": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Defines the full list of valid choices for this field's value. If defined, this field will be displayed as a dropdown in Slack. Not applicable for the \"slack_user\" and \"slack_user_list\" types.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "default": {
+                        "type": "string",
+                        "description": "A fallback value for optional fields if no value is provided. Not applicable for the \"slack_user\", \"slack_user_list\", \"int_list\", and \"str_list\" types.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "A name for the field, to be displayed in Slack.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "A unique identifier for this field.",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "on_change": {
+                        "type": "string",
+                        "description": "Python code defining logic to execute when this field's value changes.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "prefetch": {
+                        "type": "bool",
+                        "description": "Whether a prefetch reducer will be used to populate the options for this field. Not applicable for the \"slack_user\" and \"slack_user_list\" types.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "required": {
+                        "type": "bool",
+                        "description": "Whether this field is a required input.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The type of data stored in this field. One of: \"string\", \"str_list\", \"int\", \"int_list\", \"bool\", \"duration\", \"slack_user\", \"slack_user_list\".",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "visible": {
+                        "type": "bool",
+                        "description": "Whether this field is rendered in the prompt modal.",
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "description": "Custom input field used to collect information from a user who is requesting access to a resource.",
+                    "description_kind": "plain"
+                  }
+                }
+              },
+              "description": "A set of parameters which configure the Flow.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          }
+        },
+        "description": "The `sym_flow` resource defines an approval workflow in Sym, allowing users to request temporary and auto-expiring access to sensitive resources.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_flows_filter": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "implementation": {
+            "type": "string",
+            "description": "Python code defining the `get_flows` reducer for the FlowsFilter.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "integrations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of Integrations available when executing this FlowsFilter's implementation.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vars": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of variables and their values to pass to this FlowsFilter implementation.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "The `sym_flows_filter` resource provides a FlowsFilter that can be used to filter the Flows displayed to the requester. You may only have one FlowsFilter resource in your organization.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "external_id": {
+            "type": "string",
+            "description": "The external ID for this Integration. E.g. Slack workspace ID for Slack Integration",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Integration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this type of Integration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Integration. E.g. 'slack' or 'pagerduty'",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_integration` resource allows you to provide Sym with the credentials and context to connect to an external service. For example, a PagerDuty integration or a Slack integration.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_log_destination": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The ID for the Integration associated with this Log Destination.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this Log Destination.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Log Destination.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_log_destination` resource allows you to specify where audit logs should be streamed.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_runtime": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "context_id": {
+            "type": "string",
+            "description": "The ID of the Runtime Permission Context integration associated with this Runtime.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Runtime.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Sym Runtime.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_runtime` resource allows you describe an execution context for the Sym runtime. For more details, see [Getting Started](https://docs.symops.com/docs/deploy-sym-platform).",
+        "description_kind": "plain"
+      }
+    },
+    "sym_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Secret.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The name of the Secret in Secrets Manager.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Used to specify the key if the secret is stored as a JSON blob. E.g. settings = { json_key = \"secret_key\" }",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "source_id": {
+            "type": "string",
+            "description": "The ID of the `sym_secrets` resource which serves as the source for this Secret.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_secret` resource allows you to specify a specific secret to be accessed by the Sym platform.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_secrets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "A label for this Secrets source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Secrets source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this type of Secrets source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of Secrets source.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_secrets` resource allows you to specify a source for secrets to be accessed by the Sym platform.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_strategy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "implementation": {
+            "type": "string",
+            "description": "Relative path to the implementation written in python if this is a custom strategy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "integration_id": {
+            "type": "string",
+            "description": "The ID of the `sym_integration` associated with this Strategy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for this Strategy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Strategy.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this type of Strategy.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "targets": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of IDs for targets associated with this Strategy.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Strategy.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_strategy` resource allows you specify a set of Targets, and a way of granting access to those Targets.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_target": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "field_bindings": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Settings whose values will be dynamically populated by submitted request values. See [docs](https://docs.symops.com/docs/dynamic-target-settings) for more details.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for this Target.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for the Target.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of settings specific to this type of Target.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the Target.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "The `sym_target` resource allows you to describe something that users can request access to.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "sym_environment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "error_logger_id": {
+            "type": "string",
+            "description": "The ID of the Error Logger",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "integrations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of Integrations available to this Environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Environment",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "log_destination_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "IDs for each Log Destination to funnel logs to",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique identifier for the Environment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "runtime_id": {
+            "type": "string",
+            "description": "The ID of the Runtime associated with this Environment",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Use this data source to get information about a Sym Environment for use in other resources.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_integration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "external_id": {
+            "type": "string",
+            "description": "The external ID for this Integration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for this Integration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Integration.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this type of Integration.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of Integration. E.g. 'slack' or 'pagerduty'",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get information about a Sym Integration for use in other resources.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_runtime": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "context_id": {
+            "type": "string",
+            "description": "The ID of the Runtime Permission Context integration associated with this Runtime.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "An optional label for the Sym Runtime.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique identifier for this Sym Runtime.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get information about a Sym Runtime for use in other resources.",
+        "description_kind": "plain"
+      }
+    },
+    "sym_secrets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "label": {
+            "type": "string",
+            "description": "A label for this Secrets source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique identifier for this Secrets source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "settings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of settings specific to this type of Secrets source.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of Secrets source.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Use this data source to get information about a Sym Secrets resource for use in other resources.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
