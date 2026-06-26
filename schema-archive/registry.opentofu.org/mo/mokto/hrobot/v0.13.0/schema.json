@@ -1,0 +1,447 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "base_url": {
+          "type": "string",
+          "description": "Robot base URL.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "Hetzner Robot webservice password (or HROBOT_PASSWORD).",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "description": "HTTP timeout seconds.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "Hetzner Robot webservice username (or HROBOT_USERNAME).",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "hrobot_configuration": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arch": {
+            "type": "string",
+            "description": "Architecture for the OS image (arm64 or amd64)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cpu_manager": {
+            "type": "bool",
+            "description": "Enable CPU manager with static policy and resource reservations (cpu-manager-policy=static, system-reserved=cpu=1, kube-reserved=cpu=1)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cryptpassword": {
+            "type": "string",
+            "description": "Password for disk encryption (used in autosetup)",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Custom description for the server",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "filesystem_type": {
+            "type": "string",
+            "description": "Filesystem type for root partition (default: ext4)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "install_docker": {
+            "type": "bool",
+            "description": "Install Docker Engine and Docker Compose during provisioning (default: false)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "k3s_token": {
+            "type": "string",
+            "description": "K3S token for joining the cluster",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "k3s_url": {
+            "type": "string",
+            "description": "K3S server URL (e.g., https://master-ip:6443)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "local_ip": {
+            "type": "string",
+            "description": "Automatically assigned local IP address for private network configuration (10.1.0.2-10.1.0.127)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Base name for the server (server_name and robot_name will be computed as name-{6-char-id})",
+            "description_kind": "plain",
+            "required": true
+          },
+          "no_uefi": {
+            "type": "bool",
+            "description": "If true, removes the UEFI boot partition from the disk partitioning scheme",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node_labels": {
+            "nested_type": {
+              "attributes": {
+                "name": {
+                  "type": "string",
+                  "description": "Label name",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Label value",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of node labels to apply to this K3S node",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "raid_level": {
+            "type": "number",
+            "description": "RAID level for software RAID configuration (default: 1)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "rescue_authorized_key_fingerprints": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "SSH key fingerprints for rescue mode access",
+            "description_kind": "plain",
+            "required": true
+          },
+          "robot_name": {
+            "type": "string",
+            "description": "Computed robot name in format: name-{6-char-id} (used in Hetzner Robot interface)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "server_ip": {
+            "type": "string",
+            "description": "The server's IP address",
+            "description_kind": "plain",
+            "required": true
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Computed server name in format: name-{6-char-id} (used as hostname in autosetup)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "server_number": {
+            "type": "number",
+            "description": "Robot server number",
+            "description_kind": "plain",
+            "required": true
+          },
+          "taints": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of taints to apply to this K3S node (e.g., 'localstorage=true:NoSchedule')",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "version": {
+            "type": "number",
+            "description": "Version of the node, will trigger rescue + full install on each change",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "vswitch_id": {
+            "type": "number",
+            "description": "ID of the vSwitch to connect the server to",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages Hetzner Robot server configuration including server naming, OS installation, and post-install setup.",
+        "description_kind": "plain"
+      }
+    },
+    "hrobot_server_auction_order": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "addons": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Addon ids (e.g., primary_ipv4)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "authorized_key_fingerprints": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Authorized key fingerprints stored in Robot",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dist": {
+            "type": "string",
+            "description": "Preinstall distribution label",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Root password alternative to keys",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "product_id": {
+            "type": "number",
+            "description": "Auction product id (e.g., 12345)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "server_ip": {
+            "type": "string",
+            "description": "The server's IP address (available when server is ready)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "server_number": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "test": {
+            "type": "bool",
+            "description": "Dry-run order",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "transaction_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Hetzner Robot server auction order. Orders servers from the auction/market at discounted prices. When destroyed, the server will be scheduled for cancellation at the end of the billing period.",
+        "description_kind": "plain"
+      }
+    },
+    "hrobot_server_order": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "addons": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Addon ids (e.g., primary_ipv4)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "authorized_key_fingerprints": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Authorized key fingerprints stored in Robot",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "dist": {
+            "type": "string",
+            "description": "Preinstall distribution label",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "location": {
+            "type": "string",
+            "description": "FSN1 / NBG1 / HEL1",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Root password alternative to keys",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "product_id": {
+            "type": "string",
+            "description": "Robot product id (e.g., 1234)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "server_ip": {
+            "type": "string",
+            "description": "The server's IP address (available when server is ready)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "server_number": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "test": {
+            "type": "bool",
+            "description": "Dry-run order",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "transaction_id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages a Hetzner Robot server order. When destroyed, the server will be scheduled for cancellation at the end of the billing period.",
+        "description_kind": "plain"
+      }
+    },
+    "hrobot_vswitch": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "description": "The unique ID of the vSwitch.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the vSwitch.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "vlan": {
+            "type": "number",
+            "description": "The VLAN ID for the vSwitch (e.g., 4000).",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages a Hetzner Robot virtual switch (vSwitch).",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "hrobot_servers": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "servers": {
+            "nested_type": {
+              "attributes": {
+                "location": {
+                  "type": "string",
+                  "description": "The server location",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "product": {
+                  "type": "string",
+                  "description": "The server product",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "server_ip": {
+                  "type": "string",
+                  "description": "The server IP address",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "server_name": {
+                  "type": "string",
+                  "description": "The server name",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "server_number": {
+                  "type": "number",
+                  "description": "The server number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The server status",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of all servers",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches all servers from Hetzner Robot using bulk API call for efficiency.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
