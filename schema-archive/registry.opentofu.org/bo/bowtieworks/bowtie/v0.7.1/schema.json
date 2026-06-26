@@ -1,0 +1,3342 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "ca_bundle": {
+          "type": "string",
+          "description": "A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for Controllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "host": {
+          "type": "string",
+          "description": "The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example: `https://bowtie.example.com`",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "insecure": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable if set. Intended for development controllers with self-signed certificates; do not enable against production.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "lazy_authentication": {
+          "type": "bool",
+          "description": "By default, the provider will authenticate to the Bowtie API just in time (or lazily) which permits use cases like creating Controllers in Terraform before using their API endpoints. Set this variable to `false` if you instead want to authenticate at the time the provider is configured - for example, to catch authentication errors up-front before starting an `apply` or `plan`.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "The service account's password. Supply it from a secrets manager via the `BOWTIE_PASSWORD` environment variable rather than in version-controlled Terraform configuration. Honors the `BOWTIE_PASSWORD` environment variable if set.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "tagged_locations": {
+          "type": "bool",
+          "description": "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "username": {
+          "type": "string",
+          "description": "The login name (username or email) of the Bowtie account Terraform authenticates as. Use a dedicated service account scoped to the least privilege it needs, not a human administrator. Honors the `BOWTIE_USERNAME` environment variable, which is the recommended way to supply it.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "The Bowtie provider for Terraform configures your Bowtie installation via native Terraform resources instead of the Controller web interface. Use the provider to declaratively manage API resources such as resource groups, DNS resources, user groups, and more.\n\nNote that you must configure appropriate credentials to authenticate with the Bowtie API before you can use this provider.\n\nFor more documentation about installing and configuring Bowtie, refer to the official [Bowtie documentation](https://docs.bowtie.works/).\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "bowtie_collection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "An optional description of the collection.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal collection ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "comment": {
+                  "type": "string",
+                  "description": "An optional comment describing this member.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "expires": {
+                  "type": "string",
+                  "description": "An optional RFC 3339 timestamp after which the Controller automatically removes this member.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "location": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr": {
+                        "type": "string",
+                        "description": "A CIDR range.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "collection": {
+                        "type": "string",
+                        "description": "The ID of another collection to nest inside this one.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "dns": {
+                        "type": "string",
+                        "description": "A DNS name.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "ip": {
+                        "type": "string",
+                        "description": "A single IP address.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The location this member matches. Set exactly one of `ip`, `cidr`, `dns`, or `collection`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "A human readable name for this member.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "The locations contained in this collection.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of the collection.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A *collection* is a named, reusable set of network locations - IP addresses, CIDR ranges, DNS names, or nested collections. Collections can be targeted by a resource's `location` (type `collection`) and are used throughout the policy engine and web filtering configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_controller": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_temporary_console_users": {
+            "type": "bool",
+            "description": "Whether temporary console users may be created on this Controller.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "can_use_idp": {
+            "type": "bool",
+            "description": "Whether this Controller may use the identity provider.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "can_use_public_https": {
+            "type": "bool",
+            "description": "Whether this Controller may serve public HTTPS.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "can_use_vanity_domain": {
+            "type": "bool",
+            "description": "Whether this Controller may use a vanity domain.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "clear_overrides": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Per-Controller overrides to clear on update. Supported values are `version_strategy_splay`, `version_include_prereleases`, `version_minimum_age`, `ssh_listener`, and `web_filter_trusted_proxy_collection`. Use `version_strategy_type = \"org-default\"` to make the Controller inherit the organization update strategy.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "current_version": {
+            "type": "string",
+            "description": "The software version the Controller is currently running.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "https_endpoint": {
+            "type": "string",
+            "description": "The Controller's HTTPS endpoint.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The Controller's unique identifier. Set by importing an existing Controller.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The last time Terraform changed this object. Provider metadata, not part of the Bowtie API.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "persistent_keepalive": {
+            "type": "number",
+            "description": "Keepalive interval, in seconds, advertised to peers.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "public_address": {
+            "type": "string",
+            "description": "The publicly reachable address clients and other Controllers use to reach this Controller.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The Controller's VPN public key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "The site this Controller belongs to.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ssh_listener": {
+            "type": "string",
+            "description": "Where the Controller accepts SSH: `any`, `local-only`, or `tunnel-only`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "track_policy_verdict_logs": {
+            "type": "bool",
+            "description": "Emit per-packet policy verdict logs.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "track_policy_verdict_metrics": {
+            "type": "bool",
+            "description": "Record per-packet policy verdict metrics.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_include_prereleases": {
+            "type": "bool",
+            "description": "Consider pre-release versions when selecting updates. Unset falls back to the organization default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_minimum_age": {
+            "type": "number",
+            "description": "Minimum age, in days, a release must have before this Controller adopts it under a latest-version strategy. Unset falls back to the organization default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_strategy_splay_type": {
+            "type": "string",
+            "description": "Spreads update times across a fleet. One of `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_strategy_splay_value": {
+            "type": "string",
+            "description": "A systemd time-span used by `randomized-delay` and `consistent-randomized-delay`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_strategy_type": {
+            "type": "string",
+            "description": "How this Controller chooses update versions. One of `org-default`, `manual`, `specific`, `newest-at-interval`, or `newest-at-calendar`. This is the upgrade orchestration control.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "version_strategy_value": {
+            "type": "string",
+            "description": "The value for `version_strategy_type` when it requires one: a version string for `specific`, a systemd time-span for `newest-at-interval`, or a systemd calendar expression for `newest-at-calendar`. Leave unset for `org-default` and `manual`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "web_filter_trusted_proxy_collection": {
+            "type": "string",
+            "description": "A collection ID used as the web-filter trusted proxy list for this Controller.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wireguard_port": {
+            "type": "number",
+            "description": "The UDP port the Controller listens on for VPN connections.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wireguard_strategy": {
+            "type": "string",
+            "description": "How the VPN port is reached: `static` (publicly reachable) or `dynamic` (privately reachable or NAT-punched).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nManage the lifecycle settings of an existing Bowtie Controller: its update\n(version) strategy, update stagger, minimum release age, and other per-Controller options.\n\n**Note**: Controllers register themselves with the control plane when they boot, so this\nresource **cannot create or destroy** a Controller. Create will fail; instead, import an\nexisting Controller with `terraform import bowtie_controller.<name> <controller-id>`\nand then manage its settings. Destroying the resource removes it from Terraform state only and\nleaves the Controller running.\n\nOptional attributes that inherit an organization default keep the Controller's current value when\nthey are omitted from configuration. To actively clear one of those per-Controller overrides, list\nit in `clear_overrides`.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_device_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "An optional description of the device group.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal device group ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of the device group.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A named group of devices. Device groups are referenced by policy sources (`device_group`) to grant or deny access based on device membership rather than per-device.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_dns": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "excludes": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "Internal resource ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name to exclude sending to the upstream server for resolution.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "order": {
+                  "type": "number",
+                  "description": "Order when presented with other excluded names in the web interface",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Names under this domain to exclude from resolution.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "include_only_sites": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Limit name resolution for this domain only to these sites.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "is_counted": {
+            "type": "bool",
+            "description": "Whether to only log metrics for this domain and not all requests.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_dns64": {
+            "type": "bool",
+            "description": "Whether to resolve names using DNS64.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_drop_a": {
+            "type": "bool",
+            "description": "Whether to drop A record responses from requests for this domain.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_drop_all": {
+            "type": "bool",
+            "description": "Whether all record responses for this domain should be dropped.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_log": {
+            "type": "bool",
+            "description": "Whether to log all requests for names in this domain.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_search_domain": {
+            "type": "bool",
+            "description": "Whether this domain should be treated as a search domain.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Metadata about the last time a write API was called by this provider for this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The DNS zone name you wish to target. Example: `example.com`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "servers": {
+            "nested_type": {
+              "attributes": {
+                "addr": {
+                  "type": "string",
+                  "description": "The IP address for this DNS server.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Internal resource ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "order": {
+                  "type": "number",
+                  "description": "The order for this DNS server.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Provider Metadata storing extra API data about the upstream servers for this domain",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nUsed to control organization DNS settings. `{{ .Name }}` can enable resolution for internal names reachable over the private network tunnel.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_dns_block_list": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather extra provider metadata.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of the block list.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "override_to_allow": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of DNS names to exclude from any retrieved DNS block lists.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "upstream": {
+            "type": "string",
+            "description": "An upstream URL that returns a DNS block list.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "\nManage lists of DNS names that Controllers will reference to perform DNS-level blocking.\n\nNames may be given as upstream URLs which will be retrieved periodically.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Metadata about the last time a write API was called by this provider for this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human-readable name of the group.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manage user groups which assign access policies to groups of users.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_group_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group_id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The list of users to grant membership to the group. This resource accepts both `user_ids` and emails. Will completely overwrite membership on apply.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Used to set the membership of a group. Will remove any users not represented in the users array. Each group can only be associated with a single membership resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_ipv4_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assign_addresses_from_here": {
+            "type": "string",
+            "description": "Address assignment strategy: `never`, `on-demand-assign-random`, or `always-assign-random`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Provider metadata: the last time Terraform changed this object.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "range": {
+            "type": "string",
+            "description": "The IPv4 CIDR for the pool, for example `192.0.2.0/24`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "skip_first_n_addresses": {
+            "type": "number",
+            "description": "Number of addresses to skip at the start of the range before assigning.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nManage an organization IPv4 address pool.\n\n**Note**: per-site routing strategies (`site_strategies`) are not yet managed by this resource. Strategies configured in the Control Plane are preserved across updates and are not cleared.\n\nDestroying this resource deletes the range with Controller cascade behavior enabled so allocations from the pool do not block deletion.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_ipv6_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assign_addresses_from_here": {
+            "type": "bool",
+            "description": "Whether the Controller assigns addresses to devices from this pool.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Provider metadata: the last time Terraform changed this object.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "range": {
+            "type": "string",
+            "description": "The IPv6 CIDR for the pool, for example `fd00:1:1:5678::/64`. Generated by the Controller when unset.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manage an organization IPv6 address pool. Leave `range` unset to have the Controller generate a Bowtie ULA prefix. Destroying this resource deletes the range with Controller cascade behavior enabled so allocations from the pool do not block deletion.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_org_config": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_controller_approval_with_psk_only": {
+            "type": "bool",
+            "description": "Automatically admit a Controller that presents a valid pre-shared key, for zero-touch cluster scale-out.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "allow_device_approval_on_user_auth": {
+            "type": "bool",
+            "description": "Automatically approve a device when its user authenticates after installing the client.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "clear_fields": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Organization configuration keys to clear from the organization config document on update. Supported values are `controller_version_strategy`, `controller_version_splay`, `controller_version_include_prereleases`, `controller_version_minimum_age`, `controller_ssh_listener`, `allow_device_approval_on_user_auth`, `allow_controller_approval_with_psk_only`, `disable_peers_require_quorum`, `peers_require_quorum_percentage`, `delete_devices_more_stale_than_days`, `remove_approval_devices_more_stale_than_days`, and `user_device_disassociation_minutes`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "controller_ssh_listener": {
+            "type": "string",
+            "description": "Organization default for how Controllers listen on the SSH port: `any`, `local-only`, or `tunnel-only`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_include_prereleases": {
+            "type": "bool",
+            "description": "Default for considering pre-release versions when Controllers do not specify their own value.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_minimum_age": {
+            "type": "number",
+            "description": "Default minimum age, in days, a release must have before adoption under a latest-version strategy.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_splay_type": {
+            "type": "string",
+            "description": "Organization default update stagger: `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_splay_value": {
+            "type": "string",
+            "description": "A systemd time-span for `randomized-delay` and `consistent-randomized-delay`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_strategy_type": {
+            "type": "string",
+            "description": "Organization default update strategy: `manual`, `specific`, `newest-at-interval`, or `newest-at-calendar`. (`org-default` is not valid here; the organization default cannot itself defer to the organization default.)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "controller_version_strategy_value": {
+            "type": "string",
+            "description": "Value for the default update strategy when it requires one (a version, time-span, or calendar expression).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "delete_devices_more_stale_than_days": {
+            "type": "number",
+            "description": "Delete devices that have not checked in for more than this many days. Must be greater than 7.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "disable_peers_require_quorum": {
+            "type": "bool",
+            "description": "When false, destructive device cleanup only proceeds when a quorum of Controller peers is connected.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Provider metadata: the last time Terraform changed this object.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "peers_require_quorum_percentage": {
+            "type": "number",
+            "description": "Percentage, from 0 through 100, of Controller peers required for quorum. Default 51.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "remove_approval_devices_more_stale_than_days": {
+            "type": "number",
+            "description": "Revoke approval for devices that have not checked in for more than this many days. Must be greater than 7.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user_device_disassociation_minutes": {
+            "type": "number",
+            "description": "Disassociate a device from its user after this many minutes.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nManage organization-wide configuration, including the default Controller update strategy that\nControllers inherit when their own version strategy is `org-default`.\n\n**Note**: the organization configuration is a singleton and cannot be created or destroyed.\nImport it with `terraform import bowtie_org_config.this organization-config` and then manage it.\nFields the provider does not surface are preserved on update. Surfaced fields are managed only\nwhen they are configured or listed in `clear_fields`; omitting a surfaced field leaves the\ncurrent Control Plane value in place.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "Domain to associate with this organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather extra provider metadata.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nManage organization information.\n\n**Note**: Organizations are always represented in the Bowtie API and cannot be created or destroyed.\nThis resource will **fail** with an error if any Terraform actions try to delete or create organizations.\nInstead, you should use an [import](https://developer.hashicorp.com/terraform/language/import) block (or `terraform import <target>` command) to import the already-existing organization which you can then configure normally.\nIf you need to remove an organization from your Terraform state, you may remove it with the `terraform state rm <target>` command.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "The action to take on matching traffic: `Accept`, `Reject` (deny with feedback), or `Drop` (deny silently).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "dest": {
+            "type": "string",
+            "description": "The ID of the resource group this policy controls access to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal policy ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "order": {
+            "type": "number",
+            "description": "Evaluation order of the policy. When omitted, the Controller appends the policy to the end of the list.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "nested_type": {
+              "attributes": {
+                "always": {
+                  "type": "bool",
+                  "description": "Match every device, authenticated or not.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "and": {
+                  "nested_type": {
+                    "attributes": {
+                      "always": {
+                        "type": "bool",
+                        "description": "Match every device, authenticated or not.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "and": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "authenticated_user": {
+                        "type": "bool",
+                        "description": "Match any device attached to an authenticated user.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device": {
+                        "type": "string",
+                        "description": "Match a single device by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device_group": {
+                        "type": "string",
+                        "description": "Match any device in the device group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "nor": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "or": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user": {
+                        "type": "string",
+                        "description": "Match a single user by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user_group": {
+                        "type": "string",
+                        "description": "Match any user in the user group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "authenticated_user": {
+                  "type": "bool",
+                  "description": "Match any device attached to an authenticated user.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "device": {
+                  "type": "string",
+                  "description": "Match a single device by ID.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "device_group": {
+                  "type": "string",
+                  "description": "Match any device in the device group with this ID.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Internal identifier of the source predicate. Assigned by the provider.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "nor": {
+                  "nested_type": {
+                    "attributes": {
+                      "always": {
+                        "type": "bool",
+                        "description": "Match every device, authenticated or not.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "and": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "authenticated_user": {
+                        "type": "bool",
+                        "description": "Match any device attached to an authenticated user.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device": {
+                        "type": "string",
+                        "description": "Match a single device by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device_group": {
+                        "type": "string",
+                        "description": "Match any device in the device group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "nor": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "or": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user": {
+                        "type": "string",
+                        "description": "Match a single user by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user_group": {
+                        "type": "string",
+                        "description": "Match any user in the user group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "or": {
+                  "nested_type": {
+                    "attributes": {
+                      "always": {
+                        "type": "bool",
+                        "description": "Match every device, authenticated or not.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "and": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "authenticated_user": {
+                        "type": "bool",
+                        "description": "Match any device attached to an authenticated user.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device": {
+                        "type": "string",
+                        "description": "Match a single device by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "device_group": {
+                        "type": "string",
+                        "description": "Match any device in the device group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "nor": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "or": {
+                        "nested_type": {
+                          "attributes": {
+                            "always": {
+                              "type": "bool",
+                              "description": "Match every device, authenticated or not.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "and": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "authenticated_user": {
+                              "type": "bool",
+                              "description": "Match any device attached to an authenticated user.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device": {
+                              "type": "string",
+                              "description": "Match a single device by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "device_group": {
+                              "type": "string",
+                              "description": "Match any device in the device group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "nor": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "or": {
+                              "nested_type": {
+                                "attributes": {
+                                  "always": {
+                                    "type": "bool",
+                                    "description": "Match every device, authenticated or not.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "authenticated_user": {
+                                    "type": "bool",
+                                    "description": "Match any device attached to an authenticated user.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device": {
+                                    "type": "string",
+                                    "description": "Match a single device by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "device_group": {
+                                    "type": "string",
+                                    "description": "Match any device in the device group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user": {
+                                    "type": "string",
+                                    "description": "Match a single user by ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  },
+                                  "user_group": {
+                                    "type": "string",
+                                    "description": "Match any user in the user group with this ID.",
+                                    "description_kind": "markdown",
+                                    "optional": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user": {
+                              "type": "string",
+                              "description": "Match a single user by ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            },
+                            "user_group": {
+                              "type": "string",
+                              "description": "Match any user in the user group with this ID.",
+                              "description_kind": "markdown",
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user": {
+                        "type": "string",
+                        "description": "Match a single user by ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "user_group": {
+                        "type": "string",
+                        "description": "Match any user in the user group with this ID.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "user": {
+                  "type": "string",
+                  "description": "Match a single user by ID.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "user_group": {
+                  "type": "string",
+                  "description": "Match any user in the user group with this ID.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The set of devices this policy applies to. Set exactly one of the leaf matchers (`always`, `authenticated_user`, `user`, `device`, `user_group`, `device_group`) or exactly one of the logic groups (`and`, `or`, `nor`).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Whether the policy is `Enabled` or `Disabled`. Defaults to `Enabled`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A *policy* is a single rule in the Bowtie policy engine. It grants or denies a *source* - described by a predicate over users, devices, and groups - access to a destination *resource group*.\n\nPolicies are evaluated in order, so set `order` explicitly when the relative precedence of two rules matters.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_resource": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "location": {
+            "nested_type": {
+              "attributes": {
+                "cidr": {
+                  "type": "string",
+                  "description": "A CIDR address reachable from behind your Bowtie Controller.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "collection": {
+                  "type": "string",
+                  "description": "The ID of a collection whose members this resource should match. Requires the default tagged location format.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "dns": {
+                  "type": "string",
+                  "description": "A DNS name pointing to a resource reachable from behind your Bowtie Controller.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "The IP address of a resource reachable from behind your Bowtie Controller.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The address of the resource. Set exactly one of `ip`, `cidr`, `dns`, or `collection`.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human readable name of the resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ports": {
+            "nested_type": {
+              "attributes": {
+                "collection": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "List of allowed ports.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "range": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "First element is the low port and second is the high port (range is inclusive).",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Which ports to include in this resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Matching connection protocol.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nBowtie *resources* represent network properties like address ranges that may be targeted by *policies*.\n\nNote that defining these resources does not implicitly grant or deny access to them - resources must be collected into resource groups and then referenced by policies.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_resource_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inherited": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The list of resource groups to include in this resource group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name/description of the resource group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The resources that should directly be included in this resource group",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Group *resources* into *resource groups* which may be then targeted by *policies*. A resource can be thought of as an internal property, like a private wiki. Resource groups collects many private network resources into a group like 'Internal Tools' that may be access-controlled with a policy.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_route_exclusion": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "apply_strategy": {
+            "type": "string",
+            "description": "Rollout strategy: `always`, `never` (staged but inactive), `percentage_user_match`, or `percentage_device_match`. Defaults to `always`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "apply_strategy_percentage": {
+            "type": "number",
+            "description": "The match percentage, from 0 through 255 in ~0.5% increments, used when `apply_strategy` is `percentage_user_match` or `percentage_device_match`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "collection_id": {
+            "type": "string",
+            "description": "The ID of the collection whose CIDR members are excluded from the tunnel. The collection must already exist.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal route exclusion ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "match_only_device_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Apply only to devices in these device group IDs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "match_only_device_os": {
+            "type": "string",
+            "description": "Apply only to devices with this OS: `windows`, `macos`, `linux`, `ios`, `android`, `chromeos`, `bowtie_controller`, or `unknown`. Changing or removing this recreates the exclusion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "match_only_device_type": {
+            "type": "string",
+            "description": "Apply only to devices of this type: `laptop`, `desktop`, `mobile`, `server`, or `other`. Changing or removing this recreates the exclusion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "match_only_ownership": {
+            "type": "string",
+            "description": "Apply only to devices owned by this organization ID. Changing or removing this recreates the exclusion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "match_only_user_groups": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Apply only to devices whose user is in these user group IDs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the exclusion.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "only_if_wan_matches_cidrs": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "If set, the exclusion only applies when the device's WAN IP falls within one of these CIDRs (for example, an office network).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "sites": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The site IDs this exclusion applies to. Omit to apply to all sites.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "A content hash of the exclusion, computed by the Controller.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A *route exclusion* keeps a set of network destinations (a collection of CIDRs) out of the Bowtie tunnel for split-tunnel routing, optionally scoped to specific sites, WAN networks, and device or user attributes.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_site": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "The last time this object was updated using terraform. _Not part of the api_ just a piece of provider metadata.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of the site.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nRepresents a Bowtie *site*, or a discrete network location such as a datacenter or public cloud region.\n\nIf you are managing pre-existing sites, you may wish to import sites as outlined in the [import](#import) section.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_site_range": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Long-form description for this site.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ipv4_range": {
+            "type": "string",
+            "description": "The IPv4 CIDR range for this site range. **Mutually exclusive with `ipv6_range`**.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ipv6_range": {
+            "type": "string",
+            "description": "The IPv6 CIDR range for this site range. **Mutually exclusive with `ipv4_range`**.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Provider metadata for when the last update was performed via Terraform for this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "metric": {
+            "type": "number",
+            "description": "The metric for this range. Currently unused but may be in future updates.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The human readable name of this range.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "site_id": {
+            "type": "string",
+            "description": "The Site ID that this range should be associated with.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "weight": {
+            "type": "number",
+            "description": "The weight for this range. Currently unused but may be in future updates.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "\nSite *ranges* declare which addresses, if any, a given site is capable of serving.\n\nA given site may be associated with more than one range.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "authz_control_plane": {
+            "type": "bool",
+            "description": "Grants the user access to the Control Plane UI and API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "authz_devices": {
+            "type": "bool",
+            "description": "Grants the user access to the Devices UI and API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "authz_policies": {
+            "type": "bool",
+            "description": "Grants the user access to the Policies UI and API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "authz_users": {
+            "type": "bool",
+            "description": "Grants the user access to the Users UI and API.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Configures if the user is `Active` or `Disabled`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The user's name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description": "What role the user is assigned. Value must be one of `Ownder`, `User`, `FullAdministrator`, or `LimitedAdministrator`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manage users, including individual user permissions and status.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "bowtie_collection": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the collection.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal collection ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the collection to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Look up an existing collection by name, for example to reference its ID from a resource location of type `collection`.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_device": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assigned_to_user": {
+            "type": "string",
+            "description": "The user this device is assigned to, if any.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "controller_id": {
+            "type": "string",
+            "description": "The Controller the device last contacted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "device_os": {
+            "type": "string",
+            "description": "The device operating system.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "device_type": {
+            "type": "string",
+            "description": "The device type.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The device's unique identifier.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "ipv6": {
+            "type": "string",
+            "description": "The device's assigned IPv6 prefix.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_seen": {
+            "type": "string",
+            "description": "When the device was last seen.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_seen_version": {
+            "type": "string",
+            "description": "The client version last reported by the device.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The device name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The device's VPN public key.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "serial": {
+            "type": "string",
+            "description": "The device serial number, used for pre-approval.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Enrollment state: `pending`, `accepted`, or `rejected`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an enrolled device by ID, for example to read its enrollment state or reference it in a policy source.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_device_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "The description of the device group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal device group ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the device group to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Look up an existing device group by name, for example to reference its ID in a policy source (`device_group`).",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal user group ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user group to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Look up an existing user group by name, for example to reference its ID in a policy source (`user_group`).",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_resource_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internal resource group ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "inherited": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The resource groups inherited by this resource group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the resource group to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The resources directly included in this resource group.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Look up an existing resource group by name, for example to reference its ID as the `dest` of a policy.",
+        "description_kind": "markdown"
+      }
+    },
+    "bowtie_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "authz_control_plane": {
+            "type": "bool",
+            "description": "Whether the given user is authorized to administer an organization's control plane configuration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "authz_devices": {
+            "type": "bool",
+            "description": "Whether the given user is authorized to administer organization devices.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "authz_policies": {
+            "type": "bool",
+            "description": "Whether the given user is authorized to administer organization policies.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "authz_users": {
+            "type": "bool",
+            "description": "Whether the given user is authorized to update an organization's users.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Identifying login address.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal resource ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The given name for a user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Represents the user's current system state. Can be `active` or `disabled`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "\nReference user information retrieved from the user account API.\n",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
