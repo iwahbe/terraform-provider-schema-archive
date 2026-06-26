@@ -1,0 +1,3799 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "credentials": {
+          "type": "string",
+          "description": "The contents of a service account key file in JSON format.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "The endpoint url of the server to manage resources.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "region": {
+          "type": "string",
+          "description": "The default region to manage resources in. Valid regions are `us` or `eu`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "space": {
+          "type": "string",
+          "description": "The default space to manage resources in.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "mondoo_asset_routing_rule": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "mrn": {
+            "type": "string",
+            "description": "The Mondoo Resource Name (MRN) of the routing rule.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "org_mrn": {
+            "type": "string",
+            "description": "The Mondoo Resource Name (MRN) of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "The priority of this rule. Lower values are evaluated first. Rules with the same priority are further sorted by specificity (number of conditions) and MRN.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "target_space_mrn": {
+            "type": "string",
+            "description": "The MRN of the space where matching assets will be routed.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "condition": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "field": {
+                  "type": "string",
+                  "description": "The field to match on. Valid values: `HOSTNAME`, `PLATFORM`, `LABEL`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The label key to match on. Required when `field` is `LABEL`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "The comparison operator. Valid values: `EQUAL`, `NOT_EQUAL`, `CONTAINS`, `MATCHES`.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "values": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of values to match against. A condition matches if the field matches any of the listed values (OR logic).",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "Conditions that must all match for this rule to apply (AND logic). If empty, the rule matches all assets (catch-all).",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages an individual asset routing rule for a Mondoo organization. This is a **non-authoritative** resource \u2014 it manages a single rule without affecting other rules. Multiple rules can coexist and be managed independently, making it ideal for multi-team setups where each team manages their own routing rules.\n\n~> **Warning:** Do not use this resource together with `mondoo_asset_routing_table` for the same organization. The table resource replaces all rules atomically, which will overwrite individually managed rules.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_asset_routing_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "org_mrn": {
+            "type": "string",
+            "description": "The Mondoo Resource Name (MRN) of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "target_space_mrn": {
+                  "type": "string",
+                  "description": "The MRN of the space where matching assets will be routed.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "block_types": {
+                "condition": {
+                  "nesting_mode": "list",
+                  "block": {
+                    "attributes": {
+                      "field": {
+                        "type": "string",
+                        "description": "The field to match on. Valid values: `HOSTNAME`, `PLATFORM`, `LABEL`.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "The label key to match on. Required when `field` is `LABEL`.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "operator": {
+                        "type": "string",
+                        "description": "The comparison operator. Valid values: `EQUAL`, `NOT_EQUAL`, `CONTAINS`, `MATCHES`.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "values": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of values to match against. A condition matches if the field matches any of the listed values (OR logic).",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "description": "Conditions that must all match for this rule to apply (AND logic). If empty, the rule matches all assets (catch-all).",
+                    "description_kind": "markdown"
+                  }
+                }
+              },
+              "description": "Ordered list of routing rules. Priority is determined by position (first = highest priority). A rule with no conditions acts as a catch-all.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "Manages the asset routing table for a Mondoo organization. This is an **authoritative** resource \u2014 it manages the entire routing table and replaces all rules on every apply. Priority is derived from the order of rules in the configuration (first rule = highest priority).\n\n~> **Warning:** Do not use this resource together with `mondoo_asset_routing_rule` for the same organization. The table resource replaces all rules atomically, which will overwrite individually managed rules.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_custom_framework": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_url": {
+            "type": "string",
+            "description": "URL to the custom compliance framework data.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo resource name.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there's no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Set custom compliance frameworks for a Mondoo space.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_custom_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Data as string to be uploaded. Must be defined if source is not. Note: The content field is marked as sensitive. To view the raw contents of the object, please define an output.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "crc32c": {
+            "type": "string",
+            "description": "Base64 CRC32 hash of the uploaded data.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mrns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The Mondoo Resource Name (MRN) of the created policies",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "If set to true, existing policies are overwritten.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "Mondoo scope MRN. Provide this if not uploading to a space",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "source": {
+            "type": "string",
+            "description": "A path to the data you want to upload. Must be defined if content is not.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Custom Policy resource",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_custom_querypack": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "content": {
+            "type": "string",
+            "description": "Data as string to be uploaded. Must be defined if source is not. Note: The content field is marked as sensitive. To view the raw contents of the object, please define an output.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "crc32c": {
+            "type": "string",
+            "description": "Base64 CRC32 hash of the uploaded data.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "mrns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "The Mondoo Resource Name (MRN) of the created query packs",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "description": "If set to true, existing policies are overwritten.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "A path to the data you want to upload. Must be defined if content is not.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Custom Query Pack resource",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_exception": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "action": {
+            "type": "string",
+            "description": "The action to perform. Default is `RISK_ACCEPTED`. Other valid values are `WORKAROUND`, `FALSE_POSITIVE`, `ENABLE`, `DISABLE`, `OUT_OF_SCOPE` and `SNOOZE`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "check_mrns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of check MRNs to set exceptions for. If set, `vulnerability_mrns` must not be set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "exception_id": {
+            "type": "string",
+            "description": "The ID of the exception",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "justification": {
+            "type": "string",
+            "description": "Description why the exception is required.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (either asset mrn or space mrn).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "valid_until": {
+            "type": "string",
+            "description": "The date when the exception is no longer valid.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "vulnerability_mrns": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of vulnerability MRNs to set exceptions for. If set, `check_mrns` must not be set.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Set custom exceptions for a scope.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_export_bigquery": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "wif": {
+                  "nested_type": {
+                    "attributes": {
+                      "audience": {
+                        "type": "string",
+                        "description": "WIF audience URL for GCP workload identity federation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "service_account_email": {
+                        "type": "string",
+                        "description": "Optional GCP service account email to impersonate via workload identity federation.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Workload identity federation configuration. Mutually exclusive with `service_account_key`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the BigQuery export. Provide `wif` for workload identity federation instead of the top-level `service_account_key`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "dataset_id": {
+            "type": "string",
+            "description": "Target BigQuery dataset (project-id.dataset_id).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo resource name (MRN) of the integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A descriptive name for the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (space, organization, or platform) for the export integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "service_account_key": {
+            "type": "string",
+            "description": "Google service account JSON key content. Mutually exclusive with `credentials.wif`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "wif_subject": {
+            "type": "string",
+            "description": "Computed OIDC subject used when Mondoo requests a WIF token for this integration. Configure your cloud provider's trust policy to accept this subject.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Export data to Google BigQuery.\n\t\t\t## Example Usage\n\t\t\t```hcl\n\t\t\tresource \"mondoo_export_bigquery\" \"example\" {\n\t\t\t\tname                = \"enterprise-demo-BigQuery\"\n\t\t\t\tscope_mrn           = \"//captain.api.mondoo.app/spaces/your-space-id\"\n\t\t\t\tdataset_id          = \"project-id.dataset_id\"\n\t\t\t\tservice_account_key = file(\"service-account.json\")\n\t\t\t}\n\t\t\t```\n\t\t",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_export_gcs_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket_name": {
+            "type": "string",
+            "description": "Name of the Google Cloud Storage bucket to export data to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "private_key": {
+                  "type": "string",
+                  "description": "Private key for the service account in JSON format. Mutually exclusive with `wif`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "wif": {
+                  "nested_type": {
+                    "attributes": {
+                      "audience": {
+                        "type": "string",
+                        "description": "WIF audience URL for GCP workload identity federation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "service_account_email": {
+                        "type": "string",
+                        "description": "Optional GCP service account email to impersonate via workload identity federation.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Workload identity federation configuration. Mutually exclusive with `private_key`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the Google Cloud Storage bucket. Provide either a static service account `private_key` or a `wif` block for workload identity federation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "export_format": {
+            "type": "string",
+            "description": "Format of the export (JSONL or CSV), defaults to JSONL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo resource name (MRN) of the integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the export integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (space, organization, or platform) for the export integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "wif_subject": {
+            "type": "string",
+            "description": "Computed OIDC subject used when Mondoo requests a WIF token for this integration. Configure your cloud provider's trust policy to accept this subject.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Export data to a Google Cloud Storage bucket.\n\t\t\t## Example Usage\n\t\t\t```hcl\n\t\t\tresource \"mondoo_export_gcs_bucket\" \"test\" {\n\t\t\t\tname          = \"bucket-export-integration\"\n\t\t\t\tbucket_name   = \"my-bucket-name\"\n\t\t\t\tscope_mrn     = \"//captain.api.mondoo.app/spaces/your-space-id\"\n\t\t\t\texport_format = \"jsonl\"\n\t\t\t\tcredentials = {\n\t\t\t\t\tprivate_key = base64decode(google_service_account_key.mondoo_integration.private_key)\n\t\t\t\t}\n\t\t\t}\n\t\t\t```\n\t\t",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_export_s3": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket_name": {
+            "type": "string",
+            "description": "Name of the Amazon S3 bucket to export data to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "key": {
+                  "nested_type": {
+                    "attributes": {
+                      "access_key": {
+                        "type": "string",
+                        "description": "AWS access key ID.",
+                        "description_kind": "markdown",
+                        "required": true,
+                        "sensitive": true
+                      },
+                      "secret_key": {
+                        "type": "string",
+                        "description": "AWS secret access key.",
+                        "description_kind": "markdown",
+                        "required": true,
+                        "sensitive": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "AWS access key credentials.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the Amazon S3 bucket.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "export_format": {
+            "type": "string",
+            "description": "Format of the export (JSONL or CSV), defaults to JSONL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo resource name (MRN) of the integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the export integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "AWS region where the S3 bucket is located.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (space, organization, or platform) for the export integration.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Export data to an Amazon S3 bucket.\n\t\t\t## Example Usage\n\t\t\t```hcl\n\t\t\tresource \"mondoo_export_s3\" \"s3_export\" {\n\t\t\t\tname          = \"My S3 Export Integration\"\n\t\t\t\tbucket_name   = \"my-mondoo-exports\"\n\t\t\t\tregion        = \"us-west-2\"\n\t\t\t\tscope_mrn     = \"//captain.api.mondoo.app/spaces/your-space-id\"\n\t\t\t\texport_format = \"jsonl\"\n\n\t\t\t\tcredentials = {\n\t\t\t\t\tkey = {\n\t\t\t\t\t\taccess_key = var.aws_access_key\n\t\t\t\t\t\tsecret_key = var.aws_secret_key\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\t```\n\t\t",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_framework_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "enabled": {
+            "type": "bool",
+            "description": "Enable or disable the compliance framework.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "framework_mrn": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Compliance framework MRN.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there's no ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Set compliance frameworks for a Mondoo space.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_gcs_bucket_export": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket_name": {
+            "type": "string",
+            "description": "Name of the Google Cloud Storage bucket to export data to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "private_key": {
+                  "type": "string",
+                  "description": "Private key for the service account in JSON format.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the Google Cloud Storage bucket.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "export_format": {
+            "type": "string",
+            "description": "Format of the export (JSONL or CSV), defaults to JSONL.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo resource name (MRN) of the integration.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the export integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Export data to a Google Cloud Storage bucket.\n\t\t\t## Example Usage\n\t\t\t```hcl\n\t\t\tresource \"mondoo_gcs_bucket_export\" \"test\" {\n\t\t\t\tname         = \"bucket-export-integration\"\n\t\t\t\tbucket_name  = \"my-bucket-name\"\n\t\t\t\tspace_id     = \"your-space-id\"\n\t\t\t\texport_format = \"jsonl\"\n\t\t\t\t  credentials = {\n\t\t\t\t\tprivate_key = base64decode(google_service_account_key.mondoo_integration.private_key)\n\t\t\t\t}\n\t\t\t}\n\t\t\t```\n\t\t",
+        "description_kind": "markdown",
+        "deprecated": true
+      }
+    },
+    "mondoo_iam_binding": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "identity_mrn": {
+            "type": "string",
+            "description": "MRN of the identity principal (team, user, or service account) to grant roles to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource_mrn": {
+            "type": "string",
+            "description": "MRN of the resource (organization, space, workspace, etc.) to grant access to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of role names to assign to the identity on the resource. Can be specified as short names (e.g. \"editor\") or full MRNs (e.g. \"//iam.api.mondoo.app/roles/editor\"). Available roles: integrations-manager, sla-manager, policy-manager, policy-editor, ticket-manager, ticket-creator, exceptions-requester, query-pack-manager, query-pack-editor, viewer, editor, owner.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nThis resource manages IAM role bindings in Mondoo. It assigns roles to identity principals (users, service accounts, or teams) on specific resources (organizations, spaces, workspaces, etc.).\n\n## Example Usage\n\n```hcl\n# Grant a team editor permissions on a space\nresource \"mondoo_iam_binding\" \"team_permissions\" {\n  identity_mrn = mondoo_team.security_team.mrn\n  resource_mrn = mondoo_space.production.mrn\n  roles        = [\"//iam.api.mondoo.app/roles/editor\"]\n}\n\n# Grant a team viewer permissions on a workspace\nresource \"mondoo_iam_binding\" \"security_team_permissions\" {\n  identity_mrn = mondoo_team.team_1.mrn\n  resource_mrn = mondoo_workspace.my_workspace.mrn\n  roles        = [\"//iam.api.mondoo.app/roles/viewer\"]\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_iam_workload_identity_binding": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_audiences": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": " List of allowed audiences.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the binding.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "expiration": {
+            "type": "number",
+            "description": "Expiration in seconds associated with the binding.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "issuer_uri": {
+            "type": "string",
+            "description": "URI for the token issuer, e.g. https://accounts.google.com.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mappings": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "List of additional configurations to confirm.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "The Mondoo resource name (MRN) of the created binding.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the binding.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of role names to assign to the binding. Can be specified as short names (e.g. \"editor\") or full MRNs (e.g. \"//iam.api.mondoo.app/roles/editor\"). Available roles: integrations-manager, sla-manager, policy-manager, policy-editor, ticket-manager, ticket-creator, exceptions-requester, query-pack-manager, query-pack-editor, viewer, editor, owner.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (either space or organization). If there is no scope, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "Unique identifier to confirm.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Allows management of a Mondoo Workload Identity Federation bindings.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_audit_log_export": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bucket": {
+            "type": "string",
+            "description": "GCS bucket name for audit log export.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "include_historical": {
+            "type": "bool",
+            "description": "Whether to include historical audit logs on first export. Default false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "Mondoo organization identifier. Use this for org-scoped integrations. Conflicts with `scope_mrn`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "Scope MRN for the integration. Use `//platform.api.mondoo.app` for platform-level exports. Conflicts with `org_id`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "service_account_json": {
+            "type": "string",
+            "description": "GCS service account JSON credentials. Either this or WIF credentials must be provided.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "wif_audience": {
+            "type": "string",
+            "description": "WIF audience URL for GCP workload identity federation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wif_service_account_email": {
+            "type": "string",
+            "description": "GCP service account email for WIF service account impersonation.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Export Mondoo audit logs to a GCS bucket in OCSF format for ingestion by third-party SIEM systems.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_aws": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "key": {
+                  "nested_type": {
+                    "attributes": {
+                      "access_key": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true,
+                        "sensitive": true
+                      },
+                      "secret_key": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true,
+                        "sensitive": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Static IAM access key credentials. Mutually exclusive with `role` and `wif`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "role": {
+                  "nested_type": {
+                    "attributes": {
+                      "external_id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "sensitive": true
+                      },
+                      "role_arn": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true,
+                        "sensitive": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "IAM role credentials. Mutually exclusive with `key` and `wif`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "wif": {
+                  "nested_type": {
+                    "attributes": {
+                      "audience": {
+                        "type": "string",
+                        "description": "Audience value configured in the AWS IAM OIDC identity provider.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "role_arn": {
+                        "type": "string",
+                        "description": "ARN of the IAM role to assume via web identity federation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Workload identity federation credentials. Uses Mondoo as an OIDC identity provider to assume an IAM role via web identity. Mutually exclusive with `role` and `key`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the AWS integration. Exactly one of `role`, `key`, or `wif` must be configured.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wif_subject": {
+            "type": "string",
+            "description": "Computed OIDC subject used when Mondoo requests a WIF token for this integration. Configure your cloud provider's trust policy to accept this subject.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Continuously scan AWS accounts for misconfigurations and vulnerabilities.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_aws_serverless": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of AWS account IDs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "console_sign_in_trigger": {
+            "type": "bool",
+            "description": "Enable console sign-in trigger.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "instance_state_change_trigger": {
+            "type": "bool",
+            "description": "Enable instance state change trigger.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "is_organization": {
+            "type": "bool",
+            "description": "Is organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "AWS region.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scan_configuration": {
+            "nested_type": {
+              "attributes": {
+                "cron_scan_in_hours": {
+                  "type": "number",
+                  "description": "Cron scan in hours.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ec2_scan": {
+                  "type": "bool",
+                  "description": "Enable EC2 scan.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ec2_scan_options": {
+                  "nested_type": {
+                    "attributes": {
+                      "ebs_scan_options": {
+                        "nested_type": {
+                          "attributes": {
+                            "max_asg_instances": {
+                              "type": "number",
+                              "description": "Max ASG instances.",
+                              "description_kind": "markdown",
+                              "deprecated": true,
+                              "optional": true
+                            },
+                            "target_instances_per_scanner": {
+                              "type": "number",
+                              "description": "Target instances per scanner.",
+                              "description_kind": "markdown",
+                              "deprecated": true,
+                              "optional": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "deprecated": true,
+                        "optional": true
+                      },
+                      "ebs_volume_scan": {
+                        "type": "bool",
+                        "description": "Enable EBS volume scan.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "exclude_instance_ids_filter": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of instance IDs to exclude.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "exclude_regions_filter": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of regions to exclude.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "exclude_tags_filter": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Excluded tags filter.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "instance_connect": {
+                        "type": "bool",
+                        "description": "Enable instance connect.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "instance_ids_filter": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of instance IDs filter.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "regions_filter": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "List of regions filter.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "ssm": {
+                        "type": "bool",
+                        "description": "Enable SSM.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "tags_filter": {
+                        "type": [
+                          "map",
+                          "string"
+                        ],
+                        "description": "Tags filter.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "ecr_scan": {
+                  "type": "bool",
+                  "description": "Enable ECR scan.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ecs_scan": {
+                  "type": "bool",
+                  "description": "Enable ECS scan.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "event_scan_triggers": {
+                  "nested_type": {
+                    "attributes": {
+                      "event_detail_type": {
+                        "type": "string",
+                        "description": "Event detail type.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "event_source": {
+                        "type": "string",
+                        "description": "Event source.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "scan_type": {
+                        "type": "string",
+                        "description": "Scan type.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "vpc_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "cidr_block": {
+                        "type": "string",
+                        "description": "CIDR block for the Mondoo VPC.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "use_mondoo_vpc": {
+                        "type": "bool",
+                        "description": "Use Mondoo VPC.",
+                        "description_kind": "markdown",
+                        "deprecated": true,
+                        "optional": true
+                      },
+                      "vpc_flavour": {
+                        "type": "string",
+                        "description": "VPC flavour, one of: DEFAULT_VPC, MONDOO_NATGW, MONDOO_IGW",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "vpc_tag": {
+                        "nested_type": {
+                          "attributes": {
+                            "key": {
+                              "type": "string",
+                              "description": "Key of the VPC tag.",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description": "Value of the VPC tag.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "VPC tag to use when vpc_flavour is set to CUSTOM_VPC.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Integration token",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Continuously scan AWS organization and accounts for misconfigurations and vulnerabilities.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_azure": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure client ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "pem_file": {
+                  "type": "string",
+                  "description": "PEM file for Azure integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scan_vms": {
+            "type": "bool",
+            "description": "Scan VMs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subscription_allow_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Azure subscriptions to scan.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "subscription_deny_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Azure subscriptions to exclude from scanning.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Azure tenant ID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Continuously scan Microsoft Azure subscriptions and resources for misconfigurations and vulnerabilities. To learn more, read the [Mondoo documentation](https://mondoo.com/docs/platform/infra/cloud/azure/azure-integration-scan-subscription/).",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_azure_devops": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_close_tickets": {
+            "type": "bool",
+            "description": "The AzureDevops AutoCloseTickets",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "auto_create_tickets": {
+            "type": "bool",
+            "description": "The AzureDevops AutoCreateTickets",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The AzureDevops ClientSecret",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "default_project_name": {
+            "type": "string",
+            "description": "The AzureDevops DefaultProjectName",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_url": {
+            "type": "string",
+            "description": "The AzureDevops OrganizationUrl",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_principal_id": {
+            "type": "string",
+            "description": "The AzureDevops ServicePrincipalId",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "The AzureDevops TenantId",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "AzureDevops integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_crowdstrike": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Client ID used for authentication with CrowdStrike Falcon platform.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "Client Secret used for authentication with CrowdStrike Falcon platform.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "cloud": {
+            "type": "string",
+            "description": "The Falcon Cloud to connect.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "member_cid": {
+            "type": "string",
+            "description": "CID selector for cases when the client ID and secret has access to multiple CIDs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "CrowdStrike Falcon for Cloud integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "host": {
+            "type": "string",
+            "description": "Domain name or IP address.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "http": {
+            "type": "bool",
+            "description": "Enable HTTP port.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "https": {
+            "type": "bool",
+            "description": "Enable HTTPS port.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Continuously scan endpoints to evaluate domain TLS, SSL, HTTP, and HTTPS security",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_email": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_close": {
+            "type": "bool",
+            "description": "Auto close tickets (defaults to false).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_create": {
+            "type": "bool",
+            "description": "Auto create tickets (defaults to false).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "recipients": {
+            "nested_type": {
+              "attributes": {
+                "email": {
+                  "type": "string",
+                  "description": "Recipient email address.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "is_default": {
+                  "type": "bool",
+                  "description": "Mark this recipient as default. This must be set if auto_create is enabled.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Recipient name.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "reference_url": {
+                  "type": "string",
+                  "description": "Optional reference URL for the recipient.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of email recipients.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Send email to your ticket system or any recipient.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_gcp": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "private_key": {
+                  "type": "string",
+                  "description": "GCP service account JSON key. Mutually exclusive with `wif`.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "wif": {
+                  "nested_type": {
+                    "attributes": {
+                      "audience": {
+                        "type": "string",
+                        "description": "WIF audience URL for GCP workload identity federation.",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "service_account_email": {
+                        "type": "string",
+                        "description": "Optional GCP service account email to impersonate via workload identity federation.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Workload identity federation configuration. Mutually exclusive with `private_key`.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials for the GCP integration. Provide either a static service account `private_key` or a `wif` block for workload identity federation.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "project_id": {
+            "type": "string",
+            "description": "GCP project ID",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "wif_subject": {
+            "type": "string",
+            "description": "Computed OIDC subject used when Mondoo requests a WIF token for this integration. Configure your cloud provider's trust policy to accept this subject.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Continuously scan GCP organizations and projects for misconfigurations and vulnerabilities.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_github": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "token": {
+                  "type": "string",
+                  "description": "Token for GitHub integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "discovery": {
+            "nested_type": {
+              "attributes": {
+                "k8s_manifests": {
+                  "type": "bool",
+                  "description": "Enable discovery of Kubernetes manifests.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "terraform": {
+                  "type": "bool",
+                  "description": "Enable discovery of Terraform configurations.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "force_replace": {
+            "type": "bool",
+            "description": "Set to true to force replacement on next apply, useful to refresh credentials when the current value cannot be read.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "GitHub owner.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "repository": {
+            "type": "string",
+            "description": "GitHub repository.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "repository_allow_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of GitHub repositories to scan.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "repository_deny_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of GitHub repositories to exclude from scanning.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Continuously scan GitHub organizations and repositories for misconfigurations.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_gitlab": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "base_url": {
+            "type": "string",
+            "description": "Base URL of the GitLab instance (only set this if your instance is self-hosted).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "token": {
+                  "type": "string",
+                  "description": "Token for GitLab integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "discovery": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "type": "bool",
+                  "description": "Enable discovery of GitLab groups.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "k8s_manifests": {
+                  "type": "bool",
+                  "description": "Enable discovery of Kubernetes manifests.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "projects": {
+                  "type": "bool",
+                  "description": "Enable discovery of GitLab projects.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "terraform": {
+                  "type": "bool",
+                  "description": "Enable discovery of Terraform configurations.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "optional": true
+          },
+          "group": {
+            "type": "string",
+            "description": "Group to assign the integration to (by default all groups are discovered).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Continuously scan GitLab for misconfigurations.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_google_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "customer_id": {
+            "type": "string",
+            "description": "The GoogleWorkspace CustomerId",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "impersonated_user_email": {
+            "type": "string",
+            "description": "The GoogleWorkspace ImpersonatedUserEmail",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "service_account": {
+            "type": "string",
+            "description": "The GoogleWorkspace ServiceAccount",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "GoogleWorkspace integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_jira": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_close": {
+            "type": "bool",
+            "description": "Automatically close Jira issues for resolved Mondoo findings",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_create": {
+            "type": "bool",
+            "description": "Automatically create Jira issues for Mondoo findings. This corresponds to the **'Create drift issues in this integration'** toggle in the Mondoo Console.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "token": {
+                  "type": "string",
+                  "description": "Jira API token.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "default_project": {
+            "type": "string",
+            "description": "Default Jira project (represented by the project key, such as `SEC` or `SECURITY`). This corresponds to the **'Select a default drift issue destination'** dropdown in the Mondoo Console.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Jira user email.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Jira host URL.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Integrate the Jira ticket system with Mondoo to automatically create and close Jira issues based on Mondoo findings.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_ms365": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure client ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "pem_file": {
+                  "type": "string",
+                  "description": "PEM file for MS365 integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Azure tenant ID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Continuously monitor your Microsoft 365 resources for misconfigurations and vulnerabilities. To learn more, read the [Mondoo documentation](https://mondoo.com/docs/platform/infra/saas/ms365/ms365-auto/).",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_ms_intune": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure client ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "client_secret": {
+                  "type": "string",
+                  "description": "Client secret for the Intune integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Azure tenant ID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Continuously scan and remediate your Microsoft Intune managed devices. To learn more, read the [Mondoo documentation](https://mondoo.com/docs/platform/infra/saas/ms365/ms365-auto/).",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_msdefender": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Azure client ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "pem_file": {
+                  "type": "string",
+                  "description": "PEM file for Azure integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subscription_allow_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Azure subscriptions from which to import Defender data.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "subscription_deny_list": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Azure subscriptions to exclude from imports.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Azure tenant ID.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Microsoft Defender for Cloud integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_oci_tenant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "fingerprint": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "private_key": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "OCI region",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "tenancy": {
+            "type": "string",
+            "description": "OCI tenancy",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "user": {
+            "type": "string",
+            "description": "OCI user",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Continuously monitor OCI tenancies and resources for misconfigurations and vulnerabilities.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_okta": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization": {
+            "type": "string",
+            "description": "The Okta Organization",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The Okta Token",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Okta integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_sentinel_one": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account": {
+            "type": "string",
+            "description": "The account ID of the SentinelOne integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "certificate": {
+                  "type": "string",
+                  "description": "The certificate for the SentinelOne integration.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "client_secret": {
+                  "type": "string",
+                  "description": "The client secret of the SentinelOne integration.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Credentials require one of certificate or client secret to be provided.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The host of the SentinelOne integration. Must include URL scheme, e.g., https://domain.sentinelone.net.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "SentinelOne integration.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_shodan": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "token": {
+                  "type": "string",
+                  "description": "Token for Shodan integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "targets": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Shodan scan targets.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Continuously assess external risk for domains and IP addresses.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_slack": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "slack_token": {
+            "type": "string",
+            "description": "The Slack token to authenticate with the Slack API.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Continuously scan your Slack teams for security misconfigurations.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_integration_zendesk": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_close": {
+            "type": "bool",
+            "description": "Automatically close tickets.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "auto_create": {
+            "type": "bool",
+            "description": "Automatically create tickets.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "credentials": {
+            "nested_type": {
+              "attributes": {
+                "token": {
+                  "type": "string",
+                  "description": "Token for Zendesk integration.",
+                  "description_kind": "markdown",
+                  "required": true,
+                  "sensitive": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "custom_fields": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "number",
+                  "description": "Custom field ID.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Custom field value.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Custom fields to add to the Zendesk ticket.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Zendesk email.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Integration identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "Zendesk subdomain.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Zendesk integration to keep track of security tasks and add Zendesk tickets directly from within the Mondoo Console.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "annotations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Annotations for the organization as key-value pairs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "company": {
+            "type": "string",
+            "description": "Company name of the organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the org. Must be globally unique. If the provider has a org configured and this field is empty, the provider org is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mrn of the org.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the space.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "mondoo_policy_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "policies": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Policies to assign to the scope.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "The MRN of the scope (space, organization, or platform) to assign policies to.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Policy assignment state (preview, enabled, or disabled).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "mondoo_querypack_assignment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "querypacks": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "QueryPacks to assign to the space.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "QueryPack Assignment State (enabled or disabled).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "mondoo_registration_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the token.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "The date and time when the token will expire.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "expires_in": {
+            "type": "string",
+            "description": "The duration after which the token will expire. Format: 1h, 1d, 1w, 1m, 1y",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "The Mondoo Resource Name (MRN) of the created token.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "no_expiration": {
+            "type": "bool",
+            "description": "If set to true, the token will not expire.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "result": {
+            "type": "string",
+            "description": "The generated token.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "revoked": {
+            "type": "bool",
+            "description": "If set to true, the token is revoked.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Identifier of the Mondoo space in which to create the token. If there is no space ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Registration Token resource",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_resource_contacts": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "contacts": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of contacts. Each entry is an identity: user MRN, team MRN, or email address.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resource_mrn": {
+            "type": "string",
+            "description": "MRN of the resource (organization, space, or workspace) to manage contacts for.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages contacts for a Mondoo resource (organization, space, or workspace).\n\nThis is an authoritative resource \u2014 it manages **all** contacts for the target resource.\nSetting contacts replaces any existing contacts; destroying this resource clears all contacts.\n\n## Example Usage\n\n```hcl\nresource \"mondoo_space\" \"example\" {\n  org_id = \"my-org\"\n  name   = \"Production\"\n}\n\nresource \"mondoo_team\" \"ops\" {\n  name      = \"ops-team\"\n  scope_mrn = mondoo_space.example.mrn\n  email     = \"ops@example.com\"\n}\n\nresource \"mondoo_resource_contacts\" \"example\" {\n  resource_mrn = mondoo_space.example.mrn\n  contacts     = [\n    mondoo_team.ops.mrn,\n    \"security@example.com\",\n  ]\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_scim_group_mapping": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "group": {
+            "type": "string",
+            "description": "SCIM 2.0 Group Display Name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mappings": {
+            "nested_type": {
+              "attributes": {
+                "iam_role": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "org_mrn": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "space_mrn": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "required": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "Mondoo Organization Identifier.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\n\t\tThis resource provides SCIM 2.0 Group Mapping. It allows the mapping of SCIM 2.0 groups to Mondoo organization or spaces and IAM roles.\n\t\t",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_service_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "credential": {
+            "type": "string",
+            "description": "The service account credential in JSON format, base64 encoded. This is the same content when creating service account credentials through the Mondoo Console.",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the service account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "The Mondoo resource name (MRN) of the created service account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the service account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "Identifier of the Mondoo organization in which to create the service account.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Roles to assign to the service account.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "The identifier of the Mondoo space in which to create the service account.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Allows management of a Mondoo service account.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "annotations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Annotations for the space as key-value pairs.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the space.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the space. Must be globally unique. If the provider has a space configured and this field is empty, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mrn of the space.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the space.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "ID of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_settings": {
+            "nested_type": {
+              "attributes": {
+                "cases_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "aggregation_window": {
+                        "type": "number",
+                        "description": "Aggregate findings for the same asset within this window. The value is specified in hours. 0 means no aggregation.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "auto_create": {
+                        "type": "bool",
+                        "description": "Whether to enable auto-create cases on drift.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Cases configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "eol_assets_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether to enable EOL assets analysis.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "months_in_advance": {
+                        "type": "number",
+                        "description": "How many months in advance should EOL be applied as risk factor.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "EOL platform configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "exceptions_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "allow_indefinite_valid_until": {
+                        "type": "bool",
+                        "description": "Whether to allow creation of exception groups with indefinite valid until.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "allow_self_approval": {
+                        "type": "bool",
+                        "description": "Whether a user can approve their own exception requests.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "require_approval": {
+                        "type": "bool",
+                        "description": "Whether to require approval for exceptions.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Exceptions configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "garbage_collect_assets_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "after_days": {
+                        "type": "number",
+                        "description": "After how many days to garbage collect. ",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether to enable garbage collection.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Garbage collect assets configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "platform_vulnerability_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "enabled": {
+                        "type": "bool",
+                        "description": "Whether to enable platform vulnerability analysis.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Platform vulnerability configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "terminated_assets_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "cleanup": {
+                        "type": "bool",
+                        "description": "Whether to cleanup terminated assets.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Terminated assets configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "unused_service_accounts_configuration": {
+                  "nested_type": {
+                    "attributes": {
+                      "cleanup": {
+                        "type": "bool",
+                        "description": "Whether to cleanup unused service accounts.",
+                        "description_kind": "markdown",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Unused service accounts configuration for the space.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Space settings.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Space resource",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_team": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Description of the team.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email for the team.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the team. If not provided, it will be auto-generated.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo Resource Name (MRN) of the team.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the team.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "scope_mrn": {
+            "type": "string",
+            "description": "MRN of the scope (organization or space) that owns this team.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "\nThis resource manages Mondoo Teams\n\n## Example Usage\n\n```hcl\nresource \"mondoo_team\" \"security_team\" {\n  name        = \"security-team\"\n  description = \"Team responsible for security policies and compliance\"\n  scope_mrn   = data.mondoo_organization.current.mrn\n}\n\n# Grant team permissions using existing IAM binding resource\nresource \"mondoo_iam_binding\" \"security_team_permissions\" {\n  identity_mrn = mondoo_team.security_team.mrn\n  resource_mrn = mondoo_space.production.mrn\n  roles        = [\"//iam.api.mondoo.app/roles/editor\"]\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_team_external_group_mapping": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "RFC 3339 timestamp when the team external group mapping was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "external_id": {
+            "type": "string",
+            "description": "External group ID from the OIDC provider (e.g., group name or UUID).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Mondoo Resource Name (MRN) of the team external group mapping.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "team_mrn": {
+            "type": "string",
+            "description": "MRN of the team to map the external group to.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "This resource manages external group mappings for Mondoo Teams. External group mappings link OIDC group claims to teams, enabling automatic team membership based on identity provider group membership.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_team_member": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "identity": {
+            "type": "string",
+            "description": "Email address or MRN of the user to add to the team.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "member_mrn": {
+            "type": "string",
+            "description": "MRN of the member. Empty if the user has not yet registered.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "team_mrn": {
+            "type": "string",
+            "description": "MRN of the team to add the member to.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "This resource manages team membership in Mondoo. It allows adding users to teams by email address or MRN. If the user does not yet have a Mondoo account, a pending membership is created.\n\n**Example usage:**\n\n```hcl\nresource \"mondoo_team\" \"example\" {\n  name      = \"security-team\"\n  scope_mrn = mondoo_organization.example.mrn\n}\n\nresource \"mondoo_team_member\" \"alice\" {\n  team_mrn = mondoo_team.example.mrn\n  identity = \"alice@example.com\"\n}\n```",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_workspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "asset_selections": {
+            "nested_type": {
+              "attributes": {
+                "conditions": {
+                  "nested_type": {
+                    "attributes": {
+                      "int_condition": {
+                        "nested_type": {
+                          "attributes": {
+                            "field": {
+                              "type": "string",
+                              "description": "Numeric field to match. Valid values: [\"RISK_SCORE\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "operator": {
+                              "type": "string",
+                              "description": "Numeric operator. Valid values: [\"EQUAL\" \"NOT_EQUAL\" \"GT\" \"LT\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "values": {
+                              "type": [
+                                "list",
+                                "number"
+                              ],
+                              "description": "Int values to match. Values are ORed together.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A condition with values of type int.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "key_value_condition": {
+                        "nested_type": {
+                          "attributes": {
+                            "field": {
+                              "type": "string",
+                              "description": "key:value field to match. Valid values: [\"LABELS\" \"ANNOTATIONS\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "operator": {
+                              "type": "string",
+                              "description": "Rating operator. Valid values: [\"CONTAINS\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "values": {
+                              "nested_type": {
+                                "attributes": {
+                                  "key": {
+                                    "type": "string",
+                                    "description": "The key.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "description": "The value.",
+                                    "description_kind": "markdown",
+                                    "required": true
+                                  }
+                                },
+                                "nesting_mode": "list"
+                              },
+                              "description": "key:value list to match. Values are ORed together.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A condition with values of type key:value.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "operator": {
+                        "type": "string",
+                        "description": "Operator determining how the condition is joined with the other conditions in the list. Valid values: `AND`, `AND_NOT`",
+                        "description_kind": "markdown",
+                        "required": true
+                      },
+                      "rating_condition": {
+                        "nested_type": {
+                          "attributes": {
+                            "field": {
+                              "type": "string",
+                              "description": "Rating field to match. Valid values: [\"RISK\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "operator": {
+                              "type": "string",
+                              "description": "Rating operator. Valid values: [\"EQUAL\" \"NOT_EQUAL\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "values": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "Int values to match. Values are ORed together.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A condition with values of type int.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      },
+                      "string_condition": {
+                        "nested_type": {
+                          "attributes": {
+                            "field": {
+                              "type": "string",
+                              "description": "String field to match. Valid values: [\"PLATFORM\" \"PLATFORM_VERSION\" \"ASSET_NAME\" \"ASSET_KIND\" \"TECHNOLOGY\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "operator": {
+                              "type": "string",
+                              "description": "String operator. Valid values: [\"EQUAL\" \"NOT_EQUAL\" \"CONTAINS\"]",
+                              "description_kind": "markdown",
+                              "required": true
+                            },
+                            "values": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description": "String values to match. Values are ORed together.",
+                              "description_kind": "markdown",
+                              "required": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description": "A condition with values of type string.",
+                        "description_kind": "markdown",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "A list of conditions for the selection.",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "A list of workspace selections.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the workspace.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "The Mondoo resource name (MRN) of the workspace.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Mondoo space identifier. If there is no ID, the provider space is used.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Allows management of Mondoo workspaces.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "mondoo_assets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assets": {
+            "nested_type": {
+              "attributes": {
+                "annotations": {
+                  "nested_type": {
+                    "attributes": {
+                      "key": {
+                        "type": "string",
+                        "description": "The key of the annotation.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "The value of the annotation.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "The annotations/tags of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "asset_type": {
+                  "type": "string",
+                  "description": "The type of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mrn": {
+                  "type": "string",
+                  "description": "The unique Mondoo Resource Name (MRN) of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "reference_ids": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "The reference IDs of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "score": {
+                  "nested_type": {
+                    "attributes": {
+                      "grade": {
+                        "type": "string",
+                        "description": "The grade of the asset.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "number",
+                        "description": "The score value of the asset.",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "The overall score of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "state": {
+                  "type": "string",
+                  "description": "The current state of the asset.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "The timestamp when the asset was last updated.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of assets in the space.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "The unique identifier of the space.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_mrn": {
+            "type": "string",
+            "description": "The unique Mondoo Resource Name (MRN) of the space.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "The asset data source allows you to fetch assets from a space.",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_frameworks": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "frameworks": {
+            "nested_type": {
+              "attributes": {
+                "authors": {
+                  "nested_type": {
+                    "attributes": {
+                      "email": {
+                        "type": "string",
+                        "description": "Author email",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Author name",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of authors",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "mrn": {
+                  "type": "string",
+                  "description": "Compliance framework MRN",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Compliance framework name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "previous_completion_scores": {
+                  "nested_type": {
+                    "attributes": {
+                      "score": {
+                        "type": "number",
+                        "description": "Score",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "timestamp": {
+                        "type": "string",
+                        "description": "Timestamp",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of previous completion scores",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "state": {
+                  "type": "string",
+                  "description": "Compliance framework state is either `PREVIEW` or `ACTIVE`",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "tags": {
+                  "nested_type": {
+                    "attributes": {
+                      "key": {
+                        "type": "string",
+                        "description": "Tag key",
+                        "description_kind": "markdown",
+                        "computed": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Tag value",
+                        "description_kind": "markdown",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of tags",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of compliance frameworks",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Space ID",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_mrn": {
+            "type": "string",
+            "description": "Space MRN",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Data source to return compliance frameworks in a Space",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "annotations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Annotations for the organization as key-value pairs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization ID",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Organization MRN",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization name",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "spaces": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of spaces (MRNs) in the organization",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Organization data source",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assigned_only": {
+            "type": "bool",
+            "description": "Only return enabled policies if set to `true`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "catalog_type": {
+            "type": "string",
+            "description": "Catalog type of either `ALL`, `POLICY` or `QUERYPACK`. Defaults to `ALL`",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "policies": {
+            "nested_type": {
+              "attributes": {
+                "action": {
+                  "type": "string",
+                  "description": "Policies can be set to `Null`, `IGNORE` or `ACTIVE`",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "assigned": {
+                  "type": "bool",
+                  "description": "Determines if a policy is enabled or disabled",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp of policy creation",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "is_public": {
+                  "type": "bool",
+                  "description": "Determines if a policy is public or private",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "policy_mrn": {
+                  "type": "string",
+                  "description": "Unique policy Mondoo Resource Name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "policy_name": {
+                  "type": "string",
+                  "description": "Policy name",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp of policy update",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Version",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of policies",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "space_id": {
+            "type": "string",
+            "description": "Space ID",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "space_mrn": {
+            "type": "string",
+            "description": "Space MRN",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Data source for policies and querypacks",
+        "description_kind": "markdown"
+      }
+    },
+    "mondoo_space": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "annotations": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Annotations for the space as key-value pairs.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Space ID",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "mrn": {
+            "type": "string",
+            "description": "Space MRN",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Space name",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Space data source",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

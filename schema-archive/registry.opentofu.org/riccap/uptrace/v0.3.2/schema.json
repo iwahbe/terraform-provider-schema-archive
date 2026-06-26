@@ -1,0 +1,720 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "The Uptrace API endpoint. May also be provided via UPTRACE_ENDPOINT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "project_id": {
+          "type": "number",
+          "description": "The default project ID for Uptrace operations. May also be provided via UPTRACE_PROJECT_ID environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "The authentication token for Uptrace API. May also be provided via UPTRACE_TOKEN environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Interact with Uptrace API to manage monitors and dashboards.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "uptrace_dashboard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "string",
+            "description": "Dashboard creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Dashboard identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Dashboard name (extracted from YAML or API response).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pinned": {
+            "type": "bool",
+            "description": "Whether the dashboard is pinned.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Dashboard last update timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "yaml": {
+            "type": "string",
+            "description": "Dashboard YAML definition. Supports all dashboard features including grid layout, charts, tables, heatmaps, and gauges.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages an Uptrace dashboard using YAML definition.",
+        "description_kind": "plain"
+      }
+    },
+    "uptrace_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of notification channel IDs.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Monitor creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Monitor identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Monitor name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "notify_everyone_by_email": {
+            "type": "bool",
+            "description": "Whether to notify all project members by email.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "params": {
+            "nested_type": {
+              "attributes": {
+                "check_num_point": {
+                  "type": "number",
+                  "description": "Number of consecutive points that must breach threshold.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "column": {
+                  "type": "string",
+                  "description": "Column name to evaluate (metric monitors only).",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "grouping_interval": {
+                  "type": "number",
+                  "description": "Grouping interval in milliseconds.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "max_allowed_value": {
+                  "type": "number",
+                  "description": "Maximum allowed value for the metric.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "metrics": {
+                  "nested_type": {
+                    "attributes": {
+                      "alias": {
+                        "type": "string",
+                        "description": "Optional alias for the metric.",
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Metric name.",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of metrics to monitor.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "min_allowed_value": {
+                  "type": "number",
+                  "description": "Minimum allowed value for the metric.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "nulls_mode": {
+                  "type": "string",
+                  "description": "How to handle null values: 'allow', 'forbid', or 'convert'.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "query": {
+                  "type": "string",
+                  "description": "UQL query for metric evaluation or error filtering. Note: The Uptrace cloud API normalizes queries to canonical form, so the stored value may differ from the input.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "time_offset": {
+                  "type": "number",
+                  "description": "Time offset in milliseconds.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Monitor parameters (metric or error specific).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "repeat_interval": {
+            "nested_type": {
+              "attributes": {
+                "interval": {
+                  "type": "number",
+                  "description": "Custom interval in seconds (only for custom strategy, minimum 60).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "strategy": {
+                  "type": "string",
+                  "description": "Repeat interval strategy. Must be 'default' or 'custom'.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Repeat interval configuration.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Current monitor state (open, firing, paused).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of team IDs to notify.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "trend_agg_func": {
+            "type": "string",
+            "description": "Trend aggregation function for monitor evaluation. Required for Uptrace cloud API, optional for self-hosted v2.0.2 and earlier. Valid values: avg, sum, min, max, p50, p90, p95, p99.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Monitor type. Must be 'metric' or 'error'.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Monitor last update timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages an Uptrace monitor for metrics or errors.",
+        "description_kind": "plain"
+      }
+    },
+    "uptrace_notification_channel": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "condition": {
+            "type": "string",
+            "description": "Optional condition expression to filter notifications.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Channel creation timestamp (computed).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Notification channel identifier.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "params": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Channel-specific configuration parameters. Structure varies by channel type.",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "priority": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Alert priority levels. Required for Uptrace cloud API. Valid values discovered through testing. Leave empty for self-hosted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Channel delivery status (computed).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Channel type. Supported values: slack, webhook, telegram, mattermost.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Channel last update timestamp (computed).",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages an Uptrace notification channel for alert notifications.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "uptrace_monitor": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "channel_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of notification channel IDs.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Monitor creation timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Monitor identifier.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Monitor name.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "notify_everyone_by_email": {
+            "type": "bool",
+            "description": "Whether to notify all project members by email.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "params": {
+            "nested_type": {
+              "attributes": {
+                "check_num_point": {
+                  "type": "number",
+                  "description": "Number of consecutive points that must breach threshold.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "column": {
+                  "type": "string",
+                  "description": "Column name to evaluate (metric monitors only).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "grouping_interval": {
+                  "type": "number",
+                  "description": "Grouping interval in milliseconds.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_allowed_value": {
+                  "type": "number",
+                  "description": "Maximum allowed value for the metric.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metrics": {
+                  "nested_type": {
+                    "attributes": {
+                      "alias": {
+                        "type": "string",
+                        "description": "Optional alias for the metric.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Metric name.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of metrics to monitor.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_allowed_value": {
+                  "type": "number",
+                  "description": "Minimum allowed value for the metric.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "nulls_mode": {
+                  "type": "string",
+                  "description": "How to handle null values: allow, forbid, or convert.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "query": {
+                  "type": "string",
+                  "description": "UQL query for metric evaluation or error filtering.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "time_offset": {
+                  "type": "number",
+                  "description": "Time offset in milliseconds.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Monitor parameters (metric or error specific).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "repeat_interval": {
+            "nested_type": {
+              "attributes": {
+                "interval": {
+                  "type": "number",
+                  "description": "Custom interval in seconds (minimum 60).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "strategy": {
+                  "type": "string",
+                  "description": "Repeat interval strategy (default or custom).",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Repeat interval configuration.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Current monitor state (open, firing, paused).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "team_ids": {
+            "type": [
+              "list",
+              "number"
+            ],
+            "description": "List of team IDs to notify.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "trend_agg_func": {
+            "type": "string",
+            "description": "Trend aggregation function for monitor evaluation. Required for Uptrace cloud API, optional for self-hosted v2.0.2 and earlier. Valid values: avg, sum, min, max, p50, p90, p95, p99.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Monitor type (metric or error).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Monitor last update timestamp.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Fetches an existing Uptrace monitor by ID.",
+        "description_kind": "plain"
+      }
+    },
+    "uptrace_monitors": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "monitors": {
+            "nested_type": {
+              "attributes": {
+                "channel_ids": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "List of notification channel IDs.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Monitor creation timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Monitor identifier.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Monitor name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "notify_everyone_by_email": {
+                  "type": "bool",
+                  "description": "Whether to notify all project members by email.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "params": {
+                  "nested_type": {
+                    "attributes": {
+                      "check_num_point": {
+                        "type": "number",
+                        "description": "Number of consecutive points that must breach threshold.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "column": {
+                        "type": "string",
+                        "description": "Column name to evaluate (metric monitors only).",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "grouping_interval": {
+                        "type": "number",
+                        "description": "Grouping interval in milliseconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "max_allowed_value": {
+                        "type": "number",
+                        "description": "Maximum allowed value for the metric.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "metrics": {
+                        "nested_type": {
+                          "attributes": {
+                            "alias": {
+                              "type": "string",
+                              "description": "Optional alias for the metric.",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Metric name.",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description": "List of metrics to monitor.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "min_allowed_value": {
+                        "type": "number",
+                        "description": "Minimum allowed value for the metric.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "nulls_mode": {
+                        "type": "string",
+                        "description": "How to handle null values: allow, forbid, or convert.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "query": {
+                        "type": "string",
+                        "description": "UQL query for metric evaluation or error filtering.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "time_offset": {
+                        "type": "number",
+                        "description": "Time offset in milliseconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Monitor parameters (metric or error specific).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "repeat_interval": {
+                  "nested_type": {
+                    "attributes": {
+                      "interval": {
+                        "type": "number",
+                        "description": "Custom interval in seconds.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "strategy": {
+                        "type": "string",
+                        "description": "Repeat interval strategy (default or custom).",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Repeat interval configuration.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "state": {
+                  "type": "string",
+                  "description": "Current monitor state (open, firing, paused).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "team_ids": {
+                  "type": [
+                    "list",
+                    "number"
+                  ],
+                  "description": "List of team IDs to notify.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "trend_agg_func": {
+                  "type": "string",
+                  "description": "Trend aggregation function for monitor evaluation. Required for Uptrace cloud API, optional for self-hosted v2.0.2 and earlier. Valid values: avg, sum, min, max, p50, p90, p95, p99.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Monitor type (metric or error).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Monitor last update timestamp.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of monitors matching the filter criteria.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Filter monitors by name (case-insensitive substring match).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Filter monitors by state (open, firing, paused).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Filter monitors by type (metric or error).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Fetches a list of Uptrace monitors with optional filtering.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
