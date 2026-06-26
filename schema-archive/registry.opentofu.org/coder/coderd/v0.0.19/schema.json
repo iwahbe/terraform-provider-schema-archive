@@ -1,0 +1,1277 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "default_organization_id": {
+          "type": "string",
+          "description": "Default organization ID to use when creating resources. Defaults to the first organization the token has access to.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "headers": {
+          "type": [
+            "map",
+            "string"
+          ],
+          "description": "Additional HTTP headers to include in all API requests. Provide as a map of header names to values. For example, set `X-Coder-Bypass-Ratelimit` to `\"true\"` to bypass rate limits (requires Owner role). Can also be specified with the `CODER_HEADER` environment variable as comma-separated `key=value` pairs (CSV format, matching the coder CLI).",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "API token for communicating with the deployment. Most resource types require elevated permissions. Defaults to `$CODER_SESSION_TOKEN`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "url": {
+          "type": "string",
+          "description": "URL to the Coder deployment. Defaults to `$CODER_URL`.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "\nThe coderd provider can be used to manage resources on a Coder deployment. The provider exposes resources and data sources for users, groups, templates, and workspace proxies.\n\n~> **Warning**\nThis provider is only compatible with Coder version [2.10.1](https://github.com/coder/coder/releases/tag/v2.10.1) and later.\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "coderd_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "The URL of the group's avatar.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The display name of the group. Defaults to the group name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Group ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Members of the group, by ID. If `null`, members will not be added or removed by Terraform. To have a group resource with unmanaged members, but be able to read the members in Terraform, use `data.coderd_group`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The unique name of the group.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The organization ID that the group belongs to. Defaults to the provider default organization ID.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "quota_allowance": {
+            "type": "number",
+            "description": "The number of quota credits to allocate to each user in the group.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A group on the Coder deployment.\n\nCreating groups requires an Enterprise license.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_license": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "expires_at": {
+            "type": "number",
+            "description": "Unix timestamp of when the license expires.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Integer ID of the license.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "license": {
+            "type": "string",
+            "description": "A license key for Coder.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          }
+        },
+        "description": "A license for a Coder deployment.\n\nIt's recommended to set [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) on license resources. Without setting this, Terraform will remove the old license before adding the updated license. This will result in a temporary disruption to your users; during which they may be unable to use features that require a license.\n\nTerraform does not guarantee this resource will be created before other resources or attributes that require a licensed deployment. The `depends_on` meta-argument is instead recommended.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the organization. Defaults to name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Organization ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the organization.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "org_sync_idp_groups": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Claims from the IdP provider that will give users access to this organization.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "workspace_sharing": {
+            "type": "string",
+            "description": "Workspace sharing setting for the organization. Valid values are `everyone` and `none`. Requires a Coder Deployment running v2.32.0 or later.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "group_sync": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "auto_create_missing": {
+                  "type": "bool",
+                  "description": "Controls whether groups will be created if they are missing.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "field": {
+                  "type": "string",
+                  "description": "The claim field that specifies what groups a user should be in.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mapping": {
+                  "type": [
+                    "map",
+                    [
+                      "list",
+                      "string"
+                    ]
+                  ],
+                  "description": "A map from OIDC group name to Coder group ID.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "regex_filter": {
+                  "type": "string",
+                  "description": "A regular expression that will be used to filter the groups returned by the OIDC provider. Any group not matched will be ignored.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Group sync settings to sync groups from an IdP.\n\n~> **Deprecated** This block is deprecated. Use the `coderd_organization_group_sync` resource instead.",
+              "description_kind": "markdown",
+              "deprecated": true
+            }
+          },
+          "role_sync": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "field": {
+                  "type": "string",
+                  "description": "The claim field that specifies what organization roles a user should be given.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "mapping": {
+                  "type": [
+                    "map",
+                    [
+                      "list",
+                      "string"
+                    ]
+                  ],
+                  "description": "A map from OIDC group name to Coder organization role.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "description": "Role sync settings to sync organization roles from an IdP.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "An organization on the Coder deployment.\n\n~> **Warning**\nThis resource is only compatible with Coder version [2.16.0](https://github.com/coder/coder/releases/tag/v2.16.0) and later.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_organization_group_sync": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_create_missing": {
+            "type": "bool",
+            "description": "Controls whether groups will be created if they are missing. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "field": {
+            "type": "string",
+            "description": "The claim field that specifies what groups a user should be in.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mapping": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "A map from OIDC group name to Coder group ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The ID of the organization to configure group sync for.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "regex_filter": {
+            "type": "string",
+            "description": "A regular expression that will be used to filter the groups returned by the OIDC provider. Any group not matched will be ignored.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Group sync settings for an organization on the Coder deployment. \nMultiple instances of this resource for a single organization will conflict.\n\n~> **Warning**\nThis resource is only compatible with Coder version [2.16.0](https://github.com/coder/coder/releases/tag/v2.16.0) and later.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_organization_sync_settings": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "assign_default": {
+            "type": "bool",
+            "description": "When true, every user will be added to the default organization, regardless of claims.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "field": {
+            "type": "string",
+            "description": "The claim field that specifies what organizations a user should be in.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "mapping": {
+            "type": [
+              "map",
+              [
+                "list",
+                "string"
+              ]
+            ],
+            "description": "A map from OIDC group name to Coder organization ID.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "IdP sync settings for organizations.\n\nThis resource can only be created once. Attempts to create multiple will fail.\n\n~> **Warning**\nThis resource is only compatible with Coder version [2.19.0](https://github.com/coder/coder/releases/tag/v2.19.0) and later.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_provisioner_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "key": {
+            "type": "string",
+            "description": "The acquired provisioner key",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the key.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The organization that provisioners connected with this key will be connected to.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "The tags that provisioners connected with this key will accept jobs for.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "A provisioner key for a Coder deployment.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acl": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "role": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "users": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "role": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "(Enterprise) Access control list for the template. If null, ACL policies will not be added, removed, or read by Terraform.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "activity_bump_ms": {
+            "type": "number",
+            "description": "The activity bump duration for all workspaces created from this template, in milliseconds. Defaults to one hour.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "allow_user_auto_start": {
+            "type": "bool",
+            "description": "(Enterprise) Whether users can auto-start workspaces created from this template. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "allow_user_auto_stop": {
+            "type": "bool",
+            "description": "(Enterprise) Whether users can auto-stop workspaces created from this template. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "allow_user_cancel_workspace_jobs": {
+            "type": "bool",
+            "description": "Whether users can cancel in-progress workspace jobs using this template. Defaults to true.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_start_permitted_days_of_week": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "(Enterprise) List of days of the week in which autostart is allowed to happen, for all workspaces created from this template. Defaults to all days. If no days are specified, autostart is not allowed.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "auto_stop_requirement": {
+            "nested_type": {
+              "attributes": {
+                "days_of_week": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "List of days of the week on which restarts are required. Restarts happen within the user's quiet hours (in their configured timezone). If no days are specified, restarts are not required.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "weeks": {
+                  "type": "number",
+                  "description": "Weeks is the number of weeks between required restarts. Weeks are synced across all workspaces (and Coder deployments) using modulo math on a hardcoded epoch week of January 2nd, 2023 (the first Monday of 2023). Values of 0 or 1 indicate weekly restarts. Values of 2 indicate fortnightly restarts, etc.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "(Enterprise) The auto-stop requirement for all workspaces created from this template.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "cors_behavior": {
+            "type": "string",
+            "description": "The CORS behavior for workspace apps in this template. Valid values are `simple` (default CORS middleware) or `passthru` (bypass CORS middleware). Defaults to `simple`. Requires a Coder deployment running v2.26.0 or later.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "default_ttl_ms": {
+            "type": "number",
+            "description": "The default time-to-live for all workspaces created from this template, in milliseconds.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "deprecation_message": {
+            "type": "string",
+            "description": "If set, the template will be marked as deprecated with the provided message and users will be blocked from creating new workspaces from it. Does nothing if set when the resource is created.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the template.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The display name of the template. Defaults to the template name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "failure_ttl_ms": {
+            "type": "number",
+            "description": "(Enterprise) The max lifetime before Coder stops all resources for failed workspaces created from this template, in milliseconds.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Relative path or external URL that specifies an icon to be displayed in the dashboard.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "max_port_share_level": {
+            "type": "string",
+            "description": "(Enterprise) The maximum port share level for workspaces created from this template. Defaults to `owner` on an Enterprise deployment, or `public` otherwise.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the template.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The ID of the organization. Defaults to the provider's default organization",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "require_active_version": {
+            "type": "bool",
+            "description": "(Enterprise) Whether workspaces must be created from the active version of this template. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "time_til_dormant_autodelete_ms": {
+            "type": "number",
+            "description": "(Enterprise) The max lifetime before Coder permanently deletes dormant workspaces created from this template.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "time_til_dormant_ms": {
+            "type": "number",
+            "description": "(Enterprise) The max lifetime before Coder locks inactive workspaces created from this template, in milliseconds.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "use_classic_parameter_flow": {
+            "type": "bool",
+            "description": "If true, the classic parameter flow will be used when creating workspaces from this template. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "versions": {
+            "nested_type": {
+              "attributes": {
+                "active": {
+                  "type": "bool",
+                  "description": "Whether this version is the active version of the template. Only one version can be active at a time.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "directory": {
+                  "type": "string",
+                  "description": "A path to the directory to create the template version from. Changes in the directory contents will trigger the creation of a new template version.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "directory_hash": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "message": {
+                  "type": "string",
+                  "description": "A message describing the changes in this version of the template. Messages longer than 72 characters will be truncated.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the template version. Automatically generated if not provided. If provided, the name *must* change each time the directory contents, or the `tf_vars` attribute are updated.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "provisioner_tags": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description": "Provisioner tags for the template version.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tf_vars": {
+                  "nested_type": {
+                    "attributes": {
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      },
+                      "value": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "required": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description": "Terraform variables for the template version.",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A Coder template.\n\nLogs from building template versions can be optionally streamed from the provisioner by setting the `TF_LOG` environment variable to `INFO` or higher.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the user. Required unless `is_service_account` is `true`, in which case it must be omitted (service accounts have no email).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "User ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "is_service_account": {
+            "type": "bool",
+            "description": "Whether the user is a service account. Service accounts are admin-managed accounts that cannot log in interactively: they have no password or email and use `login_type` `none`. Unlike a regular `login_type = none` user, a service account does not consume a licensed user seat. Changing this attribute forces replacement.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "login_type": {
+            "type": "string",
+            "description": "Type of login for the user. Valid types are `none`, `password`, `github`, and `oidc`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the user. Defaults to username.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for the user. Required when `login_type` is `password`. Passwords are saved into the state as plain text and should only be used for testing purposes.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Roles assigned to the user. Valid roles are `owner`, `template-admin`, `user-admin`, and `auditor`. If `null`, roles will not be managed by Terraform. This attribute must be null if the user is an OIDC user and role sync is configured",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "suspended": {
+            "type": "bool",
+            "description": "Whether the user is suspended.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the user.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A user on the Coder deployment.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_workspace_proxy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the workspace proxy.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Relative path or external URL that specifies an icon to be displayed in the dashboard.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Workspace Proxy ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace proxy.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "session_token": {
+            "type": "string",
+            "description": "Session token for the workspace proxy.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "A Workspace Proxy for the Coder deployment.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "coderd_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the group to retrieve. This field will be populated if a name and organization ID is supplied.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "members": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "number",
+                  "description": "Unix timestamp of when the member was created.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "email": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_seen_at": {
+                  "type": "number",
+                  "description": "Unix timestamp of when the member was last seen.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "login_type": {
+                  "type": "string",
+                  "description": "The login type of the member. Can be `oidc`, `token`, `password`, `github` or `none`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The status of the member. Can be `active`, `dormant` or `suspended`.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Members of the group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the group to retrieve. This field will be populated if an ID is supplied.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The organization ID that the group belongs to. This field will be populated if an ID is supplied. Defaults to the provider default organization ID.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "quota_allowance": {
+            "type": "number",
+            "description": "The number of quota credits to allocate to each user in the group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the group. Either `oidc` or `user`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An existing group on the Coder deployment.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_organization": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created_at": {
+            "type": "number",
+            "description": "Unix timestamp when the organization was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the organization to retrieve. This field will be populated if the organization is found by name, or if the default organization is requested.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "is_default": {
+            "type": "bool",
+            "description": "Whether the organization is the default organization of the deployment. This field will be populated if the organization is found by ID or name.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "members": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Members of the organization, by ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the organization to retrieve. This field will be populated if the organization is found by ID, or if the default organization is requested.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "number",
+            "description": "Unix timestamp when the organization was last updated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "workspace_sharing": {
+            "type": "string",
+            "description": "Workspace sharing setting for the organization. Valid values are `everyone` and `none`.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An existing organization on the Coder deployment.\n\n~> **Warning**\nThis data source is only compatible with Coder version [2.13.0](https://github.com/coder/coder/releases/tag/v2.13.0) and later.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_template": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "acl": {
+            "nested_type": {
+              "attributes": {
+                "groups": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "role": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "users": {
+                  "nested_type": {
+                    "attributes": {
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "role": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "set"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "(Enterprise) Access control list for the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "active_user_count": {
+            "type": "number",
+            "description": "Number of active users using the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "active_version_id": {
+            "type": "string",
+            "description": "ID of the active version of the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "activity_bump_ms": {
+            "type": "number",
+            "description": "Duration to bump the deadline of a workspace when it receives activity.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "allow_user_autostart": {
+            "type": "bool",
+            "description": "Whether users can autostart workspaces created from the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "allow_user_autostop": {
+            "type": "bool",
+            "description": "Whether users can customize autostop behavior for workspaces created from the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "allow_user_cancel_workspace_jobs": {
+            "type": "bool",
+            "description": "Whether users can cancel jobs in workspaces created from the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auto_start_permitted_days_of_week": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "List of days of the week in which autostart is allowed to happen, for all workspaces created from this template. Defaults to all days. If no days are specified, autostart is not allowed.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "auto_stop_requirement": {
+            "nested_type": {
+              "attributes": {
+                "days_of_week": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description": "List of days of the week on which restarts are required. Restarts happen within the user's quiet hours (in their configured timezone). If no days are specified, restarts are not required.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "weeks": {
+                  "type": "number",
+                  "description": "Weeks is the number of weeks between required restarts. Weeks are synced across all workspaces (and Coder deployments) using modulo math on a hardcoded epoch week of January 2nd, 2023 (the first Monday of 2023). Values of 0 or 1 indicate weekly restarts. Values of 2 indicate fortnightly restarts, etc.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The auto-stop requirement for all workspaces created from this template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cors_behavior": {
+            "type": "string",
+            "description": "The CORS behavior for workspace apps in this template. Requires a Coder deployment running v2.26.0 or later.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "number",
+            "description": "Unix timestamp of when the template was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_by_user_id": {
+            "type": "string",
+            "description": "ID of the user who created the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "default_ttl_ms": {
+            "type": "number",
+            "description": "Default time-to-live for workspaces created from the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deprecated": {
+            "type": "bool",
+            "description": "Whether the template is deprecated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "deprecation_message": {
+            "type": "string",
+            "description": "Message to display when the template is deprecated.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Display name of the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "failure_ttl_ms": {
+            "type": "number",
+            "description": "Automatic cleanup TTL for failed workspace builds.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "URL of the template's icon.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the template to retrieve. This field will be populated if a template name is supplied.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "max_port_share_level": {
+            "type": "string",
+            "description": "The maximum port share level for workspaces created from the template.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the template to retrieve. This field will be populated if an ID is supplied.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "ID of the organization the template is associated with. This field will be populated if an ID is supplied. Defaults to the provider default organization ID.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "require_active_version": {
+            "type": "bool",
+            "description": "Whether workspaces created from the template must be up-to-date on the latest active version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "time_til_dormant_autodelete_ms": {
+            "type": "number",
+            "description": "Duration of inactivity after the workspace becomes dormant before a workspace is automatically deleted.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "time_til_dormant_ms": {
+            "type": "number",
+            "description": "Duration of inactivity before a workspace is considered dormant.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "number",
+            "description": "Unix timestamp of when the template was last updated.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "An existing template on the Coder deployment.",
+        "description_kind": "markdown"
+      }
+    },
+    "coderd_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "avatar_url": {
+            "type": "string",
+            "description": "URL of the user's avatar.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "created_at": {
+            "type": "number",
+            "description": "Unix timestamp of when the user was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the user to retrieve. This field will be populated if a username is supplied.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "is_service_account": {
+            "type": "bool",
+            "description": "Whether the user is a service account: an admin-managed account that cannot log in interactively and does not consume a licensed user seat.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "last_seen_at": {
+            "type": "number",
+            "description": "Unix timestamp of when the user was last seen.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "login_type": {
+            "type": "string",
+            "description": "Type of login for the user. Valid types are `none`, `password', `github`, and `oidc`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "IDs of organizations the user is associated with.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "roles": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Roles assigned to the user. Valid roles are `owner`, `template-admin`, `user-admin`, and `auditor`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "suspended": {
+            "type": "bool",
+            "description": "Whether the user is suspended.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "The username of the user to retrieve. This field will be populated if an ID is supplied.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "An existing user on the Coder deployment",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

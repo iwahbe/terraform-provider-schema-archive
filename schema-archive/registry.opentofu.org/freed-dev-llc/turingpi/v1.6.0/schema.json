@@ -1,0 +1,1325 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "endpoint": {
+          "type": "string",
+          "description": "The BMC API endpoint URL (e.g., https://turingpi.local or https://192.168.1.100)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "insecure": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification (useful for self-signed or expired certificates)",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "password": {
+          "type": "string",
+          "description": "The password for BMC authentication",
+          "description_kind": "plain",
+          "required": true,
+          "sensitive": true
+        },
+        "username": {
+          "type": "string",
+          "description": "The username for BMC authentication",
+          "description_kind": "plain",
+          "required": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "turingpi_bmc_firmware": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bmc_local": {
+            "type": "bool",
+            "description": "If true, the firmware_file path refers to a file on the BMC's local filesystem. If false (default), the file will be uploaded from the Terraform host.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "firmware_file": {
+            "type": "string",
+            "description": "Path to the BMC firmware file. Can be a local path on the Terraform host (will be uploaded) or a path on the BMC filesystem (use with bmc_local=true).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_upgrade": {
+            "type": "string",
+            "description": "Timestamp of the last firmware upgrade operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "previous_version": {
+            "type": "string",
+            "description": "The firmware version before the upgrade.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Timeout in seconds for the firmware upgrade operation (default: 300).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger a firmware upgrade. Use this to force an upgrade based on version changes.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Upgrades the BMC firmware on the Turing Pi. The BMC will reboot after a successful firmware update.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_bmc_reboot": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_reboot": {
+            "type": "string",
+            "description": "Timestamp of the last BMC reboot operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ready_timeout": {
+            "type": "number",
+            "description": "Timeout in seconds to wait for BMC to become ready after reboot (default: 120).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger a BMC reboot.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wait_for_ready": {
+            "type": "bool",
+            "description": "Wait for the BMC to become available again after reboot (default: true).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Triggers a reboot of the Turing Pi BMC (Baseboard Management Controller). The BMC will be temporarily unavailable during the reboot.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_bmc_reload": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_reload": {
+            "type": "string",
+            "description": "Timestamp of the last daemon reload operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ready_timeout": {
+            "type": "number",
+            "description": "Timeout in seconds to wait for daemon to become ready after reload (default: 30).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger a daemon reload.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "wait_for_ready": {
+            "type": "bool",
+            "description": "Wait for the BMC daemon to become available again after reload (default: true).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Restarts the BMC system management daemon (bmcd). This is a softer restart than a full BMC reboot.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_clear_usb_boot": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_cleared": {
+            "type": "string",
+            "description": "Timestamp when USB boot status was last cleared.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "The node number (1-4) to clear USB boot status for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will re-clear USB boot status.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Clears USB boot status for a specified node. This resets the USB boot mode configuration that was previously enabled.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_flash": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "firmware_file": {
+            "type": "string",
+            "description": "Path to the firmware file to flash, streamed to the BMC. **Deprecated:** the BMC reports completion when the upload finishes, not when the eMMC write does (issue #63). Prefer `firmware_url`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "firmware_url": {
+            "type": "string",
+            "description": "HTTP(S) URL the BMC will fetch the firmware from directly. The BMC reports completion only after the full download + decompress + eMMC write, so this is the only reliable code path on current BMC firmware.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to flash firmware (1-4)",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Flashes firmware to a Turing Pi compute node. The node must be powered off before flashing. Exactly one of `firmware_file` or `firmware_url` must be set; `firmware_url` is recommended (see #63 \u2014 streaming upload via `firmware_file` reports completion before the eMMC write actually finishes).",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_k3s_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_endpoint": {
+            "type": "string",
+            "description": "Kubernetes API endpoint URL",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_status": {
+            "type": "string",
+            "description": "Current cluster status (bootstrapping, ready, degraded)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cluster_token": {
+            "type": "string",
+            "description": "Cluster token for node authentication. Auto-generated if not provided.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "install_timeout": {
+            "type": "number",
+            "description": "Timeout in seconds for K3s installation (default 10 minutes)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "k3s_version": {
+            "type": "string",
+            "description": "K3s version to install (e.g., v1.31.4+k3s1). Empty for latest stable.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "kubeconfig": {
+            "type": "string",
+            "description": "Kubeconfig content for accessing the cluster",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "kubeconfig_path": {
+            "type": "string",
+            "description": "Path to write the kubeconfig file",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the K3s cluster",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node_token": {
+            "type": "string",
+            "description": "Node token for joining additional nodes",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "pod_cidr": {
+            "type": "string",
+            "description": "CIDR for pod network",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "service_cidr": {
+            "type": "string",
+            "description": "CIDR for service network",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "control_plane": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "IP address or hostname of the node",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "ssh_key": {
+                  "type": "string",
+                  "description": "SSH private key content for authentication",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "ssh_password": {
+                  "type": "string",
+                  "description": "SSH password for authentication (ssh_key is preferred)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "ssh_port": {
+                  "type": "number",
+                  "description": "SSH port number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ssh_user": {
+                  "type": "string",
+                  "description": "SSH username for connecting to the node",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Control plane node configuration",
+              "description_kind": "plain"
+            },
+            "min_items": 1,
+            "max_items": 1
+          },
+          "ingress": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable NGINX Ingress controller deployment",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "LoadBalancer IP for ingress (uses first MetalLB IP if not set)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "NGINX Ingress chart version (empty for latest)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "NGINX Ingress controller configuration",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "metallb": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable MetalLB deployment",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip_range": {
+                  "type": "string",
+                  "description": "IP address range for MetalLB (e.g., 10.10.88.80-10.10.88.89)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "MetalLB chart version (empty for latest)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "MetalLB load balancer configuration",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "worker": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "IP address or hostname of the node",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "ssh_key": {
+                  "type": "string",
+                  "description": "SSH private key content for authentication",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "ssh_password": {
+                  "type": "string",
+                  "description": "SSH password for authentication (ssh_key is preferred)",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "sensitive": true
+                },
+                "ssh_port": {
+                  "type": "number",
+                  "description": "SSH port number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ssh_user": {
+                  "type": "string",
+                  "description": "SSH username for connecting to the node",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description": "Worker node configurations",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Deploys a K3s Kubernetes cluster on pre-flashed Turing Pi nodes",
+        "description_kind": "plain",
+        "deprecated": true
+      }
+    },
+    "turingpi_network_reset": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_reset": {
+            "type": "string",
+            "description": "Timestamp of the last network reset operation.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger a network reset. Use this to force a reset based on other resource changes.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Triggers a reset of the Turing Pi network switch. The switch will be reset when this resource is created or when the triggers change.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_node": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "boot_check": {
+            "type": "bool",
+            "description": "Check if the node successfully boots by monitoring UART output",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "boot_check_pattern": {
+            "type": "string",
+            "description": "Pattern to search for in UART output to confirm successful boot (e.g., 'login:' for standard Linux, 'machine is running and ready' for Talos)",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "firmware_file": {
+            "type": "string",
+            "description": "Path to a local firmware image streamed to the node. Deprecated: prefer firmware_url. Mutually exclusive with firmware_url.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "firmware_url": {
+            "type": "string",
+            "description": "HTTP(S) URL the BMC pulls the firmware image from. This is the reliable flash path: the BMC reports completion only after the eMMC write finishes. Mutually exclusive with firmware_file.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "login_prompt_timeout": {
+            "type": "number",
+            "description": "Timeout in seconds to wait for boot check pattern via UART",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to manage (1-4)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "power_state": {
+            "type": "string",
+            "description": "Desired power state of the node (on/off)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_node_to_msd": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_triggered": {
+            "type": "string",
+            "description": "Timestamp when MSD mode was last triggered.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "The node number (1-4) to reboot into MSD mode.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger a reboot into MSD mode.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Reboots a node into USB Mass Storage Device (MSD) mode. This allows the node's storage to be accessed as a USB device for imaging or file transfer.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_power": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "current_state": {
+            "type": "bool",
+            "description": "Current power state as reported by BMC (true = powered on)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to control power (1-4)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "state": {
+            "type": "string",
+            "description": "Power state: 'on', 'off', or 'reset'. Reset triggers a reboot and the state returns to 'on' after.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Manages power state of a Turing Pi compute node, including power on, power off, and reset operations.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_talos_cluster": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allow_scheduling_on_control_plane": {
+            "type": "bool",
+            "description": "Allow scheduling workloads on control plane nodes.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "api_endpoint": {
+            "type": "string",
+            "description": "Kubernetes API server endpoint.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "bootstrap_timeout": {
+            "type": "number",
+            "description": "Timeout in seconds for cluster bootstrap operations.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "cluster_endpoint": {
+            "type": "string",
+            "description": "Kubernetes API endpoint URL (e.g., https://10.10.88.73:6443).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cluster_status": {
+            "type": "string",
+            "description": "Current status of the cluster (bootstrapping, ready, degraded).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "install_disk": {
+            "type": "string",
+            "description": "Install disk for Talos (default: /dev/mmcblk0 for eMMC).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "kubeconfig": {
+            "type": "string",
+            "description": "Kubeconfig content for accessing the cluster.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "kubeconfig_path": {
+            "type": "string",
+            "description": "Path to write the kubeconfig file.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "kubernetes_version": {
+            "type": "string",
+            "description": "Kubernetes version for reference.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Talos cluster.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "secrets_path": {
+            "type": "string",
+            "description": "Path to write the cluster secrets file (for backup).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "secrets_yaml": {
+            "type": "string",
+            "description": "Cluster secrets (PKI) in YAML format.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "talos_version": {
+            "type": "string",
+            "description": "Talos version for reference (not used in provisioning).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "talosconfig": {
+            "type": "string",
+            "description": "Talosconfig content for talosctl CLI.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "talosconfig_path": {
+            "type": "string",
+            "description": "Path to write the talosconfig file.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "block_types": {
+          "control_plane": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "IP address or hostname of the node.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "Hostname to assign to the node (defaults to turing-cp-N or turing-w-N). Must be a valid lowercase RFC-1123 hostname label, or empty to use the default.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Control plane node configuration.",
+              "description_kind": "plain"
+            },
+            "min_items": 1
+          },
+          "ingress": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable NGINX Ingress controller deployment",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip": {
+                  "type": "string",
+                  "description": "LoadBalancer IP for ingress (uses first MetalLB IP if not set)",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "NGINX Ingress chart version (empty for latest)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "NGINX Ingress controller configuration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "metallb": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable MetalLB deployment",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "ip_range": {
+                  "type": "string",
+                  "description": "IP address range for MetalLB (e.g., 10.10.88.80-10.10.88.89)",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "MetalLB chart version (empty for latest)",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "MetalLB load balancer configuration.",
+              "description_kind": "plain"
+            },
+            "max_items": 1
+          },
+          "worker": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "host": {
+                  "type": "string",
+                  "description": "IP address or hostname of the node.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "hostname": {
+                  "type": "string",
+                  "description": "Hostname to assign to the node (defaults to turing-cp-N or turing-w-N). Must be a valid lowercase RFC-1123 hostname label, or empty to use the default.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description": "Worker node configurations.",
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Deploys a Talos Kubernetes cluster on pre-flashed Turing Pi nodes using talosctl.",
+        "description_kind": "plain",
+        "deprecated": true
+      }
+    },
+    "turingpi_uart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "command": {
+            "type": "string",
+            "description": "The command or data to write to the UART. Will be URL-encoded automatically.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_sent": {
+            "type": "string",
+            "description": "Timestamp of when the command was last sent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to write UART data to (1-4)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will trigger resending the command.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Writes data to the UART of a Turing Pi compute node. Use this to send commands or data to a node's serial console.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_usb": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "current_mode": {
+            "type": "string",
+            "description": "Current USB mode as reported by BMC",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "current_node": {
+            "type": "number",
+            "description": "Current node that USB is routed to",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "current_route": {
+            "type": "string",
+            "description": "Current USB routing destination",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "USB mode: 'host' (node acts as USB host) or 'device' (node acts as USB device)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to route USB to (1-4)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "route": {
+            "type": "string",
+            "description": "USB routing destination: 'usb-a' (external USB-A connector) or 'bmc' (route to BMC chip)",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Manages USB routing configuration on the Turing Pi BMC. The USB bus can only be routed to one node at a time.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_usb_boot": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_enabled": {
+            "type": "string",
+            "description": "Timestamp when USB boot mode was last enabled.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "The node number (1-4) to enable USB boot mode for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "triggers": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of values that, when changed, will re-enable USB boot mode.",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Enables USB boot mode for a specified node. For Raspberry Pi CM4s, this pulls pin 93 (nRPIBOOT) low to enable USB boot.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "turingpi_about": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_version": {
+            "type": "string",
+            "description": "BMC API version (e.g., '1.0.0').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "build_time": {
+            "type": "string",
+            "description": "Timestamp when the BMC firmware was built.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "buildroot_version": {
+            "type": "string",
+            "description": "Buildroot version used to build the BMC firmware.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "daemon_version": {
+            "type": "string",
+            "description": "BMC daemon version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "firmware_version": {
+            "type": "string",
+            "description": "BMC firmware version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieves detailed version and build information about the Turing Pi BMC daemon, including API version, firmware version, buildroot version, and build timestamp.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_info": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "api_version": {
+            "type": "string",
+            "description": "BMC API version",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "build_time": {
+            "type": "string",
+            "description": "BMC build timestamp",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "buildroot_version": {
+            "type": "string",
+            "description": "Buildroot version",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "daemon_version": {
+            "type": "string",
+            "description": "BMC daemon version",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "firmware_version": {
+            "type": "string",
+            "description": "BMC firmware version",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "network_interfaces": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "device": "string",
+                  "ip": "string",
+                  "mac": "string"
+                }
+              ]
+            ],
+            "description": "List of network interfaces on the BMC",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes": {
+            "type": [
+              "map",
+              "bool"
+            ],
+            "description": "Power status of each node (node1-node4)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "storage_devices": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "free_bytes": "number",
+                  "name": "string",
+                  "total_bytes": "number",
+                  "used_bytes": "number"
+                }
+              ]
+            ],
+            "description": "List of storage devices",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about the Turing Pi BMC including version info, network configuration, storage metrics, and node power status.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_power": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node1": {
+            "type": "bool",
+            "description": "Power status of node 1 (true = powered on, false = powered off)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node2": {
+            "type": "bool",
+            "description": "Power status of node 2 (true = powered on, false = powered off)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node3": {
+            "type": "bool",
+            "description": "Power status of node 3 (true = powered on, false = powered off)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node4": {
+            "type": "bool",
+            "description": "Power status of node 4 (true = powered on, false = powered off)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nodes": {
+            "type": [
+              "map",
+              "bool"
+            ],
+            "description": "Power status of all nodes as a map (node1-node4 -> bool)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "powered_off_count": {
+            "type": "number",
+            "description": "Number of nodes currently powered off",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "powered_on_count": {
+            "type": "number",
+            "description": "Number of nodes currently powered on",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the current power status of all nodes on the Turing Pi BMC.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_sdcard": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "free_bytes": {
+            "type": "number",
+            "description": "Free space on the microSD card in bytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "free_gb": {
+            "type": "number",
+            "description": "Free space on the microSD card in gigabytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "total_bytes": {
+            "type": "number",
+            "description": "Total microSD card capacity in bytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total_gb": {
+            "type": "number",
+            "description": "Total microSD card capacity in gigabytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "used_bytes": {
+            "type": "number",
+            "description": "Used space on the microSD card in bytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "used_gb": {
+            "type": "number",
+            "description": "Used space on the microSD card in gigabytes.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "used_percent": {
+            "type": "number",
+            "description": "Percentage of microSD card space used.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves information about the microSD card in the Turing Pi BMC, including total capacity, used space, and free space.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_uart": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "encoding": {
+            "type": "string",
+            "description": "Character encoding for UART output. Valid values: utf8, utf16, utf16le, utf16be, utf32, utf32le, utf32be",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "has_output": {
+            "type": "bool",
+            "description": "Whether there was any output in the UART buffer.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID to read UART output from (1-4)",
+            "description_kind": "plain",
+            "required": true
+          },
+          "output": {
+            "type": "string",
+            "description": "The buffered UART output from the node. Reading this clears the buffer.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Reads buffered UART output from a Turing Pi compute node. Reading clears the UART buffer.",
+        "description_kind": "plain"
+      }
+    },
+    "turingpi_usb": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Current USB mode: 'host' (node acts as USB host) or 'device' (node acts as USB device)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "node": {
+            "type": "number",
+            "description": "Node ID that USB is currently routed to (1-4)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "route": {
+            "type": "string",
+            "description": "Current USB routing destination: 'usb-a' (external connector) or 'bmc' (BMC chip)",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves the current USB routing configuration from the Turing Pi BMC.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
