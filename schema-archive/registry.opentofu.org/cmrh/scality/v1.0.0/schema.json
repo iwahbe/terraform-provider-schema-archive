@@ -1,0 +1,1670 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_key": {
+          "type": "string",
+          "description": "Admin access key for IAM API authentication. Can also be set via SCALITY_ACCESS_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "console_endpoint": {
+          "type": "string",
+          "description": "Scality Console API endpoint (e.g., https://vault.example.com:8080). Can also be set via SCALITY_CONSOLE_ENDPOINT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "console_password": {
+          "type": "string",
+          "description": "Console API password for JWT authentication. Can also be set via SCALITY_CONSOLE_PASSWORD environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "console_username": {
+          "type": "string",
+          "description": "Console API username for JWT authentication. Can also be set via SCALITY_CONSOLE_USERNAME environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Scality IAM API endpoint (e.g., https://vault.example.com). Can also be set via SCALITY_ENDPOINT environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "insecure_skip_verify": {
+          "type": "bool",
+          "description": "Skip TLS certificate verification (useful for self-signed certificates). Can also be set via SCALITY_INSECURE_SKIP_VERIFY environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS region used for SigV4 request signing. Defaults to \"us-east-1\". Can also be set via SCALITY_REGION environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "secret_key": {
+          "type": "string",
+          "description": "Admin secret key for IAM API authentication. Can also be set via SCALITY_SECRET_KEY environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "Terraform provider for managing Scality accounts and resources. Supports both IAM-style API (AWS Signature V4) and Console API (JWT authentication).",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "scality_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key": {
+            "type": "string",
+            "description": "S3 API access key (generated automatically)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "Amazon Resource Name (ARN) of the account",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "canonical_id": {
+            "type": "string",
+            "description": "Canonical ID of the account",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "create_date": {
+            "type": "string",
+            "description": "Account creation date",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "custom_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom attributes for the account (key-value string pairs, max 10)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "email_address": {
+            "type": "string",
+            "description": "Email address for the account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "external_account_id": {
+            "type": "string",
+            "description": "External account ID for integration with other systems",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Account ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "quota_max": {
+            "type": "number",
+            "description": "Maximum amount of bytes storable by the account (0 = unlimited)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "S3 API secret key (generated automatically)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a Scality account with automatically generated S3 API credentials.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_account_access_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key": {
+            "type": "string",
+            "description": "S3 API access key (only available after creation)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account to create the key for",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account to create the key for",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "create_date": {
+            "type": "string",
+            "description": "Key creation timestamp",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Access key ID (same as access_key)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "S3 API secret key (only available after creation, cannot be retrieved later)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the access key",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an additional S3 API access key for a Scality account. Uses per-account credentials to create and manage root access keys.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "Name of the S3 bucket",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "object_lock_enabled": {
+            "type": "bool",
+            "description": "Enable Object Lock on the bucket. Can only be set at creation time.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Key-value tags for the bucket. Overwrites all existing tags when set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "versioning": {
+            "type": "bool",
+            "description": "Enable versioning on the bucket. Set to true to enable, false to suspend. Leave unset to not manage versioning.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages an S3 bucket within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket_encryption": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "Name of the S3 bucket",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "kms_master_key_id": {
+            "type": "string",
+            "description": "KMS master key ID to use for encryption (only for aws:kms)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "sse_algorithm": {
+            "type": "string",
+            "description": "Server-side encryption algorithm to use (AES256 or aws:kms)",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages server-side encryption configuration for an S3 bucket.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket_lifecycle": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "abort_incomplete_multipart_upload_days": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "expiration_date": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "expiration_days": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "noncurrent_version_expiration_days": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "prefix": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "status": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "scality_bucket_object_lock": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "Name of the S3 bucket",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "retention_days": {
+            "type": "number",
+            "description": "Number of days for the default retention period (mutually exclusive with retention_years)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "retention_mode": {
+            "type": "string",
+            "description": "Default retention mode for objects placed in the bucket (GOVERNANCE or COMPLIANCE)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "retention_years": {
+            "type": "number",
+            "description": "Number of years for the default retention period (mutually exclusive with retention_days)",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages the Object Lock configuration for an S3 bucket.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this bucket",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "Name of the S3 bucket",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy": {
+            "type": "string",
+            "description": "JSON policy document",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an S3 bucket policy within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket_replication": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true,
+            "sensitive": true
+          },
+          "bucket": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "role": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "block_types": {
+          "rule": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "destination_bucket": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "destination_storage_class": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "prefix": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "status": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description_kind": "plain"
+      }
+    },
+    "scality_console_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key": {
+            "type": "string",
+            "description": "S3 API access key (persistent credentials, generated automatically)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "account_name": {
+            "type": "string",
+            "description": "Name of the account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Account creation timestamp",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address for the account",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "generate_random_password": {
+            "type": "bool",
+            "description": "Generate a random password for Console access (optional, default false)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Account identifier (same as account_name)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Generated Console password (only available if generate_random_password is true)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "password_length": {
+            "type": "number",
+            "description": "Length of generated password (default 16, only used if generate_random_password is true)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "quota": {
+            "type": "number",
+            "description": "Maximum amount of bytes storable by the account (0 = unlimited)",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "S3 API secret key (persistent credentials, generated automatically)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "Manages a Scality account via Console API with JWT authentication. Optionally generates a random password for Console access. Persistent S3 credentials are generated automatically.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this group",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this group",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the IAM group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Unique ID of the IAM group",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_name": {
+            "type": "string",
+            "description": "Name of the IAM group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the IAM group",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Manages an IAM group within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_group_membership": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this group",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this group",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "group_name": {
+            "type": "string",
+            "description": "Name of the IAM group",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "users": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Set of IAM usernames that belong to this group",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages the membership of IAM users in a group within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this policy",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this policy",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the managed policy",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policy_document": {
+            "type": "string",
+            "description": "JSON policy document",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy_name": {
+            "type": "string",
+            "description": "Name of the managed policy",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an IAM managed policy within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this role",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this role",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the IAM role",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "assume_role_policy": {
+            "type": "string",
+            "description": "JSON trust policy document that grants entities permission to assume the role",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Name of the IAM role",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an IAM role within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_role_policy_attachment": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this role and policy",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this role and policy",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "policy_arn": {
+            "type": "string",
+            "description": "ARN of the IAM managed policy to attach",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Name of the IAM role to attach the policy to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Attaches an IAM managed policy to an IAM role within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the IAM user",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the IAM user",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Unique ID of the IAM user",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Name of the IAM user",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an IAM user within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_user_access_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "access_key_id": {
+            "type": "string",
+            "description": "The access key ID",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "secret_access_key": {
+            "type": "string",
+            "description": "The secret access key (only available after creation)",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the access key",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Name of the IAM user this key belongs to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an access key for an IAM user within a Scality account.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_user_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns this user",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "policy_document": {
+            "type": "string",
+            "description": "JSON policy document",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "policy_name": {
+            "type": "string",
+            "description": "Name of the inline policy",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Name of the IAM user this policy is attached to",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages an inline IAM policy for a user within a Scality account.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "scality_account": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "arn": {
+            "type": "string",
+            "description": "Amazon Resource Name (ARN) of the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "canonical_id": {
+            "type": "string",
+            "description": "Canonical ID of the account, used in S3 bucket policies.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "create_date": {
+            "type": "string",
+            "description": "Account creation date.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "custom_attributes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Custom attributes (key-value string pairs) attached to the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email_address": {
+            "type": "string",
+            "description": "Email address registered against the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Vault account ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the account to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "quota_max": {
+            "type": "number",
+            "description": "Maximum bytes storable by the account (0 = unlimited).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Looks up an existing Scality account by name. Useful for referencing accounts created outside the current Terraform configuration \u2014 pass the looked-up ID, ARN, or canonical ID into downstream resources or modules without hardcoding. Does not expose `access_key`/`secret_key`: the IAM API returns those only at account creation. To get keys for an existing account, mint a new pair via `scality_account_access_key` against an existing root key.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_accounts": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "accounts": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "Amazon Resource Name of the account.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "canonical_id": {
+                  "type": "string",
+                  "description": "Canonical ID of the account, used in S3 bucket policies.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "create_date": {
+                  "type": "string",
+                  "description": "Account creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "email_address": {
+                  "type": "string",
+                  "description": "Email address registered against the account.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "Vault account ID.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Account name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "quota_max": {
+                  "type": "number",
+                  "description": "Maximum bytes storable by the account (0 = unlimited).",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of accounts in the cluster.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all Scality accounts in the cluster. Useful for inventory, audit, and dashboard tooling \u2014 `for_each` over the result and drill down with `data.scality_account` per-account. The list does not include `custom_attributes` (those require a per-account call; use `data.scality_account` for the drill-down). Empty cluster returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns the bucket.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns the bucket.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the bucket (`arn:aws:s3:::<bucket>`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "bucket": {
+            "type": "string",
+            "description": "Name of the bucket to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Bucket identifier (same value as `bucket`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "object_lock_enabled": {
+            "type": "bool",
+            "description": "Whether Object Lock is enabled on the bucket.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Tags attached to the bucket.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "versioning": {
+            "type": "bool",
+            "description": "Whether versioning is enabled on the bucket (`true` when status is `Enabled`, `false` otherwise).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Looks up an existing S3 bucket by name within an account. Useful for attaching Terraform-managed sub-resources (`scality_bucket_policy`, `scality_bucket_lifecycle`, `scality_bucket_replication`, etc.) to a bucket that was created outside the current configuration. Sub-feature data sources (encryption, lifecycle, replication configuration of the existing bucket) are not yet implemented \u2014 open an issue if needed.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_buckets": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account whose buckets to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account whose buckets to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "buckets": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "ARN of the bucket (`arn:aws:s3:::<bucket>`).",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "creation_date": {
+                  "type": "string",
+                  "description": "Bucket creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Bucket name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of buckets owned by the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all S3 buckets owned by the calling account. Useful for inventory, audit, and dashboard tooling \u2014 `for_each` over the result and drill down with `data.scality_bucket` per-bucket. The list does not include versioning, tags, or object-lock state (those require per-bucket calls; use `data.scality_bucket` for the drill-down). Empty account returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns the group.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns the group.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Stable unique identifier for the group.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group_name": {
+            "type": "string",
+            "description": "Name of the group to look up.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Same as `group_id`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "IAM path of the group (usually `/`).",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Looks up an existing IAM group by name within an account. Useful for attaching Terraform-managed sub-resources (`scality_group_membership`) to a group created outside the current Terraform configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account whose groups to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account whose groups to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "groups": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "ARN of the group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "create_date": {
+                  "type": "string",
+                  "description": "Group creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "group_id": {
+                  "type": "string",
+                  "description": "Stable unique identifier for the group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "group_name": {
+                  "type": "string",
+                  "description": "Group name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "IAM path of the group.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of IAM groups in the account.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all IAM groups in the calling account. Useful for inventory, audit, and dashboard tooling \u2014 `for_each` over the result and drill down with `data.scality_group` per-group. Empty account returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_policies": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account whose policies to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account whose policies to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policies": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "ARN of the policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "attachment_count": {
+                  "type": "number",
+                  "description": "Number of principals (users, groups, roles) the policy is attached to.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "create_date": {
+                  "type": "string",
+                  "description": "Policy creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "default_version_id": {
+                  "type": "string",
+                  "description": "Default version identifier for the policy document.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "IAM path of the policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "policy_id": {
+                  "type": "string",
+                  "description": "Stable unique identifier for the policy.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "policy_name": {
+                  "type": "string",
+                  "description": "Policy name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "update_date": {
+                  "type": "string",
+                  "description": "Last update date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of managed policies in the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all customer-managed (scope `Local`) IAM policies in the calling account. Policy documents are not included in the list \u2014 use `data.scality_iam_policy` for per-policy drill-down. Empty account returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_policy": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns the policy.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns the policy.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the managed policy.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Same as `arn`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policy_document": {
+            "type": "string",
+            "description": "JSON policy document of the default version.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "policy_name": {
+            "type": "string",
+            "description": "Name of the managed policy to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Looks up an existing customer-managed IAM policy by name within an account. Lookup walks `ListPolicies` (scope `Local`) and matches by name; returns the ARN and the default version's policy document.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns the role.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns the role.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the role.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "assume_role_policy": {
+            "type": "string",
+            "description": "Trust policy (AssumeRolePolicyDocument) attached to the role, as a JSON string.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Same as `role_name`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "IAM path of the role (usually `/`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Name of the role to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Looks up an existing IAM role by name within an account. Useful for attaching Terraform-managed sub-resources (`scality_iam_role_policy_attachment`) to a role created outside the current Terraform configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_iam_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account whose roles to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account whose roles to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "roles": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "ARN of the role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "create_date": {
+                  "type": "string",
+                  "description": "Role creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "IAM path of the role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role_id": {
+                  "type": "string",
+                  "description": "Stable unique identifier for the role.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "role_name": {
+                  "type": "string",
+                  "description": "Role name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of IAM roles in the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all IAM roles in the calling account. Trust policies (`assume_role_policy`) are not included in the list \u2014 use `data.scality_iam_role` for per-role drill-down. Empty account returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_user": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account that owns the user.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account that owns the user.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "arn": {
+            "type": "string",
+            "description": "ARN of the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Same as `user_id`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "path": {
+            "type": "string",
+            "description": "IAM path of the user (usually `/`).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Stable unique identifier for the user.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Name of the user to look up.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Looks up an existing IAM user by name within an account. Useful for attaching Terraform-managed sub-resources (`scality_user_policy`, `scality_user_access_key`, `scality_group_membership`) to a user created outside the current Terraform configuration.",
+        "description_kind": "markdown"
+      }
+    },
+    "scality_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "account_access_key": {
+            "type": "string",
+            "description": "Access key of the account whose users to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "account_secret_key": {
+            "type": "string",
+            "description": "Secret key of the account whose users to list.",
+            "description_kind": "markdown",
+            "required": true,
+            "sensitive": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Synthetic identifier for the data source instance.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "users": {
+            "nested_type": {
+              "attributes": {
+                "arn": {
+                  "type": "string",
+                  "description": "ARN of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "create_date": {
+                  "type": "string",
+                  "description": "User creation date.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "path": {
+                  "type": "string",
+                  "description": "IAM path of the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "user_id": {
+                  "type": "string",
+                  "description": "Stable unique identifier for the user.",
+                  "description_kind": "markdown",
+                  "computed": true
+                },
+                "username": {
+                  "type": "string",
+                  "description": "User name.",
+                  "description_kind": "markdown",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of IAM users in the account.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Lists all IAM users in the calling account. Useful for inventory, audit, and dashboard tooling \u2014 `for_each` over the result and drill down with `data.scality_user` per-user. Empty account returns an empty list, not an error.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

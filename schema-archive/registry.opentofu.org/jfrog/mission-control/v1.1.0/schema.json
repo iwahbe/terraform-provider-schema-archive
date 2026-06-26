@@ -1,0 +1,427 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "access_token": {
+          "type": "string",
+          "description": "This is a access token that can be given to you by your admin under `Platform Configuration -> User Management -> Access Tokens`. This can also be sourced from the `JFROG_ACCESS_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "oidc_provider_name": {
+          "type": "string",
+          "description": "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "tfc_credential_tag_name": {
+          "type": "string",
+          "description": "Terraform Cloud Workload Identity Token tag name. Use for generating multiple TFC workload identity tokens. When set, the provider will attempt to use env var with this tag name as suffix. **Note:** this is case sensitive, so if set to `JFROG`, then env var `TFC_WORKLOAD_IDENTITY_TOKEN_JFROG` is used instead of `TFC_WORKLOAD_IDENTITY_TOKEN`. See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "url": {
+          "type": "string",
+          "description": "JFrog Platform URL. This can also be sourced from the `JFROG_URL` environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "The JFrog Mission Control provider provides resources to interact with Mission Control supported by JFrog Platform. See [official documentation](https://jfrog.com/help/r/get-started-with-the-jfrog-platform/jfrog-mission-control) for more details.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "missioncontrol_access_federation_mesh": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "entities": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Entity types to sync. Allow values: `USERS`, `GROUPS`, `PERMISSIONS`, `TOKENS`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "ids": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "IDs for the source Platform Deployment. Use [Get Access Federation Candidate API](https://jfrog.com/help/r/jfrog-rest-apis/get-access-federation-candidates) to get a list of ID. Must have at least 2 items.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a [JFrog Access Federation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-federation) resource to setup Mesh Topology.\n\n~>The source and targets must have been configured properly for [Access Federation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-federation).\n\n~>**Deletion** is currently not supported via REST API. This must be done using JFrog UI.",
+        "description_kind": "markdown"
+      }
+    },
+    "missioncontrol_access_federation_star": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "entities": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Entity types to sync. Allow values: `USERS`, `GROUPS`, `PERMISSIONS`, `TOKENS`",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID for the source Platform Deployment. Use [Get Access Federation Candidate API](https://jfrog.com/help/r/jfrog-rest-apis/get-access-federation-candidates) to get a list of ID.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "targets": {
+            "nested_type": {
+              "attributes": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the targeted Platform Deployment",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "permission_filters": {
+                  "nested_type": {
+                    "attributes": {
+                      "exclude_patterns": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description_kind": "plain",
+                        "optional": true
+                      },
+                      "include_patterns": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description_kind": "plain",
+                        "optional": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "When assigning entity types to targets, you can assign specific permissions to be synchronized using the `include_patterns`/`exclude_patterns` regular expressions.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Target Platform deployment URL: http://<hostname>:<port>/access; for example: http://myplatformserver:8082/access.",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Target JPD",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a [JFrog Access Federation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-federation) resource to setup Star Topology.\n\n~>The source and targets must have been configured properly for [Access Federation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-federation).\n\n~>**Deletion** is currently not supported via REST API. This must be done using JFrog UI.",
+        "description_kind": "markdown"
+      }
+    },
+    "missioncontrol_jpd": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "base_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cold_storage_jpd": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_cold_storage": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "licenses": {
+            "nested_type": {
+              "attributes": {
+                "expired": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "license_hash": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "licensed_to": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "valid_through": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "local": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "location": {
+            "nested_type": {
+              "attributes": {
+                "city_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "country_code": {
+                  "type": "string",
+                  "description": "2 letters ISO-3166-2 country code",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "latitude": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "longitude": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "The geographical location of the Platform Deployment to be displayed on a global Platform Deployment view",
+            "description_kind": "plain",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "A unique logical name for this Platform Deployment",
+            "description_kind": "plain",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Admin password for legacy JPD (Artifactory 6.x).",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "services": {
+            "nested_type": {
+              "attributes": {
+                "status": {
+                  "nested_type": {
+                    "attributes": {
+                      "code": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "message": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "warnings": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "Add labels to be applied for filtering Platform Deployments according to categories for example, location, dedicated centers - dev, testing, production",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "JPD join key",
+            "description_kind": "plain",
+            "optional": true,
+            "sensitive": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The Platform deployment URL: `http://<hostname>:<port>/`; for example: `http://myplatformserver:8082/`. Note: For legacy instances, version 6.x and lower, the URL should contain the instance root context: `http://<hostname>:<port>/<context>/`; for example `http://myv6server:8081/artifactory/`. URL must ends with trailing slash.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Admin username for legacy JPD (Artifactory 6.x).",
+            "description_kind": "plain",
+            "optional": true
+          }
+        },
+        "description": "Provides a [JFrog Platform Deployment](https://jfrog.com/help/r/jfrog-platform-administration-documentation/manage-platform-deployments) resource to manage JPD.\n\n~>Supported on the Self-Hosted platform, with an Enterprise X or Enterprise+ license.",
+        "description_kind": "markdown"
+      }
+    },
+    "missioncontrol_license_bucket": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "file": {
+            "type": "string",
+            "description": "File path to the license bucket. Can't be set together with `url`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The identifier of this license bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "issued_date": {
+            "type": "string",
+            "description": "The issue date for this license bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "key": {
+            "type": "string",
+            "description": "License bucket key.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "license_type": {
+            "type": "string",
+            "description": "The license type of this license bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the license bucket",
+            "description_kind": "plain",
+            "required": true
+          },
+          "product_id": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "product_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "quantity": {
+            "type": "number",
+            "description": "The total number of licenses in this bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "signature": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "The customer name of this license bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Signed URL of the license bucket. Can't be set together with `file`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "used": {
+            "type": "number",
+            "description": "The number of used licenses in this bucket.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "valid_date": {
+            "type": "string",
+            "description": "The expiry date for this license bucket.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides a JFrog [license bucket](https://jfrog.com/help/r/jfrog-platform-administration-documentation/manage-license-buckets) resource to manage license buckets.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
