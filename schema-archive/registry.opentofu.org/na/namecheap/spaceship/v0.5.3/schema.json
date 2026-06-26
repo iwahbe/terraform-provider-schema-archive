@@ -1,0 +1,986 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Spaceship API key, created in the [API Manager](https://www.spaceship.com/application/api-manager/). If omitted, the provider will attempt to read the value from the `SPACESHIP_API_KEY` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_secret": {
+          "type": "string",
+          "description": "Spaceship API secret, created in the [API Manager](https://www.spaceship.com/application/api-manager/) alongside the API key. If omitted, the provider will attempt to read the value from the `SPACESHIP_API_SECRET` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description": "The Spaceship provider is used to manage DNS records and domain settings, including auto-renew and nameservers, for domains managed by the Spaceship registrar",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "spaceship_dns_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "IPv4 or IPv6 address for A and AAAA records",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "alias_name": {
+            "type": "string",
+            "description": "Canonical domain name for ALIAS records. Implements CNAME-like behavior for the zone apex where CNAME is not allowed.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "association_data": {
+            "type": "string",
+            "description": "Association data (hex) for TLSA records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "cname": {
+            "type": "string",
+            "description": "Canonical name for CNAME records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name the record belongs to (for example `example.com`). The domain must already exist in the Spaceship account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "exchange": {
+            "type": "string",
+            "description": "Mail exchange host for MX records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "flag": {
+            "type": "number",
+            "description": "Flag for CAA records (0 or 128).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier with the form `domain/TYPE/name/<data-signature>`. The data signature is a normalized representation of the record's type-specific fields (lowercased, pipe-separated) and is the same key used internally for record matching. Stable across updates that don't change identity (e.g. TTL changes).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "matching": {
+            "type": "number",
+            "description": "Matching type for TLSA records (0-255).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Record host. Use `@` for the zone apex.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "nameserver": {
+            "type": "string",
+            "description": "Nameserver host for NS records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "pointer": {
+            "type": "string",
+            "description": "Pointer target for PTR records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "port": {
+            "type": "string",
+            "description": "Port for HTTPS, SVCB and TLSA records(accepts `*` or `_NNNN`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "port_number": {
+            "type": "number",
+            "description": "Port for SRV records (1-65535).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "preference": {
+            "type": "number",
+            "description": "Preference value for MX records (0-65535).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Priority for SRV records (0-65535).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol label for SRV/TLSA records (e.g. `_tcp`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "scheme": {
+            "type": "string",
+            "description": "Scheme for HTTPS/SVCB/TLSA records (for example `_https`, `_tcp`)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "selector": {
+            "type": "number",
+            "description": "Selector value for TLSA records (0-255).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "service": {
+            "type": "string",
+            "description": "Service label for SRV records (for example `_sip`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "svc_params": {
+            "type": "string",
+            "description": "SvcParams string for HTTPS/SVCB records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "svc_priority": {
+            "type": "number",
+            "description": "Service priority for HTTPS/SVCB records (0-65535).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "tag": {
+            "type": "string",
+            "description": "Tag for CAA records (e.g. `issue`)",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "target": {
+            "type": "string",
+            "description": "Target host for SRV records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "target_name": {
+            "type": "string",
+            "description": "Target name for HTTPS/SVCB records.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Record TTL in seconds. Defaults to 3600 if omitted.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "DNS record type(A, AAAA, ALIAS, CAA, CNAME, HTTPS, MX, NS, PTR, SRV, SVCB, TLSA, TXT).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "usage": {
+            "type": "number",
+            "description": "Usage value for TLSA records (0-255).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Generic value field used by several record types (CAA, TXT).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "weight": {
+            "type": "number",
+            "description": "Weight for SRV records (0-65535).",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "Manages a single DNS record for a Spaceship-managed domain. Only records in the `custom` DNS group are managed \u2014 records owned by Spaceship features (e.g. URL redirect, personal nameservers) are left untouched.",
+        "description_kind": "markdown"
+      }
+    },
+    "spaceship_dns_records": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain name to manage (for example `example.com`). The domain must already exist in the Spaceship account.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "force": {
+            "type": "bool",
+            "description": "Deprecated: this attribute has no effect. The provider always applies DNS updates with force enabled.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Internal identifier for tf state.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "records": {
+            "nested_type": {
+              "attributes": {
+                "address": {
+                  "type": "string",
+                  "description": "IPv4 or IPv6 address for A and AAAA records",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "alias_name": {
+                  "type": "string",
+                  "description": "Canonical domain name for ALIAS records. Implements CNAME-like behavior for the zone apex where CNAME is not allowed.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "association_data": {
+                  "type": "string",
+                  "description": "Association data (hex) for TLSA records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "cname": {
+                  "type": "string",
+                  "description": "Canonical name for CNAME records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "exchange": {
+                  "type": "string",
+                  "description": "Mail exchange host for MX records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "flag": {
+                  "type": "number",
+                  "description": "Flag for CAA records (0 or 128).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "matching": {
+                  "type": "number",
+                  "description": "Matching type for TLSA records (0-255).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Record host. Use `@` for the zone apex.",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "nameserver": {
+                  "type": "string",
+                  "description": "Nameserver host for NS records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "pointer": {
+                  "type": "string",
+                  "description": "Pointer target for PTR records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port": {
+                  "type": "string",
+                  "description": "Port for HTTPS, SVCB and TLSA records(accepts `*` or `_NNNN`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "port_number": {
+                  "type": "number",
+                  "description": "Port for SRV records (1-65535).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "preference": {
+                  "type": "number",
+                  "description": "Preference value for MX records (0-65535).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "priority": {
+                  "type": "number",
+                  "description": "Priority for SRV records (0-65535).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "protocol": {
+                  "type": "string",
+                  "description": "Protocol label for SRV/TLSA records (e.g. `_tcp`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "scheme": {
+                  "type": "string",
+                  "description": "Scheme for HTTPS/SVCB/TLSA records (for example `_https`, `_tcp`)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "selector": {
+                  "type": "number",
+                  "description": "Selector value for TLSA records (0-255).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "service": {
+                  "type": "string",
+                  "description": "Service label for SRV records (for example `_sip`).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "svc_params": {
+                  "type": "string",
+                  "description": "SvcParams string for HTTPS/SVCB records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "svc_priority": {
+                  "type": "number",
+                  "description": "Service priority for HTTPS/SVCB records (0-65535).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "tag": {
+                  "type": "string",
+                  "description": "Tag for CAA records (e.g. `issue`)",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "target": {
+                  "type": "string",
+                  "description": "Target host for SRV records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "target_name": {
+                  "type": "string",
+                  "description": "Target name for HTTPS/SVCB records.",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "ttl": {
+                  "type": "number",
+                  "description": "Record TTL in seconds. Defaults to 3600 if omitted.",
+                  "description_kind": "markdown",
+                  "optional": true,
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "DNS record type(A, AAAA, ALIAS, CAA, CNAME, HTTPS, MX, NS, PTR, SRV, SVCB, TLSA, TXT).",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "usage": {
+                  "type": "number",
+                  "description": "Usage value for TLSA records (0-255).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Generic value field used by several record types (CAA, TXT).",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "weight": {
+                  "type": "number",
+                  "description": "Weight for SRV records (0-65535).",
+                  "description_kind": "markdown",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "DNS records that should be configured for the domain. The provider diffs this list against existing custom records \u2014 only removed records are deleted and new or changed records are upserted. Records in other DNS groups (product, personalNS) are not affected.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Manages custom DNS records for a Spaceship-managed domain. Only records in the `custom` DNS group are managed \u2014 records owned by Spaceship features (e.g. URL redirect, personal nameservers) are left untouched. On each apply, the provider computes a diff and only deletes removed records and upserts new or changed ones.",
+        "description_kind": "markdown"
+      }
+    },
+    "spaceship_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_renew": {
+            "type": "bool",
+            "description": "Indicates whether the auto-renew option is enabled",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "contacts": {
+            "nested_type": {
+              "attributes": {
+                "admin": {
+                  "type": "string",
+                  "description": "Administrative contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "attributes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Optional list of contact attributes supplied by Spaceship.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "billing": {
+                  "type": "string",
+                  "description": "Billing contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "registrant": {
+                  "type": "string",
+                  "description": "Always present registrant handle.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tech": {
+                  "type": "string",
+                  "description": "Technical contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description": "Indicate domain name which you want to manage",
+            "description_kind": "plain",
+            "required": true
+          },
+          "epp_statuses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Possible values clientDeleteProhibited clientHold clientRenewProhibited clientTransferProhibited clientUpdateProhibited",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expiration_date": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_premium": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "description": "Lifecycle phase. One of creating, registered, grace1, grace2, redemption.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Domain name in ASCII format (A-label)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nameservers": {
+            "nested_type": {
+              "attributes": {
+                "hosts": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "provider": {
+                  "type": "string",
+                  "description": "type: basic or custom",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Information about nameservers",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "privacy_protection": {
+            "nested_type": {
+              "attributes": {
+                "contact_form": {
+                  "type": "bool",
+                  "description": "Indicates whether WHOIS should display the contact form link",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "level": {
+                  "type": "string",
+                  "description": "Privacy level: public or high",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "registration_date": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "suspensions": {
+            "nested_type": {
+              "attributes": {
+                "reason_code": {
+                  "type": "string",
+                  "description": "Suspension reason code (raaVerification, abuse, promoAbuse, fraud, pendingAccountVerification, unauthorizedAccess, tosViolation, transferDispute, restrictedSecurity, lockCourt, suspendCourt, udrpUrs, restrictedLegal, paymentPending, unpaidService, restrictedWhois, lockedWhois)",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Information about domain suspensions. May contain up to 2 items.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "unicode_name": {
+            "type": "string",
+            "description": "Domain name in UTF-8 format (U-label)",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "verification_status": {
+            "type": "string",
+            "description": "Status of the RAA verification process. One of verification, success, failed. Null when not applicable.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages domain settings for Spaceship domain",
+        "description_kind": "plain"
+      }
+    },
+    "spaceship_personal_nameserver": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain": {
+            "type": "string",
+            "description": "The domain the personal nameserver host belongs to (for example `example.com`). Changing this forces a new resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The host label of the nameserver, relative to `domain` (for example `ns1`, not `ns1.example.com`). The registry joins the label and the domain to form the full host name `ns1.example.com`; supplying a fully qualified name here would produce `ns1.example.com.example.com`. Changing this renames the host in place via the API.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Composite identifier with the form `domain/host`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ips": {
+            "type": [
+              "set",
+              "string"
+            ],
+            "description": "The glue record IP addresses (IPv4 or IPv6) served for this host. Must contain between 1 and 16 addresses.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Manages a single personal nameserver host (a registry glue record) for a Spaceship-managed domain. A personal nameserver is a host label (e.g. `ns1`) relative to the domain, plus the set of IP addresses the registry serves for it. Pointing the domain at these hosts is configured separately via the domain's `nameservers` block.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "spaceship_domain_info": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "auto_renew": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "contacts": {
+            "nested_type": {
+              "attributes": {
+                "admin": {
+                  "type": "string",
+                  "description": "Administrative contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "attributes": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Optional list of contact attributes supplied by Spaceship.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "billing": {
+                  "type": "string",
+                  "description": "Billing contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "registrant": {
+                  "type": "string",
+                  "description": "Always present registrant handle.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tech": {
+                  "type": "string",
+                  "description": "Technical contact handle when provided.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "domain": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "epp_statuses": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Possible values clientDeleteProhibited clientHold clientRenewProhibited clientTransferProhibited clientUpdateProhibited",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "expiration_date": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_premium": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "description": "Lifecycle phase. One of creating, registered, grace1, grace2, redemption.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "nameservers": {
+            "nested_type": {
+              "attributes": {
+                "hosts": {
+                  "type": [
+                    "set",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "provider": {
+                  "type": "string",
+                  "description": "type: basic or custom",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "privacy_protection": {
+            "nested_type": {
+              "attributes": {
+                "contact_form": {
+                  "type": "bool",
+                  "description": "Indicates whether WHOIS should display the contact form link",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "level": {
+                  "type": "string",
+                  "description": "Privacy level: public or high",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "registration_date": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "suspensions": {
+            "nested_type": {
+              "attributes": {
+                "reason_code": {
+                  "type": "string",
+                  "description": "Suspension reason code (raaVerification, abuse, promoAbuse, fraud, pendingAccountVerification, unauthorizedAccess, tosViolation, transferDispute, restrictedSecurity, lockCourt, suspendCourt, udrpUrs, restrictedLegal, paymentPending, unpaidService, restrictedWhois, lockedWhois)",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "Information about domain suspensions. May contain up to 2 items.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "unicode_name": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "verification_status": {
+            "type": "string",
+            "description": "Status of the RAA verification process. One of verification, success, failed. Null when not applicable.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Get all info about single domain",
+        "description_kind": "plain"
+      }
+    },
+    "spaceship_domain_list": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "items": {
+            "nested_type": {
+              "attributes": {
+                "auto_renew": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "contacts": {
+                  "nested_type": {
+                    "attributes": {
+                      "admin": {
+                        "type": "string",
+                        "description": "Administrative contact handle when provided.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "attributes": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description": "Optional list of contact attributes supplied by Spaceship.",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "billing": {
+                        "type": "string",
+                        "description": "Billing contact handle when provided.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "registrant": {
+                        "type": "string",
+                        "description": "Always present registrant handle.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "tech": {
+                        "type": "string",
+                        "description": "Technical contact handle when provided.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "epp_statuses": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Possible values clientDeleteProhibited clientHold clientRenewProhibited clientTransferProhibited clientUpdateProhibited",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "expiration_date": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_premium": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "lifecycle_status": {
+                  "type": "string",
+                  "description": "Lifecycle phase. One of creating, registered, grace1, grace2, redemption.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "nameservers": {
+                  "nested_type": {
+                    "attributes": {
+                      "hosts": {
+                        "type": [
+                          "set",
+                          "string"
+                        ],
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "provider": {
+                        "type": "string",
+                        "description": "type: basic or custom",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "privacy_protection": {
+                  "nested_type": {
+                    "attributes": {
+                      "contact_form": {
+                        "type": "bool",
+                        "description": "Indicates whether WHOIS should display the contact form link",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "level": {
+                        "type": "string",
+                        "description": "Privacy level: public or high",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "registration_date": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "suspensions": {
+                  "nested_type": {
+                    "attributes": {
+                      "reason_code": {
+                        "type": "string",
+                        "description": "Suspension reason code (raaVerification, abuse, promoAbuse, fraud, pendingAccountVerification, unauthorizedAccess, tosViolation, transferDispute, restrictedSecurity, lockCourt, suspendCourt, udrpUrs, restrictedLegal, paymentPending, unpaidService, restrictedWhois, lockedWhois)",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "Information about domain suspensions. May contain up to 2 items.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "unicode_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "verification_status": {
+                  "type": "string",
+                  "description": "Status of the RAA verification process. One of verification, success, failed. Null when not applicable.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "total": {
+            "type": "number",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Provides full list of domain in account with domain details for each domain",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}

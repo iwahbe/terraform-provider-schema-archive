@@ -1,0 +1,274 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "description_kind": "plain"
+    }
+  },
+  "data_source_schemas": {
+    "utils_yaml_merge": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Hexadecimal encoding of the checksum of the output.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "input": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "A list of YAML strings that is merged into the `output` attribute.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "merge_list_items": {
+            "type": "bool",
+            "description": "Merge list entries if all primitive values match. Default value is `true`.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "output": {
+            "type": "string",
+            "description": "The merged output.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Merge a list of YAML strings into a single YAML string, where maps are deep merged and list entries are compared against existing list entries and if all primitive values match, the entries are deep merged. YAML `!env` tags can be used to resolve values from environment variables.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "merge": {
+      "description": "Merge a list of data structures into a single data structure, where maps are deep merged and list entries are compared against existing list entries and if all primitive values match, the entries are deep merged.",
+      "summary": "Merge a list of data structures",
+      "return_type": "dynamic",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "A list of data structures to be merged.",
+          "type": "dynamic"
+        }
+      ]
+    },
+    "normalize_bgp_rd": {
+      "description": "Takes a BGP RD in standard colon notation (e.g., '65000:1001', '192.168.100.1:1002', '4200000001:1003') or the keyword 'auto' and returns an object with the detected format type and parsed components. Supports four format types: 'auto' (BGP RD auto-assignment), 'two_byte_as' (AS <= 65535), 'four_byte_as' (AS > 65535), and 'ipv4_address' (IPv4:value).\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.\n\n## Return Object\n\nThe function returns an object with the following attributes:\n\n| Attribute | Type | Description |\n|-----------|------|-------------|\n| `format` | String | Detected format: `\"auto\"`, `\"two_byte_as\"`, `\"four_byte_as\"`, or `\"ipv4_address\"` |\n| `as_number` | Number | Administrator subfield as AS number (populated for `two_byte_as` and `four_byte_as`; `0` for `ipv4_address` and `auto`) |\n| `assigned_number` | Number | Assigned Number subfield (always populated; `0` for `auto`) |\n| `ipv4_address` | String | Administrator subfield as IPv4 address (populated for `ipv4_address`; `\"\"` for AS formats and `auto`) |",
+      "summary": "Normalize a BGP Route Distinguisher from colon notation",
+      "return_type": [
+        "object",
+        {
+          "as_number": "number",
+          "assigned_number": "number",
+          "format": "string",
+          "ipv4_address": "string"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "description": "BGP RD in colon notation (e.g., '65000:1001', '192.168.100.1:1002', '4200000001:1003') or the keyword 'auto'.",
+          "type": "string"
+        }
+      ]
+    },
+    "normalize_bgp_rt": {
+      "description": "Takes a BGP RT in standard colon notation (e.g., '65000:1001', '192.168.100.1:1002', '4200000001:1003') or the keyword 'auto' and returns an object with the detected format type and parsed components. Supports four format types: 'auto' (BGP RT auto-assignment), 'two_byte_as' (AS <= 65535), 'four_byte_as' (AS > 65535), and 'ipv4_address' (IPv4:value).\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.\n\n## Return Object\n\nThe function returns an object with the following attributes:\n\n| Attribute | Type | Description |\n|-----------|------|-------------|\n| `format` | String | Detected format: `\"auto\"`, `\"two_byte_as\"`, `\"four_byte_as\"`, or `\"ipv4_address\"` |\n| `as_number` | Number | Administrator subfield as AS number (populated for `two_byte_as` and `four_byte_as`; `0` for `ipv4_address` and `auto`) |\n| `assigned_number` | Number | Assigned Number subfield (always populated; `0` for `auto`) |\n| `ipv4_address` | String | Administrator subfield as IPv4 address (populated for `ipv4_address`; `\"\"` for AS formats and `auto`) |",
+      "summary": "Normalize a BGP Route Target from colon notation",
+      "return_type": [
+        "object",
+        {
+          "as_number": "number",
+          "assigned_number": "number",
+          "format": "string",
+          "ipv4_address": "string"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "description": "BGP RT in colon notation (e.g., '65000:1001', '192.168.100.1:1002', '4200000001:1003') or the keyword 'auto'.",
+          "type": "string"
+        }
+      ]
+    },
+    "normalize_mac": {
+      "description": "Takes a MAC address in any common format (colon-separated, dash-separated, or dotted) and a format parameter. Returns the MAC address in the specified format. Supports 'dotted' (Cisco xxxx.xxxx.xxxx), 'colon' (IEEE 802 xx:xx:xx:xx:xx:xx), and 'dash' (xx-xx-xx-xx-xx-xx) formats.\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.",
+      "summary": "Normalize MAC address to specified format",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "mac",
+          "description": "MAC address in any common format (e.g., '00:11:22:33:44:55', '00-11-22-33-44-55', or '0011.2233.4455').",
+          "type": "string"
+        },
+        {
+          "name": "format",
+          "description": "Required output format: 'dotted' for Cisco notation (xxxx.xxxx.xxxx), 'colon' for IEEE 802 standard (xx:xx:xx:xx:xx:xx), or 'dash' for dash-separated (xx-xx-xx-xx-xx-xx).",
+          "type": "string"
+        }
+      ]
+    },
+    "normalize_mask": {
+      "description": "Takes a subnet mask in prefix length format (0-32) and a format parameter. Returns the mask in the specified format. Currently supports 'dotted-decimal' format (e.g., 24 \u2192 '255.255.255.0').\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.",
+      "summary": "Normalize subnet mask from prefix length to specified format",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "mask",
+          "description": "Subnet mask as prefix length (0-32).",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "description": "Required output format: 'dotted-decimal' for standard notation (e.g., '255.255.255.0').",
+          "type": "string"
+        }
+      ]
+    },
+    "normalize_vlans": {
+      "description": "Takes an object with optional `ids` (list of integers) and `ranges` (list of objects with `from`/`to` fields) and a required `format` parameter. Returns a normalized representation as either a string or list of integers. In string format, 3 or more consecutive IDs are grouped into ranges (e.g., '10-20'), while individual or pairs of VLANs are listed separately (e.g., '1,2' not '1-2'). In string-nxos format, 2 or more consecutive IDs are grouped into ranges (e.g., '1-2' instead of '1,2'). Both `ids` and `ranges` fields are optional and can be omitted from the input object.\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.",
+      "summary": "Normalize VLAN IDs and ranges into a compact string format or list of integers",
+      "return_type": "dynamic",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "An object containing optional `ids` (list of VLAN IDs) and `ranges` (list of objects with `from` and `to` fields). Both fields are optional and can be omitted from the input object.",
+          "type": "dynamic"
+        },
+        {
+          "name": "format",
+          "description": "Required output format: 'string' for compact range notation (e.g., '1,2,5,10-30' where ranges are only used for 3+ consecutive VLANs), 'string-nxos' for NX-OS style notation (e.g., '1-2,5,10-30' where ranges are used for 2+ consecutive VLANs), or 'list' for array of individual VLAN IDs (e.g., [1,2,5,10,11,12,...,30]).",
+          "type": "string"
+        }
+      ]
+    },
+    "render_device_configs": {
+      "description": "Processes a Network as Code model structure to produce fully rendered per-device configurations. Handles template evaluation, deep merging with precedence cascade (global \u2192 group \u2192 device), interface group merging, and CLI template collection. Supports nxos, iosxe, and iosxr architectures.\n\n~> This function is intended for use within the [Network as Code](https://netascode.cisco.com/) Terraform modules and is not intended for standalone use.\n\n## Template Functions\n\nThe following functions are available inside `${}` template expressions in model templates, file templates, and CLI templates:\n\n**Numeric:** `abs`, `ceil`, `floor`, `log`, `max`, `min`, `parseint`, `pow`, `signum`, `sum`\n\n**String:** `chomp`, `endswith`, `format`, `formatlist`, `indent`, `join`, `lower`, `regex`, `regexall`, `regexreplace`, `replace`, `sort`, `split`, `startswith`, `strcontains`, `strlen`, `substr`, `title`, `trim`, `trimprefix`, `trimsuffix`, `trimspace`, `upper`\n\n**Collection:** `chunklist`, `coalesce`, `coalescelist`, `compact`, `concat`, `contains`, `distinct`, `element`, `flatten`, `index`, `keys`, `length`, `lookup`, `merge`, `one`, `range`, `reverse`, `setintersection`, `setproduct`, `setsubtract`, `setunion`, `slice`, `values`, `zipmap`\n\n**Type Conversion:** `tobool`, `tonumber`, `tostring`\n\n**Encoding:** `base64decode`, `base64encode`, `csvdecode`, `jsondecode`, `jsonencode`\n\n**Date/Time:** `formatdate`, `timeadd`\n\n**Boolean:** `alltrue`, `anytrue`\n\n**Error Handling:** `try`, `can`",
+      "summary": "Render per-device configurations from a hierarchical Network-as-Code model",
+      "return_type": [
+        "object",
+        {
+          "provider_devices": "dynamic",
+          "raw": "dynamic",
+          "resolved": "dynamic"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "yaml_strings",
+          "description": "List of YAML strings to decode and merge into the base model.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "model",
+          "description": "HCL model variable to merge on top of the YAML strings.",
+          "type": "dynamic"
+        },
+        {
+          "name": "defaults_yaml",
+          "description": "Module defaults YAML string. User defaults from model override these.",
+          "type": "string"
+        },
+        {
+          "name": "file_templates",
+          "description": "Map of file path to pre-read file content for file-type templates.",
+          "type": "dynamic"
+        },
+        {
+          "name": "managed_devices",
+          "description": "List of device names to manage. Empty list means all devices.",
+          "type": [
+            "list",
+            "string"
+          ]
+        },
+        {
+          "name": "managed_device_groups",
+          "description": "List of device group names to manage. Empty list means all device groups.",
+          "type": [
+            "list",
+            "string"
+          ]
+        }
+      ]
+    },
+    "resolve_yaml_tags": {
+      "description": "Recursively walk a data structure and resolve YAML tag strings. Currently supports the `!env VARNAME` tag, which is resolved to the value of the corresponding environment variable. This is intended to be used after `yaml_decode` which preserves unknown YAML tags as literal strings.",
+      "summary": "Resolve YAML tags in a data structure",
+      "return_type": "dynamic",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The data structure to resolve YAML tags in. Can be any Terraform value type.",
+          "type": "dynamic",
+          "is_nullable": true
+        }
+      ]
+    },
+    "version_compare": {
+      "description": "Compares two semantic version strings and returns an integer: positive if v1 > v2, negative if v1 < v2, or zero if v1 = v2. Supports standard semantic versioning (e.g., '1.2.3', '25.2.2') with optional 'v' prefix, prerelease versions, and metadata.",
+      "summary": "Compare two semantic versions",
+      "return_type": "number",
+      "parameters": [
+        {
+          "name": "v1",
+          "description": "First version string to compare (e.g., '1.2.3', 'v25.2.2').",
+          "type": "string"
+        },
+        {
+          "name": "v2",
+          "description": "Second version string to compare (e.g., '1.2.3', 'v25.2.2').",
+          "type": "string"
+        }
+      ]
+    },
+    "yaml_decode": {
+      "description": "Decode a YAML-formatted string and return the resulting value. Uses the `goccy/go-yaml` library for YAML 1.2 compliant parsing. Unknown YAML tags on scalar values are preserved as literal strings (e.g., `!env ABC` becomes the string `\"!env ABC\"`). Standard YAML tags (`!!str`, `!!int`, `!!float`, `!!bool`, `!!null`, `!!map`, `!!seq`, `!!timestamp`, `!!binary`) are handled normally. Only a single YAML document is supported.",
+      "summary": "Decode a YAML string into a Terraform value",
+      "return_type": "dynamic",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "A YAML-formatted string to decode. Must contain exactly one YAML document.",
+          "type": "string"
+        }
+      ]
+    },
+    "yaml_encode": {
+      "description": "Encode a given value as a YAML string using the `goccy/go-yaml` library. Produces YAML 1.2 compliant block-style output with 2-space indentation. Map keys are sorted alphabetically, strings that could be misinterpreted are automatically quoted, and null values are rendered as `null`.",
+      "summary": "Encode a value as a YAML string",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "The value to encode as YAML. Can be any Terraform value type including strings, numbers, booleans, lists, maps, objects, and null.",
+          "type": "dynamic",
+          "is_nullable": true
+        }
+      ]
+    },
+    "yaml_merge": {
+      "description": "Merge a list of YAML strings into a single YAML string, where maps are deep merged and list entries are compared against existing list entries and if all primitive values match, the entries are deep merged. YAML `!env` tags can be used to resolve values from environment variables.",
+      "summary": "Merge a list of YAML strings",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "input",
+          "description": "A list of YAML strings that is merged.",
+          "type": [
+            "list",
+            "string"
+          ]
+        }
+      ]
+    }
+  }
+}
