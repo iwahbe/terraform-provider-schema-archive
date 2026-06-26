@@ -1,0 +1,134 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "enabled": {
+          "type": "bool",
+          "description": "Sending telemetry or not, set this argument to `false` would turn telemetry off. Defaults to `true`.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Telemetry endpoint to send data to.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "module_source_regex": {
+          "type": [
+            "list",
+            "string"
+          ],
+          "description": "List of regex as allow list for module source. Only module source that match one of the regex will be collected.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "modtm_telemetry": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "endpoint": {
+            "type": "string",
+            "description": "Telemetry endpoint to send data to, will override provider's default `endpoint` setting.\nYou can set `endpoint` in this resource, when there's no explicit `setting` in the provider block, it will override provider's default `endpoint`.\n\n|Explicit `endpoint` in `provider` block | `MODTM_ENDPOINT` environment variable set | Explicit `endpoint` in resource block | Telemetry endpoint |\n|--|--|--|--|\n| \u2713 | \u2713 | \u2713 | Explicit `endpoint` in `provider` block | \n| \u2713 | \u2713 | \u00d7 | Explicit `endpoint` in `provider` block | \n| \u2713 | \u00d7 | \u2713 | Explicit `endpoint` in `provider` block | \n| \u2713 | \u00d7 | \u00d7 | Explicit `endpoint` in `provider` block | \n| \u00d7 | \u2713 | \u2713 | `MODTM_ENDPOINT` environment variable | \n| \u00d7 | \u2713 | \u00d7 | `MODTM_ENDPOINT` environment variable | \n| \u00d7 | \u00d7 | \u2713 | Explicit `endpoint` in resource block | \n| \u00d7 | \u00d7 | \u00d7 | Default Microsoft telemetry service endpoint | \n",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ephemeral_number": {
+            "type": "number",
+            "description": "An ephemeral number that works with tags-generation tools like [BridgeCrew Yor](https://yor.io/)",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource identifier",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "nonce": {
+            "type": "number",
+            "description": "A nonce that works with tags-generation tools like [BridgeCrew Yor](https://yor.io/)",
+            "description_kind": "markdown",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "tags": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Tags to be sent to telemetry endpoint. The following tags are reserved and cannot be used: `event`. When specififying `module_path`, the `source` and `version` tags will be automatically added to the tags sent to the telemetry endpoint.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`modtm_telemetry` resource gathers and sends telemetry data to a specified endpoint. The aim is to provide visibility into the lifecycle of your Terraform modules - whether they are being created, updated, or deleted.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "modtm_module_source": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "module_path": {
+            "type": "string",
+            "description": "The path of the module that the telemetry resource is associated with. From this data the provider will attempt to read the `$TF_DATA_DIR/modules/modules.json` file and will send the module source and version to the telemetry endpoint.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "module_source": {
+            "type": "string",
+            "description": "The source of the module that the telemetry resource is associated with",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "module_version": {
+            "type": "string",
+            "description": "The version of the module that the telemetry resource is associated with",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`modtm_module_source` data source is used to read the source and version that the current module is associated with. It tried to read `modules.json` file in `.terraform/modules` folder during the plan time.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "module_source": {
+      "description": "This function takes in `${path.module}` and return the corresponding item's `Source` in `modules.json` file in the current root module's `.terraform/module` folder",
+      "summary": "`module_source` function",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "module_path",
+          "description": "`${path.module}`",
+          "type": "string"
+        }
+      ]
+    },
+    "module_version": {
+      "description": "This function takes in `${path.module}` and return the corresponding item's `Version` in `modules.json` file in the current root module's `.terraform/module` folder",
+      "summary": "`module_source` function",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "module_path",
+          "description": "`${path.module}`",
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

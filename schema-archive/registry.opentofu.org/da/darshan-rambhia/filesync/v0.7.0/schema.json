@@ -1,0 +1,606 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "bastion_host": {
+          "type": "string",
+          "description": "Default bastion/jump host address for multi-hop SSH connections.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "bastion_key_path": {
+          "type": "string",
+          "description": "Default path to SSH private key file for bastion host. Falls back to ssh_key_path if not set.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "bastion_password": {
+          "type": "string",
+          "description": "Default SSH password for bastion host (sensitive).",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "bastion_port": {
+          "type": "number",
+          "description": "Default bastion host SSH port. Defaults to 22.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "bastion_private_key": {
+          "type": "string",
+          "description": "Default SSH private key content for bastion host (sensitive). Falls back to ssh_private_key if not set.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "bastion_user": {
+          "type": "string",
+          "description": "Default SSH user for bastion host. Falls back to ssh_user if not set.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "connection_pool_enabled": {
+          "type": "bool",
+          "description": "Enable SSH connection pooling for improved performance when managing multiple files on the same host. Connections are reused across resources and automatically cleaned up after 5 minutes of inactivity. Defaults to false.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "insecure_ignore_host_key": {
+          "type": "bool",
+          "description": "Skip SSH host key verification. WARNING: This is insecure and should only be used for testing or in trusted environments. Defaults to false.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "known_hosts_file": {
+          "type": "string",
+          "description": "Path to a custom known_hosts file for SSH host key verification. Supports ~ expansion. If not set, uses the default ~/.ssh/known_hosts.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "max_retries": {
+          "type": "number",
+          "description": "Maximum number of retry attempts for transient SSH failures (connection timeouts, network errors). Set to 0 to disable retries. Defaults to 3.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "socks_proxy": {
+          "type": "string",
+          "description": "SOCKS5 proxy URL for SSH connections (e.g. `socks5://127.0.0.1:1080`). When set, all SSH connections are dialed through the proxy. Useful for accessing hosts through an SSH tunnel or VPN.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "ssh_certificate": {
+          "type": "string",
+          "description": "Default SSH certificate content for certificate authentication. Used with ssh_private_key or ssh_key_path.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "ssh_certificate_path": {
+          "type": "string",
+          "description": "Default path to SSH certificate file for certificate authentication. Used with ssh_private_key or ssh_key_path.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "ssh_key_path": {
+          "type": "string",
+          "description": "Default path to SSH private key file. Mutually exclusive with ssh_private_key.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "ssh_password": {
+          "type": "string",
+          "description": "Default SSH password for password authentication (sensitive). Use this as an alternative to key-based authentication.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "ssh_port": {
+          "type": "number",
+          "description": "Default SSH port. Defaults to 22.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "ssh_private_key": {
+          "type": "string",
+          "description": "Default SSH private key content (sensitive). Mutually exclusive with ssh_key_path.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "ssh_user": {
+          "type": "string",
+          "description": "Default SSH user for connections. Can be overridden per-resource.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "strict_host_key_checking": {
+          "type": "string",
+          "description": "SSH host key checking mode (like OpenSSH StrictHostKeyChecking). Valid values: `yes` (default) - strict checking, fail if unknown or mismatched; `no` - skip all verification (insecure); `accept-new` - accept and save new keys, fail on mismatch. Takes precedence over insecure_ignore_host_key if both are set.",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "\nThe filesync provider enables declarative file synchronization to remote hosts via SSH/SFTP.\n\nUnlike traditional provisioners, this provider:\n- Tracks file state properly in Terraform state\n- Detects drift on apply (fails if remote was modified externally)\n- Supports plan-time change detection based on local file hashes\n\n## Example Usage\n\n```hcl\nprovider \"filesync\" {\n  ssh_user     = \"root\"\n  ssh_key_path = \"~/.ssh/id_ed25519\"\n}\n\nresource \"filesync_file\" \"config\" {\n  source      = \"./config/app.conf\"\n  destination = \"/etc/myapp/app.conf\"\n  host        = \"192.168.1.100\"\n  mode        = \"0644\"\n}\n```\n",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "filesync_directory": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bastion_host": {
+            "type": "string",
+            "description": "Bastion/jump host address for multi-hop SSH connections. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_key_path": {
+            "type": "string",
+            "description": "Path to SSH private key file for bastion host. Falls back to ssh_key_path if not set. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_password": {
+            "type": "string",
+            "description": "SSH password for bastion host (sensitive). Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "bastion_port": {
+            "type": "number",
+            "description": "Bastion host SSH port. Defaults to 22. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_private_key": {
+            "type": "string",
+            "description": "SSH private key content for bastion host (sensitive). Falls back to ssh_private_key if not set. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "bastion_user": {
+            "type": "string",
+            "description": "SSH user for bastion host. Falls back to ssh_user if not set. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "Absolute path on the remote host where files should be placed.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "exclude": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of glob patterns to exclude from sync (e.g., `*.tmp`, `.git`, `.DS_Store`). Supports standard glob syntax with `*` and `?` wildcards.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "file_count": {
+            "type": "number",
+            "description": "Number of files in the directory (including those in subdirectories) that were synced. Excludes files matching the exclude patterns.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "file_hashes": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of relative file paths to their SHA256 hashes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "group": {
+            "type": "string",
+            "description": "File group on remote. If not set, no group change is made. Set explicitly to change group (requires appropriate permissions).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Remote host address (IP or hostname).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource identifier (host:destination).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "insecure_ignore_host_key": {
+            "type": "bool",
+            "description": "Skip SSH host key verification. WARNING: This is insecure and should only be used for testing or in trusted environments. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "known_hosts_file": {
+            "type": "string",
+            "description": "Path to a custom known_hosts file for SSH host key verification. Supports ~ expansion. If not set, uses the default ~/.ssh/known_hosts. Ignored if insecure_ignore_host_key is true.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "File permissions in octal notation (e.g., '0644' for rw-r--r--) applied to all files. Must be 3-4 digits. Defaults to '0644'.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "File owner on remote. If not set, no ownership change is made (file is owned by the SSH user). Set explicitly to change ownership (requires appropriate permissions).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "parallel_uploads": {
+            "type": "number",
+            "description": "Number of files to upload in parallel. Set to 1 for sequential uploads. Higher values improve performance but use more connections. Defaults to 4.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Path to the local source directory.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_hash": {
+            "type": "string",
+            "description": "Combined SHA256 hash of all source files.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ssh_certificate": {
+            "type": "string",
+            "description": "SSH certificate content for certificate authentication. Used with ssh_private_key or ssh_key_path. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_certificate_path": {
+            "type": "string",
+            "description": "Path to SSH certificate file for certificate authentication. Used with ssh_private_key or ssh_key_path. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_key_path": {
+            "type": "string",
+            "description": "Path to SSH private key file. Mutually exclusive with ssh_private_key.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_password": {
+            "type": "string",
+            "description": "SSH password for password authentication. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_port": {
+            "type": "number",
+            "description": "SSH port. Defaults to 22.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ssh_private_key": {
+            "type": "string",
+            "description": "SSH private key content. Mutually exclusive with ssh_key_path.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_user": {
+            "type": "string",
+            "description": "SSH user. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "strict_host_key_checking": {
+            "type": "string",
+            "description": "SSH host key checking mode (like OpenSSH StrictHostKeyChecking). Valid values: `yes` (default) - strict checking, fail if unknown or mismatched; `no` - skip all verification (insecure); `accept-new` - accept and save new keys, fail on mismatch. Takes precedence over insecure_ignore_host_key if both are set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "symlink_policy": {
+            "type": "string",
+            "description": "How to handle symbolic links. Options: `follow` (default) - follow symlinks and copy target content; `skip` - ignore symlinks; `preserve` - create symlinks on remote (requires remote support).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "total_size": {
+            "type": "number",
+            "description": "Total size of all synced files in bytes.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "\nManages synchronization of a directory to a remote host via SSH/SFTP.\n\nThis resource syncs all files in a source directory to a destination directory on the remote host.\nIt tracks individual file hashes and only uploads files that have changed.\n\n## Behavior\n\n- **Plan**: Computes hashes for all local files, compares with state\n- **Apply**:\n  1. Connects to remote host via SSH\n  2. Creates destination directory structure\n  3. Uploads only changed files\n  4. Sets ownership and permissions on all files\n  5. Removes files from remote that no longer exist locally\n\n## Example Usage\n\n```hcl\nresource \"filesync_directory\" \"configs\" {\n  source      = \"${path.module}/configs\"\n  destination = \"/etc/myapp\"\n  host        = \"192.168.1.100\"\n\n  owner = \"root\"\n  group = \"root\"\n  mode  = \"0644\"\n\n  exclude = [\n    \"*.tmp\",\n    \".git\",\n    \"*.bak\"\n  ]\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    },
+    "filesync_file": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "bastion_host": {
+            "type": "string",
+            "description": "Bastion/jump host address for multi-hop SSH connections.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_key_path": {
+            "type": "string",
+            "description": "Path to SSH private key file for bastion host. Falls back to ssh_key_path if not set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_password": {
+            "type": "string",
+            "description": "SSH password for bastion host (sensitive).",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "bastion_port": {
+            "type": "number",
+            "description": "Bastion host SSH port. Defaults to 22.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "bastion_private_key": {
+            "type": "string",
+            "description": "SSH private key content for bastion host (sensitive). Falls back to ssh_private_key if not set.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "bastion_user": {
+            "type": "string",
+            "description": "SSH user for bastion host. Falls back to ssh_user if not set.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "check_remote_on_plan": {
+            "type": "bool",
+            "description": "If true, connects to the remote host during plan to detect drift. This adds latency to planning but provides early warning if remote files were modified outside Terraform. When drift is detected, a warning is shown in the plan output. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "destination": {
+            "type": "string",
+            "description": "Absolute path on the remote host where the file should be placed.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "group": {
+            "type": "string",
+            "description": "File group on remote. If not set, no group change is made. Set explicitly to change group (requires appropriate permissions).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "host": {
+            "type": "string",
+            "description": "Remote host address (IP or hostname).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "host_agnostic_id": {
+            "type": "bool",
+            "description": "If true, the resource ID uses only the destination path (not host:destination). This allows the host to change (e.g., switching between network paths to the same machine) without causing resource identity conflicts. Defaults to false for backwards compatibility.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Resource identifier. Format depends on host_agnostic_id: when false (default), ID is `host:destination`; when true, ID is just `destination`.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "import_syncs_local": {
+            "type": "bool",
+            "description": "If true, when importing an existing remote file, the remote content is written to the local source path. This allows you to import a remote file and have the local file created/updated to match. The source attribute must still be set in the config to specify where to write the file. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "insecure_ignore_host_key": {
+            "type": "bool",
+            "description": "Skip SSH host key verification. WARNING: This is insecure and should only be used for testing or in trusted environments. Defaults to false.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "known_hosts_file": {
+            "type": "string",
+            "description": "Path to a custom known_hosts file for SSH host key verification. Supports ~ expansion. If not set, uses the default ~/.ssh/known_hosts. Ignored if insecure_ignore_host_key is true.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "File permissions in octal notation (e.g., '0644' for rw-r--r--). Must be 3-4 digits. Defaults to '0644'.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "overwrite_on_drift": {
+            "type": "bool",
+            "description": "If true, when the remote file was modified outside Terraform (drift), the apply overwrites the remote with the local source instead of failing with a drift error. This is non-destructive (the file is uploaded/overwritten in place, never deleted), making it a safe alternative to `-replace` for a 'local source is authoritative' (GitOps) workflow. A warning is still emitted noting the overwrite. Defaults to false (drift is a hard error).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "owner": {
+            "type": "string",
+            "description": "File owner on remote. If not set, no ownership change is made (file is owned by the SSH user). Set explicitly to change ownership (requires appropriate permissions).",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "size": {
+            "type": "number",
+            "description": "Size of the file in bytes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Path to the local source file. Can be relative or absolute path.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "source_hash": {
+            "type": "string",
+            "description": "SHA256 hash of the source file in format `sha256:<hex>`. Updated when local file changes.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "source_trigger": {
+            "type": "string",
+            "description": "Optional external trigger value. When this changes between plans, forces re-sync on the next apply even if the local source file appears unchanged on disk at plan time. Use when the source file is produced by another resource in the same plan (e.g., `local_sensitive_file`) whose new content isn't yet on disk when this resource's plan modifier runs. Typically set to the producing resource's content checksum (e.g., `local_sensitive_file.example.content_sha256`).",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_certificate": {
+            "type": "string",
+            "description": "SSH certificate content for certificate authentication. Used with ssh_private_key or ssh_key_path. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_certificate_path": {
+            "type": "string",
+            "description": "Path to SSH certificate file for certificate authentication. Used with ssh_private_key or ssh_key_path. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_key_path": {
+            "type": "string",
+            "description": "Path to SSH private key file. Mutually exclusive with ssh_private_key.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_password": {
+            "type": "string",
+            "description": "SSH password for password authentication. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_port": {
+            "type": "number",
+            "description": "SSH port. Defaults to 22.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "ssh_private_key": {
+            "type": "string",
+            "description": "SSH private key content. Mutually exclusive with ssh_key_path.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_user": {
+            "type": "string",
+            "description": "SSH user. Overrides provider default.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "strict_host_key_checking": {
+            "type": "string",
+            "description": "SSH host key checking mode (like OpenSSH StrictHostKeyChecking). Valid values: `yes` (default) - strict checking, fail if unknown or mismatched; `no` - skip all verification (insecure); `accept-new` - accept and save new keys, fail on mismatch. Takes precedence over insecure_ignore_host_key if both are set.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "\nManages a single file on a remote host via SSH/SFTP.\n\n## Behavior\n\n- **Plan**: Compares local file hash against state. Shows change if local file modified.\n  - If `check_remote_on_plan = true`, also connects to remote to detect drift early.\n- **Apply**:\n  1. Connects to remote host via SSH\n  2. Checks remote file hash against state (drift detection)\n  3. If remote was modified externally, fails with error showing diff\n  4. If no drift, uploads new file content\n  5. Sets ownership and permissions\n  6. Updates state with new hash\n\n## Drift Detection\n\nIf someone modifies the remote file outside of Terraform, apply will fail:\n\n```\nError: Remote file drift detected\n\n  Resource: filesync_file.config\n  File: /etc/myapp/app.conf\n\n  Expected (from state): sha256:abc123...\n  Found (on remote):     sha256:def456...\n\n  To resolve:\n    - terraform import with import_syncs_local=true  # Accept remote as source of truth\n    - terraform apply -replace=filesync_file.config  # Force overwrite\n```\n\n### Early Drift Detection (check_remote_on_plan)\n\nSet `check_remote_on_plan = true` to detect drift during `terraform plan`:\n\n```hcl\nresource \"filesync_file\" \"config\" {\n  source      = \"./config.json\"\n  destination = \"/app/config.json\"\n  host        = \"192.168.1.100\"\n\n  check_remote_on_plan = true  # Warn about drift during plan\n}\n```\n\nThis adds latency to planning (requires SSH connection) but provides early warning.\n\n## Importing Existing Remote Files\n\nUse `import_syncs_local = true` to download remote file content to local path during import:\n\n```hcl\nresource \"filesync_file\" \"workflow\" {\n  source      = \"./workflows/my-workflow.json\"\n  destination = \"/app/workflow.json\"\n  host        = \"192.168.1.100\"\n\n  import_syncs_local = true  # Download remote to local on import\n}\n```\n\nThen import:\n```bash\nterraform import filesync_file.workflow \"192.168.1.100:/app/workflow.json\"\n```\n\nThe remote file content will be written to `./workflows/my-workflow.json`.\n\n## Example Usage\n\n```hcl\nresource \"filesync_file\" \"nginx_config\" {\n  source      = \"${path.module}/configs/nginx.conf\"\n  destination = \"/etc/nginx/nginx.conf\"\n  host        = \"192.168.1.100\"\n\n  owner = \"root\"\n  group = \"root\"\n  mode  = \"0644\"\n\n  ssh_user     = \"deploy\"\n  ssh_key_path = \"~/.ssh/deploy_key\"\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "filesync_host": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "address": {
+            "type": "string",
+            "description": "Host address as IP or hostname. Required field for data source lookup.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier computed from host address. Format: 'host:<address>'.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "ssh_certificate": {
+            "type": "string",
+            "description": "SSH certificate content in OpenSSH format. Used with ssh_private_key for certificate-based authentication. Sensitive field not stored in state.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_certificate_path": {
+            "type": "string",
+            "description": "Path to SSH certificate file in OpenSSH format. Used with ssh_key_path for certificate-based authentication. Supports ~ expansion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_key_path": {
+            "type": "string",
+            "description": "Path to SSH private key file. Can be absolute or relative. Mutually exclusive with ssh_private_key. Supports ~ expansion.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_password": {
+            "type": "string",
+            "description": "SSH password for password authentication. Required if not using key-based authentication. Sensitive field not stored in state.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_port": {
+            "type": "number",
+            "description": "SSH listening port on this host. Must be between 1 and 65535. Defaults to 22 if not specified.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "ssh_private_key": {
+            "type": "string",
+            "description": "SSH private key content in PEM format. Mutually exclusive with ssh_key_path. Sensitive field not stored in state.",
+            "description_kind": "markdown",
+            "optional": true,
+            "sensitive": true
+          },
+          "ssh_user": {
+            "type": "string",
+            "description": "SSH username for authentication on this host. Defaults to current system user if not specified.",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "\nDefines a reusable host configuration for file synchronization.\n\nThis data source allows you to define SSH connection parameters once and reuse them across multiple filesync_file or filesync_directory resources. This is especially useful when managing files on multiple hosts with different credentials.\n\n## Example Usage\n\n### Single Host Configuration\n\n```hcl\ndata \"filesync_host\" \"webserver\" {\n  address      = \"192.168.1.100\"\n  ssh_user     = \"deploy\"\n  ssh_key_path = \"~/.ssh/deploy_key\"\n  ssh_port     = 22\n}\n\nresource \"filesync_file\" \"nginx_config\" {\n  source      = \"${path.module}/configs/nginx.conf\"\n  destination = \"/etc/nginx/nginx.conf\"\n  host        = data.filesync_host.webserver.address\n\n  ssh_user     = data.filesync_host.webserver.ssh_user\n  ssh_key_path = data.filesync_host.webserver.ssh_key_path\n  ssh_port     = data.filesync_host.webserver.ssh_port\n  mode         = \"0644\"\n}\n```\n\n### Multiple Hosts with for_each\n\n```hcl\nlocals {\n  host_configs = {\n    webserver = {\n      address      = \"192.168.1.100\"\n      ssh_user     = \"deploy\"\n      ssh_key_path = \"~/.ssh/deploy_key\"\n    }\n    database = {\n      address      = \"192.168.1.101\"\n      ssh_user     = \"admin\"\n      ssh_key_path = \"~/.ssh/admin_key\"\n    }\n  }\n}\n\ndata \"filesync_host\" \"servers\" {\n  for_each = local.host_configs\n\n  address      = each.value.address\n  ssh_user     = each.value.ssh_user\n  ssh_key_path = each.value.ssh_key_path\n}\n\nresource \"filesync_file\" \"common_config\" {\n  for_each = data.filesync_host.servers\n\n  source      = \"${path.module}/configs/common.conf\"\n  destination = \"/etc/app/common.conf\"\n  host        = each.value.address\n\n  ssh_user     = each.value.ssh_user\n  ssh_key_path = each.value.ssh_key_path\n  mode         = \"0644\"\n}\n```\n\n### Password Authentication\n\n```hcl\ndata \"filesync_host\" \"legacy_server\" {\n  address      = \"192.168.1.200\"\n  ssh_user     = \"admin\"\n  ssh_password = var.legacy_server_password\n}\n```\n\n### Certificate Authentication\n\n```hcl\ndata \"filesync_host\" \"secure_server\" {\n  address              = \"192.168.1.50\"\n  ssh_user             = \"deploy\"\n  ssh_key_path         = \"~/.ssh/id_ed25519\"\n  ssh_certificate_path = \"~/.ssh/id_ed25519-cert.pub\"\n}\n```\n",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
