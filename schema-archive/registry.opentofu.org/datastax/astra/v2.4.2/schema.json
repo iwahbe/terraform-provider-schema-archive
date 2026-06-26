@@ -1,0 +1,2697 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "astra_api_url": {
+          "type": "string",
+          "description": "URL for Astra API. May also be provided via ASTRA_API_URL environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "astra_apps_domain": {
+          "type": "string",
+          "description": "DNS suffix for Astra databases. May also be provided via ASTRA_APPS_DOMAIN environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "streaming_api_url": {
+          "type": "string",
+          "description": "URL for Astra Streaming API. May also be provided via ASTRA_STREAMING_API_URL environment variable.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Authentication token for Astra API. May also be provided via ASTRA_API_TOKEN environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        }
+      },
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "astra_access_list": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "Public access restrictions enabled or disabled",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "block_types": {
+          "addresses": {
+            "nesting_mode": "list",
+            "block": {
+              "attributes": {
+                "address": {
+                  "type": "string",
+                  "description": "IP Address/CIDR group that should have access",
+                  "description_kind": "markdown",
+                  "required": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description for the IP Address/CIDR group",
+                  "description_kind": "markdown",
+                  "optional": true
+                },
+                "enabled": {
+                  "type": "bool",
+                  "description": "Enable/disable this IP Address/CIDR group's access",
+                  "description_kind": "markdown",
+                  "required": true
+                }
+              },
+              "description": "List of address requests that should have access to database endpoints.",
+              "description_kind": "markdown"
+            }
+          }
+        },
+        "description": "`astra_access_list` resource represents a database access list, used to limit the ip's / CIDR groups that have access to a database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_cdc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "connector_status": {
+            "type": "string",
+            "description": "Connector Status",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "data_topic": {
+            "type": "string",
+            "description": "Data topic name",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "Astra database to create the keyspace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "database_name": {
+            "type": "string",
+            "description": "Astra database name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "Initial keyspace name. For additional keyspaces, use the astra_keyspace resource.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "pulsar_cluster": {
+            "type": "string",
+            "description": "Name of the pulsar cluster to connect CDC.  If this is not set, Terraform will try to determine the pulsar cluster name based on the database cloud provider and region",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "table": {
+            "type": "string",
+            "description": "Astra database table.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tenant_name": {
+            "type": "string",
+            "description": "Streaming tenant name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "topic_partitions": {
+            "type": "number",
+            "description": "Number of partitions in cdc topic.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Deprecated as of version 2.4, please use `astra_cdc_v3` resource instead.",
+        "description_kind": "markdown",
+        "deprecated": true
+      }
+    },
+    "astra_cdc_v3": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "data_topics": {
+            "type": [
+              "map",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "Map of CDC data topics for each table in each region. Use the region as the first key and the keyspace.table as the second key. For example, astra_cdc.mycdc.data_topics['us-east1']['ks1.table1'].",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "Astra database to create the keyspace.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "database_name": {
+            "type": "string",
+            "description": "Astra database name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "regions": {
+            "nested_type": {
+              "attributes": {
+                "datacenter_id": {
+                  "type": "string",
+                  "description": "Astra Datacenter ID",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Cloud provider region",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "streaming_cluster": {
+                  "type": "string",
+                  "description": "Name of Pulsar cluster hosting the streaming tenant.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "streaming_tenant": {
+                  "type": "string",
+                  "description": "Name of the streaming tenant",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "Mapping between datacenter regions and streaming tenants.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tables": {
+            "nested_type": {
+              "attributes": {
+                "keyspace": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "table": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "set"
+            },
+            "description": "List of tables to enable CDC.  Must include at least 1.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "`astra_cdc_v3` enables CDC between Astra Serverless database and Astra Streaming.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_customer_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider where the Customer Key exists (Currently supported: aws, gcp)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Customer Key ID. This is cloud provider specific.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Astra organization ID (this is derived from the token used to create the Customer Key).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Region in which the Customer Key exists.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`astra_customer_key` provides a Customer Key resource for Astra's Bring Your Own Key (BYOK). Note that DELETE is not supported through Terraform currently. A support ticket must be created to delete Customer Keys in Astra. WARNING: Deleting a key from Astra will result in an outage. Please see https://docs.datastax.com/en/astra-db-serverless/administration/delete-customer-keys.html for more information.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "additional_keyspaces": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Additional keyspaces",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider to launch the database. (Currently supported: aws, azure, gcp)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "cqlsh_url": {
+            "type": "string",
+            "description": "The cqlsh_url",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "data_endpoint_url": {
+            "type": "string",
+            "description": "The data_endpoint_url",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "datacenters": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of Datacenter IDs. The map key is \"cloud_provider.region\". Example: \"GCP.us-east4\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "db_type": {
+            "type": "string",
+            "description": "Database type. Currently only `vector` is supported. Omit this optional field if you want a regular serverless database.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "Whether or not to allow Terraform to destroy the instance. Unless this field is set to false in Terraform state, a `terraform destroy` or `terraform apply` command that deletes the instance will fail. Defaults to `true`.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "grafana_url": {
+            "type": "string",
+            "description": "The grafana_url",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "graphql_url": {
+            "type": "string",
+            "description": "The graphql_url",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "Initial keyspace name. For additional keyspaces, use the astra_keyspace resource. If omitted, Astra will use its default, currently `default_keyspace`",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Astra database name.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "node_count": {
+            "type": "number",
+            "description": "The node_count",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The org id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "The owner id.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Cloud regions to launch the database. (see https://docs.datastax.com/en/astra/docs/database-regions.html for supported regions)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "replication_factor": {
+            "type": "number",
+            "description": "The replication_factor",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total_storage": {
+            "type": "number",
+            "description": "The total_storage",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "delete": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "read": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "`astra_database` provides an Astra Serverless Database resource. You can create and delete databases. Note: Classic Tier databases are not supported by the Terraform provider. (see https://docs.datastax.com/en/astra/docs/index.html for more about Astra DB)",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_enterprise_org": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "admin_user_id": {
+            "type": "string",
+            "description": "UUID of the Astra user that will be the admin of the organization",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The timestamp when the organization was created.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Organization email address",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enterprise_id": {
+            "type": "string",
+            "description": "UUID of the Enterprise under which the organization is created",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_modified": {
+            "type": "string",
+            "description": "The timestamp when the organization was last modified.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization name",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "organization_group_id": {
+            "type": "string",
+            "description": "The group ID (UUID) of the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "The Astra organization ID (UUID) for the created Enterprise organization.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_type": {
+            "type": "string",
+            "description": "The type of the organization.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`enterprise_org` resource represents an Organization that is created under an Enterprise in Astra.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_keyspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "Astra database to create the keyspace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Keyspace name can have up to 48 alpha-numeric characters and contain underscores; only letters and numbers are supported as the first character.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`astra_keyspace` provides a keyspace resource. Keyspaces are groupings of tables for Cassandra. `astra_keyspace` resources are associated with a database id. You can have multiple keyspaces per DB in addition to the default keyspace provided in the `astra_database` resource.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_pcu_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cache_type": {
+            "type": "string",
+            "description": "The instance type/cache type for the PCU group. Defaults to 'STANDARD'. Changing this value requires replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider where the PCU group will be provisioned (e.g., AWS, GCP, AZURE). This cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the PCU group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "The user who created the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "When enabled, prevents accidental deletion of the PCU group. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A user-defined description for the PCU group.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "The maximum capacity units the PCU group may scale to. Must be at least 1 and greater than or equal to min_capacity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "min_capacity": {
+            "type": "number",
+            "description": "The minimum capacity units the PCU must be scaled to. Must be at least 1 and greater than or equal to reserved_capacity.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "The organization ID that owns this PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "park": {
+            "type": "bool",
+            "description": "When set to true, parks the PCU group and any associated databases, reducing costs. When set to false, unparks the group. Defaults to false.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "provision_type": {
+            "type": "string",
+            "description": "The provisioning type for the PCU group (e.g., SHARED, DEDICATED). Defaults to 'SHARED'. Changing this value requires replacement.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The cloud region where the PCU group will be provisioned. This cannot be changed after creation.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "reserved_capacity": {
+            "type": "number",
+            "description": "The reserved (committed) capacity units for the PCU group. Must be at least 0. Changing this value when reserved_protection is enabled will result in an error.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "reserved_protection": {
+            "type": "bool",
+            "description": "When enabled, prevents accidental reserved capacity unit increases. Defaults to true.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the PCU group (e.g., ACTIVE, PARKED, CREATING, TERMINATING).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The user-defined title/name of the PCU group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the PCU group was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "The user who last updated the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Creates and manages a PCU (Provisioned Capacity Units) group. PCU groups provide dedicated compute capacity for databases in a specific cloud provider and region.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_pcu_group_association": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "datacenter_id": {
+            "type": "string",
+            "description": "The datacenter to associate with the PCU group. Note that this is a datacenter ID, not a database ID. The `provider::astra::resolve_datacenter` function may be used to easily obtain the datacenter ID from a database ID.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pcu_group_id": {
+            "type": "string",
+            "description": "The PCU group to associate the datacenter with. This may be changed to transfer the association to another PCU group.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "provisioning_status": {
+            "type": "string",
+            "description": "The provisioning status of the PCU group association. This will likely always be 'CREATED'.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "block_types": {
+          "timeouts": {
+            "nesting_mode": "single",
+            "block": {
+              "attributes": {
+                "create": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "update": {
+                  "type": "string",
+                  "description": "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "description_kind": "plain"
+            }
+          }
+        },
+        "description": "Creates a transferable association between an existing PCU group and datacenter.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_private_link": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "allowed_principals": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of service principals to apply to the Private Link (i.e. arn:aws:iam::123456789012:role/admin).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "Astra database where private link will be enabled.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenter_id": {
+            "type": "string",
+            "description": "Astra datacenter in the region where the private link will be created.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Name of the endpoint service for private link generated by the cloud provider.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_private_link` provides a private link resource. Private Link is a private network endpoint that can be created to connect from your vpc to Astra without using a publicly routable IP address. `astra_private_link` resources are associated with a database id. Once the private_link resource is created in Astra it must be linked to an endpoint within your vpc, use `astra_private_link_endpoint` to do this.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_private_link_endpoint": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "astra_endpoint_id": {
+            "type": "string",
+            "description": "Endpoint ID for referencing within Astra. May be different than the endpoint_id of this resource.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenter_id": {
+            "type": "string",
+            "description": "Astra datacenter in the region where the private link will be created.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "endpoint_id": {
+            "type": "string",
+            "description": "Endpoint created in your cloud provider account example: \"vpce-svc-1148ea04af8675309\"",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "`astra_private_link_endpoint` completes the creation of a private link endpoint by associating it with your endpoint.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Role description",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "effect": {
+            "type": "string",
+            "description": "Role effect",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "policy": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of policies for the role. See https://docs.datastax.com/en/astra/docs/user-permissions.html#_operational_roles_detail for supported policies.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "resources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Resources for which role is applicable (format is \"drn:astra:org:<org UUID>\", followed by optional resource criteria. See example usage above).",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "Role ID, system generated",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Role name",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`astra_role` resource represents custom roles for a particular Astra Org. Custom roles can be assigned to an Astra user is to grant them granular permissions when the default roles in the UI are not specific enough. Roles are composed of policies which are granted to resources.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_streaming_namespace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster": {
+            "type": "string",
+            "description": "Name of the Pulsar cluster where the tenant is located.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Full path to the namespace",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Name of the Pulsar namespace.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "policies": {
+            "nested_type": {
+              "attributes": {
+                "auto_topic_creation_override": {
+                  "nested_type": {
+                    "attributes": {
+                      "allow_auto_topic_creation": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "default_num_partitions": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "topic_type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "backlog_quota_map": {
+                  "nested_type": {
+                    "attributes": {
+                      "limit": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "limit_size": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "limit_time": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "policy": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "map"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "inactive_topic_policies": {
+                  "nested_type": {
+                    "attributes": {
+                      "delete_mode": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "delete_while_inactive": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "max_inactive_duration_seconds": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "is_allow_auto_update_schema": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "message_ttl_in_seconds": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "offload_threshold": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "retention_policies": {
+                  "nested_type": {
+                    "attributes": {
+                      "retention_size_in_mb": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      },
+                      "retention_time_in_minutes": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "optional": true,
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema_auto_update_compatibility_strategy": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema_compatibility_strategy": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "schema_validation_enforced": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "subscription_expiration_time_minutes": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Policies to be applied to the Pulsar namespace. For more details related to valid policy configuration, refer to the Pulsar namespace policies documentation (https://pulsar.apache.org/docs/3.0.x/admin-api-namespaces/).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tenant": {
+            "type": "string",
+            "description": "Name of the tenant.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "A Pulsar Namespace.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_streaming_pulsar_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster": {
+            "type": "string",
+            "description": "Cluster where the Pulsar tenant is located.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Full path to the namespace",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tenant": {
+            "type": "string",
+            "description": "Name of the tenant.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "time_to_live": {
+            "type": "string",
+            "description": "The relative time until the token expires.  For example 1h, 1d, 1y, etc.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "token": {
+            "type": "string",
+            "description": "String values of the token",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "A Pulsar Token.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_streaming_sink": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "archive": {
+            "type": "string",
+            "description": "Name of the sink archive type to use, e.g. 'builtin://kafka'. It is recommended to set this field even though it is marked optional. Defaults to the value of sink_name. Must be formatted as a URL, e.g. 'builtin://jdbc-clickhouse'",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "auto_ack": {
+            "type": "bool",
+            "description": "auto ack",
+            "description_kind": "plain",
+            "required": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider (deprecated, use `cluster` instead)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "cluster": {
+            "type": "string",
+            "description": "Name of the pulsar cluster in which to create the sink. If left blank, the name will be inferred from the cloud provider and region.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "Whether or not to allow Terraform to destroy this streaming sink. Unless this field is set to false in Terraform state, a `terraform destroy` or `terraform apply` command that deletes the instance will fail. Defaults to `true`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique ID in the form cluster_name/tenant_name/namespace/sink_name",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Pulsar Namespace",
+            "description_kind": "plain",
+            "required": true
+          },
+          "parallelism": {
+            "type": "number",
+            "description": "Parallelism for Pulsar sink",
+            "description_kind": "plain",
+            "required": true
+          },
+          "processing_guarantees": {
+            "type": "string",
+            "description": "\"ATLEAST_ONCE\" \"ATMOST_ONCE\" \"EFFECTIVELY_ONCE\".",
+            "description_kind": "plain",
+            "required": true
+          },
+          "pulsar_cluster": {
+            "type": "string",
+            "description": "Name of the pulsar cluster in which to create the sink. If left blank, the name will be inferred from the cloud provider and region.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "region": {
+            "type": "string",
+            "description": "cloud region (deprecated, use `cluster` instead)",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "retain_ordering": {
+            "type": "bool",
+            "description": "Retain ordering.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sink_configs": {
+            "type": "string",
+            "description": "Sink Configs",
+            "description_kind": "plain",
+            "required": true
+          },
+          "sink_name": {
+            "type": "string",
+            "description": "Name of the sink. Note that the combination of tenant, namespace, and sink name must not exceed 47 characters.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tenant_name": {
+            "type": "string",
+            "description": "Streaming tenant name.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Streaming tenant topic.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Creates a streaming sink which sends data from a topic to a target system.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_streaming_tenant": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "broker_service_url": {
+            "type": "string",
+            "description": "The Pulsar Binary Protocol URL used for production and consumption of messages.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider, one of `aws`, `gcp`, or `azure`. Required if `cluster_name` is not set.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "cluster_name": {
+            "type": "string",
+            "description": "Pulsar cluster name. Required if `cloud_provider` and `region` are not specified.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "Whether or not to allow Terraform to destroy this tenant. Unless this field is set to false in Terraform state, a `terraform destroy` or `terraform apply` command that deletes the instance will fail. Defaults to `true`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID used by Terraform to identify the tenant.  In the form <cluster_name>/<tenant_name>",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Cloud provider region. Required if `cluster_name` is not set.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "UUID for the tenant.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "tenant_name": {
+            "type": "string",
+            "description": "Name of the Astra Streaming tenant.  Similar to a Pulsar tenant.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Streaming tenant topic. Use the `astra_streaming_topic` resource instead.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "user_email": {
+            "type": "string",
+            "description": "Email address of the owner of the tenant.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "user_metrics_url": {
+            "type": "string",
+            "description": "URL for metrics.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "web_service_url": {
+            "type": "string",
+            "description": "URL used for administrative operations.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "web_socket_query_param_url": {
+            "type": "string",
+            "description": "URL used for web socket query parameter operations.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "web_socket_url": {
+            "type": "string",
+            "description": "URL used for web socket operations.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Astra Streaming Tenant",
+        "description_kind": "plain"
+      }
+    },
+    "astra_streaming_topic": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "**Deprecated** Cloud provider where the  Astra Streaming tenant is located.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "cluster": {
+            "type": "string",
+            "description": "Cluster where the Astra Streaming tenant is located.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "deletion_protection": {
+            "type": "bool",
+            "description": "Prevent this topic from being deleted via Terraform",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Full path to the topic",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Pulsar namespace of the topic.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "num_partitions": {
+            "type": "number",
+            "description": "Number of partitions for a partitioned topic.  This field must not be set for a non-partitioned topic.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "partitioned": {
+            "type": "bool",
+            "description": "Partitioned or non-partitioned topic",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "persistent": {
+            "type": "bool",
+            "description": "Persistent or non-persistent topic",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "**Deprecated** Region where the  Astra Streaming tenant is located.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true,
+            "computed": true
+          },
+          "schema": {
+            "nested_type": {
+              "attributes": {
+                "properties": {
+                  "type": [
+                    "map",
+                    "string"
+                  ],
+                  "description": "Additional properties",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "schema": {
+                  "type": "string",
+                  "description": "Schema definition",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the schema, e.g. JSON",
+                  "description_kind": "plain",
+                  "required": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Pulsar topic schema.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant": {
+            "type": "string",
+            "description": "Name of the streaming tenant.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "tenant_name": {
+            "type": "string",
+            "description": "**Deprecated** Name of the streaming tenant.",
+            "description_kind": "plain",
+            "deprecated": true,
+            "optional": true
+          },
+          "topic": {
+            "type": "string",
+            "description": "Name of the topic",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "topic_fqn": {
+            "type": "string",
+            "description": "Fully qualified name of the topic, for example 'persistent://mytenant/namespace1/mytopic'",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "A Pulsar Topic.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_table": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "clustering_columns": {
+            "type": "string",
+            "description": "Clustering column(s), separated by :",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "column_definitions": {
+            "type": [
+              "list",
+              [
+                "map",
+                "string"
+              ]
+            ],
+            "description": "A list of table Definitions",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "Astra database to create the keyspace.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "Keyspace name can have up to 48 alpha-numeric characters and contain underscores; only letters are supported as the first character.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "partition_keys": {
+            "type": "string",
+            "description": "Partition key(s), separated by :",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "region": {
+            "type": "string",
+            "description": "region.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "table": {
+            "type": "string",
+            "description": "Table name can have up to 48 alpha-numeric characters and contain underscores; only letters are supported as the first character.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`astra_table` provides a table resource which represents a table in cassandra.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_token": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "client_id": {
+            "type": "string",
+            "description": "Client id, use as username in cql to connect",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "The UUID of the organization under which the token will be created. If not provided, the token will be created under the organization/enterprise of the token making the request.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "roles": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of Role IDs to be assigned to the generated token",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "secret": {
+            "type": "string",
+            "description": "Secret, use as password in cql to connect",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          },
+          "token": {
+            "type": "string",
+            "description": "Token, use as auth bearer for API calls or as password in combination with the word `token` in cql",
+            "description_kind": "markdown",
+            "computed": true,
+            "sensitive": true
+          }
+        },
+        "description": "`astra_token` resource represents a token with a specific role assigned.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "astra_access_list": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "addresses": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "address": "string",
+                  "description": "string",
+                  "enabled": "bool"
+                }
+              ]
+            ],
+            "description": "Addresses in the access list.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "enabled": {
+            "type": "bool",
+            "description": "The Access list is enabled or disabled.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "`astra_access_list` provides a datasource that lists the access lists for an Astra database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_available_regions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider to filter by",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "only_enabled": {
+            "type": "bool",
+            "description": "Whether to filter by enabled regions. If 'false' or omitted, all regions are returned, enabled or not",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "region_type": {
+            "type": "string",
+            "description": "The region type to filter by (currently either 'serverless', 'vector' or 'all'). If omitted, the default is 'serverless'",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "cloud_provider": "string",
+                  "display_name": "string",
+                  "enabled": "bool",
+                  "region": "string",
+                  "region_type": "string",
+                  "reserved_for_qualified_users": "bool",
+                  "zone": "string"
+                }
+              ]
+            ],
+            "description": "The list of supported Astra regions by cloud provider and tier.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a list of available cloud regions in Astra",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_cloud_accounts": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider where the Customer Key exists (Currently supported: aws, gcp)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Cloud provider region",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "organization_id": "string",
+                  "provider": "string",
+                  "provider_id": "string"
+                }
+              ]
+            ],
+            "description": "The list of Cloud Accounts for the given Organization.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a list of Cloud Accounts within an Organization",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_customer_key": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider where the Customer Key exists (Currently supported: aws, gcp)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "key_id": {
+            "type": "string",
+            "description": "The Customer Key ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization ID",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "Cloud provider region",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "Retrieve a Customer Key for a given cloud provider and region",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_customer_keys": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "cloud_provider": "string",
+                  "key_id": "string",
+                  "organization_id": "string",
+                  "region": "string"
+                }
+              ]
+            ],
+            "description": "The list of Customer Keys for the given Organization.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a list of Customer Keys within an Organization",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_database": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "additional_keyspaces": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Additional keyspaces",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "Cloud provider (AWS, GCP, AZURE)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "cqlsh_url": {
+            "type": "string",
+            "description": "URL for cqlsh web",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "data_endpoint_url": {
+            "type": "string",
+            "description": "REST API URL",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "database_id": {
+            "type": "string",
+            "description": "Astra Database ID (system generated)",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenters": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "Map of Datacenter IDs. The map key is \"cloud_provider.region\". Example: \"GCP.us-east4\".",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "db_type": {
+            "type": "string",
+            "description": "Database Type. Only 'vector' is supported. For serverless, this field will be omitted",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "grafana_url": {
+            "type": "string",
+            "description": "URL for the grafana dashboard for this database",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "graphql_url": {
+            "type": "string",
+            "description": "Graphql URL",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "keyspace": {
+            "type": "string",
+            "description": "Initial keyspace",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Database name (user provided)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "node_count": {
+            "type": "number",
+            "description": "Node count (not relevant for serverless databases)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "organization_id": {
+            "type": "string",
+            "description": "Organization id (system generated)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "Owner id (system generated)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "regions": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Cloud provider region. Get list of supported regions from regions data-source",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "replication_factor": {
+            "type": "number",
+            "description": "Replication Factor (not relevant for serverless databases)",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Database status",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "total_storage": {
+            "type": "number",
+            "description": "Storage Capacity (not relevant for serverelss databases)",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_database` provides a datasource for Astra an Astra database. This can be used to select an existing database within your Astra Organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_databases": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "additional_keyspaces": [
+                    "list",
+                    "string"
+                  ],
+                  "cloud_provider": "string",
+                  "cqlsh_url": "string",
+                  "data_endpoint_url": "string",
+                  "datacenters": [
+                    "map",
+                    "string"
+                  ],
+                  "db_type": "string",
+                  "grafana_url": "string",
+                  "graphql_url": "string",
+                  "id": "string",
+                  "keyspace": "string",
+                  "name": "string",
+                  "node_count": "number",
+                  "organization_id": "string",
+                  "owner_id": "string",
+                  "regions": [
+                    "list",
+                    "string"
+                  ],
+                  "replication_factor": "number",
+                  "status": "string",
+                  "total_storage": "number"
+                }
+              ]
+            ],
+            "description": "The list of Astra databases that match the search criteria.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status filter. Only return databases with matching status, if supplied. Otherwise return all databases matching other requirements",
+            "description_kind": "markdown",
+            "optional": true
+          }
+        },
+        "description": "`astra_databases` provides a datasource for a list of Astra databases. This can be used to select databases within your Astra Organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_keyspace": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The keyspace name.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "`astra_keyspace` provides a datasource for a particular keyspace. See `astra_keyspaces` if you're looking to fetch all the keyspaces for a particular database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_keyspaces": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "name": "string"
+                }
+              ]
+            ],
+            "description": "The list of keyspaces that match the search criteria.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_keyspaces` provides a datasource that lists the keyspaces in an Astra database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_pcu_group": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cache_type": {
+            "type": "string",
+            "description": "The instance type/cache type for the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "cloud_provider": {
+            "type": "string",
+            "description": "The cloud provider where the PCU group is provisioned (e.g., AWS, GCP, AZURE).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when the PCU group was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_by": {
+            "type": "string",
+            "description": "The user who created the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The user-defined description of the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "max_capacity": {
+            "type": "number",
+            "description": "The maximum capacity units the PCU group may scale to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "min_capacity": {
+            "type": "number",
+            "description": "The minimum capacity units the PCU must be scaled to.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "The organization ID that owns this PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "pcu_group_id": {
+            "type": "string",
+            "description": "The unique identifier of the PCU group to retrieve.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "provision_type": {
+            "type": "string",
+            "description": "The provisioning type for the PCU group (i.e., SHARED, DEDICATED).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "region": {
+            "type": "string",
+            "description": "The cloud region where the PCU group is provisioned.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reserved_capacity": {
+            "type": "number",
+            "description": "The reserved (committed) capacity units for the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The current status of the PCU group (e.g., ACTIVE, CREATED, INITIALIZING).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The user-defined title/name of the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp when the PCU group was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "The user who last updated the PCU group.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves details for a specific PCU (Provisioned Capacity Units) group by its ID.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_pcu_group_associations": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "pcu_group_id": {
+            "type": "string",
+            "description": "The PCU group to retrieve associations for.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "results": {
+            "nested_type": {
+              "attributes": {
+                "datacenter_id": {
+                  "type": "string",
+                  "description": "The datacenter that is associated with the PCU Group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "provisioning_status": {
+                  "type": "string",
+                  "description": "The provisioning status of the PCU group association. This will likely always be 'CREATED'.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Gets all of the associations for a given PCU group.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_pcu_groups": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "pcu_group_ids": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Optional list of PCU group IDs to retrieve. If not provided, all PCU groups in the organization will be returned.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "results": {
+            "nested_type": {
+              "attributes": {
+                "cache_type": {
+                  "type": "string",
+                  "description": "The instance type/cache type for the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "cloud_provider": {
+                  "type": "string",
+                  "description": "The cloud provider where the PCU group is provisioned (e.g., AWS, GCP, AZURE).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp when the PCU group was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_by": {
+                  "type": "string",
+                  "description": "The user who created the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The user-defined description of the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "max_capacity": {
+                  "type": "number",
+                  "description": "The maximum capacity units the PCU group may scale to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "min_capacity": {
+                  "type": "number",
+                  "description": "The minimum capacity units the PCU must be scaled to.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "org_id": {
+                  "type": "string",
+                  "description": "The organization ID that owns this PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "provision_type": {
+                  "type": "string",
+                  "description": "The provisioning type for the PCU group (i.e., SHARED, DEDICATED).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "region": {
+                  "type": "string",
+                  "description": "The cloud region where the PCU group is provisioned.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "reserved_capacity": {
+                  "type": "number",
+                  "description": "The reserved (committed) capacity units for the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The current status of the PCU group (e.g., ACTIVE, CREATED, INITIALIZING).",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The user-defined title/name of the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "Timestamp when the PCU group was last updated.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_by": {
+                  "type": "string",
+                  "description": "The user who last updated the PCU group.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of PCU groups matching the specified criteria or all PCU groups if no IDs were provided.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieves a list of PCU (Provisioned Capacity Units) groups. If no IDs are specified, returns all PCU groups in the organization.",
+        "description_kind": "plain"
+      }
+    },
+    "astra_private_link_endpoints": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenter_id": {
+            "type": "string",
+            "description": "The Datacenter ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "endpoint_id": {
+            "type": "string",
+            "description": "Endpoint ID.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "create_time": "string",
+                  "description": "string",
+                  "endpoint_id": "string",
+                  "status": "string"
+                }
+              ]
+            ],
+            "description": "The list of private links endpoint details that match the search criteria.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_private_link_endpoints` provides a datasource that lists the private link endpoints for an Astra database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_private_links": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenter_id": {
+            "type": "string",
+            "description": "The datacenter where of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "allowed_principals": [
+                    "list",
+                    "string"
+                  ],
+                  "datacenter_id": "string",
+                  "endpoints": [
+                    "list",
+                    "string"
+                  ],
+                  "service_name": "string"
+                }
+              ]
+            ],
+            "description": "The list of private links that match the search criteria.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_private_links` provides a datasource that lists the private links in an Astra database.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_role": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "description": {
+            "type": "string",
+            "description": "Role description",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "effect": {
+            "type": "string",
+            "description": "Role effect",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "policy": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of policies for the role. See https://docs.datastax.com/en/astra/docs/user-permissions.html#_operational_roles_detail for supported policies.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "resources": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "Resources for which role is applicable (format is \"drn:astra:org:<org UUID>\", followed by optional resource criteria. See example usage above).",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "role_id": {
+            "type": "string",
+            "description": "Role ID, system generated",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Role name",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_role` provides a datasource that lists the custom roles for an org.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_roles": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "results": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "description": "string",
+                  "effect": "string",
+                  "policy": [
+                    "list",
+                    "string"
+                  ],
+                  "resources": [
+                    "list",
+                    "string"
+                  ],
+                  "role_id": "string",
+                  "role_name": "string"
+                }
+              ]
+            ],
+            "description": "The list of Astra roles.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_roles` provides a datasource for a list of Astra roles. This can be used to select roles within your Astra Organization.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_secure_connect_bundle_url": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "database_id": {
+            "type": "string",
+            "description": "The ID of the Astra database.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "datacenter_id": {
+            "type": "string",
+            "description": "The ID of the Astra datacenter. If omitted, all bundles will be fetched.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "secure_bundles": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "custom_domain_bundles": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "api_fqdn": "string",
+                        "cql_fqdn": "string",
+                        "dashboard_fqdn": "string",
+                        "domain": "string",
+                        "url": "string"
+                      }
+                    ]
+                  ],
+                  "datacenter_id": "string",
+                  "internal_migration_proxy_url": "string",
+                  "internal_url": "string",
+                  "migration_proxy_url": "string",
+                  "url": "string"
+                }
+              ]
+            ],
+            "description": "A list of Secure Connect Bundle info",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_secure_connect_bundle_url` provides a datasource that generates a temporary secure connect bundle URL. This URL lasts five minutes. Secure connect bundles are used to connect to Astra using cql cassandra drivers. See the [docs](https://docs.datastax.com/en/astra/docs/connecting-to-database.html) for more information on how to connect.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_streaming_tenant_tokens": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "cluster_name": {
+            "type": "string",
+            "description": "Name of the Pulsar Cluster. Format: `pulsar-<cloud provider>-<cloud region>`. Example: `pulsar-gcp-useast1`",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "tenant_name": {
+            "type": "string",
+            "description": "Name of the streaming tenant for which to fetch tokens.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "tokens": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "iat": "number",
+                  "iss": "string",
+                  "sub": "string",
+                  "token": "string",
+                  "token_id": "string"
+                }
+              ]
+            ],
+            "description": "The list of tokens for the specified tenant.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_streaming_tenant_tokens` provides a datasource that lists streaming tenant tokens.",
+        "description_kind": "markdown"
+      }
+    },
+    "astra_users": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "org_id": {
+            "type": "string",
+            "description": "Organization ID.",
+            "description_kind": "markdown",
+            "computed": true
+          },
+          "org_name": {
+            "type": "string",
+            "description": "Organization Name.",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "users": {
+            "type": [
+              "list",
+              [
+                "object",
+                {
+                  "email": "string",
+                  "roles": [
+                    "list",
+                    [
+                      "object",
+                      {
+                        "role_id": "string"
+                      }
+                    ]
+                  ],
+                  "status": "string",
+                  "user_id": "string"
+                }
+              ]
+            ],
+            "description": "The list of Astra users.",
+            "description_kind": "markdown",
+            "computed": true
+          }
+        },
+        "description": "`astra_users` provides a datasource for a list of Astra users. This can be used to select users within your Astra Organization.",
+        "description_kind": "markdown"
+      }
+    }
+  },
+  "functions": {
+    "resolve_datacenter": {
+      "description": "Resolves the datacenter ID for a given database and optional region (if the database has multiple regions). Helpful for components that require a datacenter ID such as PCU group associations and private links.",
+      "summary": "",
+      "return_type": "string",
+      "parameters": [
+        {
+          "name": "database",
+          "description": "The database object to resolve the datacenter from. This should be the result of an \"astra_database\" resource or data source.",
+          "type": [
+            "object",
+            {
+              "cloud_provider": "string",
+              "datacenters": [
+                "map",
+                "string"
+              ]
+            }
+          ]
+        }
+      ],
+      "variadic_parameter": {
+        "name": "region",
+        "description": "The region to resolve the datacenter for. If not provided, the function will attempt to resolve the datacenter if there is only one configured.",
+        "type": "string"
+      }
+    }
+  }
+}
