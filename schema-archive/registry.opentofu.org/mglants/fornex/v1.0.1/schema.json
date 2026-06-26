@@ -1,0 +1,182 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_key": {
+          "type": "string",
+          "description": "Your Fornex API key. Can also be set via `FORNEX_API_KEY` environment variable.",
+          "description_kind": "plain",
+          "optional": true,
+          "sensitive": true
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Fornex API base URL. Defaults to `https://fornex.com/api`. Can also be set via `FORNEX_BASE_URL` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Per-request HTTP timeout, as a Go duration string (e.g. `30s`, `2m`). Each retry attempt gets its own fresh timeout. Defaults to `3m`. Can also be set via `FORNEX_TIMEOUT` environment variable.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "The Fornex provider is used to interact with the many services offered by Fornex. It provides resources to manage DNS records and domains.",
+      "description_kind": "plain"
+    }
+  },
+  "resource_schemas": {
+    "fornex_domain": {
+      "version": 1,
+      "block": {
+        "attributes": {
+          "name": {
+            "type": "string",
+            "description": "The domain name to manage.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a Fornex domain resource. This can be used to create and delete domains on Fornex DNS.",
+        "description_kind": "plain"
+      }
+    },
+    "fornex_record": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domain_name": {
+            "type": "string",
+            "description": "The domain name this record belongs to.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "description": "The host part of the record (e.g., \"www\"). For apex records write \"@\"; it is rewritten to \"\" before being sent to the Fornex API, and any apex form the API returns (\"\", \"@\", \"<domain>\", \"<domain>.\") is canonicalized back to \"@\" in state. The empty string is rejected \u2014 write \"@\" instead.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "number",
+            "description": "The ID of the record.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "priority": {
+            "type": "number",
+            "description": "Priority of the record (used for MX, SRV). Must be >= 1; Fornex's API silently coerces 0 to 1, which Terraform would then reject as an inconsistent apply result.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "ttl": {
+            "type": "number",
+            "description": "Time to live for the record, in seconds. Fornex only accepts a fixed set of values: 120 (2m), 300 (5m), 600 (10m), 900 (15m), 1800 (30m), 3600 (1h), 7200 (2h), 18000 (5h), 43200 (12h), 86400 (24h). Omit the attribute to use the Fornex default (auto).",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the record (A, AAAA, CAA, CNAME, MX, NS, SRV, TXT).",
+            "description_kind": "plain",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the record.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Provides a Fornex DNS record resource. This can be used to create, modify, and delete DNS records.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "fornex_domain": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "created": {
+            "type": "string",
+            "description": "The date and time the domain was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The domain name to look up.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "tags": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of tags associated with the domain.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated": {
+            "type": "string",
+            "description": "The date and time the domain was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Get information about a specific Fornex domain.",
+        "description_kind": "plain"
+      }
+    },
+    "fornex_domains": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "domains": {
+            "nested_type": {
+              "attributes": {
+                "created": {
+                  "type": "string",
+                  "description": "The date and time the domain was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The domain name.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "tags": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "List of tags associated with the domain.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated": {
+                  "type": "string",
+                  "description": "The date and time the domain was last updated.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of domains found.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Get information about all Fornex domains.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}

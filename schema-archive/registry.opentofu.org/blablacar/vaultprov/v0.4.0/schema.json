@@ -1,0 +1,128 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "address": {
+          "type": "string",
+          "description": "Origin URL of the Vault server. This is a URL with a scheme, a hostname and a port but with no path.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "auth": {
+          "nested_type": {
+            "attributes": {
+              "jwt": {
+                "type": "string",
+                "description": "The JWT of the Kubernetes Service Account against which the login is being attempted.",
+                "description_kind": "markdown",
+                "required": true
+              },
+              "path": {
+                "type": "string",
+                "description": "The login path of the auth Kubernetes backend. For example, `auth/kubernetes/gke-tools-1/login`",
+                "description_kind": "markdown",
+                "required": true
+              },
+              "role": {
+                "type": "string",
+                "description": "The name of the role against which the login is being attempted.",
+                "description_kind": "markdown",
+                "required": true
+              }
+            },
+            "nesting_mode": "single"
+          },
+          "description_kind": "plain",
+          "optional": true
+        },
+        "token": {
+          "type": "string",
+          "description": "Vault token that will be used by Terraform to authenticate. For debug purpose only. For production, use the `auth` attributes",
+          "description_kind": "markdown",
+          "optional": true
+        }
+      },
+      "description": "A provider to generate secrets and have them stored directly into Vault without any copy in the Terraform State.  Once the secret has been generated, its value only exist into Vault. Terraform will not track any change in the value, only in the secret attribute (`metadata`, etc.`).",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "vaultprov_keypair_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "base_path": {
+            "type": "string",
+            "description": "Base path of the keypair secrets in Vault. Two Vault secrets will be created at this path: one for the private key (`private`) and one for the public one (`public`) . For example, for a `base_path` `foo/bar`, the keypair secrets will be `foo/bar/private` and `foo/bar/public`. Serves as the secret id.",
+            "description_kind": "markdown",
+            "required": true
+          },
+          "force_destroy": {
+            "type": "bool",
+            "description": "If set to `true`, removing the resource will delete the secret and all versions in Vault. If set to `false` or not defined, removing the resource will fail.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of key/value strings that will be stored along the secret as custom metadata",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of keypair to create. Only supported value for now is `curve25519`.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "A cryptographic keypair stored as two Vault secrets (one for the private key and one for the public one). Only support Curve25519 keypair for now. The resulting Vault secrets will have a custom metadata `secret_type` with the type of the secret (`keypair_curve25519`) and a custom metadata `secret_length` with the length of the keypair.",
+        "description_kind": "markdown"
+      }
+    },
+    "vaultprov_random_secret": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "force_destroy": {
+            "type": "bool",
+            "description": "If set to `true`, removing the resource will delete the secret and all versions in Vault. If set to `false` or not defined, removing the resource will fail.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "length": {
+            "type": "number",
+            "description": "The length (in bytes) of the secret. Default is 32. This information will be stored as a custom metadata under the key `secret_length` ",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "metadata": {
+            "type": [
+              "map",
+              "string"
+            ],
+            "description": "A map of key/value strings that will be stored along the secret as custom metadata",
+            "description_kind": "markdown",
+            "optional": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Full name of the Vault secret. For a nested secret the name is the nested path excluding the mount and data prefix. For example, for a secret at `keys/data/foo/bar/baz` the name is `foo/bar/baz`. Serves as the secret id.",
+            "description_kind": "markdown",
+            "required": true
+          }
+        },
+        "description": "A cryptographic randomly generated secret stored as bytes in a Vault secret. The resulting Vault secret will have a custom metadata `secret_type` with the value `random_secret` and a custom metadata `secret_length` with the same value as the `length` attribute.",
+        "description_kind": "markdown"
+      }
+    }
+  }
+}
