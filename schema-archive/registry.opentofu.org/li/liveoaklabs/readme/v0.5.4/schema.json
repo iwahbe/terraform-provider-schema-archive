@@ -1,0 +1,2977 @@
+{
+  "provider": {
+    "version": 0,
+    "block": {
+      "attributes": {
+        "api_token": {
+          "type": "string",
+          "description": "Client token for accessing the ReadMe API. May alternatively be set with the `README_API_TOKEN` environment variable.",
+          "description_kind": "markdown",
+          "optional": true,
+          "sensitive": true
+        },
+        "api_url": {
+          "type": "string",
+          "description": "URL for accessing the ReadMe API. May also be set with the `README_API_URL` environment variable or left unset to use the default.",
+          "description_kind": "markdown",
+          "optional": true
+        },
+        "config": {
+          "nested_type": {
+            "attributes": {
+              "destroy_child_docs": {
+                "type": "bool",
+                "description": "Destroy child docs when destroying a parent doc.",
+                "description_kind": "plain",
+                "optional": true
+              }
+            },
+            "nesting_mode": "single"
+          },
+          "description": "Provider configuration options.",
+          "description_kind": "plain",
+          "optional": true
+        }
+      },
+      "description": "The ReadMe provider provides resources and data sources for interacting with the [ReadMe.com](https://docs.readme.com/main/reference/intro-to-the-readme-api) API.",
+      "description_kind": "markdown"
+    }
+  },
+  "resource_schemas": {
+    "readme_api_specification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": [
+              "object",
+              {
+                "id": "string",
+                "order": "number",
+                "slug": "string",
+                "title": "string",
+                "type": "string"
+              }
+            ],
+            "description": "Category metadata for the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "definition": {
+            "type": "string",
+            "description": "Raw API specification definition in JSON format.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "delete_category": {
+            "type": "bool",
+            "description": "Delete the associated category when the resource is deleted.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "last_synced": {
+            "type": "string",
+            "description": "Timestamp of the last synchronization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "semver": {
+            "type": "string",
+            "description": "Semver (or similar) for the API specification. This value can be set in the `info:version` key of the definition JSON, but this parameter takes precedence. Changing the version will replace the API specification. Use unique resources for multiple versions. Learn more about document versioning [here](https://docs.readme.com/main/docs/versions).",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Creation source of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Title derived from the specification JSON.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "UUID of the API registry associated with this specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "Version ID associated with the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nManages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the\nspecification using the returned UUID. This association is necessary for managing the API specification and its\ndefinition. The behavior is similar to the official rdme CLI but is undocumented in the ReadMe API.\n\n## External Changes\nExternal changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a\ndefinition is updated, and the new UUID is only available when published to the registry. To synchronize, force an\nupdate via Terraform (e.g., taint or manual change).\n\n## Importing Existing Specifications\nImporting is limited due to how the API registry associates specifications with definitions. Terraform will overwrite\nthe remote definition on the next run, replacing the UUID.\n\n## Managing Documentation\nAPI specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the\nreadme_doc resource with use_slug to manage the documentation page.\n\nSee the ReadMe API documentation at https://docs.readme.com/main/reference/uploadapispecification for more information.\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_category": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category_type": {
+            "type": "string",
+            "description": "The category type (different than 'type').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order": {
+            "type": "number",
+            "description": "The order of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the project the category is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reference": {
+            "type": "bool",
+            "description": "Indicates whether the category is a reference or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the category.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The category type.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The 'semver-ish' ReadMe version to create the category under.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version_id": {
+            "type": "string",
+            "description": "The version ID the category is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manage categories for a project on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getcategory> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_changelog": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body of the changelog. Optionally use front matter to set certain attributes. ",
+            "description_kind": "plain",
+            "required": true
+          },
+          "body_clean": {
+            "type": "string",
+            "description": "The body of the changelog after normalization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date the changelog was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Whether the changelog is hidden. This can alternatively be set using the `hidden` front matter key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "html": {
+            "type": "string",
+            "description": "The body source formatted in HTML.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "__REQUIRED.__ The title of the changelog. This can alternatively be set using the `title` front matter key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of changelog. This can alternatively be set using the `type` front matter key. Valid values: added, fixed, improved, deprecated, removed",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date the changelog was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manage changelogs on ReadMe.com\n\nChangelogs on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.\n\nRefer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and changelogs.\n\nSee <https://docs.readme.com/main/reference/createchangelog> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_custom_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body of the custom page. Optionally use front matter to set certain attributes. Alternatively, use the `html_mode` and `html` attributes to set the body in HTML format.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "body_clean": {
+            "type": "string",
+            "description": "The body of the custom page after normalization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date the custom page was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fullscreen": {
+            "type": "bool",
+            "description": "Whether the custom page is in fullscreen mode.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Whether the custom page is hidden. This can alternatively be set using the `hidden` front matter key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "html": {
+            "type": "string",
+            "description": "The body source formatted in HTML. Only displayed if `htmlmode` is set to `true`. Leading and trailing whitespace and certain HTML tags are removed when uploaded to ReadMe. The `html_clean` attribute will contain the normalized HTML.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "html_clean": {
+            "type": "string",
+            "description": "The body formatted in HTML after normalization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "html_mode": {
+            "type": "bool",
+            "description": "Set to `true` if `html` should be displayed, otherwise `body` will be displayed.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the custom page. This can alternatively be set using the `title` front matter key.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date the custom page was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manage custom pages on ReadMe.com\n\nCustom pages on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.\n\nRefer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages.\n\nSee <https://docs.readme.com/main/reference/createcustompage> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_doc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "api": {
+            "nested_type": {
+              "attributes": {
+                "api_setting": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "auth": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "examples": {
+                  "nested_type": {
+                    "attributes": {
+                      "codes": {
+                        "nested_type": {
+                          "attributes": {
+                            "code": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "language": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "method": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "params": {
+                  "nested_type": {
+                    "attributes": {
+                      "default": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "desc": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "enum_values": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "in": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "ref": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "required": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "results": {
+                  "nested_type": {
+                    "attributes": {
+                      "codes": {
+                        "nested_type": {
+                          "attributes": {
+                            "code": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "language": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "status": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata for an API doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. Accepts long page content, for example, greater than 100k characters. Optionally use front matter to set certain attributes.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "body_clean": {
+            "type": "string",
+            "description": "The body content of the doc after transformations such as trimming leading and trailingspaces.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body_html": {
+            "type": "string",
+            "description": "The body content in HTML.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "**Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. Alternatively, set the `category` key the body front matter. Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "category_slug": {
+            "type": "string",
+            "description": "**Required**. The category slug of the doc. Note that changing the category will result in a replacement of the doc resource. Alternatively, set the `categorySlug` key the body front matter. Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deprecated": {
+            "type": "bool",
+            "description": "Identifies if a doc is deprecated or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "error": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Error code configuration for a doc. This attribute may be set in the body front matter.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "excerpt": {
+            "type": "string",
+            "description": "A short summary of the content.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Toggles if a doc is hidden or not. This attribute may be set in the body front matter.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_api": {
+            "type": "bool",
+            "description": "Identifies if a doc is an API doc or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_reference": {
+            "type": "bool",
+            "description": "Identifies if a doc is a reference doc or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "link_external": {
+            "type": "bool",
+            "description": "Identifies a doc's link as external or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "link_url": {
+            "type": "string",
+            "description": "The URL of the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description": "The description of the doc.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "An image associated with the doc.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the doc.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "next": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "pages": {
+                  "nested_type": {
+                    "attributes": {
+                      "category": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "deprecated": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "slug": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description": "List of 'next' page configurations.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Information about the 'next' pages in a series.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order": {
+            "type": "number",
+            "description": "The position of the doc in the project sidebar. This attribute may be set in the body front matter.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_doc": {
+            "type": "string",
+            "description": "For a subpage, specify the parent doc ID.This attribute may be set in the body front matter with the `parentDoc` key.The provider cannot verify that a `parent_doc` exists if it is hidden. To use a `parent_doc` ID without verifying, set the `verify_parent_doc` attribute to `false`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "parent_doc_slug": {
+            "type": "string",
+            "description": "For a subpage, specify the parent doc slug instead of the ID.This attribute may be set in the body front matter with the `parentDocSlug` key.If a value isn't specified but `parent_doc` is, the provider will attempt to populate this value using the `parent_doc` ID unless `verify_parent_doc` is set to `false`.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "previous_slug": {
+            "type": "string",
+            "description": "If the doc's slug has changed, this attribute contains the previous slug.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the project the doc is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "A number that is incremented upon doc updates.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug_updated_at": {
+            "type": "string",
+            "description": "The timestamp of when the doc's slug was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sync_unique": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "**Required.** The title of the doc.This attribute may optionally be set in the body front matter.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "**Required.** Type of the doc. The available types all show up under the /docs/ URL path of your docs project (also known as the \"guides\" section). Can be \"basic\" (most common), \"error\" (page describing an API error), or \"link\" (page that redirects to an external link).This attribute may optionally be set in the body front matter.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The timestamp of when the doc was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "use_slug": {
+            "type": "string",
+            "description": "**Use with caution!** Create the doc resource by importing an existing doc by its slug. This is non-conventional and should only be used when the slug is known and the doc is not managed by Terraform or when the slug is changed in the web UI. This is useful for managing an API specification's doc that gets created automatically by ReadMe. When set, the specified doc will be replaced with the Terraform-managed doc. If this is set and then unset, a new doc will be created but the existing doc will not be deleted. The existing doc will be orphaned and will not be managed by Terraform. If this is unset and then set, the existing doc will be deleted and the resource will be pointed to the specified doc. In the case of API specification docs, the doc is implicitly deleted when the API specification is deleted. This attribute may be set in the body front matter with the `slug` key.",
+            "description_kind": "markdown",
+            "optional": true,
+            "computed": true
+          },
+          "user": {
+            "type": "string",
+            "description": "The ID of the author of the doc in the web editor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "verify_parent_doc": {
+            "type": "bool",
+            "description": "Enables or disables the provider verifying the `parent_doc` exists. When using the `parent_doc` attribute with a hidden parent, the provider is unable to verify if the parent exists. Setting this to `false` will disable this behavior. When `false`, the `parent_doc_slug` value will not be resolved by the provider unless explicitly set. The `parent_doc_slug` attribute may be used as an alternative. Verifying a `parent_doc` by ID does not work if the parent is hidden.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version to create the doc under.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version_id": {
+            "type": "string",
+            "description": "The version ID the doc is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "\nManage docs on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.\n\n## Front Matter\n\nDocs on ReadMe support setting some attributes using front matter.\nResource attributes take precedence over front matter attributes in the provider.\n\nRefer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter\nin ReadMe docs and custom pages.\n\n## Doc Slugs\n\nDocs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that\nis generated upon doc creation. By default, this is a normalized version of the doc title.\nThe slug cannot be altered using the API or the Terraform Provider, but can be edited in the\nReadMe web UI.\n\nThis creates challenges when managing docs with Terraform. To address this, the provider supports\nthe `use_slug` attribute. When set, the provider will attempt to manage an existing\ndoc by its slug. This can also be set in front matter using the `slug` key.\n\nIf this attribute is set and the doc does not exist, an error will be returned. This is intended\nto be set when inheriting management of an existing doc or when customizing the slug *after*\nthe doc has been created.\n\nNote that doc slugs are shared between Guides and API Specification References.\n\n\u26a0\ufe0f **Experimental:** The `use_slug` attribute is experimental and may result in unexpected\nbehavior.\n\n## Destroying Docs with Children\n\nDocs in ReadMe can have child docs.\nTerraform can infer a doc's relationship when they are all managed by the provider and delete them\nin the proper order as normal when referenced appropriately or when using `depends_on`.\n\nHowever, when managing docs with children, the provider may not be able to infer the relationship\nbetween parent and child docs, particularly in edge cases such as using the `use_slug`\nattribute to manage an API reference's parent doc.\n\nWhen destroying a doc, the provider will check for child docs and prevent deletion if they exist.\nThis behavior can be controlled with the `config.destroy_child_docs` attribute. When set to\ntrue, the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider\nconfiguration attribute allows for it to be toggled without requiring changes to the resource.\n\nWhen `config.destroy_child_docs` is set to `true`, the provider will log a\nwarning when child docs are deleted before the parent doc.\n\nFor best results, manage docs with Terraform and set their relationship by referencing the resource\naddress of the parent doc in the child doc's `parent_doc_slug` or `depends_on`\nattributes. This ensures they are deleted in the correct order.\n",
+        "description_kind": "markdown"
+      }
+    },
+    "readme_image": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "color": {
+            "type": "string",
+            "description": "The color of the image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "filename": {
+            "type": "string",
+            "description": "The filename of the image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "height": {
+            "type": "number",
+            "description": "The pixel height of the image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The sha512sum of the source image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The path to the local image source.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the uploaded image.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "width": {
+            "type": "number",
+            "description": "The pixel width of the image.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages Images on ReadMe.com\n\nThe images API is not part of the official ReadMe API and therefore not documented or fully featured.\n\nImages are not truly stateful - the provider tracks the local source image for changes and will upload a new image if the source is changed. The provider makes a HEAD request to the image URL to verify its existence. Any change to the source path or checksum will trigger a resource replacement.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "categories": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of category IDs the version is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "codename": {
+            "type": "string",
+            "description": "Dubbed name of version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "forked_from": {
+            "type": "string",
+            "description": "The ID of the version this version is derived from.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "from": {
+            "type": "string",
+            "description": "The version this version is derived from. Note that this is only an attribute used for initial creation. The ReadMe API otherwise refers to the 'from' value as an ID tracked in the forked_from attribute. When importing a version, the from field will be created after the next apply.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_beta": {
+            "type": "bool",
+            "description": "Toggles if the version is beta or not.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_deprecated": {
+            "type": "bool",
+            "description": "Toggles if the version is deprecated or not.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_hidden": {
+            "type": "bool",
+            "description": "Toggles if the version is hidden or not. A project's stable version cannot be set to hidden.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_stable": {
+            "type": "bool",
+            "description": "Toggles if the version is stable. A project can only have a single stable version. Changing a stable version to non-stable will trigger a replacement. The main 'stable' version for a project cannot be deleted.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The project the version is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "release_date": {
+            "type": "string",
+            "description": "Timestamp of when the version was released.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version string, usually a semantic version.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "version_clean": {
+            "type": "string",
+            "description": "A 'clean' version string with certain characters replaced, usually a semantic version.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Manages Versions on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getversion> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    }
+  },
+  "data_source_schemas": {
+    "readme_api_registry": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "definition": {
+            "type": "string",
+            "description": "The raw JSON definition of an API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The UUID of an API registry definition.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Retrieve an API specification definition from the API registry on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getapiregistry> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_api_specification": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category": {
+            "type": [
+              "object",
+              {
+                "id": "string",
+                "order": "number",
+                "slug": "string",
+                "title": "string",
+                "type": "string"
+              }
+            ],
+            "description": "Category information",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "category_id": {
+                  "type": "string",
+                  "description": "Return only API specifications with the specified category ID.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "category_slug": {
+                  "type": "string",
+                  "description": "Return only API specifications with the specified category slug.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "category_title": {
+                  "type": "string",
+                  "description": "Return only API specifications with the specified category title.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "has_category": {
+                  "type": "bool",
+                  "description": "Return only API specifications with a category.",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter API specifications by the specified criteria.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the API specification.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "last_synced": {
+            "type": "string",
+            "description": "Timestamp of last synchronization.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "source": {
+            "type": "string",
+            "description": "The creation source of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the API specification derived from the specification JSON.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the API specification.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve metadata about an API specification on ReadMe.com\n\nAn ID or title must be specified to retrieve an API specification. The `filter` attribute may be used to filter API specifications by category ID, category slug, category title, or whether or not the API specification has a category. See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_api_specifications": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "filter": {
+            "nested_type": {
+              "attributes": {
+                "category_id": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Return API specifications matching the specified category IDs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "category_slug": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Return API specifications matching the specified category slugs.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "category_title": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Return API specifications matching the specified category titles.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "has_category": {
+                  "type": "bool",
+                  "description": "Return only API specifications with a category. This attribute works as an 'AND' filter with the other category filters.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "title": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Return API specifications matching the specified title.",
+                  "description_kind": "plain",
+                  "optional": true
+                },
+                "version": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description": "Return API specifications matching the specified versions (e.g. 1.0.0).",
+                  "description_kind": "plain",
+                  "optional": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Filter API specifications by the specified criteria. Omitting this attribute will return all API specifications. All category filters are 'OR' filters except `has_category`, which works as an 'AND' filter with the other category filters.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID for the data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sort_by": {
+            "type": "string",
+            "description": "Sort the returned API specifications by the specified key.Valid values are `title` or `last_synced`. If unset, API specifications are in the order they were returned by the API.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "specs": {
+            "nested_type": {
+              "attributes": {
+                "category": {
+                  "type": [
+                    "object",
+                    {
+                      "id": "string",
+                      "order": "number",
+                      "slug": "string",
+                      "title": "string",
+                      "type": "string"
+                    }
+                  ],
+                  "description": "Category information",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique identifier of the API specification.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "last_synced": {
+                  "type": "string",
+                  "description": "Timestamp of last synchronization.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "source": {
+                  "type": "string",
+                  "description": "The creation source of the API specification.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the API specification derived from the specification JSON.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the API specification.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "The version ID of the API specification.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of API specifications",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve multiple API specifications from ReadMe. The `filter` attribute may be used to filter API specifications by category ID, category slug, category title, version, or whether or not the API specifications have a category. See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_categories": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "categories": {
+            "nested_type": {
+              "attributes": {
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp of when the version was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "order": {
+                  "type": "number",
+                  "description": "The order of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project": {
+                  "type": "string",
+                  "description": "The ID of the project the category is in.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "reference": {
+                  "type": "bool",
+                  "description": "Indicates whether the category is a reference or not.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "The slug of the category.",
+                  "description_kind": "plain",
+                  "required": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The category type.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version_id": {
+                  "type": "string",
+                  "description": "The version the category is associated with.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of category summaries.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Terraform ID of the categories data source.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve all categories for a project on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getcategories> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_category": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "category_type": {
+            "type": "string",
+            "description": "The category type (different than 'type').",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order": {
+            "type": "number",
+            "description": "The order of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the project the category is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "reference": {
+            "type": "bool",
+            "description": "Indicates whether the category is a reference or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the category.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the category.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The category type.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The 'semver-ish' value of the version the category is under.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version_id": {
+            "type": "string",
+            "description": "The version the category is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve metadata about a category on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getcategory> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_category_docs": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "docs": {
+            "nested_type": {
+              "attributes": {
+                "children": {
+                  "nested_type": {
+                    "attributes": {
+                      "hidden": {
+                        "type": "bool",
+                        "description": "Tye type of category.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The unique ID of the category.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "order": {
+                        "type": "number",
+                        "description": "The order of the category.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "slug": {
+                        "type": "string",
+                        "description": "The slug of the category.",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "The title of the category.",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "hidden": {
+                  "type": "bool",
+                  "description": "Tye type of category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "order": {
+                  "type": "number",
+                  "description": "The order of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "The slug of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the category.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "List of category summaries.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal Terraform ID of the data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The category slug to retrieve docs for.",
+            "description_kind": "plain",
+            "required": true
+          }
+        },
+        "description": "Retrieve all docs for a project category on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getcategorydocs> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_changelog": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date the changelog was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Whether the changelog is hidden.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "html": {
+            "type": "string",
+            "description": "The HTML of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the changelog.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the changelog.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date the changelog was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a changelog from the ReadMe API.\n\nSee <https://docs.readme.com/reference/getchangelog> for more information about the API.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_custom_page": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date the custom page was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "fullscreen": {
+            "type": "bool",
+            "description": "Whether the custom page is in fullscreen mode.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Whether the custom page is hidden.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "html": {
+            "type": "string",
+            "description": "The HTML of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "htmlmode": {
+            "type": "bool",
+            "description": "Whether the custom page is in HTML mode.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "The revision of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the custom page.",
+            "description_kind": "plain",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the custom page.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date the custom page was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a custom page from the ReadMe API.\n\nSee <https://docs.readme.com/reference/getcustompages> for more information about the API.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_custom_pages": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The state ID of the custom pages data source.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "results": {
+            "nested_type": {
+              "attributes": {
+                "algolia": {
+                  "nested_type": {
+                    "attributes": {
+                      "publish_pending": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "record_count": {
+                        "type": "number",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "updated_at": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "body": {
+                  "type": "string",
+                  "description": "The body of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "The date the custom page was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "fullscreen": {
+                  "type": "bool",
+                  "description": "Whether the custom page is in fullscreen mode.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "hidden": {
+                  "type": "bool",
+                  "description": "Whether the custom page is hidden.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "html": {
+                  "type": "string",
+                  "description": "The HTML of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "htmlmode": {
+                  "type": "bool",
+                  "description": "Whether the custom page is in HTML mode.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "metadata": {
+                  "nested_type": {
+                    "attributes": {
+                      "description": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "image": {
+                        "type": [
+                          "list",
+                          "string"
+                        ],
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "title": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "revision": {
+                  "type": "number",
+                  "description": "The revision of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "The slug of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the custom page.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description": "The date the custom page was last updated.",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve custom pages from the ReadMe API.\n\nSee <https://docs.readme.com/reference/getcustompages> for more information about the API.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_doc": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "algolia": {
+            "nested_type": {
+              "attributes": {
+                "publish_pending": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "record_count": {
+                  "type": "number",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "updated_at": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "api": {
+            "nested_type": {
+              "attributes": {
+                "api_setting": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "auth": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "examples": {
+                  "nested_type": {
+                    "attributes": {
+                      "codes": {
+                        "nested_type": {
+                          "attributes": {
+                            "code": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "language": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "method": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "params": {
+                  "nested_type": {
+                    "attributes": {
+                      "default": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "desc": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "enum_values": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "in": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "ref": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "required": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "results": {
+                  "nested_type": {
+                    "attributes": {
+                      "codes": {
+                        "nested_type": {
+                          "attributes": {
+                            "code": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "language": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "name": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "status": {
+                              "type": "number",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "list"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Metadata for an API doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body": {
+            "type": "string",
+            "description": "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body_clean": {
+            "type": "string",
+            "description": "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. This is an alias for the `body` attribute.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "body_html": {
+            "type": "string",
+            "description": "The body content in HTML.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "category": {
+            "type": "string",
+            "description": "The category ID of the doc. Note that changing the category will result in a replacement of the doc resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "category_slug": {
+            "type": "string",
+            "description": "**Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. This attribute may optionally be set in the body front matter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "deprecated": {
+            "type": "bool",
+            "description": "Toggles if a doc is deprecated or not.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "error": {
+            "nested_type": {
+              "attributes": {
+                "code": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Error code configuration for a doc. This attribute may be set in the body front matter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "excerpt": {
+            "type": "string",
+            "description": "A short summary of the content.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "hidden": {
+            "type": "bool",
+            "description": "Toggles if a doc is hidden or not. This attribute may be set in the body front matter.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "icon": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_api": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_reference": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "link_external": {
+            "type": "bool",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "link_url": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "metadata": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "image": {
+                  "type": [
+                    "list",
+                    "string"
+                  ],
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description_kind": "plain",
+            "computed": true
+          },
+          "next": {
+            "nested_type": {
+              "attributes": {
+                "description": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "pages": {
+                  "nested_type": {
+                    "attributes": {
+                      "category": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "deprecated": {
+                        "type": "bool",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "slug": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "type": {
+                        "type": "string",
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "list"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "single"
+            },
+            "description": "Information about the 'next' pages in a series.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "order": {
+            "type": "number",
+            "description": "The position of the doc in the project sidebar.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_doc": {
+            "type": "string",
+            "description": "If the doc has a parent doc, this is doc ID of the parent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "parent_doc_slug": {
+            "type": "string",
+            "description": "If the doc has a parent doc, this is doc slug of the parent.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "previous_slug": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The ID of the project the doc is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "revision": {
+            "type": "number",
+            "description": "A number that is incremented upon doc updates.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the doc.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "slug_updated_at": {
+            "type": "string",
+            "description": "The timestamp of when the doc's slug was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "sync_unique": {
+            "type": "string",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the doc.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the doc. The available types all show up under the /docs/ URL path of your docs project (also known as the \"guides\" section). Can be \"basic\" (most common), \"error\" (page desribing an API error), or \"link\" (page that redirects to an external link).",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The timestamp of when the doc was last updated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "use_slug": {
+            "type": "string",
+            "description": "This is an unused attribute in the data source that is present to satisfy the model shared with the doc resource. It may be removed in the future.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "user": {
+            "type": "string",
+            "description": "The ID of the author of the doc in the web editor.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "verify_parent_doc": {
+            "type": "bool",
+            "description": "Enables or disables the provider verifying the `parent_doc` exists. When using the `parent_doc` attribute with a hidden parent, the provider is unable to verify if the parent exists. Setting this to `false` will disable this behavior. When `false`, the `parent_doc_slug` value will not be resolved by the provider unless explicitly set. The `parent_doc_slug` attribute may be used as an alternative. Verifying a `parent_doc` by ID does not work if the parent is hidden.",
+            "description_kind": "plain",
+            "optional": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version to create the doc under.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version_id": {
+            "type": "string",
+            "description": "The version ID the doc is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve docs on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_doc_search": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "The internal ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "query": {
+            "type": "string",
+            "description_kind": "plain",
+            "required": true
+          },
+          "results": {
+            "nested_type": {
+              "attributes": {
+                "highlight_result": {
+                  "nested_type": {
+                    "attributes": {
+                      "body": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "matched_words": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "excerpt": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "matched_words": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "title": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "matched_words": {
+                              "type": [
+                                "list",
+                                "string"
+                              ],
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "index_name": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "internal_link": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_reference": {
+                  "type": "bool",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "link_url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "method": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "object_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "project": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "reference_id": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "slug": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "snippet_result": {
+                  "nested_type": {
+                    "attributes": {
+                      "body": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "excerpt": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      },
+                      "title": {
+                        "nested_type": {
+                          "attributes": {
+                            "match_level": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            },
+                            "value": {
+                              "type": "string",
+                              "description_kind": "plain",
+                              "computed": true
+                            }
+                          },
+                          "nesting_mode": "single"
+                        },
+                        "description_kind": "plain",
+                        "computed": true
+                      }
+                    },
+                    "nesting_mode": "single"
+                  },
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "subdomain": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "title": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "type": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "url": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description_kind": "plain",
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve docs matching a search query on ReadMe.com\n\nSee <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_project": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "base_url": {
+            "type": "string",
+            "description": "The base URL of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The internal ID of this resource.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "jwt_secret": {
+            "type": "string",
+            "description": "JWT Secret.",
+            "description_kind": "plain",
+            "computed": true,
+            "sensitive": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "plan": {
+            "type": "string",
+            "description": "The account subscription plan.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "subdomain": {
+            "type": "string",
+            "description": "The base URL for the project.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve metadata about a project on ReadMe.com\n\nThe project metadata associated with the API token is returned.\n\nSee <https://docs.readme.com/main/reference/getproject> for more information about this API endpoint.\n\n",
+        "description_kind": "plain"
+      }
+    },
+    "readme_version": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "categories": {
+            "type": [
+              "list",
+              "string"
+            ],
+            "description": "List of category IDs the version is associated with.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "codename": {
+            "type": "string",
+            "description": "Dubbed name of version.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp of when the version was created.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "forked_from": {
+            "type": "string",
+            "description": "ID of the version that was forked from.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "is_beta": {
+            "type": "bool",
+            "description": "Indicates if the version is beta.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_deprecated": {
+            "type": "bool",
+            "description": "Indicates if the version is deprecated.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_hidden": {
+            "type": "bool",
+            "description": "Indicates if the version is hidden.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "is_stable": {
+            "type": "bool",
+            "description": "Indicates if the version is stable.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "project": {
+            "type": "string",
+            "description": "The project the version is in.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "release_date": {
+            "type": "string",
+            "description": "Timestamp of when the version was released.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The version string, usually a semantic version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          },
+          "version_clean": {
+            "type": "string",
+            "description": "A 'clean' version string with certain characters replaced, usually a semantic version.",
+            "description_kind": "plain",
+            "optional": true,
+            "computed": true
+          }
+        },
+        "description": "Retrieve version metadata from the ReadMe.com API.\n\nSee <https://docs.readme.com/main/reference/getversion> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    },
+    "readme_versions": {
+      "version": 0,
+      "block": {
+        "attributes": {
+          "id": {
+            "type": "string",
+            "description": "Internally used identifier attribute. This attribute only exists within the provider not the API.",
+            "description_kind": "plain",
+            "computed": true
+          },
+          "versions": {
+            "nested_type": {
+              "attributes": {
+                "codename": {
+                  "type": "string",
+                  "description": "Dubbed name of version.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "Timestamp of when the version was created.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "forked_from": {
+                  "type": "string",
+                  "description": "ID of the version that was forked from.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the version.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "is_beta": {
+                  "type": "bool",
+                  "description": "Indicates if the version is beta.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_deprecated": {
+                  "type": "bool",
+                  "description": "Indicates if the version is deprecated.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_hidden": {
+                  "type": "bool",
+                  "description": "Indicates if the version is hidden.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "is_stable": {
+                  "type": "bool",
+                  "description": "Indicates if the version is stable.",
+                  "description_kind": "plain",
+                  "computed": true
+                },
+                "version": {
+                  "type": "string",
+                  "description": "The version string, usually a semantic version.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                },
+                "version_clean": {
+                  "type": "string",
+                  "description": "A 'clean' version string with certain characters replaced, usually a semantic version.",
+                  "description_kind": "plain",
+                  "optional": true,
+                  "computed": true
+                }
+              },
+              "nesting_mode": "list"
+            },
+            "description": "The list of versions on ReadMe.com.",
+            "description_kind": "plain",
+            "computed": true
+          }
+        },
+        "description": "Retrieve a list of versions with metadata from ReadMe.\n\nSee <https://docs.readme.com/main/reference/getversions> for more information about this API endpoint.",
+        "description_kind": "plain"
+      }
+    }
+  }
+}
