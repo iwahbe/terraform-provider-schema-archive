@@ -16,6 +16,17 @@ _DOCKERFILE_DIR = os.path.dirname(__file__)
 # rather than written, so an oversized schema can never be committed or block a push.
 MAX_SCHEMA_GZ_BYTES = 80 * 1024 * 1024
 
+# tofu prints one of these as it starts initialization ("Initializing the backend..." first,
+# then "Initializing provider plugins..." as it resolves providers). If a failed run shows
+# neither, tofu never really ran — an environment fault, not a provider failure. A genuinely
+# bad config (e.g. an invalid provider namespace) still prints the backend line before erroring,
+# so it stays a normal failure rather than halting the run.
+_TOFU_START_MARKERS = ("Initializing the backend", "Initializing provider plugins")
+
+
+class HarnessError(Exception):
+    "A dump never reached provider installation — an environment fault, not a provider failure."
+
 _RETRYABLE_MARKERS = (
     "429",
     "too many requests",
@@ -100,6 +111,12 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
         stdout, stderr = _read(out_path), _read(err_path)
         if timed_out:
             return DumpResult("retry", stdout, stderr + "\ndump timed out", None, None)
+        if proc.returncode != 0 and not tofu_started(stdout, stderr):
+            raise HarnessError(
+                f"{source} {pv.version}: tofu never started (exit {proc.returncode}); "
+                f"the dump environment is likely broken.\n"
+                f"--- stderr ---\n{stderr.strip()}\n--- stdout ---\n{stdout.strip()}"
+            )
         format_version, schema = _extract(os.path.join(work, "schema.json"), source)
         status = _classify(proc.returncode, stderr, schema)
         if status != "done":
@@ -109,6 +126,11 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
             note = f"\nrejected: compressed schema exceeds the {MAX_SCHEMA_GZ_BYTES}-byte limit"
             return DumpResult("rejected", stdout, stderr + note, None, None)
         return DumpResult("done", stdout, stderr, schema_gz, format_version)
+
+
+def tofu_started(stdout: str, stderr: str) -> bool:
+    "Whether tofu actually began initialization, rather than the environment failing before it ran."
+    return any(m in stdout or m in stderr for m in _TOFU_START_MARKERS)
 
 
 def finalize_schema(schema: bytes, limit: int = MAX_SCHEMA_GZ_BYTES) -> tuple[str, Optional[bytes]]:

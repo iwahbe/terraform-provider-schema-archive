@@ -333,7 +333,7 @@ def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[i
 
     work = deque(queue)
     state_lock = threading.Lock()
-    state = {"claimed": 0, "retries": 0, "stop": False}
+    state = {"claimed": 0, "retries": 0, "stop": False, "harness_error": None}
 
     def should_stop() -> bool:
         return (signals.stop_requested() or state["stop"]
@@ -358,7 +358,15 @@ def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[i
             name = container_name(provider, version)
             slot = display.start(f"Archiving {provider.registry}/{provider.org}/{provider.name}@{version.version}")
             signals.add_container(name)
-            result = dump.dump(pv, name, per_dump_timeout(deadline))
+            try:
+                result = dump.dump(pv, name, per_dump_timeout(deadline))
+            except dump.HarnessError as err:
+                signals.remove_container(name)
+                display.finish(slot, "💥")
+                with state_lock:
+                    state["harness_error"] = err
+                    state["stop"] = True
+                return
             signals.remove_container(name)
             if signals.aborted():
                 return
@@ -400,6 +408,9 @@ def run_dumps(archive: Archive, deadline: Optional[float], max_count: Optional[i
     finally:
         ticker_stop.set()
         ticker_thread.join()
+
+    if state["harness_error"] is not None:
+        raise state["harness_error"]
 
 
 def update_latest_symlink(provider: Provider):
@@ -444,7 +455,12 @@ def main():
     archive = load_archive()
     populate(archive)
     save_archive(archive)
-    run_dumps(archive, deadline, args.max, args.jobs, signals, display)
+    try:
+        run_dumps(archive, deadline, args.max, args.jobs, signals, display)
+    except dump.HarnessError as err:
+        display.message("halting: the dump environment is broken")
+        print(f"\nHARNESS ERROR — halting without recording a failure:\n{err}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
