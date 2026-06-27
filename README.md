@@ -21,7 +21,7 @@ schema-archive/                 # The full archive
       <org>/                    # The org of the provider
         <provider>/             # The name of the provider
           <version>/            # The version of the provider
-            schema.json         # The provider's schema, indexed out of `tofu providers schema -json`
+            schema.json.gz      # The provider's schema (gzip-compressed), indexed out of `tofu providers schema -json`
             stdout.txt          # The stdout of the schema dump
             stderr.txt          # The stderr of the schema dump
             metadata.json       # Metadata about how the schema was generated
@@ -51,7 +51,7 @@ For each invocation: `maintain-archive/run.py` reads `archive.json` for the list
       "versions": [
         {
           "version": "<version>",
-          "status": "pending" | "done" | "retry" | "failure"
+          "status": "pending" | "done" | "retry" | "failure" | "rejected"
         }
       ]
     }
@@ -71,14 +71,16 @@ For each provider, in addition to the schema, we write `metadata.json`:
 ```json
 {
   "timestamp": "<ISO 8601 timestamp>",
-  "status": "success" | "retry" | "failure",
+  "status": "success" | "retry" | "failure" | "rejected",
   "format_version": "<schema format version>"
 }
 ```
 
-`format_version` is the `format_version` reported by `tofu providers schema -json`, lifted out of the schema so `schema.json` holds only the provider's schema. It is present only on success.
+`format_version` is the `format_version` reported by `tofu providers schema -json`, lifted out of the schema so `schema.json.gz` holds only the provider's schema. It is present only on success.
 
-We write `stdout.txt` & `stderr.txt` for all attempts, regardless of success or failure. "retry" means a transient failure. "failure" implies a perminent failure.
+We write `stdout.txt` & `stderr.txt` for all attempts, regardless of success or failure. "retry" means a transient failure. "failure" implies a perminent failure. "rejected" means the dump succeeded but its schema was too large to archive.
+
+Schemas are stored gzip-compressed as `schema.json.gz` (decompress with `gunzip`/`zcat`). GitHub blocks any push containing a file larger than 100 MiB, so a schema whose compressed size would exceed 80 MiB is "rejected" and never written to disk.
 
 ## Orchestration and ordering
 

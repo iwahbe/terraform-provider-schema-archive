@@ -1,3 +1,4 @@
+import gzip
 import json
 import os
 import subprocess
@@ -9,6 +10,11 @@ from registry import ProviderVersion
 
 IMAGE = "terraform-schema-archive-dump"
 _DOCKERFILE_DIR = os.path.dirname(__file__)
+
+# GitHub blocks any push containing a file larger than 100 MiB. Schemas are stored
+# gzip-compressed; a schema whose compressed size would exceed this cap is rejected
+# rather than written, so an oversized schema can never be committed or block a push.
+MAX_SCHEMA_GZ_BYTES = 80 * 1024 * 1024
 
 _RETRYABLE_MARKERS = (
     "429",
@@ -41,10 +47,10 @@ _MAIN_TF = """terraform {{
 
 @dataclass
 class DumpResult:
-    status: str  # "done" | "retry" | "failure"
+    status: str  # "done" | "retry" | "failure" | "rejected"
     stdout: str
     stderr: str
-    schema: Optional[bytes]
+    schema_gz: Optional[bytes]  # gzip-compressed schema, present only when status == "done"
     format_version: Optional[str]
 
 
@@ -88,7 +94,19 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
         status = _classify(proc.returncode, stderr, schema)
         if status != "done":
             return DumpResult(status, stdout, stderr, None, None)
-        return DumpResult(status, stdout, stderr, schema, format_version)
+        status, schema_gz = finalize_schema(schema)
+        if status == "rejected":
+            note = f"\nrejected: compressed schema exceeds the {MAX_SCHEMA_GZ_BYTES}-byte limit"
+            return DumpResult("rejected", stdout, stderr + note, None, None)
+        return DumpResult("done", stdout, stderr, schema_gz, format_version)
+
+
+def finalize_schema(schema: bytes, limit: int = MAX_SCHEMA_GZ_BYTES) -> tuple[str, Optional[bytes]]:
+    "Gzip a successful schema dump, rejecting it when the compressed size exceeds `limit`."
+    schema_gz = gzip.compress(schema, 9, mtime=0)
+    if len(schema_gz) > limit:
+        return "rejected", None
+    return "done", schema_gz
 
 
 def _classify(returncode: int, stderr: str, schema: Optional[bytes]) -> str:

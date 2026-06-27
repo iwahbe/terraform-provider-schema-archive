@@ -35,7 +35,7 @@ MAX_CONSECUTIVE_RETRIES = 10
 
 TICK_SECONDS = 30
 RESULT_COLUMN = 72
-SYMBOLS = {"done": "✅", "retry": "🕐", "failure": "☠️"}
+SYMBOLS = {"done": "✅", "retry": "🕐", "failure": "☠️", "rejected": "🚫"}
 
 
 class Status(str, Enum):
@@ -43,6 +43,7 @@ class Status(str, Enum):
     done = "done"
     retry = "retry"
     failure = "failure"
+    rejected = "rejected"
 
 
 class Version(BaseModel):
@@ -236,9 +237,9 @@ def write_outputs(provider: Provider, version: Version, result: dump.DumpResult)
         f.write(result.stdout)
     with open(os.path.join(directory, "stderr.txt"), "w") as f:
         f.write(result.stderr)
-    if result.schema is not None:
-        with open(os.path.join(directory, "schema.json"), "wb") as f:
-            f.write(result.schema)
+    if result.schema_gz is not None:
+        with open(os.path.join(directory, "schema.json.gz"), "wb") as f:
+            f.write(result.schema_gz)
     metadata_status = "success" if result.status == "done" else result.status
     metadata = {"timestamp": datetime.now(timezone.utc).isoformat(), "status": metadata_status}
     if result.format_version is not None:
