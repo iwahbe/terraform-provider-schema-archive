@@ -65,11 +65,10 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
     source = f"{pv.registry}/{pv.org}/{pv.provider}"
     version = pv.version[1:] if pv.version.startswith("v") else pv.version
     with tempfile.TemporaryDirectory() as work:
-        # The container runs tofu as root but with --cap-drop ALL, so it lacks
-        # CAP_DAC_OVERRIDE and is subject to ordinary permission checks. TemporaryDirectory
-        # creates `work` mode 0700 owned by the host user, which the container's root cannot
-        # enter — tofu then aborts with "stat .: permission denied". Make the bind-mounted
-        # working directory world-accessible so the sandboxed process can use it.
+        # The container runs tofu as root but with --cap-drop ALL, so it lacks CAP_DAC_OVERRIDE
+        # and is subject to ordinary permission checks. TemporaryDirectory creates `work` mode
+        # 0700 owned by the host user, which the container's root cannot enter; make it
+        # world-accessible so the container can read main.tf and write schema.json.
         os.chmod(work, 0o777)
         with open(os.path.join(work, "main.tf"), "w") as f:
             f.write(_MAIN_TF.format(source=source, version=version))
@@ -78,9 +77,14 @@ def dump(pv: ProviderVersion, container_name: str, timeout: float) -> DumpResult
             "--network", "bridge",
             "--cpus", "2", "--memory", "2g", "--pids-limit", "512",
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
-            "-v", f"{work}:/work", "-w", "/work",
+            "-v", f"{work}:/work",
             "--entrypoint", "/bin/sh", IMAGE,
-            "-c", "tofu init -input=false -no-color && tofu providers schema -json -no-color > schema.json",
+            # Run tofu in a container-local directory so its root-owned .terraform/ stays in the
+            # container's ephemeral filesystem (discarded with --rm). The bind-mounted /work is
+            # only an I/O channel: main.tf in, schema.json out, both host-cleanable.
+            "-c", "mkdir /tofu && cp /work/main.tf /tofu/ && cd /tofu && "
+                  "tofu init -input=false -no-color && "
+                  "tofu providers schema -json -no-color > /work/schema.json",
         ]
         out_path, err_path = os.path.join(work, "dump-stdout"), os.path.join(work, "dump-stderr")
         timed_out = False
