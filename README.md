@@ -137,3 +137,61 @@ loses progress and the next run resumes from where it left off. A provider's
 version of that provider that has been dumped successfully. Because the latest version
 is dumped first, the symlink tracks the newest working schema immediately; later
 back-filled older versions never downgrade it.
+
+## Querying the archive
+
+To query the latest version of every provider, walk `schema-latest/` with
+`followlinks=True` (its entries are symlinks into `schema-archive/`) and decompress each
+`schema.json.gz`. The decompressed root is a single provider schema:
+
+```json
+{
+  "provider":            { ... },              // provider config block
+  "resource_schemas":    { "<type>": {...} },  // keyed by resource type, e.g. azurerm_resource_group
+  "data_source_schemas": { "<type>": {...} },  // keyed by data-source type
+  "functions":           { "<name>": {...} }   // keyed by bare function name, e.g. parse_resource_id
+}
+```
+
+Note that resource and data-source keys are provider-prefixed (`azurerm_...`) while
+function keys are bare (`parse_resource_id`).
+
+As a worked example, this finds provider functions whose name clashes with a resource or
+data source in the same provider — i.e. a function `bar` in a provider prefixed `foo_`
+that also defines `foo_bar`:
+
+```python
+#!/usr/bin/env python3
+"""Find provider functions whose name clashes with a resource/data-source
+name (provider prefix stripped) within the same provider."""
+import gzip, json, os
+
+ROOT = "schema-latest"
+
+def strip_prefix(name):
+    """Drop the leading '<provider>_' segment: azurerm_foo_bar -> foo_bar."""
+    i = name.find("_")
+    return name[i + 1:] if i != -1 else name
+
+for dirpath, _, filenames in os.walk(ROOT, followlinks=True):
+    if "schema.json.gz" not in filenames:
+        continue
+    with gzip.open(os.path.join(dirpath, "schema.json.gz")) as f:
+        schema = json.load(f)
+
+    functions = schema.get("functions") or {}
+    if not functions:
+        continue
+
+    # bare name -> full name, for resources and data sources
+    resources   = {strip_prefix(n): n for n in schema.get("resource_schemas") or {}}
+    datasources = {strip_prefix(n): n for n in schema.get("data_source_schemas") or {}}
+
+    provider = os.path.relpath(dirpath, ROOT)   # e.g. registry.opentofu.org/op/opentofu/azurerm
+    for fn in functions:
+        for kind, table in (("resource", resources), ("data_source", datasources)):
+            if fn in table:
+                print(f"{provider}\tfunction:{fn}\tclashes with {kind}:{table[fn]}")
+```
+
+Most providers define no functions, so skipping those early keeps a full walk fast.
